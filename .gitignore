@@ -71,3 +71,4 @@ arbitrum.code-workspace
 arbitrum-dafny.code-workspace
 *.sol
 *.dfy2
+src/dafny/dafny-evm.code-workspace
