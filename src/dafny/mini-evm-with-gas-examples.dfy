@@ -42,7 +42,6 @@ method main1(g: uint256)
  */
 method main2(c: uint256, g: uint256) 
     requires g as nat >= c as nat * 4
-    // ensures c as nat * 4 <= MAX_UINT256 
 {
     //  The pre-condition constrains input c
     assert c as nat * 4 <= MAX_UINT256;
@@ -296,4 +295,125 @@ method main6(c: uint256, g: uint256)
     assert e.gas >= 0;
 
 }
+
+/**
+ *  Compute c in a loop.
+ */
+method foo(c: uint256) returns (i: uint256)
+    ensures i == fooSpec(c)
+{
+    i := 0;
+    var c' := c;
+
+    while c' > 0 
+        invariant c' as nat + i as nat == c as nat  
+    {
+        i := i + 1;
+        c' := c' - 1;
+    }
+    assert i == c;
+
+}
+
+/**
+ *  Compute c in a loop.
+ */
+method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
+    requires g >= 1 
+    ensures i == c
+{
+    i := 0;
+    ghost var c' := c;
+
+    var e := new EVM(g);
+
+    e.push1(c);
+    assert e.stack[0] == c == c';
+
+    //  push i
+    assume e.gas >= 1;
+    e.push1(0x0);
+
+    while e.stack[1] > 0
+        invariant |e.stack| > 1
+        invariant c' == e.stack[1]
+        invariant i == e.stack[0]
+        invariant c' as nat + i as nat == c as nat  
+    {
+        i := i + 1;
+        //  compute i + 1
+        assume e.gas >= 2;
+        e.push1(0x01);
+        e.add();
+        //  i + 1 is at top opf the stack 
+
+        c' := c' - 1;
+        //  compute c' update on the stack
+        assume e.gas >= 5;
+        e.swap1();
+        //  c' is at top of stack
+        e.push1(0x1);
+        e.swap1();
+        e.sub();
+        //  e.stack[0] should contain c'
+        assert e.stack[0] == c';
+        e.swap1();
+    }
+    
+
+}
+/**
+ *  Compute c in a loop.
+ */
+method foo3(c: uint256, e: EVM) 
+    requires e.gas as nat >= 2 + 7 * c as nat 
+    ensures |e.stack| > 0 && e.stack[0] == fooSpec(c)
+
+    modifies e
+{
+    //  original algorithm variables become verification/ghost variable 
+    ghost var i := 0;
+    ghost var c' := c;
+
+    e.push1(c);
+    assert e.stack[0] == c == c';
+
+    //  push i
+    e.push1(0x0);
+
+    while e.stack[1] > 0
+        invariant |e.stack| > 1
+        //  locate original variables in the stack
+        invariant c' == e.stack[1]
+        invariant i == e.stack[0]
+        invariant e.gas >= 7 * c'
+        invariant c' as nat + i as nat == c as nat  
+    {
+        i := i + 1;
+        //  compute i + 1
+        e.push1(0x01);
+        e.add();
+        //  i + 1 is at top of the stack 
+
+        c' := c' - 1;
+        //  compute c' update on the stack
+        e.swap1();
+        //  c' is at top of stack
+        e.push1(0x1);
+        e.swap1();
+        e.sub();
+        //  e.stack[0] should contain c'
+        assert e.stack[0] == c';
+        e.swap1();
+    }
+}
+
+/**
+ *  Functional spec of foo
+ */
+ function fooSpec(c: uint256) : uint256
+ {
+    c
+ }
+
 
