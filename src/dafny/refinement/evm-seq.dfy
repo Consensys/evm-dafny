@@ -13,7 +13,7 @@
  */
  
 /**
- *  Basic instructions of the EVM, with no jumps.
+ *  Provides basic instructions of the EVM, with no jumps.
  */
 module EVMSeq {
 

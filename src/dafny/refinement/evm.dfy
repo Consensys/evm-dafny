@@ -15,7 +15,7 @@
 include "evm-seq.dfy"
 
 /** 
- *  EVM programs possibly with Jumps.
+ *  Provides EVM programs possibly with Jumps.
  */
 module EVM {
 
