@@ -25,11 +25,11 @@ method main1()
 
     ghost var g := e.stack;
 
-    e.push1(a); 
-    e.push1(b);
+    e.push(a); 
+    e.push(b);
     e.add();
 
-    assert e.stack[0] == a + b;
+    assert e.stack[0] == a + b; 
 
     e.pop();
     assert e.stack == g;
@@ -50,8 +50,8 @@ method main2(c: uint256)
     while count > 0 
         invariant  e.stack == g
     {
-        e.push1(a);
-        e.push1(b);
+        e.push(a);
+        e.push(b);
         e.add();
         e.pop();
         count := count - 1 ;
@@ -71,7 +71,7 @@ method main3(c: uint256)
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
-    e.push1(c);
+    e.push(c);
     ghost var g := e.stack;
     ghost var count := c;
 
@@ -82,13 +82,13 @@ method main3(c: uint256)
         invariant count == e.stack[0]
         invariant e.stack == [count]
     {
-        e.push1(a);
-        e.push1(b);
+        e.push(a);
+        e.push(b);
         e.add();
         e.pop();
 
         //  count := count - 1 ;
-        e.push1(0x1);
+        e.push(0x1);
         e.subR();
         count := count - 1;
         
@@ -106,7 +106,7 @@ method main4(c: uint256)
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
-    e.push1(c);
+    e.push(c);
     ghost var g := e.stack;
     ghost var count := c;
 
@@ -116,13 +116,13 @@ method main4(c: uint256)
         invariant  |e.stack| > 0  
         invariant count == e.stack[0]
     {
-        e.push1(a);
-        e.push1(b);
+        e.push(a);
+        e.push(b);
         e.add();
         e.pop();
 
         //  count := count - 1 ;
-        e.push1(0x1);
+        e.push(0x1);
         e.swap1();
         e.sub();
 
@@ -141,7 +141,7 @@ method main5(c: uint256)
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
-    e.push1(c);
+    e.push(c);
     ghost var g := e.stack;
     ghost var count := c;
 
@@ -152,7 +152,7 @@ method main5(c: uint256)
 
     //  top of the stack has the result of count > 0
     //  push 0, then duplicate second element on top
-    e.push1(0x0);
+    e.push(0x0);
     e.dup2();
     //  stack = [count, 0, count]
     //  compute stack[0] > stack[1]
@@ -173,22 +173,22 @@ method main5(c: uint256)
         e.pop();
         //  stack = [count] 
         //  a + b and discard result
-        e.push1(a);
-        e.push1(b);
+        e.push(a);
+        e.push(b);
         e.add();
         e.pop();
 
         assert count == e.stack[0] ;
         assert count > 0;
         //  count := count - 1 ;
-        e.push1(0x1);
+        e.push(0x1);
         e.swap1();
         //  stack = [count, 1]
         e.sub();
         //  stack = [count - 1]
 
         //  prepare comparison count > 0. count is at the top
-        e.push1(0x0);
+        e.push(0x0);
         e.dup2();
         //  stack = [count - 1, 0, count - 1]
         //  compute stack[0] > stack[1]
@@ -215,7 +215,7 @@ method main6(c: uint256, g: uint256)
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
-    e.push1(c);
+    e.push(c);
     ghost var g := e.stack;
     ghost var count := c;
 
@@ -226,7 +226,7 @@ method main6(c: uint256, g: uint256)
 
     //  top of the stack has the result of count > 0
     //  push 0, then duplicate second element on top
-    e.push1(0x0);
+    e.push(0x0);
     e.dup2();
     //  stack = [count, 0, count]
     //  compute stack[0] > stack[1]
@@ -247,22 +247,22 @@ method main6(c: uint256, g: uint256)
         e.pop();
         //  stack = [count] 
         //  a + b and discard result
-        e.push1(a);
-        e.push1(b);
+        e.push(a);
+        e.push(b);
         e.add();
         e.pop();
 
         assert count == e.stack[0] ;
         assert count > 0;
         //  count := count - 1 ;
-        e.push1(0x1);
+        e.push(0x1);
         e.swap1();
         //  stack = [count, 1]
         e.sub();
         //  stack = [count - 1]
 
         //  prepare comparison count > 0. count is at the top
-        e.push1(0x0);
+        e.push(0x0);
         e.dup2();
         //  stack = [count - 1, 0, count - 1]
         //  compute stack[0] > stack[1]
