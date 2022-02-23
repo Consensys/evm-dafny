@@ -13,21 +13,23 @@
  */
 
 include "NonNativeTypes.dfy"
+include "mini-evm-with-gas.dfy"
 
 /**
- *  Not used yet.
+ *  High-level instructions.
  */
 module EVMInst {
 
-    import opened NonNativeTypes
+    import opened NonNativeTypes 
 
-    type EVMStack = seq<uint256>
+    // type EVMStack = seq<uint256>
 
-    method push1(s: EVMStack, v: uint256) returns (s': EVMStack)
+    // method push1(s: EVMStack, v: uint256) returns (s': EVMStack)
 
-    method pop(s: EVMStack, v: uint256) returns (s': EVMStack)
+    // method pop(s: EVMStack, v: uint256) returns (s': EVMStack)
 
-    method add(s: EVMStack) returns (s': EVMStack)
+    // method add(s: EVMStack) returns (s': EVMStack)
+    // method incr(e: EVM, )
 
 
 }
