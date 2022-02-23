@@ -5,11 +5,11 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 error=0
-processeddirs=0
+# processeddirs=0
 
 mydirs=()
 mydirsstatus=()
-
+ 
 # help and usage
 help()
 {
@@ -35,17 +35,18 @@ fi
 
 echo "Processing " $1
 LOG_FILE=$1/verif-`date +'%Y-%m-%d-%H:%M:%S'`.log
-./verifyAll.sh $1 | tee $LOG_FILE
+./verifyAll.sh $1 
 if [ $? -eq 0 ] # check if errors
 then
-  echo -e "${GREEN}No errors in directory $dir${NC}"
+  echo -e "${GREEN}No errors in directory $1${NC}"
 else
-  echo -e "${RED}Some errors occured in directory $dir${NC}"
+  echo -e "${RED}Some errors occured in directory $1${NC}"
   error=$((error + 1))
 fi
 
 # The list of dirs 
 listofdirs=`find $1 -maxdepth 1 -mindepth 1 -type d`
+
 # listofdirs=`find $1 -maxdepth 1 -mindepth 1 -type d -printf '%p\n'`
 for dir in $listofdirs
 do
@@ -65,15 +66,15 @@ done
 
 if [ $error -ne 0 ]
 then
-  echo -e "${RED}Some directories [$error/$processeddirs] has(ve) errors :-("
+  echo -e "${RED}Some directories [$error] has(ve) errors :-("
   for i in ${!mydirs[@]}; do
-  if [ ${mydirsstatus[$i]} -ne 1 ]
-  then
-    echo -e "${RED}[FAIL] ${mydirs[$i]} has some errors :-(${NC}"
-  else 
-     echo -e "${GREEN}[OK] ${mydirs[$i]}${NC}" 
-  fi
-done
+    if [ ${mydirsstatus[$i]} -ne 1 ]
+    then
+      echo -e "${RED}[FAIL] ${mydirs[$i]} has some errors :-(${NC}"
+    else 
+      echo -e "${GREEN}[OK] ${mydirs[$i]}${NC}" 
+    fi
+  done
   exit 1
 else 
   echo -e "${GREEN}No errors in any dirs! Great job.${NC}"
