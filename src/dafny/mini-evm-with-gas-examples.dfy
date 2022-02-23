@@ -410,6 +410,77 @@ method foo3(c: uint256, e: EVM)
 }
 
 /**
+ *  Pass parameter on stack
+ */
+method foo4(e: EVM) 
+    requires |e.stack| > 0 
+    requires e.gas as nat >= 2 + 10 * e.stack[0] as nat 
+    ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0])
+    ensures e.stack[1..] == old(e.stack[1..])
+
+    modifies e
+{
+    //  original algorithm variables become verification/ghost variable 
+    ghost var i := 0;
+    ghost var c := e.stack[0];
+    ghost var c' := e.stack[0];
+    // e.push1(c);
+    assert e.stack[0] == c' == c;
+
+    //  push i
+    e.push1(0x00); 
+    //  [i, c' , -]
+    ghost var oldS := e.stack[2..];
+
+    while e.stack[1] > 0
+        invariant |e.stack| > 1
+        //  locate original variables in the stack
+        invariant c' == e.stack[1]
+        invariant i == e.stack[0]
+        invariant e.gas >= 1 + 10 * c'
+        invariant e.stack[2..] == oldS
+        invariant c' as nat + i as nat == c as nat  
+    {
+        // assume e.stack[2..] == oldS;
+        //  [i, c', -]
+        i := i + 1;
+        //  compute i + 1
+        // e.push1(0x01);
+        // assert e.stack[3..] == oldS;
+        // e.add();
+        e.incr(0, 0x01);
+        e.swap1(); 
+        e.pop();
+        //  [i + 1, c', -]
+        //  i + 1 is at top of the stack 
+        assert e.stack[2..] == oldS;
+        c' := c' - 1;
+        //  compute c' update on the stack
+        e.swap1();
+        //  [ c', i, -] 
+        //  c' is at top of stack
+        e.push1(0x1);
+        assert e.stack[3..] == oldS; 
+        e.swap1();
+        e.sub();
+        //  [ c' - 1, i + 1, -]
+        //  e.stack[0] should contain c'
+        assert e.stack[0] == c';
+        e.swap1();
+        //  [ i + 1, c' - 1, -]
+        assert e.stack[2..] == oldS;
+    }
+    e.pop();
+}
+
+lemma foobar(xa: seq<uint256>)
+    requires |xa| > 0
+    ensures old(xa)[1..] == old(xa[1..])
+{
+    
+}
+
+/**
  *  Functional spec of foo
  */
  function fooSpec(c: uint256) : uint256
