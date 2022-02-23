@@ -360,9 +360,8 @@ method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
         assert e.stack[0] == c';
         e.swap1();
     }
-    
-
 }
+
 /**
  *  Compute c in a loop.
  */
@@ -488,4 +487,18 @@ lemma foobar(xa: seq<uint256>)
     c
  }
 
+method main101(e: EVM, e2: EVM) 
+    // requires |e.stack| > 0  
+    requires e.gas as nat >= 3
+    // ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0])
+    // ensures e.stack[1..] == old(e.stack[1..])
 
+    modifies e
+{
+    e.push1(0x01);
+    e.push1(0x02);
+    e.add();
+
+    
+    assert e.stack[0] == 3;
+}
