@@ -12,13 +12,15 @@
  * under the License.
  */
 
-include "./evmir-types.dfy"
-include "./evmir-semantics.dfy"
+include "./evm-seq.dfy"
+include "./evmir.dfy"
+include "./evm.dfy"
 
-module EVMIRTests {
+module EVMIRTests { 
 
-import opened EVMIRTypes
-import opened EVMIRSemantics
+    import opened EVMSeq
+    import opened EVMIR
+    import opened EVM 
 
     //  Tests
 

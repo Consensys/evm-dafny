@@ -12,23 +12,30 @@
  * under the License.
  */
 
-include "./evmir-types.dfy"
-include "./evmir-semantics.dfy"
+include "./evm-seq.dfy"
+include "./evmir.dfy"
+include "./evm.dfy"
+include "../utils/Helpers.dfy"
 
 module EVMIRRefinement {
 
-    import opened EVMIRTypes
-    import opened EVMIRSemantics
+    import opened EVMSeq
+    import opened EVMIR
+    import opened EVM 
+    import opened Helpers
    
+    //  Warm up proof
+
     /**
-     *  Translation proof.
-     *  Assume two programs, a loop 
-     *
-     *  while(c, b)
-     *  jumpi(!c, [b, jump[]])
+     *  while(c, body)
+     *  translates to:
+     *  a1: jumpi(!c, end)
+     *  a2: body  
+     *  a3: jump a1
+     *  end: 
      *
      */
-    lemma foo202<S>(i: EVMInst, cond: S -> bool, n: nat, s: S)
+    lemma singleLoop<S>(i: EVMInst, cond: S -> bool, n: nat, s: S)
         ensures runEVMIR([While(cond, i)], s, n) ==
             runEVM(
                 1,
@@ -41,30 +48,36 @@ module EVMIRRefinement {
                 3 * n).0
     {
         if n == 0 {
-            //  
+            //  state should be the same
         } else if cond(s) {
+            //  For convenience and clarity, store program in a var 
             var p := map[
                         1 := Jumpi(negF(cond), 0),
                         2 := AInst(i),
                         3 := Jump(1)
                     ];
-
+            //  verified calculations. Unfold one round of jump program
             calc == {
                 runEVM(1, p, s, 3 * n);
-                { assert 1 in p; assert !negF(cond)(s); }
                 runEVM(1 + 1, p, s, 3 * n - 1);
                 runEVM(2, p, s, 3 * n - 1);
 
                 runEVM(3, p, runInst(i, s), 3 * n - 2 );
                 runEVM(1, p, runInst(i, s), 3 * n - 3);
+                //  after one iteration, n - 1 remaining from new state after body
                 runEVM(1, p, runInst(i, s), 3 * (n - 1));
             }
+            //  Because body of while and jump progs are the same, theh reach the same
+            //  state after one iteration of the body.
             calc == {
                 runEVMIR([While(cond, i)], s, n);
                 runEVMIR([While(cond, i)], runInst(i, s) , n - 1);
             }
-            foo202(i, cond, n - 1, runInst(i, s));
+            //  And by induction, the n - 1 remaining steps compute the same
+            //  result.
+            singleLoop(i, cond, n - 1, runInst(i, s));
         } else {
+            //  state should be the same too.
             assert !cond(s);
         }
     }
