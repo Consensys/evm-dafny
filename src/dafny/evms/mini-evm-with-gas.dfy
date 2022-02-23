@@ -37,29 +37,33 @@ class EVM {
     /** The gas left in the EVM.  */
     var gas: uint256
 
+    /** Enable/disable gas check. */
+    const checkGas: bool
+
     /** Init the VM. */
-    constructor (g: uint256) 
+    constructor (g: uint256, check: bool) 
         ensures stack == []
         ensures gas == g 
     {
         stack := []; 
         gas := g;
+        checkGas := check;
     }
 
     /** 
      *  PUSH1 opcode.
      */
     method push1(v: uint256) 
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| + 1
         ensures stack == [v] + old(stack)
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
         stack := [v] + stack;
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     /**
@@ -67,16 +71,16 @@ class EVM {
      */
     method pop() 
         requires |stack| > 0 
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack == old(stack[1..])
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
         stack := stack[1..];
-        gas := gas - 1; 
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     /**
@@ -84,18 +88,18 @@ class EVM {
      */
     method swap1()  
         requires |stack| >= 2
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)|
         ensures stack[0] == old(stack[1])
         ensures stack[1] == old(stack[0])
         ensures stack[2..] == old(stack[2..])
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
         stack := [stack[1]] + [stack[0]] + stack[2..];
-        gas := gas  - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
 
@@ -105,17 +109,17 @@ class EVM {
     method add()  
         requires |stack| >= 2
         requires stack[0] as nat + stack[1] as nat <= MAX_UINT256
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack[0] == old(stack)[0] + old(stack)[1]
         ensures stack[1..] == old(stack[2..])
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
         stack := [stack[0] + stack[1]] + stack[2..];
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     /**
@@ -125,17 +129,18 @@ class EVM {
     method subR()  
         requires |stack| >= 2
         requires stack[1] as nat - stack[0] as nat >= 0
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack[0] == old(stack)[1] - old(stack)[0]
         ensures stack[1..] == old(stack)[2..]
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
+        // modifies if checkGas then {`stack, `gas} else {this`stack} 
     {
         stack := [stack[1] - stack[0]] + stack[2..];
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     /**
@@ -145,17 +150,17 @@ class EVM {
     method sub()  
         requires |stack| >= 2
         requires stack[0] as nat - stack[1] as nat >= 0
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack[0] == old(stack)[0] - old(stack)[1]
         ensures stack[1..] == old(stack)[2..]
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas 
     {
         stack := [stack[0] - stack[1]] + stack[2..];
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     /**
@@ -163,16 +168,16 @@ class EVM {
      */
     method dup2()  
         requires |stack| >= 2
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| + 1
         ensures stack == [old(stack)[1]] + old(stack)
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
         stack := [stack[1]] + stack;
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     /**
@@ -183,16 +188,16 @@ class EVM {
     method dup(i: nat)
         requires 0 <= i <= 15  
         requires |stack| > i as nat
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| + 1
         ensures stack == [old(stack)[i]] + old(stack)
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
         stack := [stack[i]] + stack;
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
 
@@ -201,11 +206,11 @@ class EVM {
      */
     method gt()  
         requires |stack| >= 2
-        requires gas >= 1
+        requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack == [if (old(stack)[0] > old(stack)[1]) then 1 else 0] + old(stack)[2..]
-        ensures gas == old(gas) - 1
+        ensures !checkGas || gas == old(gas) - 1
 
         modifies `stack, `gas
     {
@@ -214,7 +219,7 @@ class EVM {
         } else {
             stack := [0] + stack[2..];
         }
-        gas := gas - 1;
+        gas := gas - (if checkGas then 1 else 0);
     }
 
     //  Macros
@@ -230,14 +235,14 @@ class EVM {
      */
     method incr(i: nat, v: uint256)
         requires 0 <= i <= 15
-        requires gas >= 3
+        requires !checkGas || gas >= 3
         requires |stack| > i as nat
         requires stack[i] as nat + v as nat <= MAX_UINT256 
 
         ensures |stack| == |old(stack)| + 1
         ensures stack == [old(stack[i]) + v] + old(stack)
         ensures stack[1..] == old(stack)
-        ensures gas == old(gas) - 3
+        ensures !checkGas || gas == old(gas) - 3
 
         modifies `stack, `gas
     {
