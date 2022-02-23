@@ -1,6 +1,6 @@
 
-include "NativeTypes.dfy"
-include "NonNativeTypes.dfy"
+include "../utils/NativeTypes.dfy"
+include "../utils/NonNativeTypes.dfy"
 
 import opened NativeTypes
 import opened NonNativeTypes

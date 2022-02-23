@@ -13,7 +13,10 @@
  */
 
 
-include "NonNativeTypes.dfy"
+include "../utils/NativeTypes.dfy"
+include "../utils/NonNativeTypes.dfy"
+
+import opened NativeTypes
 import opened NonNativeTypes
 
 /** The type for the EVM stack. 
@@ -31,23 +34,32 @@ class EVM {
     /** The stack of the VM. */
     var stack: EVMStack
 
+    /** The gas left in the EVM.  */
+    var gas: uint256
+
     /** Init the VM. */
-    constructor () 
+    constructor (g: uint256) 
         ensures stack == []
+        ensures gas == g 
     {
         stack := []; 
+        gas := g;
     }
 
     /** 
      *  PUSH1 opcode.
      */
     method push1(v: uint256) 
+        requires gas >= 1
+
         ensures |stack| == |old(stack)| + 1
         ensures stack == [v] + old(stack)
+        ensures gas == old(gas) - 1
 
-        modifies `stack
+        modifies `stack, `gas
     {
         stack := [v] + stack;
+        gas := gas - 1;
     }
 
     /**
@@ -55,13 +67,16 @@ class EVM {
      */
     method pop() 
         requires |stack| > 0 
+        requires gas >= 1
 
         ensures |stack| == |old(stack)| - 1
-        ensures stack == old(stack)[1..]
+        ensures stack == old(stack[1..])
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas
     {
-        stack := stack[1..]; 
+        stack := stack[1..];
+        gas := gas - 1; 
     }
 
     /**
@@ -69,15 +84,18 @@ class EVM {
      */
     method swap1()  
         requires |stack| >= 2
+        requires gas >= 1
 
         ensures |stack| == |old(stack)|
-        ensures stack[0] == old(stack)[1]
-        ensures stack[1] == old(stack)[0]
-        ensures stack[2..] == old(stack)[2..]
+        ensures stack[0] == old(stack[1])
+        ensures stack[1] == old(stack[0])
+        ensures stack[2..] == old(stack[2..])
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas
     {
         stack := [stack[1]] + [stack[0]] + stack[2..];
+        gas := gas  - 1;
     }
 
 
@@ -87,14 +105,17 @@ class EVM {
     method add()  
         requires |stack| >= 2
         requires stack[0] as nat + stack[1] as nat <= MAX_UINT256
+        requires gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack[0] == old(stack)[0] + old(stack)[1]
-        ensures stack[1..] == old(stack)[2..]
+        ensures stack[1..] == old(stack[2..])
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas
     {
         stack := [stack[0] + stack[1]] + stack[2..];
+        gas := gas - 1;
     }
 
     /**
@@ -104,14 +125,17 @@ class EVM {
     method subR()  
         requires |stack| >= 2
         requires stack[1] as nat - stack[0] as nat >= 0
+        requires gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack[0] == old(stack)[1] - old(stack)[0]
         ensures stack[1..] == old(stack)[2..]
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas
     {
         stack := [stack[1] - stack[0]] + stack[2..];
+        gas := gas - 1;
     }
 
     /**
@@ -121,14 +145,17 @@ class EVM {
     method sub()  
         requires |stack| >= 2
         requires stack[0] as nat - stack[1] as nat >= 0
+        requires gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack[0] == old(stack)[0] - old(stack)[1]
         ensures stack[1..] == old(stack)[2..]
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas 
     {
         stack := [stack[0] - stack[1]] + stack[2..];
+        gas := gas - 1;
     }
 
     /**
@@ -136,31 +163,92 @@ class EVM {
      */
     method dup2()  
         requires |stack| >= 2
+        requires gas >= 1
 
         ensures |stack| == |old(stack)| + 1
         ensures stack == [old(stack)[1]] + old(stack)
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas
     {
         stack := [stack[1]] + stack;
+        gas := gas - 1;
     }
+
+    /**
+     *  DUPi opcode. Duplicate the i-th element of the stack.
+     *  
+     *  @param  i   The index of the element.
+     */
+    method dup(i: nat)
+        requires 0 <= i <= 15  
+        requires |stack| > i as nat
+        requires gas >= 1
+
+        ensures |stack| == |old(stack)| + 1
+        ensures stack == [old(stack)[i]] + old(stack)
+        ensures gas == old(gas) - 1
+
+        modifies `stack, `gas
+    {
+        stack := [stack[i]] + stack;
+        gas := gas - 1;
+    }
+
 
     /**
      *  GT opcode. Compute stack[0] > stack[1] and store result. 
      */
     method gt()  
         requires |stack| >= 2
+        requires gas >= 1
 
         ensures |stack| == |old(stack)| - 1
         ensures stack == [if (old(stack)[0] > old(stack)[1]) then 1 else 0] + old(stack)[2..]
+        ensures gas == old(gas) - 1
 
-        modifies `stack 
+        modifies `stack, `gas
     {
         if (stack[0] > stack[1]) {
             stack := [1] + stack[2..];
         } else {
             stack := [0] + stack[2..];
         }
+        gas := gas - 1;
+    }
+
+    //  Macros
+
+    /** Increment a counter. 
+     *  
+     *  @param  i   An index 0 = top.
+     *  @param  v   Value to add to stack[i]
+     *
+     *  @returns    
+     *  Counter must be one of the last 16 items pushed on the stack.
+     *  
+     */
+    method incr(i: nat, v: uint256)
+        requires 0 <= i <= 15
+        requires gas >= 3
+        requires |stack| > i as nat
+        requires stack[i] as nat + v as nat <= MAX_UINT256 
+
+        ensures |stack| == |old(stack)| + 1
+        ensures stack == [old(stack[i]) + v] + old(stack)
+        ensures stack[1..] == old(stack)
+        ensures gas == old(gas) - 3
+
+        modifies `stack, `gas
+    {
+        //  Stack is [x_0, x_1, ..., x _i] + xs
+        //  put element i on top of stack
+        dup(i);
+        //  Stack is [x_i, x_0, x_1, ..., x _i] + xs
+        push1(v);
+        // Stack is [v, x_i, x_0, x_1, ..., x _i] + xs
+        add();
+        // Stack is [x_i + v, x_0, x_1, ..., x _i] + xs
     }
 
 }

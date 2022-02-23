@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "./mini-evm-with-gas.dfy" 
+include "../evms/mini-evm-with-gas.dfy"   
 
 /**
  *   A very simple program manipulating the stack.

@@ -13,7 +13,7 @@
  */
 
 
-include "NonNativeTypes.dfy"
+include "../utils/NonNativeTypes.dfy"
 import opened NonNativeTypes
 
 /** The type for the EVM stack. 
@@ -23,12 +23,8 @@ import opened NonNativeTypes
  */
 type EVMStack = seq<uint256>
 
-datatype EVMInst = PUSH1(v: uint256) | POP | ADD 
-type EVMProg = seq<EVMInst>
-
 /** 
  *  Provide an initialiased EVM with a small instruction set.
- *  @note   Early experiments.
  */
 class EVM {
 
@@ -165,32 +161,6 @@ class EVM {
         } else {
             stack := [0] + stack[2..];
         }
-    }
-
-    method exec(i: EVMInst)
-        modifies `stack
-    {
-        match i 
-            case PUSH1(v) => 
-                push1(v);
-            case POP => 
-                assume |stack| > 0 ; 
-                pop();
-            case ADD => 
-                assume |stack| > 1 ; 
-                assume stack[0] as nat + stack[1] as nat <= MAX_UINT256; 
-                add();
-    } 
-
-    method run(xp: EVMProg)
-        modifies `stack
-
-        decreases xp 
-    {
-        match |xp| > 0  
-            case false => assert(true) ;
-            case true => exec(xp[0]); run(xp[1..]);
-                
     }
 
 }
