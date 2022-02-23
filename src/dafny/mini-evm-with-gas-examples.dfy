@@ -444,23 +444,26 @@ method foo4(e: EVM)
         //  [i, c', -]
         i := i + 1;
         //  compute i + 1
-        // e.push1(0x01);
-        // assert e.stack[3..] == oldS;
-        // e.add();
         e.incr(0, 0x01);
+        //  [i + 1, i, c', -]
+        // assert e.stack[3..] == oldS;
         e.swap1(); 
+        //  [i, i + 1, c', -]
         e.pop();
         //  [i + 1, c', -]
         //  i + 1 is at top of the stack 
         assert e.stack[2..] == oldS;
-        c' := c' - 1;
         //  compute c' update on the stack
         e.swap1();
+        assert e.stack[0] == c';
+        c' := c' - 1;
+        assert e.stack[0] == c' + 1;
         //  [ c', i, -] 
         //  c' is at top of stack
         e.push1(0x1);
         assert e.stack[3..] == oldS; 
         e.swap1();
+        assume e.stack[0] >= e.stack[1];
         e.sub();
         //  [ c' - 1, i + 1, -]
         //  e.stack[0] should contain c'
