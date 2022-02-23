@@ -12,20 +12,20 @@
  * under the License.
  */
 
-include "../evms/mini-evm.dfy"  
+include "../evms/mini-evm-with-gas.dfy"  
 
 /**
  *   A very simple program manipulating stack.
  */
 method main1() 
 {
-    var e := new EVM();
+    var e := new EVM(0, false);
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
     ghost var g := e.stack;
 
-    e.push1(a);
+    e.push1(a); 
     e.push1(b);
     e.add();
 
@@ -40,7 +40,7 @@ method main1()
  */
 method main2(c: uint256) 
 {
-    var e := new EVM();
+    var e := new EVM(0, false);
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
     var count: uint256 := c;
@@ -67,7 +67,7 @@ method main2(c: uint256)
  */
 method main3(c: uint256) 
 {
-    var e := new EVM();
+    var e := new EVM(0, false);
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
@@ -102,7 +102,7 @@ method main3(c: uint256)
  */
 method main4(c: uint256)  
 {
-    var e := new EVM();
+    var e := new EVM(0, false);
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
@@ -137,7 +137,7 @@ method main4(c: uint256)
  */
 method main5(c: uint256)  
 {
-    var e := new EVM();
+    var e := new EVM(0, false);
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 
@@ -211,7 +211,7 @@ method main5(c: uint256)
  */
 method main6(c: uint256, g: uint256)  
 {
-    var e := new EVM();
+    var e := new EVM(0, false);
     var a: uint256 := 0x01;
     var b : uint256 := 0x02;
 

@@ -44,6 +44,7 @@ class EVM {
     constructor (g: uint256, check: bool) 
         ensures stack == []
         ensures gas == g 
+        ensures checkGas == check
     {
         stack := []; 
         gas := g;
