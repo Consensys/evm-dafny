@@ -15,7 +15,7 @@
 include "./mini-evm-with-gas.dfy" 
 
 /**
- *   A very simple program manipulating stack.
+ *   A very simple program manipulating the stack.
  */
 method main1(g: uint256) 
     requires g >= 4
@@ -345,6 +345,7 @@ method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
         assume e.gas >= 2;
         e.push1(0x01);
         e.add();
+
         //  i + 1 is at top opf the stack 
 
         c' := c' - 1;
