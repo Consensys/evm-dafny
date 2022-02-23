@@ -25,7 +25,7 @@ module EVMIR {
     /** Programs with while loops/ifs. */
     datatype EVMIR<!S> = 
         |   While(cond: S -> bool, body: EVMInst)
-        // |   IfElse(cond: S -> bool, ifBody: EVMInst, elseBody: EVMInst)
+        |   IfElse(cond: S -> bool, ifBody: EVMInst, elseBody: EVMInst)
 
     /**
      *  Run n steps of the program.
@@ -42,7 +42,10 @@ module EVMIR {
         else 
             match p[0] 
                 case While(c, b) => 
-                    if c(s) then runEVMIR(p, runInst(b, s) , n - 1)
-                    else s
+                    if c(s) then runEVMIR(p, runInst(b, s), n - 1)
+                    else runEVMIR(p[1..], s , n - 1)
+                case IfElse(c, b1, b2) => 
+                    if c(s) then runEVMIR(p, runInst(b1, s), n - 1)
+                    else  runEVMIR(p, runInst(b2, s), n - 1)
     }
 }
