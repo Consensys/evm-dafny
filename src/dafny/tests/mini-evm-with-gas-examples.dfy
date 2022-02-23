@@ -220,7 +220,7 @@ method main5(c: uint256, g: uint256)
 }
 
 /**
- * Use gas cost.
+ *  Enable gas cost.
  */
 method main6(c: uint256, g: uint256) 
     requires g as nat >= 5 + 11 * c as nat  
@@ -331,7 +331,7 @@ method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
     assert e.stack[0] == c == c';
 
     //  push i
-    assume e.gas >= 1;
+    assert e.gas >= 1;
     e.push(0x0);
 
     while e.stack[1] > 0
