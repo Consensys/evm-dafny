@@ -28,6 +28,7 @@ type EVMStack = seq<uint256>
 
 /** 
  *  Provide an initialiased EVM with a small instruction set.
+ *  Gas can be enabled or disabled.
  */
 class EVM {
 
@@ -40,7 +41,11 @@ class EVM {
     /** Enable/disable gas check. */
     const checkGas: bool
 
-    /** Init the VM. */
+    /** Init the VM. 
+     *  
+     *  @param  g       Initial gas in the EVM.add
+     *  @param  check   Whether the machine requires gas or not.
+     */
     constructor (g: uint256, check: bool) 
         ensures stack == []
         ensures gas == g 
@@ -52,9 +57,14 @@ class EVM {
     }
 
     /** 
-     *  PUSH1 opcode.
+     *  PUSH opcode.
+     *  This is code for push32 but as other pushes 
+     *  are syntactic sugar we implement only this one.
+     *
+     *  @param  v   The value to push on the stack.
+     *  @return     Add `v` to the top of the stack.
      */
-    method push1(v: uint256) 
+    method push(v: uint256) 
         requires !checkGas || gas >= 1
 
         ensures |stack| == |old(stack)| + 1
@@ -69,6 +79,7 @@ class EVM {
 
     /**
      *  POP opcode.
+     *  @return     The tail of the stack.
      */
     method pop() 
         requires |stack| > 0 
@@ -106,6 +117,9 @@ class EVM {
 
     /**
      *  ADD opcode.
+     *  
+     *  Assume stack = [a,b] + xr
+     *  @returns [a + b] + xr
      */
     method add()  
         requires |stack| >= 2
@@ -147,6 +161,9 @@ class EVM {
     /**
      *  SUB opcode. compute stack[0] - stack[1], which is the
      *  real semantics of sub 
+     *
+     *  Assume stack = [a, b] + xr
+     *  @returns [a - b] + xr
      */
     method sub()  
         requires |stack| >= 2
@@ -185,6 +202,8 @@ class EVM {
      *  DUPi opcode. Duplicate the i-th element of the stack.
      *  
      *  @param  i   The index of the element.
+     *  Assume  stack
+     *  @returns [stack[i]] + stack
      */
     method dup(i: nat)
         requires 0 <= i <= 15  
@@ -204,6 +223,8 @@ class EVM {
 
     /**
      *  GT opcode. Compute stack[0] > stack[1] and store result. 
+     *
+     *  
      */
     method gt()  
         requires |stack| >= 2
@@ -215,11 +236,7 @@ class EVM {
 
         modifies `stack, `gas
     {
-        if (stack[0] > stack[1]) {
-            stack := [1] + stack[2..];
-        } else {
-            stack := [0] + stack[2..];
-        }
+        stack := (if (stack[0] > stack[1]) then [1] else [0]) + stack[2..];
         gas := gas - (if checkGas then 1 else 0);
     }
 
@@ -251,7 +268,7 @@ class EVM {
         //  put element i on top of stack
         dup(i);
         //  Stack is [x_i, x_0, x_1, ..., x _i] + xs
-        push1(v);
+        push(v);
         // Stack is [v, x_i, x_0, x_1, ..., x _i] + xs
         add();
         // Stack is [x_i + v, x_0, x_1, ..., x _i] + xs
