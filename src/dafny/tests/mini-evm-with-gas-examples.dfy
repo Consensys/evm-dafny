@@ -319,7 +319,7 @@ method foo(c: uint256) returns (i: uint256)
  *  Compute c in a loop.
  */
 method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
-    requires g >= 1 
+    requires g as nat >= 2 + 7 * c as nat  
     ensures i == c
 {
     i := 0;
@@ -339,10 +339,10 @@ method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
         invariant c' == e.stack[1]
         invariant i == e.stack[0]
         invariant c' as nat + i as nat == c as nat  
+        invariant e.gas >= 7 * c'
     {
         i := i + 1;
         //  compute i + 1
-        assume e.gas >= 2;
         e.push1(0x01);
         e.add();
 
@@ -350,7 +350,6 @@ method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
 
         c' := c' - 1;
         //  compute c' update on the stack
-        assume e.gas >= 5;
         e.swap1();
         //  c' is at top of stack
         e.push1(0x1);
