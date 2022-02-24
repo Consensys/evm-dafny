@@ -17,7 +17,9 @@
  */
 module EVMSeq {
 
-    /** Basic instruction in EVM. Termninating. */
+    /** Basic instruction in EVM. Termninating. 
+     *  This can stand for any linear sequence of instructions without jumps.
+     */
     datatype EVMInst<!S> = 
         Inst(i : S -> S)
     
