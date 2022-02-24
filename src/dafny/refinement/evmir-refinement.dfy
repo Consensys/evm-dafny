@@ -17,6 +17,9 @@ include "./evmir.dfy"
 include "./evm.dfy"
 include "../utils/Helpers.dfy"
 
+/**
+ *  Provides proofs that EVM code simulates some corresponding EVMIR code.
+ */
 module EVMIRRefinement {
 
     import opened EVMSeq
@@ -24,12 +27,15 @@ module EVMIRRefinement {
     import opened EVM 
     import opened Helpers
    
-    //  Warm up proof
+    //  Warm up proofs
+
     /**
-     *  Block of instructions.
+     *  Block of instructions. Simulation proof.
+     *
+     *  @returns    The (minimum) number of steps in the EVMIR to simulate n steps in EVM. 
      */
-    lemma singleBlock<S>(i: EVMInst, cond: S -> bool, n: nat, s: S)
-        ensures runEVMIR([Block(i)], s, n) ==
+    lemma singleBlockSim<S>(i: EVMInst, cond: S -> bool, n: nat, s: S) returns (k: nat)
+        ensures k <= n && runEVMIR([Block(i)], s, k) ==
             runEVM(
                 1,
                 map[
@@ -38,123 +44,70 @@ module EVMIRRefinement {
                 s, 
                 n).0
     {
-        //  Thanks Dafny
+        k := n;
     }
 
     /**
-     *  while(c, body)
-     *  translates to:
-     *  a1: jumpi(!c, end)
-     *  a2: body  
-     *  a3: jump a1
-     *  end: 
+     *  Single While loop.
      *
+     *  @returns    The (minimum) number of steps in the EVMIR to simulate n steps in EVM. 
      */
-    lemma singleLoop<S>(i: EVMInst, cond: S -> bool, n: nat, s: S)
-        ensures runEVMIR([While(cond, i)], s, n) ==
+    lemma singleWhileSim<S>(i: EVMInst, cond: S -> bool, n: nat, s: S) returns (k: nat)
+         ensures k <= n && runEVMIR([While(cond, Block(i))], s, k) ==
             runEVM(
                 1,
                 map[
-                    1 := Jumpi(negF(cond), 0),
+                    1 := Jumpi(negF(cond), 4),
                     2 := AInst(i),
                     3 := Jump(1)
                 ], 
                 s, 
-                3 * n).0
+                n).0
     {
         //  For convenience and clarity, store program in a var 
         var p := map[
-                        1 := Jumpi(negF(cond), 0),
-                        2 := AInst(i),
-                        3 := Jump(1)
-                    ];
-        if n == 0 {
-            //  state should be the same
-            assert runEVMIR([While(cond, i)], s, n) == s == runEVM(1, p, s, 3 * n).0;
-        } else if cond(s) {
-            //  verified calculations. Unfold one round of jump program
-            calc == {
-                runEVM(1, p, s, 3 * n);
-                runEVM(1 + 1, p, s, 3 * n - 1);
-                runEVM(2, p, s, 3 * n - 1);
-
-                runEVM(3, p, runInst(i, s), 3 * n - 2 );
-                runEVM(1, p, runInst(i, s), 3 * n - 3);
-                //  after one iteration, n - 1 remaining from new state after body
-                runEVM(1, p, runInst(i, s), 3 * (n - 1));
-            }
-            //  Because body of while and jump progs are the same, theh reach the same
-            //  state after one iteration of the body.
-            calc == {
-                runEVMIR([While(cond, i)], s, n);
-                runEVMIR([While(cond, i)], runInst(i, s) , n - 1);
-            }
-            //  And by induction, the n - 1 remaining steps compute the same
-            //  result.
-            singleLoop(i, cond, n - 1, runInst(i, s));
-        } else {
-            //  state should be the same too.
-            assert !cond(s);
-        }
-    }
-
-    /**
-     *  IfElse refinement proof.
-     */
-    lemma singleIfElse<S>(i1: EVMInst, i2: EVMInst, cond: S -> bool, n: nat, k: nat, s: S)
-        requires n >= 2 && k >= n + 3
-        ensures runEVMIR([IfElse(cond, i1, i2)], s, n) ==
-            runEVM(
-                1,
-                map[
                     1 := Jumpi(negF(cond), 4),
-                    2 := AInst(i1),
-                    3 := Jump(5),
-                    4 := AInst(i2)
-                ], 
-                s, 
-                k).0 
-    {
-        var p1 := [IfElse(cond, i1, i2)];
-        var p2 := map[
-                    1 := Jumpi(negF(cond), 4),
-                    2 := AInst(i1),
-                    3 := Jump(5),
-                    4 := AInst(i2)
+                    2 := AInst(i),
+                    3 := Jump(1)
                 ];
-        
-        if cond(s) {
-            calc == {
-                runEVMIR([IfElse(cond, i1, i2)], s, n);
-                runEVMIR([IfElse(cond, i1, i2)][1..], runInst(i1, s), n - 1); 
-                runEVMIR([], runInst(i1, s), n - 1); 
-                runInst(i1, s);
-            }
-            calc == {
-                runEVM(1, p2, s, k);
-                { assert !negF(cond)(s); }
-                runEVM(1 + 1 , p2, s, k - 1);
-                runEVM(3, p2, runInst(i1, s), k - 2);
-                runEVM(5, p2, runInst(i1, s), k - 1);
-                (runInst(i1, s), 0);
+        if n < 2 {
+            //  Only one step can be simulated so the instruction at pc is not executed.
+            k := 0;
+        } else if n < 3 {
+            //  Exactly two steps in the EVM. 
+            assert n == 2;
+            if cond(s) {
+                k := 1;
+            } else {
+                assert !cond(s);
+                k := 0;
             }
         } else {
-            assert !cond(s);
-            calc == {
-                runEVMIR([IfElse(cond, i1, i2)], s, n);
-                { assert !cond(s); }
-                runEVMIR([IfElse(cond, i1, i2)][1..], runInst(i2, s), n - 1); 
-                runEVMIR([], runInst(i2, s), n - 1); 
-                runInst(i2, s);
-            }
-            calc == {
-                runEVM(1, p2, s, k);
-                { assert negF(cond)(s); }
-                runEVM(4 , p2, s, k - 1);
-                runEVM(5, p2, runInst(i2, s), k - 2);
-                (runInst(i2, s), 0);
-            }
+            //  More than 2 steps in the EVM. So at least one iteration of the EVM body.
+            assert n > 2;
+            if cond(s) {
+                calc == {
+                    runEVM(1, p, s, n);
+                    runEVM(2, p, s, n - 1);
+                    runEVM(3, p, runInst(i, s), n - 2);
+                    runEVM(1, p, runInst(i, s), n - 3);
+                }
+                //  Because body of while and jump progs are the same, they reach the same
+                //  state after one iteration of the body.
+                calc == {
+                    runEVMIR([While(cond, Block(i))], s, n);
+                    runEVMIR([While(cond, Block(i))], runInst(i, s), n - 1);
+                }
+                //  And by induction, we can get a simulation for the n - 3 remaining steps compute the same
+                //  result.
+                var xk := singleWhileSim(i, cond, n - 3, runInst(i, s));
+                //  Overall we do the body of the loop once and then in xk steps simulate the rest.
+                k := 1 + xk;
+            } else {
+                //  Exit the loop.
+                assert !cond(s);
+                k := 1;
+            }    
         }
-    }
-    
+    }    
 }

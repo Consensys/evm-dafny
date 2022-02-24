@@ -40,7 +40,8 @@ module EVM {
                 case AInst(Inst(i)) => 
                     runEVM(pc + 1, p, i(s), n - 1)
                 case Jumpi(c, tgt) => 
-                    if !c(s) then runEVM(pc + 1, p, s, n - 1) else runEVM(tgt, p, s, n - 1)
+                    if !c(s) then runEVM(pc + 1, p, s, n - 1) 
+                    else runEVM(tgt, p, s, n - 1)
                 case Jump(tgt) => 
                     runEVM(tgt, p, s, n - 1) 
     }
