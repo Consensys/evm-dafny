@@ -45,7 +45,7 @@ module EVMIR {
                     if c(s) then runEVMIR(p, runInst(b, s), n - 1)
                     else runEVMIR(p[1..], s , n - 1)
                 case IfElse(c, b1, b2) => 
-                    if c(s) then runEVMIR(p, runInst(b1, s), n - 1)
-                    else  runEVMIR(p, runInst(b2, s), n - 1)
+                    if c(s) then runEVMIR(p[1..], runInst(b1, s), n - 1)
+                    else  runEVMIR(p[1..], runInst(b2, s), n - 1)
     }
 }

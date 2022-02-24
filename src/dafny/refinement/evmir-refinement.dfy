@@ -47,15 +47,16 @@ module EVMIRRefinement {
                 s, 
                 3 * n).0
     {
-        if n == 0 {
-            //  state should be the same
-        } else if cond(s) {
-            //  For convenience and clarity, store program in a var 
-            var p := map[
+        //  For convenience and clarity, store program in a var 
+        var p := map[
                         1 := Jumpi(negF(cond), 0),
                         2 := AInst(i),
                         3 := Jump(1)
                     ];
+        if n == 0 {
+            //  state should be the same
+            assert runEVMIR([While(cond, i)], s, n) == s == runEVM(1, p, s, 3 * n).0;
+        } else if cond(s) {
             //  verified calculations. Unfold one round of jump program
             calc == {
                 runEVM(1, p, s, 3 * n);
@@ -79,6 +80,65 @@ module EVMIRRefinement {
         } else {
             //  state should be the same too.
             assert !cond(s);
+        }
+    }
+
+    /**
+     *  IfElse refinement proof.
+     */
+    lemma singleIfElse<S>(i1: EVMInst, i2: EVMInst, cond: S -> bool, n: nat, k: nat, s: S)
+        requires n >= 2 && k >= n + 3
+        ensures runEVMIR([IfElse(cond, i1, i2)], s, n) ==
+            runEVM(
+                1,
+                map[
+                    1 := Jumpi(negF(cond), 4),
+                    2 := AInst(i1),
+                    3 := Jump(5),
+                    4 := AInst(i2)
+                ], 
+                s, 
+                k).0 
+    {
+        var p1 := [IfElse(cond, i1, i2)];
+        var p2 := map[
+                    1 := Jumpi(negF(cond), 4),
+                    2 := AInst(i1),
+                    3 := Jump(5),
+                    4 := AInst(i2)
+                ];
+        
+        if cond(s) {
+            calc == {
+                runEVMIR([IfElse(cond, i1, i2)], s, n);
+                runEVMIR([IfElse(cond, i1, i2)][1..], runInst(i1, s), n - 1); 
+                runEVMIR([], runInst(i1, s), n - 1); 
+                runInst(i1, s);
+            }
+            calc == {
+                runEVM(1, p2, s, k);
+                { assert !negF(cond)(s); }
+                runEVM(1 + 1 , p2, s, k - 1);
+                runEVM(3, p2, runInst(i1, s), k - 2);
+                runEVM(5, p2, runInst(i1, s), k - 1);
+                (runInst(i1, s), 0);
+            }
+        } else {
+            assert !cond(s);
+            calc == {
+                runEVMIR([IfElse(cond, i1, i2)], s, n);
+                { assert !cond(s); }
+                runEVMIR([IfElse(cond, i1, i2)][1..], runInst(i2, s), n - 1); 
+                runEVMIR([], runInst(i2, s), n - 1); 
+                runInst(i2, s);
+            }
+            calc == {
+                runEVM(1, p2, s, k);
+                { assert negF(cond)(s); }
+                runEVM(4 , p2, s, k - 1);
+                runEVM(5, p2, runInst(i2, s), k - 2);
+                (runInst(i2, s), 0);
+            }
         }
     }
     
