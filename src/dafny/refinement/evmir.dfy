@@ -22,9 +22,9 @@ module EVMIR {
 
     import opened EVMSeq
 
-    /** Programs with while loops/ifs. */
+    /** Programs with block of instructions, while loops/ifs. */
     datatype EVMIR<!S> = 
-        |   LinInst(i:EVMInst)
+        |   Block(i:EVMInst)
         |   While(cond: S -> bool, body: EVMInst)
         |   IfElse(cond: S -> bool, ifBody: EVMInst, elseBody: EVMInst)
 
@@ -42,7 +42,7 @@ module EVMIR {
             //  max number of steps reached or program has terminated. 
         else 
             match p[0] 
-                case LinInst(i) => runInst(i, s)
+                case Block(i) => runInst(i, s)
                 case While(c, b) => 
                     if c(s) then runEVMIR(p, runInst(b, s), n - 1)
                     else runEVMIR(p[1..], s , n - 1)

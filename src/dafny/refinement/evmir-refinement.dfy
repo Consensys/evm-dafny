@@ -25,6 +25,21 @@ module EVMIRRefinement {
     import opened Helpers
    
     //  Warm up proof
+    /**
+     *  Block of instructions.
+     */
+    lemma singleBlock<S>(i: EVMInst, cond: S -> bool, n: nat, s: S)
+        ensures runEVMIR([Block(i)], s, n) ==
+            runEVM(
+                1,
+                map[
+                    1 := AInst(i)
+                ], 
+                s, 
+                n).0
+    {
+        //  Thanks Dafny
+    }
 
     /**
      *  while(c, body)
