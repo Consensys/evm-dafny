@@ -48,7 +48,7 @@ module EVMIRSimulation {
     }
 
     /**
-     *  If Then Else Simulation proof.
+     *  If Then Else Simulation proof. Assume unique block in ifBody and ifElse.
      *
      *  @returns    The (minimum) number of steps in the EVMIR to simulate n steps in EVM. 
      */
@@ -115,7 +115,7 @@ module EVMIRSimulation {
     }
 
     /**
-     *  Single While loop.
+     *  Single While loop. Assume Unique block in loop body.
      *
      *  @returns    The (minimum) number of steps in the EVMIR to simulate n steps in EVM. 
      */
@@ -177,4 +177,7 @@ module EVMIRSimulation {
             }    
         }
     }    
+
+    //  Geenral proofs
+    //  For this we need to define a translation from EVM-IR to EVM
 }

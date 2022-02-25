@@ -26,10 +26,12 @@ module EVMIR {
     datatype EVMIR<!S> = 
         |   Block(i:EVMInst)
         |   While(cond: S -> bool, body: EVMIR)
-        |   IfElse(cond: S -> bool, ifBody: EVMInst, elseBody: EVMInst)
+        |   IfElse(cond: S -> bool, ifBody: EVMIR, elseBody: EVMIR)
 
     /**
      *  Run n steps of the program.
+     *  Interpretation of a subset of EVM-IR.
+     *
      *  @param  p   A program.
      *  @param  s   A state.
      *  @param  n   The number of steps to execute.
@@ -47,8 +49,34 @@ module EVMIR {
                     if c(s) then runEVMIR(p, runInst(b, s), n - 1)
                     else runEVMIR(p[1..], s , n - 1)
                 case While(c, b) => s   // Todo
-                case IfElse(c, b1, b2) => 
+                case IfElse(c, Block(b1), Block(b2)) => 
                     if c(s) then runEVMIR(p[1..], runInst(b1, s), n - 1)
                     else  runEVMIR(p[1..], runInst(b2, s), n - 1)
+                 case IfElse(c, _, _) =>  s   // Todo
+    }
+
+    /**
+     *  Interpretation of EVM-IR.
+     *
+     *  @note   In this interoretation a test fopr a condition costs 1.
+     */
+    function method runEVMIR2<S>(p: seq<EVMIR>, s: S, n: nat): (S, nat) 
+        ensures runEVMIR2(p, s, n).1 <= n 
+        ensures n > 0 && p != [] ==> runEVMIR2(p, s, n).1 < n
+        decreases n - 1
+    {   
+        if n == 0 || p == [] then (s, n) 
+            //  max number of steps reached or program has terminated. 
+        else 
+            match p[0] 
+                case Block(i) => (runInst(i, s), n - 1)
+                case While(c, b) => 
+                    if c(s) then 
+                        var (s', n') := runEVMIR2([b], s, n - 1);
+                        runEVMIR2(p, s', n - 1 - n')
+                    else runEVMIR2(p[1..], s , n - 1)
+                case IfElse(c, b1, b2) => 
+                    var (s', n') := if c(s) then runEVMIR2([b1], s, n - 1) else runEVMIR2([b2], s, n - 1);
+                    runEVMIR2(p[1..], s', n - 1 - n')
     }
 }
