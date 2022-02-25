@@ -73,7 +73,7 @@ module EVMIRSimulation {
                     4 := AInst(i2)
                 ];
         if n < 3 {
-            //  if less than 1 step, only evaluate condition whic takes no steps in EVM-IR
+            //  if less than 1 step, only evaluate condition which takes no steps in EVM-IR
             if n <= 1 {
                 k := 0 ;
             } else {
@@ -113,7 +113,6 @@ module EVMIRSimulation {
             }
         }
     }
-
 
     /**
      *  Single While loop.
@@ -178,6 +177,4 @@ module EVMIRSimulation {
             }    
         }
     }    
-
-
 }
