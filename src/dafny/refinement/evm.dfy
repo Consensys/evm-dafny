@@ -37,8 +37,8 @@ module EVM {
         else 
             //  Execute instruction at PC and increment PC accordingly
             match p[pc] 
-                case AInst(Inst(i)) => 
-                    runEVM(pc + 1, p, i(s), n - 1)
+                case AInst(i) => 
+                    runEVM(pc + 1, p, runInst(i, s), n - 1)
                 case Jumpi(c, tgt) => 
                     if !c(s) then runEVM(pc + 1, p, s, n - 1) 
                     else runEVM(tgt, p, s, n - 1)
