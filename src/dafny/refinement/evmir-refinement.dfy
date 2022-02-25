@@ -20,7 +20,7 @@ include "../utils/Helpers.dfy"
 /**
  *  Provides proofs that EVM code simulates some corresponding EVMIR code.
  */
-module EVMIRRefinement {
+module EVMIRSimulation {
 
     import opened EVMSeq
     import opened EVMIR
@@ -46,6 +46,74 @@ module EVMIRRefinement {
     {
         k := n;
     }
+
+    /**
+     *  If Then Else Simulation proof.
+     *
+     *  @returns    The (minimum) number of steps in the EVMIR to simulate n steps in EVM. 
+     */
+    lemma ifTheElseSim<S>(i1: EVMInst, i2: EVMInst, cond: S -> bool, n: nat, s: S) returns (k: nat)
+        // requires n > 2
+        ensures k <= n && runEVMIR([IfElse(cond, i1, i2)], s, k) ==  
+            runEVM(
+                1,
+                map[
+                    1 := Jumpi(negF(cond), 4),
+                    2 := AInst(i1),
+                    3 := Jump(5),
+                    4 := AInst(i2)
+                ], 
+                s, 
+                n).0
+    { 
+        var p := map[
+                    1 := Jumpi(negF(cond), 4),
+                    2 := AInst(i1),
+                    3 := Jump(5),
+                    4 := AInst(i2)
+                ];
+        if n < 3 {
+            //  if less than 1 step, only evaluate condition whic takes no steps in EVM-IR
+            if n <= 1 {
+                k := 0 ;
+            } else {
+                //  Evaluate condition and execute i1 or i2. One step in EVM-IR
+                k := 1;
+            }
+        } else {
+            if cond(s) {
+                //  Execute the ifBody
+                calc == {
+                    runEVM(1, p, s, n);
+                    runEVM(2, p, s, n - 1);
+                    runEVM(3, p, runInst(i1, s), n - 2);
+                    runEVM(5, p, runInst(i1, s), n - 3);
+                }
+                //  EVM-IR program simulates p in 2 steps
+                calc == {
+                    runEVMIR([IfElse(cond, i1, i2)], s, n);
+                    runEVMIR([], runInst(i1, s), n - 1);
+                    runInst(i1, s);
+                }
+                k := n - 2;
+            } else {
+                assert !cond(s);
+                calc == {
+                    runEVM(1, p, s, n);
+                    runEVM(4, p, s, n - 1);
+                    runEVM(5, p, runInst(i2, s), n - 2);
+                }
+                //  EVM-IR program simulates p in 2 steps
+                calc == {
+                    runEVMIR([IfElse(cond, i1, i2)], s, n);
+                    runEVMIR([], runInst(i2, s), n - 1);
+                    runInst(i2, s);
+                }
+                k := n - 2;
+            }
+        }
+    }
+
 
     /**
      *  Single While loop.
@@ -110,4 +178,6 @@ module EVMIRRefinement {
             }    
         }
     }    
+
+
 }
