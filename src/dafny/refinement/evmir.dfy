@@ -23,10 +23,10 @@ module EVMIR {
     import opened EVMSeq
 
     /** Programs with block of instructions, while loops/ifs. */
-    datatype EVMIR<!S> = 
+    datatype EVMIRProg<!S> =  
         |   Block(i:EVMInst)
-        |   While(cond: S -> bool, body: EVMIR)
-        |   IfElse(cond: S -> bool, ifBody: EVMIR, elseBody: EVMIR)
+        |   While(cond: S -> bool, body: EVMIRProg)
+        |   IfElse(cond: S -> bool, ifBody: EVMIRProg, elseBody: EVMIRProg) 
 
     /**
      *  Run n steps of the program.
@@ -37,7 +37,7 @@ module EVMIR {
      *  @param  n   The number of steps to execute.
      *  @returns    The state obtained after executing `n` steps of `p`. 
      */
-    function method runEVMIR<S>(p: seq<EVMIR>, s: S, n: nat): S 
+    function method runEVMIR<S>(p: seq<EVMIRProg>, s: S, n: nat): S 
         decreases n - 1
     {   
         if n == 0 || p == [] then s 
@@ -60,7 +60,7 @@ module EVMIR {
      *
      *  @note   In this interoretation a test fopr a condition costs 1.
      */
-    function method runEVMIR2<S>(p: seq<EVMIR>, s: S, n: nat): (S, nat) 
+    function method runEVMIR2<S>(p: seq<EVMIRProg>, s: S, n: nat): (S, nat) 
         ensures runEVMIR2(p, s, n).1 <= n 
         ensures n > 0 && p != [] ==> runEVMIR2(p, s, n).1 < n
         decreases n - 1
