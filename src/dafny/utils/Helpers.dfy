@@ -19,7 +19,7 @@
      *  @param  f   A boolean function with domain `S`.
      *  @return     not(f) i.e. the function negF: x => !f(x).
      */
-    function negF<S>(f: S -> bool): S -> bool 
+    function method negF<S>(f: S -> bool): S -> bool 
     { 
         x => !f(x) 
     }
