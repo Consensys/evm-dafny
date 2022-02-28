@@ -39,7 +39,7 @@ module EVMIRSimulation {
             runEVM(
                 1,
                 map[
-                    1 := AInst(i)
+                    1 := EVMProg.AInst(i)
                 ], 
                 s, 
                 n).0
@@ -54,23 +54,23 @@ module EVMIRSimulation {
      */
     lemma ifTheElseSim<S>(i1: EVMInst, i2: EVMInst, cond: S -> bool, n: nat, s: S) returns (k: nat)
         // requires n > 2
-        ensures k <= n && runEVMIR([IfElse(cond, i1, i2)], s, k) ==  
+        ensures k <= n && runEVMIR([IfElse(cond, Block(i1), Block(i2))], s, k) ==  
             runEVM(
                 1,
                 map[
-                    1 := Jumpi(negF(cond), 4),
-                    2 := AInst(i1),
-                    3 := Jump(5),
-                    4 := AInst(i2)
+                    1 := EVMProg.Jumpi(negF(cond), 4),
+                    2 := EVMProg.AInst(i1),
+                    3 := EVMProg.Jump(5),
+                    4 := EVMProg.AInst(i2)
                 ], 
                 s, 
                 n).0
     { 
         var p := map[
-                    1 := Jumpi(negF(cond), 4),
-                    2 := AInst(i1),
-                    3 := Jump(5),
-                    4 := AInst(i2)
+                    1 := EVMProg.Jumpi(negF(cond), 4),
+                    2 := EVMProg.AInst(i1),
+                    3 := EVMProg.Jump(5),
+                    4 := EVMProg.AInst(i2)
                 ];
         if n < 3 {
             //  if less than 1 step, only evaluate condition which takes no steps in EVM-IR
@@ -91,7 +91,7 @@ module EVMIRSimulation {
                 }
                 //  EVM-IR program simulates p in 2 steps
                 calc == {
-                    runEVMIR([IfElse(cond, i1, i2)], s, n);
+                    runEVMIR([IfElse(cond, Block(i1), Block(i2))], s, n);
                     runEVMIR([], runInst(i1, s), n - 1);
                     runInst(i1, s);
                 }
@@ -105,7 +105,7 @@ module EVMIRSimulation {
                 }
                 //  EVM-IR program simulates p in 2 steps
                 calc == {
-                    runEVMIR([IfElse(cond, i1, i2)], s, n);
+                    runEVMIR([IfElse(cond, Block(i1), Block(i2))], s, n);
                     runEVMIR([], runInst(i2, s), n - 1);
                     runInst(i2, s);
                 }
@@ -124,18 +124,18 @@ module EVMIRSimulation {
             runEVM(
                 1,
                 map[
-                    1 := Jumpi(negF(cond), 4),
-                    2 := AInst(i),
-                    3 := Jump(1)
+                    1 := EVMProg.Jumpi(negF(cond), 4),
+                    2 := EVMProg.AInst(i),
+                    3 := EVMProg.Jump(1)
                 ], 
                 s, 
                 n).0
     {
         //  For convenience and clarity, store program in a var 
         var p := map[
-                    1 := Jumpi(negF(cond), 4),
-                    2 := AInst(i),
-                    3 := Jump(1)
+                    1 := EVMProg.Jumpi(negF(cond), 4),
+                    2 := EVMProg.AInst(i),
+                    3 := EVMProg.Jump(1)
                 ];
         if n < 2 {
             //  Only one step can be simulated so the instruction at pc is not executed.
@@ -177,7 +177,4 @@ module EVMIRSimulation {
             }    
         }
     }    
-
-    //  Geenral proofs
-    //  For this we need to define a translation from EVM-IR to EVM
 }
