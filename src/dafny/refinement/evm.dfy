@@ -27,6 +27,16 @@ module EVM {
         |   Jump(tgt: nat)
 
     /**
+     *  EVM instructions.
+     *
+     *  @note   Jump values are relatove to pc the instruction is at.
+     */
+    datatype EVMProg2<!S> = 
+            AInst(i: EVMInst)
+        |   Jumpi(cond: S -> bool, tgt: int)    
+        |   Jump(tgt: int)
+
+    /**
      *  Semantics of EVM programs.
      */
     function method runEVM<S>(pc: nat, p: map<nat, EVMProg>, s: S, n: nat): (S, nat)
@@ -44,6 +54,36 @@ module EVM {
                     else runEVM(tgt, p, s, n - 1)
                 case Jump(tgt) => 
                     runEVM(tgt, p, s, n - 1) 
+    }
+
+    /**
+     *  A program is a sequence of EVM instructions.
+     *
+     *  @param  pc  (Current) PC
+     *  @param  p   The program to be executed.
+     *  @param  s   The (current) state.
+     *  @param  n   The maximum number of steps to be executed.
+     *  @returns    The state reached from `s` by executing at most `n` steps of `p`.
+     *
+     *  @note       In this semantics `jumps` are relative i.e. `jump(k)` updates the 
+     *              `pc` to `pc + k`.
+     *  
+     */
+    function method runEVM2<S>(pc: int, p: seq<EVMProg2>, s: S, n: nat): (S, nat)
+        decreases n 
+    {
+        if n == 0 || pc >= |p| || pc < 0 then (s, |p|)
+            //  We could have different types of termination
+        else 
+            //  Execute instruction at PC and increment PC accordingly
+            match p[pc] 
+                case AInst(i) => 
+                    runEVM2(pc + 1, p, runInst(i, s), n - 1)
+                case Jumpi(c, tgt) => 
+                    if !c(s) then runEVM2(pc + 1, p, s, n - 1) 
+                    else runEVM2(pc + tgt, p, s, n - 1)
+                case Jump(tgt) => 
+                    runEVM2(pc + tgt, p, s, n - 1) 
     }
 
 }
