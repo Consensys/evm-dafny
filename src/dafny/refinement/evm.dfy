@@ -59,7 +59,7 @@ module EVM {
     /**
      *  A program is a sequence of EVM instructions.
      *
-     *  @param  pc  (Current) PC
+     *  @param  pc  (Current) PC.
      *  @param  p   The program to be executed.
      *  @param  s   The (current) state.
      *  @param  n   The maximum number of steps to be executed.
@@ -73,16 +73,19 @@ module EVM {
         decreases n 
     {
         if n == 0 || pc >= |p| || pc < 0 then (s, |p|)
-            //  We could have different types of termination
+            //  We could have different types of termination.
         else 
-            //  Execute instruction at PC and increment PC accordingly
+            //  Execute instruction at PC and increment PC accordingly.
             match p[pc] 
                 case AInst(i) => 
+                    //  Run rest of program from `pc` + 1 from state obtained after executing `i`
                     runEVM2(pc + 1, p, runInst(i, s), n - 1)
                 case Jumpi(c, tgt) => 
+                    //  Conditional jump. If `cond` true the jump otherwise continue to next instruction.
                     if !c(s) then runEVM2(pc + 1, p, s, n - 1) 
                     else runEVM2(pc + tgt, p, s, n - 1)
                 case Jump(tgt) => 
+                    //  Unconditional jump.
                     runEVM2(pc + tgt, p, s, n - 1) 
     }
 
