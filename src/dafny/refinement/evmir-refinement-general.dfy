@@ -18,7 +18,7 @@ include "./evm.dfy"
 include "../utils/Helpers.dfy"
 
 /**
- *  Provides proofs that EVM code simulates some corresponding EVMIR code.
+ *  Provides proofs that EVM code simulates the corresponding EVMIR code.
  */
 module EVMIRSimulationFull {
 
@@ -32,24 +32,28 @@ module EVMIRSimulationFull {
 
     /**
      *  Translate and EVMir program into a EVM program.
+     *
+     *  @param  p   An EVM-IR program.
+     *  @returns    Its translation into EVM (while and if are mapped to jumps).
      */
-    function method toEVM<S>(p: EVMIRProg): seq<EVMProg2>
+    function method toEVM<S>(p: EVMIRProg): seq<EVMProg2> 
     {
         match p 
             case Block(i) => [EVMProg2.AInst(i)]
-            case While(c, Block(b)) => 
-                [
-                    EVMProg2.Jumpi(negF(c), 3),     // 0
-                    EVMProg2.AInst(b),              // 1
-                    EVMProg2.Jump(-2)               // 2
-                ]
-            case IfElse(cond, Block(b1), Block(b2)) => 
-                [
-                    EVMProg2.Jumpi(negF(cond), 3),  // 0
-                    EVMProg2.AInst(b1),             // 1
-                    EVMProg2.Jump(2),               // 2
-                    EVMProg2.AInst(b2)              // 3
-                ]
+            // case While(c, Block(b)) => 
+            //     [
+            //         EVMProg2.Jumpi(negF(c), 3),     // 0
+            //         EVMProg2.AInst(b),              // 1
+            //         EVMProg2.Jump(-2)               // 2
+            //     ]
+            // case IfElse(cond, Block(b1), Block(b2)) => 
+            //     [
+            //         EVMProg2.Jumpi(negF(cond), 3),  // 0
+            //         EVMProg2.AInst(b1),             // 1
+            //         EVMProg2.Jump(2),               // 2
+            //         EVMProg2.AInst(b2)              // 3
+            //     ]
+            //  
             case While(c, xb) => 
                 //   Translate xb into EVM. xbb goes from 0 to |xbb| - 1
                 var xbb := toEVM(xb);
@@ -74,10 +78,12 @@ module EVMIRSimulationFull {
     }
 
     /**
-     *  Jumps in the EVM programs are within [0, |toEVM(p)|].
+     *  Jumps in the translated EVMIR programs are within [0, |toEVM(p)|].
+     *
+     *  @param  p   An EVM-IR program.
      */
-    lemma foo202(p: EVMIRProg) 
-        ensures isBounded(toEVM(p))
+    lemma toEVMIsClosed(p: EVMIRProg) 
+        ensures isClosed(toEVM(p))
     {
         match p 
             case Block(i) => 
@@ -85,20 +91,24 @@ module EVMIRSimulationFull {
             case IfElse(cond, Block(b1), Block(b2)) => 
             case While(c, xb) => 
                 var xbb := toEVM(xb);
-                var whileEVM :=  [EVMProg2.Jumpi(negF(c), |xbb| + 2)] + xbb + [ EVMProg2.Jump(-(|xbb| + 1))];
+                var whileEVM :=  
+                    [EVMProg2.Jumpi(negF(c), |xbb| + 2)] + 
+                        xbb + 
+                    [ EVMProg2.Jump(-(|xbb| + 1))];
                 assert toEVM(While(c, xb)) == whileEVM;
+                //  Prove closeness.
                 forall (i: nat | 0 <= i < |whileEVM|) 
-                    ensures boundedIns(whileEVM, i)
+                    ensures closeJump(whileEVM, i)
                 {
                     if 1 <= i < |whileEVM| - 1 {
                         //  Instruction i in whileEVM is intruction i - 1 xbb 
-                        foo202(xb); 
+                        toEVMIsClosed(xb); 
                         match whileEVM[i] 
                             case Jumpi(cond, tgt) => 
                                 //  Jump must be to an instruction between 1 and |whileEVM| - 1
                                 calc ==> {
                                     //  Induction on xbb
-                                    boundedIns(xbb, i - 1);
+                                    closeJump(xbb, i - 1);
                                     0 <= i - 1 + tgt <= |xbb|;
                                     calc == {
                                         |xbb|;
@@ -111,7 +121,7 @@ module EVMIRSimulationFull {
                             case Jump(tgt) => 
                                 //  Jump must be to an instruction between 1 and |whileEVM| - 1
                                 calc ==> {
-                                    boundedIns(xbb, i - 1);
+                                    closeJump(xbb, i - 1);
                                     0 <= i - 1 + tgt <= |xbb|;
                                     calc == {
                                         |xbb|;
@@ -124,8 +134,8 @@ module EVMIRSimulationFull {
                             case _ => 
                     } else {
                         //  i == 0 or i == |whileEVM| - 1
-                        assert boundedIns(whileEVM, 0);
-                        assert boundedIns(whileEVM, |whileEVM| - 1);
+                        assert closeJump(whileEVM, 0);
+                        assert closeJump(whileEVM, |whileEVM| - 1);
                     }
                 }
             case IfElse(cond, xb1, xb2) => 
@@ -137,15 +147,15 @@ module EVMIRSimulationFull {
                     xbb2;                       //  instructions from |xbb1| + 2 to |xbb1| + 2 + |xbb2|
                 assert toEVM(IfElse(cond, xb1, xb2)) == ifElseEVM;
                 forall (i: nat | 0 <= i < |ifElseEVM|) 
-                    ensures boundedIns(ifElseEVM, i)
+                    ensures closeJump(ifElseEVM, i)
                 {
                     if 1 <= i <= |xbb1| {
-                        foo202(xb1);
+                        toEVMIsClosed(xb1);
                         //  ifElseEVM[i] is xbb[i - 1]
                         match ifElseEVM[i]
                             case Jumpi(cond, tgt) => 
                                  calc ==> {
-                                    boundedIns(xbb1, i - 1);
+                                    closeJump(xbb1, i - 1);
                                     0 <= i - 1 + tgt <= |xbb1|;
                                     1 <= i + tgt <= |xbb1| + 1;
                                     calc <= {
@@ -156,7 +166,7 @@ module EVMIRSimulationFull {
                                 }
                             case Jump(tgt) => 
                                 calc ==> {
-                                    boundedIns(xbb1, i - 1);
+                                    closeJump(xbb1, i - 1);
                                     0 <= i - 1 + tgt <= |xbb1|;
                                     1 <= i + tgt <= |xbb1| + 1;
                                     calc <= {
@@ -167,12 +177,12 @@ module EVMIRSimulationFull {
                                 }
                             case _ => 
                     } else if |xbb1| + 2 <= i < |ifElseEVM| {
-                        foo202(xb2);
+                        toEVMIsClosed(xb2);
                         //  ifElseEVM[i] is xbb2[i - (|xbb1| + 2)]
                         match ifElseEVM[i]
                             case Jumpi(cond, tgt) => 
                                  calc ==> {
-                                    boundedIns(xbb2, i - (|xbb1| + 2));
+                                    closeJump(xbb2, i - (|xbb1| + 2));
                                     0 <= i - (|xbb1| + 2) + tgt <= |xbb2|;
                                     |xbb1| + 2 <= i + tgt <=  |xbb2| + (|xbb1| + 2);
                                     calc <= {
@@ -183,7 +193,7 @@ module EVMIRSimulationFull {
                                 }
                             case Jump(tgt) => 
                                 calc ==> {
-                                    boundedIns(xbb2, i - (|xbb1| + 2));
+                                    closeJump(xbb2, i - (|xbb1| + 2));
                                     0 <= i - (|xbb1| + 2) + tgt <= |xbb2|;
                                     |xbb1| + 2 <= i + tgt <=  |xbb2| + (|xbb1| + 2);
                                     calc <= {
@@ -195,7 +205,7 @@ module EVMIRSimulationFull {
                             case _ => 
                     } else {
                         assert i == 0 || i == |xbb1| + 1;
-                        assert boundedIns(ifElseEVM, i);
+                        assert closeJump(ifElseEVM, i);
                     } 
                 }
     }
