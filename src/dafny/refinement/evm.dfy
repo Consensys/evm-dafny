@@ -15,7 +15,7 @@
 include "evm-seq.dfy"
 
 /** 
- *  Provides EVM programs possibly with Jumps.
+ *  Provides EVM programs with Jumps.
  */
 module EVM {
 
@@ -29,7 +29,7 @@ module EVM {
     /**
      *  EVM instructions.
      *
-     *  @note   Jump values are relatove to pc the instruction is at.
+     *  @note   Jump values are relative to address the instruction is at.
      */
     datatype EVMProg2<!S> = 
             AInst(i: EVMInst)
@@ -57,11 +57,11 @@ module EVM {
     }
 
     /**
-     *  A program is a sequence of EVM instructions.
+     *  Compute the state after executing a given number of intructions.
      *
-     *  @param  pc  (Current) PC.
+     *  @param  pc  Initial PC.
      *  @param  p   The program to be executed.
-     *  @param  s   The (current) state.
+     *  @param  s   The initial state.
      *  @param  n   The maximum number of steps to be executed.
      *  @returns    The state reached from `s` by executing at most `n` steps of `p`.
      *
@@ -77,48 +77,41 @@ module EVM {
         else 
             //  Execute instruction at PC and increment PC accordingly.
             match p[pc] 
-                case AInst(i) => 
-                    //  Run rest of program from `pc` + 1 from state obtained after executing `i`
-                    runEVM2(pc + 1, p, runInst(i, s), n - 1)
-                case Jumpi(c, tgt) => 
-                    //  Conditional jump. If `cond` true the jump otherwise continue to next instruction.
-                    if !c(s) then runEVM2(pc + 1, p, s, n - 1) 
-                    else runEVM2(pc + tgt, p, s, n - 1)
-                case Jump(tgt) => 
-                    //  Unconditional jump.
-                    runEVM2(pc + tgt, p, s, n - 1) 
+                case AInst(i)       =>  runEVM2(pc + 1, p, runInst(i, s), n - 1)
+                case Jumpi(c, tgt)  =>  if !c(s) then runEVM2(pc + 1, p, s, n - 1) 
+                                        else runEVM2(pc + tgt, p, s, n - 1)
+                case Jump(tgt)      =>  runEVM2(pc + tgt, p, s, n - 1) 
     }
 
     /**
-     *  Check all program jumps are within [0, |p|].
+     *  All jumps are close jumps.
+     *
+     *  @param  p   A program.
+     *  @returns    Whether all instructions in `p` are clode jumps.
      */
-    function method boundedJumps<S>(p: seq<EVMProg2>, i: nat): bool
-        requires i <= |p|
-        decreases |p| - i
+    predicate isClosed(p: seq<EVMProg2>)
     {
-        if i == |p| then true   //  We have verified all the instructions in p
-        else 
-            match p[i]
-                case AInst(i)   => true 
-                case Jumpi(cond, tgt) => i + tgt <= |p| && boundedJumps(p, i + 1)
-                case Jump(tgt) => i + tgt <= |p| && boundedJumps(p, i + 1)
+        forall i :: 0 <= i < |p| ==> closeJump(p, i)
     }
 
     /**
-     *  All jumps are within [0, |p|].
+     *  Whether an instruction transfers control within a program boundary.
+     *  
+     *  @param  p   A program which is a sequence of instructions.
+     *  @param  i   The index of an instruction in `[`.
+     *  @returns    Whether `p[i]` trasfers control to an instruction in 0..p.
+     *
+     *  @note       The boundary is considered to be 0..p - 1 which are
+     *              program's instructions locations and `p` which corresponds to
+     *              the program's end point (termination).  
      */
-    predicate isBounded(p: seq<EVMProg2>)
-    {
-        forall i :: 0 <= i < |p| ==> boundedIns(p, i)
-    }
-
-    predicate boundedIns(p: seq<EVMProg2>, i: nat)
+    predicate closeJump(p: seq<EVMProg2>, i: nat)
         requires 0 <= i < |p| 
     {
         match p[i]
-                case Jumpi(cond, tgt) => 0 <= i + tgt <= |p| 
-                case Jump(tgt) => 0 <= i + tgt <= |p| 
-                case _ => true
+                case Jumpi(cond, tgt)   => 0 <= i + tgt <= |p| 
+                case Jump(tgt)          => 0 <= i + tgt <= |p| 
+                case _                  => true
     }
 
 }
