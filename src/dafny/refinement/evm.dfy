@@ -89,4 +89,36 @@ module EVM {
                     runEVM2(pc + tgt, p, s, n - 1) 
     }
 
+    /**
+     *  Check all program jumps are within [0, |p|].
+     */
+    function method boundedJumps<S>(p: seq<EVMProg2>, i: nat): bool
+        requires i <= |p|
+        decreases |p| - i
+    {
+        if i == |p| then true   //  We have verified all the instructions in p
+        else 
+            match p[i]
+                case AInst(i)   => true 
+                case Jumpi(cond, tgt) => i + tgt <= |p| && boundedJumps(p, i + 1)
+                case Jump(tgt) => i + tgt <= |p| && boundedJumps(p, i + 1)
+    }
+
+    /**
+     *  All jumps are within [0, |p|].
+     */
+    predicate isBounded(p: seq<EVMProg2>)
+    {
+        forall i :: 0 <= i < |p| ==> boundedIns(p, i)
+    }
+
+    predicate boundedIns(p: seq<EVMProg2>, i: nat)
+        requires 0 <= i < |p| 
+    {
+        match p[i]
+                case Jumpi(cond, tgt) => 0 <= i + tgt <= |p| 
+                case Jump(tgt) => 0 <= i + tgt <= |p| 
+                case _ => true
+    }
+
 }
