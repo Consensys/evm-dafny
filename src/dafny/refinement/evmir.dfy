@@ -58,7 +58,7 @@ module EVMIR {
     /**
      *  Interpretation of EVM-IR.
      *
-     *  @note   In this interoretation a test fopr a condition costs 1.
+     *  @note   In this interpretation a test for a condition costs 1.
      */
     function method runEVMIR2<S>(p: seq<EVMIRProg>, s: S, n: nat): (S, nat) 
         ensures runEVMIR2(p, s, n).1 <= n 
