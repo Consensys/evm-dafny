@@ -118,29 +118,29 @@ module EVM {
      *  The execution of n steps of a closed program |p| either termninates with 
      *  pc in 0..|p| - 1 and n == 0 or pc == |p| and n >= 0 
      */
-    lemma foo303<S>(pc: nat, p: seq<EVMProg2>, s: S, n:nat) 
+    lemma pcBoundsOnTernination<S>(pc: nat, p: seq<EVMProg2>, s: S, n:nat) 
         requires isClosed(p)
         requires 0 <= pc <= |p|
         ensures 0 <= runEVM2<S>(pc, p, s, n).1 <= |p|
+        ensures 0 <= runEVM2<S>(pc, p, s, n).1 < |p| ==> n == 0
+        ensures runEVM2<S>(pc, p, s, n).1 == |p| ==> n >= 0  
         decreases n 
-        // ensures (0 <= runEVM2<S>(pc, p, s, n).1 < |p| ==> n == 0)
-        //         (runEVM2<S>(pc, p, s, n).1 == |p| ==> n >= 0)  
     {
         if |p| == pc || n == 0 {
-            //  
+            //  Thanks Dafny
         } else {
             assert pc < |p|; 
             match p[pc] 
                 case AInst(i)           =>  
-                    foo303(pc + 1, p, runInst(i, s), n - 1);
+                    pcBoundsOnTernination(pc + 1, p, runInst(i, s), n - 1);
                 case Jumpi(cond, tgt)   =>  
                     assert closeJump(p, pc);
                     assert 0 <= pc + tgt <= |p|;
-                    foo303(if cond(s) then pc + tgt else pc + 1, p, s, n - 1);
-                case Jump(tgt) => 
+                    pcBoundsOnTernination(if cond(s) then pc + tgt else pc + 1, p, s, n - 1);
+                case Jump(tgt)          => 
                     assert closeJump(p, pc);
                     assert 0 <= pc + tgt <= |p|;
-                    foo303(pc + tgt, p, s, n - 1);
+                    pcBoundsOnTernination(pc + tgt, p, s, n - 1);
         }
     }
 }
