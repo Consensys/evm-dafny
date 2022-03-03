@@ -33,33 +33,33 @@ module EVMIRTests {
         S1(x.k + 1)
     }
 
-    method Main() 
-    {
-        //  Run a simple EVM program p1
-        var p1 := map[
-            1 := AInst(Inst(add))
-        ];
+    // method Main() 
+    // {
+    //     //  Run a simple EVM program p1
+    //     var p1 := map[
+    //         1 := AInst(Inst(add))
+    //     ];
 
-        var s0 := S1(14);
-        var s1:= runEVM(1, p1, s0, 1);
-        print s1, "\n";
+    //     var s0 := S1(14);
+    //     var s1:= runEVM(1, p1, s0, 1);
+    //     print s1, "\n";
 
-        //  run p2 EVMIR - a while loop
-        s0 := S1(0);
-        var p2 := While( (x:S1) => x.k < 7, Inst((x:S1) => S1(x.k + 1)));
-        var r2 := runEVMIR([p2], s0, 20);
-        print r2, "\n";
+    //     //  run p2 EVMIR - a while loop
+    //     s0 := S1(0);
+    //     var p2 := While( (x:S1) => x.k < 7, Block(Inst((x:S1))) => S1(x.k + 1)));
+    //     var r2 := runEVMIR([p2], s0, 20);
+    //     print r2, "\n";
 
-        //  Program with jumps to simulate p2 – EVM 
-        var p3 := map[
-            1 := Jumpi((x:S1) => x.k > 7, 0),
-            2 := AInst(Inst(add)),
-            3 := Jump(1)
-        ];
+    //     //  Program with jumps to simulate p2 – EVM 
+    //     var p3 := map[
+    //         1 := Jumpi((x:S1) => x.k > 7, 0),
+    //         2 := AInst(Inst(add)),
+    //         3 := Jump(1)
+    //     ];
 
-        var r3 := runEVM(1, p3, s0, 20);
-        print r3, "\n";
+    //     var r3 := runEVM(1, p3, s0, 20);
+    //     print r3, "\n";
 
-    }
+    // }
 }
 

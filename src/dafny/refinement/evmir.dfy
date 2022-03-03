@@ -58,7 +58,13 @@ module EVMIR {
     /**
      *  Interpretation of EVM-IR.
      *
-     *  @note   In this interpretation a test for a condition costs 1.
+     *  @param  p   An EVMIR program.
+     *  @param  s   An initial step.
+     *  @param  n   The maximum number of steps to execute.
+     *  @returns    The state reached after running from `p` from `s` and the number
+     *              (if any) of steps unused.
+     *
+     *  @note       In this interpretation a test for a condition costs 1.
      */
     function method runEVMIR2<S>(p: seq<EVMIRProg>, s: S, n: nat): (S, nat) 
         ensures runEVMIR2(p, s, n).1 <= n 
@@ -78,5 +84,24 @@ module EVMIR {
                 case IfElse(c, b1, b2) => 
                     var (s', n') := if c(s) then runEVMIR2([b1], s, n - 1) else runEVMIR2([b2], s, n - 1);
                     runEVMIR2(p[1..], s', n - 1 - n')
+    }
+
+    function method runEVMIR3<S>(p: EVMIRProg, s: S, n: nat): (S, nat) 
+        ensures runEVMIR3(p, s, n).1 <= n 
+        // ensures n > 0 && p != [] ==> runEVMIR2(p, s, n).1 < n
+        decreases n - 1
+    {   
+        if n == 0 then (s, n) 
+            //  max number of steps reached or program has terminated. 
+        else 
+            match p
+                case Block(i) => (runInst(i, s), n - 1)
+                case While(c, b) => 
+                    if c(s) then 
+                        var (s', n') := runEVMIR3(b, s, n - 1);
+                        runEVMIR3(p, s', n - 1 - n')
+                    else (s , n - 1)
+                case IfElse(c, b1, b2) => 
+                    if c(s) then runEVMIR3(b1, s, n - 1) else runEVMIR3(b2, s, n - 1)
     }
 }

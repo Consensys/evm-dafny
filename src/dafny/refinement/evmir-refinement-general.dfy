@@ -40,41 +40,22 @@ module EVMIRSimulationFull {
     {
         match p 
             case Block(i) => [EVMProg2.AInst(i)]
-            // case While(c, Block(b)) => 
-            //     [
-            //         EVMProg2.Jumpi(negF(c), 3),     // 0
-            //         EVMProg2.AInst(b),              // 1
-            //         EVMProg2.Jump(-2)               // 2
-            //     ]
-            // case IfElse(cond, Block(b1), Block(b2)) => 
-            //     [
-            //         EVMProg2.Jumpi(negF(cond), 3),  // 0
-            //         EVMProg2.AInst(b1),             // 1
-            //         EVMProg2.Jump(2),               // 2
-            //         EVMProg2.AInst(b2)              // 3
-            //     ]
-            //  
+
             case While(c, xb) => 
                 //   Translate xb into EVM. xbb goes from 0 to |xbb| - 1
                 var xbb := toEVM(xb);
                 //  transaliton of While is 0 -> jumpi, 1..|xbb| xbb, xbb + 1 -> Jump
-                [EVMProg2.Jumpi(negF(c), |xbb| + 2)] + xbb + [ EVMProg2.Jump(-(|xbb| + 1))]
+                [EVMProg2.Jumpi(negF(c), |xbb| + 2)] +  //  0 
+                    xbb +                               //  1..|xbb|
+                [EVMProg2.Jump(-(|xbb| + 1))]           //  |xbb| + 1
+
             case IfElse(cond, xb1, xb2) => 
                 var xbb1 := toEVM(xb1);
                 var xbb2 := toEVM(xb2);
-                [EVMProg2.Jumpi(negF(cond), |xbb1| + 1)] + 
-                    xbb1 + 
-                [ EVMProg2.Jump(|xbb2| + 1)] +
-                    xbb2
-
-                // [
-                //     EVMProg2.Jumpi(negF(cond), 3),  // 0
-                //     EVMProg2.AInst(b1),             // 1
-                //     EVMProg2.Jump(2),               // 2
-                //     EVMProg2.AInst(b2)              // 3
-                // ]
-            // case _ => //  Cases not covered
-            //     []
+                [EVMProg2.Jumpi(negF(cond), |xbb1| + 2)] +  // 0 
+                    xbb1 +                                  // 1..|xbb1|
+                [ EVMProg2.Jump(|xbb2| + 1)] +              //  |xbb1| + 1
+                    xbb2                                    //  |xbb1| + 2 to |xbb1| + 2 + |xbb2| - 1
     }
 
     /**
@@ -82,7 +63,7 @@ module EVMIRSimulationFull {
      *
      *  @param  p   An EVM-IR program.
      */
-    lemma toEVMIsClosed(p: EVMIRProg) 
+    lemma {:verify false} toEVMIsClosed(p: EVMIRProg) 
         ensures isClosed(toEVM(p))
     {
         match p 
@@ -141,10 +122,11 @@ module EVMIRSimulationFull {
             case IfElse(cond, xb1, xb2) => 
                 var xbb1 := toEVM(xb1);
                 var xbb2 := toEVM(xb2);
-                var ifElseEVM := [EVMProg2.Jumpi(negF(cond), |xbb1| + 1)] + 
-                    xbb1 +                      //  instructions from 1 to |xbb1|
-                [ EVMProg2.Jump(|xbb2| + 1)] +  //  instruction |xbb1| + 1
-                    xbb2;                       //  instructions from |xbb1| + 2 to |xbb1| + 2 + |xbb2|
+                var ifElseEVM := 
+                    [EVMProg2.Jumpi(negF(cond), |xbb1| + 2)] + //   0
+                        xbb1 +                      //  instructions from 1 to |xbb1|
+                    [EVMProg2.Jump(|xbb2| + 1)] +   //  instruction |xbb1| + 1
+                        xbb2;                       //  instructions from |xbb1| + 2 to |xbb1| + |xbb2| + 1
                 assert toEVM(IfElse(cond, xb1, xb2)) == ifElseEVM;
                 forall (i: nat | 0 <= i < |ifElseEVM|) 
                     ensures closeJump(ifElseEVM, i)
@@ -210,18 +192,18 @@ module EVMIRSimulationFull {
                 }
     }
 
-    // lemma foo303()
+    
 
     /**
-     *  Single While loop. Assume Unique block in loop body.
+     *  General proof of simulation.
      *
      *  @returns    The (minimum) number of steps in the EVMIR to simulate n steps in EVM. 
      */
-    lemma {:verify false} foo101<S>(xb: EVMIRProg, n: nat, s: S) returns (k: nat)
-        // requires n > 1
-        // requires n < 3
-        ensures k <= n && runEVMIR2([xb], s, k).0 == runEVM2(0, toEVM(xb), s, n).0
+    lemma {:verify true} foo101<S>(xb: EVMIRProg, s: S, n: nat) returns (k: nat)
+        ensures isClosed(toEVM(xb))
+        ensures k <= n && runEVMIR3(xb, s, k).0 == runEVM3(0, toEVM(xb), s, n).0
     {
+        toEVMIsClosed(xb);
         if n < 1 {
             k := 0;
         } else {
@@ -231,10 +213,11 @@ module EVMIRSimulationFull {
                         runEVM2(0, toEVM(xb), s, n).0;
                         runEVM2(0, [EVMProg2.AInst(i)], s, n).0;
                         runInst(i, s);
-                        runEVMIR2([Block(i)], s, n).0;
-                        runEVMIR2([xb], s, n).0;
+                        runEVMIR3(Block(i), s, n).0;
+                        runEVMIR3(xb, s, n).0;
                     }
                     k := n ;
+
                 case While(c, xb) => 
                     var xbb := toEVM(xb);
                     var whileEVM :=  [EVMProg2.Jumpi(negF(c), |xbb| + 2)] + xbb + [ EVMProg2.Jump(-(|xbb| + 2))];
@@ -269,31 +252,86 @@ module EVMIRSimulationFull {
 
                             // }
                             k := 0;
-                            assume runEVMIR2([While(c, xb)], s, k).0 == runEVM2(0, toEVM(While(c, xb)), s, n).0;
+                            assume runEVMIR3(While(c, xb), s, k).0 == runEVM3(0, toEVM(While(c, xb)), s, n).0;
                         }
                     } else {
                         //  Condition is false, exit the loop and the jump program
                         assert negF(c)(s);
                         calc == {
-                            runEVM2(0, whileEVM, s, n);
-                            runEVM2(|xbb| + 2, whileEVM, s, n - 1);
-                            (s, |xbb| + 2);
+                            runEVM3(0, whileEVM, s, n).0;
+                            runEVM3(|xbb| + 1, whileEVM, s, n - 1).0;
+                            // (s, |xbb| + 1);
                         }  
                         //  In the while program, same state is reached in 1 step.
                         calc == {
-                            runEVMIR2([While(c, xb)], s, n);
-                            runEVMIR2([While(c, xb)][1..], s , n - 1);
+                            runEVMIR3(While(c, xb), s, n);
+                            // runEVMIR3(, s , n - 1);
                             (s, n - 1);
                         }
                         k := n;
                     }
-                case IfElse(c, xb1, xb2)=> 
-                    k := 0;
-                    assume runEVMIR2([IfElse(c, xb1, xb2)], s, k).0 == runEVM2(0, toEVM(IfElse(c, xb1, xb2)), s, n).0;
+
+                case IfElse(c, xb1, xb2) => 
+                    var p := toEVM(IfElse(c, xb1, xb2));
+                        var xbb1 := toEVM(xb1);
+                        var xbb2 := toEVM(xb2);
+                        assert p == 
+                            [EVMProg2.Jumpi(negF(c), |xbb1| + 2)] +  // 0 
+                                xbb1 +                                  // 1..|xbb1|
+                            [ EVMProg2.Jump(|xbb2| + 1)] +              //  |xbb1| + 1
+                                xbb2;
+                    if c(s) {
+                        //  c(s) is true then execute xbb1
+                        // pcBoundsOnTermination(toEVM(xb1));
+                        //  Comopute new state and pc' and n'
+                        var (s', pc', n') := runEVM3(0, xbb1, s, n - 1);
+
+                        //  Get a simulation of xbb1 in k1 steps
+                        var k1 := foo101(xb1, s, n - 1);
+                        calc == {
+                            runEVM3(0, xbb1, s, n - 1).0;
+                            runEVMIR3(xb1, s, k1).0;
+                        }
+                        if pc' == |xbb1| {
+                            //  xbb1 could be run till the end 
+
+                        } else {
+                            //  xbb1 could not be run till the end
+                            //  p[1..|xbb1] is closed and actually equal to xbb1
+                            calc == {   //   to finish
+                                p[1..|xbb1|];
+                                ([EVMProg2.Jumpi(negF(c), |xbb1| + 2)] +  
+                                    xbb1 +                                
+                                [ EVMProg2.Jump(|xbb2| + 1)] +            
+                                    xbb2)[1..|xbb1|];  
+                            }
+                            assume p[1..|xbb1|] == xbb1;
+                            calc == {
+                                runEVM3(0, p, s, n);
+                                runEVM3(1, p, s, n - 1); 
+                                // runEVM2(0, xbb1, s, n - 1);
+                            }
+                        
+                        // var (s', n') := runEVMIR2([xb1], s, n - 1);
+                        // calc == {
+                        //     runEVMIR2([IfElse(c, xb1, xb2)], s, n);
+                        //     runEVMIR2([], s', n - 1 - n');
+                        //     (s', n - 1 - n');
+                        }
+                        k := 1;
+                        assume runEVMIR3(IfElse(c, xb1, xb2), s, k).0 == runEVM3(0, toEVM(IfElse(c, xb1, xb2)), s, n).0;
+
+                    } else {
+                        k := 1; 
+                        //  execute xb2 
+                        assume runEVMIR3(IfElse(c, xb1, xb2), s, k).0 == runEVM3(0, toEVM(IfElse(c, xb1, xb2)), s, n).0;
+
+                    }
         }
     }
         
-    //  Translation proof (simple)
+    //  Translation proof (simple). Consistency check.
+
     /**
      *  Single While loop. Assume Unique block in loop body.
      *
@@ -324,6 +362,7 @@ module EVMIRSimulationFull {
         } else {
             //  More than 2 steps in the EVM. So at least one iteration of the EVM body.
             assert n > 2;
+            assert |toEVM(Block(i))| == 1;
             if cond(s) {
                 calc == {
                     runEVM2(0, p, s, n);
@@ -343,8 +382,8 @@ module EVMIRSimulationFull {
                 //  Overall we do the body of the loop once and then in xk steps simulate the rest.
                 k := 1 + xk;
             } else {
-                //  Exit the loop.
                 assert !cond(s);
+                //  Exit the loop.
                 k := 1;
             }    
         }
@@ -374,6 +413,8 @@ module EVMIRSimulationFull {
                 k := 1;
             }
         } else {
+            assert |toEVM(Block(i1))| == 1;
+            assert |toEVM(Block(i2))| == 1; 
             if cond(s) {
                 //  Execute the ifBody
                 calc == {
