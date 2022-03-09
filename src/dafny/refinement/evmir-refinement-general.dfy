@@ -30,7 +30,7 @@ module EVMIRSimulationFull {
     //  General proofs
     //  For this we need to define a translation from EVM-IR to EVM
 
-    function method continuationClosure(p: seq<(EVMProg2, seq<EVMIRProg>)>, p1:  seq<EVMIRProg>):
+    function method continuationClosure<S>(p: seq<(EVMProg2, seq<EVMIRProg>)>, p1:  seq<EVMIRProg>):
         seq<(EVMProg2, seq<EVMIRProg>)>
     {
         if p == [] then 
@@ -52,7 +52,8 @@ module EVMIRSimulationFull {
             []
         else 
             match p[0]
-                case Block(i) => [(EVMProg2.AInst(i), [Block(i)])] + toEVM(p[1..])
+                case Block(i) => 
+                    [(EVMProg2.AInst(i), p)] + toEVM(p[1..])
 
                 case While(c, b) => 
                     //   Translate b into EVM. xbb goes from 0 to |xbb| - 1
@@ -66,7 +67,7 @@ module EVMIRSimulationFull {
                 case IfElse(cond, xb1, xb2) => 
                     var xbb1 := toEVM(xb1);
                     var xbb2 := toEVM(xb2);
-                    [(EVMProg2.Jumpi(negF(cond), |xbb1| + 2), xb2 + p[1..])] +  // 0 
+                    [(EVMProg2.Jumpi(negF(cond), |xbb1| + 2), p)] +  // 0 
                         continuationClosure(xbb1, p[1..]) +                     // 1..|xbb1|
                     [(EVMProg2.Jump(|xbb2| + 1), p[1..])] +                     //  |xbb1| + 1
                         continuationClosure(xbb2, p[1..])                       //  |xbb1| + 2 to |xbb1| + 2 + |xbb2| - 1
@@ -74,26 +75,136 @@ module EVMIRSimulationFull {
     }
 
     predicate equiv<S>(p:  seq<(EVMProg2, seq<EVMIRProg>)>, s1: (S, int), s2: (S, seq<EVMIRProg>))
-        // requires 0 <= s1.1 < |s1.2| 
     {
-        &&  0 <= s1.1 < |p| 
-        &&  s1.0 == s2.0 
-        &&  p[s1.1].1 == s2.1 
+        (0 <= s1.1 < |p| &&  s1.0 == s2.0 &&  p[s1.1].1 == s2.1)
+        ||
+        (s1.1 == |p| && s2.1 == [])
     }   
 
-    lemma simul<S>(p: seq<(EVMProg2, seq<EVMIRProg>)>, s1: (S, int), s2: (S, seq<EVMIRProg>))
-        // requires 0 <= s1.1 < |s1.2| 
-        requires equiv(p, s1, s2)
+    lemma simulation<S>(p: seq<EVMIRProg>, p1: seq<EVMIRProg>, pevm: seq<(EVMProg2, seq<EVMIRProg>)>, s: S, pc: nat) 
+        requires pevm == toEVM(p)
+        requires 0 <= pc <= |pevm|
+        requires equiv(pevm, (s, pc), (s, p1))
+        ensures 
+            var (pc1', s1') := stepEVM2(pc, pevm, s);
+            var (s2', p2') := stepEVMIR(p1, s);
+            equiv(pevm, (s1', pc1'), (s2', p2')) 
+    {
+        if pc == |pevm| {
+            //  
+        } else {
+            //  Execute instruction at pc
+            var (pc1', s1') := stepEVM2(pc, pevm, s);
+            var (s2', p2') := stepEVMIR(p1, s);
+
+            assume equiv(pevm, (s1', pc1'), (s2', p2'));
+        }
+
+    } 
+    // lemma simul<S>(p: seq<(EVMProg2, seq<EVMIRProg>)>, s1: (S, int), s2: (S, seq<EVMIRProg>))
+    //     requires 0 <= s1.1 < |p| 
+    //     requires equiv(p, s1, s2)
+    //     ensures 
+    //         var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
+    //         var (s2', p2') := stepEVMIR(s2.1, s2.0);
+    //         equiv(p, (s1', pc1'), (s2', p2')) 
+    // {
+    //     var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
+    //     var (s2', p2') := stepEVMIR(s2.1, s2.0);
+    //     assume equiv(p, (s1', pc1'), (s2', p2')) ;
+    // }
+
+    lemma simul1<S>(s1: (S, nat), p: seq<(EVMProg2, seq<EVMIRProg>)>, i: EVMInst, s2: (S, seq<EVMIRProg>)) 
+        // requires  p == [(EVMProg2.AInst(i), [Block(i)])]
+        requires  p == toEVM([Block(i)])
+        requires  equiv(p, (s1.0, s1.1), (s2.0, s2.1))
+        ensures |p| == 1 
         ensures 
             var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
             var (s2', p2') := stepEVMIR(s2.1, s2.0);
             equiv(p, (s1', pc1'), (s2', p2')) 
     {
-        var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
-        var (s2', p2') := stepEVMIR(s2.1, s2.0);
-        assume equiv(p, (s1', pc1'), (s2', p2')) ;
+         
     }
 
+    lemma simul10<S>(s1: (S, nat), p: seq<(EVMProg2, seq<EVMIRProg>)>, i: EVMInst, p2: seq<EVMIRProg>, s2: (S, seq<EVMIRProg>)) 
+        requires  p == toEVM(p2)
+        requires  p2 == [Block(i), Block(i)]
+        requires  equiv(p, (s1.0, s1.1), (s2.0, s2.1))
+        ensures toEVM(p2) == [(EVMProg2.AInst(i), [Block(i), Block(i)]), (EVMProg2.AInst(i), [Block(i)])] 
+        ensures 
+            var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
+            var (s2', p2') := stepEVMIR(s2.1, s2.0);
+            equiv(p, (s1', pc1'), (s2', p2')) 
+    {
+        // calc == {
+        //     toEVM(p2);
+        //     [(EVMProg2.AInst(i), p2)] + toEVM(p2[1..]);
+        //     [(EVMProg2.AInst(i), p2)] + toEVM([Block(i)]);
+        // }
+        if s1.1 == |toEVM(p2)| {
+            // var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
+            // assert pc1' == |toEVM(p2)|;
+            // var (s2', p2') := stepEVMIR(s2.1, s2.0);
+            // assume equiv(p, (s1', pc1'), (s2', p2'));
+        } else {
+            var (pc1', s1') := stepEVM2(s1.1, p, s1.0);
+            // var (s2', p2') := stepEVMIR(s2.1, s2.0);
+            // assume equiv(p, (s1', pc1'), (s2', p2'));
+        }
+
+    }
+
+    lemma simul11<S>(s1: (S, nat), i: EVMInst, p2: seq<EVMIRProg>, s2: (S, seq<EVMIRProg>)) 
+        requires  p2 == [Block(i), Block(i)]
+        ensures toEVM(p2) == [(EVMProg2.AInst(i), [Block(i), Block(i)]), (EVMProg2.AInst(i), [Block(i)])] 
+    {
+        calc == {
+            toEVM(p2);
+            [(EVMProg2.AInst(i), p2)] + toEVM(p2[1..]);
+            [(EVMProg2.AInst(i), p2)] + toEVM([Block(i)]);
+        }
+    }
+
+    lemma simul12<S>(s1: (S, nat), c: S -> bool, i: EVMInst, p2: seq<EVMIRProg>, s2: (S, seq<EVMIRProg>)) 
+        requires  p2 == [While(c, [Block(i)])]
+        ensures toEVM(p2) == [
+                    (EVMProg2.Jumpi(negF(c), 3), p2),
+                    (EVMProg2.AInst(i), [Block(i)] + p2),
+                    (EVMProg2.Jump(-2), p2)  
+                ] 
+    {
+        var xbb := toEVM([Block(i)]);  
+        assert |xbb| == |toEVM([Block(i)])| == 1;
+        calc == {
+            toEVM(p2);
+            [(EVMProg2.Jumpi(negF(c), |xbb| + 2), p2)] +  //  0 
+                        continuationClosure(xbb, p2) +            //  1..|xbb|
+                    [(EVMProg2.Jump(-(|xbb| + 1)), p2)]           //  |xbb| + 1
+                    +  toEVM(p2[1..]);
+            [(EVMProg2.Jumpi(negF(c), 3), p2),
+                (EVMProg2.AInst(i), [Block(i)] + p2),
+                (EVMProg2.Jump(-2), p2)] ;
+        }
+    }
+
+    // method {:verify false} display(p: seq<(EVMProg2, seq<EVMIRProg>)>) 
+    // {
+    //     print "here";
+    //     for i := 0 to |p| - 1 {
+    //         print i;
+    //         match p[i].0 
+    //             case AInst(i) => print(i.name);
+    //             case _ => print "NOP";
+    //     }
+    // }
+
+    // method {:verify false} Main() {
+    //     // var i := Inst(x => x + 1, "one");
+    //     // var p := toEVM([Block(i)]);
+    //     // display(p);
+    //     print "here";
+    // }
 
     /**
      *  Jumps in the translated EVMIR programs are within [0, |toEVM(p)|].
