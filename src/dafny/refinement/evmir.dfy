@@ -40,14 +40,14 @@ module EVMIR {
         // |   Skip()
     
     /** A DiGraph with nat number vertices. */
-    datatype CFG<!S(==)> = CFG(entry: S, g: LabDiGraph, exit: S) 
+    datatype CFG<!S(==)> = CFG(entry: S, g: LabDiGraph<S>, exit: S) 
 
     /**
      *  Print a CFG of type `S`.
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
      */
-    method printCFG(cfg: CFG<int>) 
+    method printCFG(cfg: CFG<nat>) 
         requires |cfg.g| >= 1
     {
         diGraphToDOT(cfg.g);  
@@ -82,13 +82,44 @@ module EVMIR {
                         (s', p' + p[1..])
     }
 
-    function method toCFG(g: CFG<nat>, p: seq<EVMIRProg2>, i: nat): (CFG<nat>, nat)
+    /**
+     *  
+     *  @param  k   First number available to id new state.
+     */
+    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg2>, k: nat): (CFG<nat>, nat)
         // decreases p, s - {p}
+        decreases p 
     {
-        if p == [] then (g, i)
-        else (CFG(0, [LabDiEdge(0, 1, "name1")] , 1), 1)
-            // match p[0]
-            //     case Block(i) => 
+        if p == [] then (inCFG, k)
+        else 
+            match p[0]
+                case Block(i) => 
+                    //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
+                    toCFG(
+                        CFG(inCFG.entry, inCFG.g + [(k, k + 1, i.name)], k + 1),
+                        p[1..],
+                        k + 1
+                    )
+                
+                case IfElse(c, b1, b2) => 
+                    //  Add true and false edges to current graph
+                    // var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, "TRUE")], k + 1); 
+                    //  Build cfgThen starting numbering from k + 1
+                    var (cfgThen, indexThen) := toCFG(inCFG, b1, k + 1);
+                    //  Build cfgElse starting numbering from indexThen + 1
+                    var (cfgThenElse, indexThenElse) := toCFG(cfgThen, b2, indexThen + 1);
+                    //  Build IfThenElse cfg stitching together previous cfgs and 
+                    //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
+                    var cfgIfThenElse := CFG(
+                                            cfgThenElse.entry, 
+                                            cfgThenElse.g + 
+                                                [(inCFG.exit, k + 1, "TRUE")] +
+                                                [(inCFG.exit, indexThen + 1, "FALSE")] +
+                                                [(cfgThen.exit, cfgThenElse.exit, "skip")],
+                                            cfgThenElse.exit
+                                        );
+                    toCFG(cfgIfThenElse, p[1..], indexThenElse)
+                case _ => (CFG(0, [(0, 1, "name1")] , 1), 1)
             //         //  compute CFG of p[1..] and wire at the end of new CFG for Block(i)
             //         var cfg1 := toCFG(p[1..]);
             //         var cfg2 := CFG(p, { DiEdge(p, p[1..])}, p[1..]);
