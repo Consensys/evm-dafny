@@ -21,7 +21,7 @@ module EVMSeq {
      *  This can stand for any linear sequence of instructions without jumps.
      */
     datatype EVMInst<!S> = 
-        Inst(i : S -> S)
+        Inst(i : S -> S, name: string)
     
     /**
      *  Compute next state.
@@ -33,7 +33,7 @@ module EVMSeq {
     function method runInst<S>(i: EVMInst, s: S): S
     {
         match i 
-            case Inst(e) => e(s)
+            case Inst(e, _) => e(s)
     }
 
 }
