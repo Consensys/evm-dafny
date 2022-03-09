@@ -15,19 +15,11 @@
 
  module Graphs {
 
-    // datatype DiEdge<!S> = DiEdge(src: S, dst: S)  
-
-    datatype LabDiEdge<!S> = LabDiEdge(src: S, dst: S, name: string)  
+    type LabDiEdge<!S> = (S, S, string)
 
     /** A Directed graph. Type of edges must support equality. */
-    // type DiGraph<!S(==)> = seq<DiEdge>
-
     type LabDiGraph<!S(==)> = seq<LabDiEdge>
 
-    function method union(d1: LabDiGraph, d2: LabDiGraph): LabDiGraph
-    {
-        d1 + d2
-    }
 
     /**
      *  Print an edge in DOT format.
@@ -36,7 +28,7 @@
      */
     method edgeToDOT<S>(e: LabDiEdge) 
     {
-        print e.src, " -> ", e.dst, "[label=\"", e.name, "\"]", ";\n";
+        print e.0, " -> ", e.1, "[label=\"", e.2, "\"]", ";\n";
     }
 
     /**
@@ -44,7 +36,7 @@
      *  @param  g   A directed graph.
      *  @param  f   A converter from `S` to a printable string.
      */
-    method diGraphToDOT(g: LabDiGraph<int>) 
+    method diGraphToDOT(g: LabDiGraph<nat>) 
         // requires |g| >= 1
     {
         print "digraph G {\n";
