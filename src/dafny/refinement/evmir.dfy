@@ -13,6 +13,7 @@
  */
  
 include "evm-seq.dfy"
+include "../utils/Graphs.dfy"
 
 /**
  *  Provides EVM intermediate representation with structured
@@ -21,6 +22,7 @@ include "evm-seq.dfy"
 module EVMIR {
 
     import opened EVMSeq
+    import opened Graphs
 
     /** Programs with block of instructions, while loops/ifs. */
     datatype EVMIRProg<!S> =  
@@ -29,6 +31,27 @@ module EVMIR {
         |   While(cond: S -> bool, body: seq<EVMIRProg>)
         |   IfElse(cond: S -> bool, ifBody: seq<EVMIRProg>, elseBody: seq<EVMIRProg>) 
         // |   Skip()
+
+    datatype EVMIRProg2<!S> =  
+        |   Block(i:EVMInst)
+        // |   Sequence(p1: EVMIRProg, p2: EVMIRProg)
+        |   While(cond:  bool, body: seq<EVMIRProg2>)
+        |   IfElse(cond: bool, ifBody: seq<EVMIRProg2>, elseBody: seq<EVMIRProg2>) 
+        // |   Skip()
+    
+    /** A DiGraph with nat number vertices. */
+    datatype CFG<!S(==)> = CFG(entry: S, g: LabDiGraph, exit: S) 
+
+    /**
+     *  Print a CFG of type `S`.
+     *  @param  g   A control flow graph.
+     *  @param  f   A converter from `S` to a printable string.
+     */
+    method printCFG(cfg: CFG<int>) 
+        requires |cfg.g| >= 1
+    {
+        diGraphToDOT(cfg.g);  
+    }
 
     /**
      *  Semantics of EVMIR programs.
@@ -44,9 +67,7 @@ module EVMIR {
         else 
             match p[0]
                 case Block(i) => (runInst(i, s), p[1..])
-                // case Sequence(b1, b2) => 
-                //     var (s', p') := stepEVMIR(b1, s);
-                //     (s', Sequence(p', p))
+                
                 case While(c, b) => 
                         if c(s) then
                             var (s', p') := stepEVMIR(b, s);
@@ -59,9 +80,26 @@ module EVMIR {
                         (s', p' + p[1..])
                     else var (s', p') := stepEVMIR(b2, s);
                         (s', p' + p[1..])
-                // case Skip() => (s, Skip)
     }
 
+    function method toCFG(g: CFG<nat>, p: seq<EVMIRProg2>, i: nat): (CFG<nat>, nat)
+        // decreases p, s - {p}
+    {
+        if p == [] then (g, i)
+        else (CFG(0, [LabDiEdge(0, 1, "name1")] , 1), 1)
+            // match p[0]
+            //     case Block(i) => 
+            //         //  compute CFG of p[1..] and wire at the end of new CFG for Block(i)
+            //         var cfg1 := toCFG(p[1..]);
+            //         var cfg2 := CFG(p, { DiEdge(p, p[1..])}, p[1..]);
+            //         CFG(p, cfg1.g + cfg2.g, p[1..]) 
+            //     case While(c, b) =>
+            //         var cfg1 := toCFG(b);
+            //         CFG(p, cfg1.g + {DiEdge(p, cfg1.entry), DiEdge(p, cfg1.exit)}, p[1..]) 
+            //     // case IfElse(c, b1, b2) => CFG(p[1..], s + {b1, b2})
+            //     case _ => CFG([], {}, [])
+    }
+        
     /**
      *  Run n steps of the program.
      *  Interpretation of a subset of EVM-IR.
