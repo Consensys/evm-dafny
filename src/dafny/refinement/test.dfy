@@ -42,6 +42,7 @@ method {:verify false} Main() {
         var p2 := [EVMIRProg.Block(i1), EVMIRProg.Block(i), EVMIRProg.Block(i)];
         var (cfg2, max2, m2) := toCFG(CFG(0, [], 0), p2, 0, map[]);
         printCFG(cfg2);   
+        printCFGmap(m2);
 
         //  IfThenElse 
         var i2 := Inst((x:nat) => x + 1, "PUSH");     
@@ -49,11 +50,13 @@ method {:verify false} Main() {
         var p3 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i2)], [EVMIRProg.Block(i2)]); 
         var (cfg3, max3, m3) := toCFG(CFG(0, [], 0), [p3] + [EVMIRProg.Block(i3)], 0, map[]);
         printCFG(cfg3);   
+        printCFGmap(m3);
 
         //  While loop
         var p4 := EVMIRProg.While(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i)]); 
         var (cfg4, max4, m4) := toCFG(CFG(0, [], 0), [p4] + [EVMIRProg.Block(i3)], 0, map[]);
         printCFG(cfg4, "CFG for While true do add; PUSH; od");   
+        printCFGmap(m4);
 
         //  A more complicated program
         var p5 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1)], [EVMIRProg.Block(i2)]); 
@@ -61,5 +64,6 @@ method {:verify false} Main() {
         // var p6 := EVMIRProg.While(true, [p5]); 
         var (cfg6, max6, m6) := toCFG(CFG(0, [], 0), [p6], 0, map[]);
         printCFG(cfg6, "CFG for While true do {if then else} od");   
+        printCFGmap(m6);
 
     }
