@@ -79,11 +79,11 @@ module EVMIR {
      *  
      *  @param  k   First number available to id new state.
      */
-    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat): (CFG<nat>, nat)
+    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat, m: map<nat, EVMIRProg>): (CFG<nat>, nat, map<nat, EVMIRProg>)
         // decreases p, s - {p}
         decreases p 
     {
-        if p == [] then (inCFG, k)
+        if p == [] then (inCFG, k, m)
         else 
             match p[0]
                 case Block(i) => 
@@ -91,15 +91,16 @@ module EVMIR {
                     toCFG(
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, i.name)], k + 1),
                         p[1..],
-                        k + 1
+                        k + 1,
+                        m
                     )
                 
                 case IfElse(c, b1, b2) => 
                     //  Add true and false edges to current graph
                     //  Build cfgThen starting numbering from k + 1
-                    var (cfgThen, indexThen) := toCFG(inCFG, b1, k + 1);
+                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m);
                     //  Build cfgElse starting numbering from indexThen + 1
-                    var (cfgThenElse, indexThenElse) := toCFG(cfgThen, b2, indexThen + 1);
+                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
                     var cfgIfThenElse := CFG(
@@ -110,13 +111,13 @@ module EVMIR {
                                                 [(cfgThen.exit, cfgThenElse.exit, "skip")],
                                             cfgThenElse.exit
                                         );
-                    toCFG(cfgIfThenElse, p[1..], indexThenElse)
+                    toCFG(cfgIfThenElse, p[1..], indexThenElse, m)
 
                 case While(c, b) => 
                     //  Build CFG for b from k + 1 when while condition is true 
                     var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, "TRUE/WHILE")], k + 1);
                     //  
-                    var (whileBodyCFG, indexBodyExit) := toCFG(tmpCFG, b, k + 1);
+                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m);
                     var cfgWhile := CFG(
                                         whileBodyCFG.entry, 
                                         whileBodyCFG.g + 
@@ -125,7 +126,7 @@ module EVMIR {
                                             [(whileBodyCFG.exit, k, "loop")],
                                         indexBodyExit + 1
                                         );
-                    toCFG(cfgWhile, p[1..], indexBodyExit + 1)
+                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, m)
     }
         
     /**
