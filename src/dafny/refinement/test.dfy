@@ -34,12 +34,12 @@ method {:verify false} Main() {
         var k := CFG(0, g1, 2); 
         printCFG(k);  
 
-        var i := Inst((x:int) => x + 1, "add");     
+        var i := Inst((x:int) => x + 1, "ADD");     
         var p1 := EVMIRProg2.IfElse(true, [EVMIRProg2.Block(i)], [EVMIRProg2.Block(i)]); 
 
         //  Sequence of blocks
-        var i1 := Inst((x:nat) => x + 1, "add");     
-        var p2 := [EVMIRProg2.Block(i1), EVMIRProg2.Block(i1), EVMIRProg2.Block(i1)];
+        var i1 := Inst((x:nat) => x + 1, "SUB");     
+        var p2 := [EVMIRProg2.Block(i1), EVMIRProg2.Block(i), EVMIRProg2.Block(i)];
         var (cfg2, max2) := toCFG(CFG(0, [], 0), p2, 0);
         printCFG(cfg2);   
 
@@ -50,5 +50,16 @@ method {:verify false} Main() {
         var (cfg3, max3) := toCFG(CFG(0, [], 0), [p3] + [EVMIRProg2.Block(i3)], 0);
         printCFG(cfg3);   
 
+        //  While loop
+        var p4 := EVMIRProg2.While(true, [EVMIRProg2.Block(i1), EVMIRProg2.Block(i)]); 
+        var (cfg4, max4) := toCFG(CFG(0, [], 0), [p4] + [EVMIRProg2.Block(i3)], 0);
+        printCFG(cfg4, "CFG for While true do add; PUSH; od");   
+
+        //  A more complicated program
+        var p5 := EVMIRProg2.IfElse(true, [EVMIRProg2.Block(i1)], [EVMIRProg2.Block(i2)]); 
+        var p6 := EVMIRProg2.While(true, [EVMIRProg2.Block(i1), p5, EVMIRProg2.Block(i2)]); 
+        // var p6 := EVMIRProg2.While(true, [p5]); 
+        var (cfg6, max6) := toCFG(CFG(0, [], 0), [p6], 0);
+        printCFG(cfg6, "CFG for While true do {if then else} od");   
 
     }
