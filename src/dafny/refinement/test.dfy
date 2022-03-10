@@ -13,7 +13,7 @@
  */
  
 include "../utils/Graphs.dfy"
-include "./evmir.dfy"
+include "./evmir.dfy"  
 include "evm-seq.dfy"
 
 import opened Graphs
@@ -65,5 +65,9 @@ method {:verify false} Main() {
         var (cfg6, max6, m6) := toCFG(CFG(0, [], 0), [p6], 0, map[]);
         printCFG(cfg6, "CFG for While true do {if then else} od");   
         printCFGmap(m6);
+
+        print "Pretty-print\n";
+        print prettyEVMIR([p6]);
+        print "\n";
 
     }

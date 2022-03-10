@@ -70,7 +70,7 @@ module EVMIR {
             {
                 print "sim[", i, "] -> ";
                 if i in m {
-                    printEVMIR(m[i]);
+                    print prettyEVMIR(m[i]);
                 } else {
                     print "Key not found:", i;
                 }
