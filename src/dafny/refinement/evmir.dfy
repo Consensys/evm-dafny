@@ -47,6 +47,53 @@ module EVMIR {
     }
 
     /**
+     *  Print map for a CFG of type `S`.
+     *  @param  g   A control flow graph.
+     *  @param  f   A converter from `S` to a printable string.
+     */
+    method {:verify false} printCFGmap(m: map<nat, seq<EVMIRProg>>, name: string := "noName") 
+        // requires |cfg.g| >= 1
+        {
+            for i := 0 to |m|
+            {
+                print "sim[", i, "] -> ";
+                if i in m {
+                    printEVMIR(m[i]);
+                } else {
+                    print "Key not found:", i;
+                }
+                
+                print "\n";
+            }
+        print "\n";
+        // diGraphToDOT(cfg.g, cfg.exit + 1, name);  
+    }
+
+    /**
+     *  Print map for a CFG of type `S`.
+     *  @param  g   A control flow graph.
+     *  @param  f   A converter from `S` to a printable string.
+     */
+    method {:verify false} printEVMIR(p: seq<EVMIRProg>, name: string := "noName") 
+        {
+            for i := 0 to |p|
+            {
+                match p[i]
+                    case Block(i) => print i.name, " ";
+                    case IfElse(c, b1, b2) => 
+                        print "IfThen(";
+                        printEVMIR(b1);
+                        print ")IfElse(";
+                        printEVMIR(b2);
+                        print ") ";
+                    case _ => print "default";
+                // print "\n";
+            }
+        // print "\n";
+        // diGraphToDOT(cfg.g, cfg.exit + 1, name);  
+    }
+
+    /**
      *  Semantics of EVMIR programs.
      *
      *  @param  p   An EVMIR program.
@@ -91,7 +138,7 @@ module EVMIR {
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, i.name)], k + 1),
                         p[1..],
                         k + 1,
-                        m + map[k + 1 := p]
+                        m[k := p] // node for Block is associated with p
                     )
                 
                 case IfElse(c, b1, b2) => 
@@ -110,7 +157,7 @@ module EVMIR {
                                                 [(cfgThen.exit, cfgThenElse.exit, "skip")],
                                             cfgThenElse.exit
                                         );
-                    toCFG(cfgIfThenElse, p[1..], indexThenElse, m)
+                    toCFG(cfgIfThenElse, p[1..], indexThenElse, ((m2[k := p])[k + 1 := b1 + p[1..]])[indexThen + 1 := b2 + p[1..]])
 
                 case While(c, b) => 
                     //  Build CFG for b from k + 1 when while condition is true 
@@ -125,7 +172,7 @@ module EVMIR {
                                             [(whileBodyCFG.exit, k, "loop")],
                                         indexBodyExit + 1
                                         );
-                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, m)
+                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, m3[indexBodyExit + 1 := p[1..]])
     }
         
     /**
