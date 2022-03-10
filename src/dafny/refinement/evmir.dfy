@@ -70,6 +70,15 @@ module EVMIR {
     }
 
     /**
+     *  Generate a string with `k` spaces.
+     */
+    function method {:tailrecursion true} spaces(k: nat): string
+    {
+        if k == 0 then ""
+        else " " + spaces(k - 1)
+    }
+
+    /**
      *  Print map for a CFG of type `S`.
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
