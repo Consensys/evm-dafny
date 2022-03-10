@@ -54,7 +54,6 @@ module EVM {
                                         else (pc + tgt, s)
                 case Jump(tgt)      =>  (pc + tgt, s) 
                 // case Nop()          =>  (pc + 1, s)
-
     }
 
     function method stepEVM2<S, T>(pc: int, p: seq<(EVMProg2, T)>, s: S): (int, S)
