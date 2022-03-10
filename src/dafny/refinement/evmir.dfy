@@ -16,8 +16,8 @@ include "evm-seq.dfy"
 include "../utils/Graphs.dfy"
 
 /**
- *  Provides EVM intermediate representation with structured
- *  EVM programs (loops and no jumps).
+ *  Provide EVM intermediate representation with structured
+ *  EVM programs (loops, if-then-else but no jumps).
  */
 module EVMIR {
 
@@ -34,8 +34,6 @@ module EVMIR {
 
     datatype EVMIRProg2<!S> =  
         |   Block(i:EVMInst)
-
-        // |   Sequence(p1: EVMIRProg, p2: EVMIRProg)
         |   While(cond:  bool, body: seq<EVMIRProg2>)
         |   IfElse(cond: bool, ifBody: seq<EVMIRProg2>, elseBody: seq<EVMIRProg2>) 
         // |   Skip()
