@@ -113,8 +113,8 @@ module EVMIR {
                     var cfgIfThenElse := CFG(
                                             cfgThenElse.entry, 
                                             cfgThenElse.g + 
-                                                [(inCFG.exit, k + 1, "TRUE")] +
-                                                [(inCFG.exit, indexThen + 1, "FALSE")] +
+                                                [(inCFG.exit, k + 1, "TRUE/IF")] +
+                                                [(inCFG.exit, indexThen + 1, "FALSE/IF")] +
                                                 [(cfgThen.exit, cfgThenElse.exit, "skip")],
                                             cfgThenElse.exit
                                         );
