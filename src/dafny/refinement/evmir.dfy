@@ -134,8 +134,14 @@ module EVMIR {
     }
 
     /**
-     *  
-     *  @param  k   First number available to id new state.
+     *  Build the CFG of a EVMIR program.
+     *
+     *  @param  inCFG   The CFG to extend.
+     *  @param  p       The program to build the CFG for.
+     *  @param  k       First Id (number) available to id newly created state.
+     *  @param  m       The simulation for inCFG.
+     *  @returns        The CFG `inCFG` extended from its final state (`k`) with the CFG of p, and
+     *                  the simulation map extended to the newly created nodes.
      */
     function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat, m: map<nat, seq<EVMIRProg>>): (CFG<nat>, nat, map<nat, seq<EVMIRProg>>)
         decreases p 
