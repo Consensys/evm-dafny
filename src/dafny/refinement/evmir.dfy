@@ -40,10 +40,22 @@ module EVMIR {
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
      */
-    method printCFG(cfg: CFG<nat>, name: string := "noName") 
+    method printCFG(cfg: CFG<nat>, name: string := "noName", m: map<nat, seq<EVMIRProg<nat>>> := map[]) 
         requires |cfg.g| >= 1
     {
-        diGraphToDOT(cfg.g, cfg.exit + 1, name);  
+        diGraphToDOT(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));  
+    }
+
+    /**
+     *  Generate tooltip, node -> pretty printed EVMIRProg<nat>
+     */
+    function method toTooltip(m: map<nat, seq<EVMIRProg>>, n: nat): map<nat, string> 
+    {
+        if n == 0 && n in m then map[n := prettyEVMIR(m[n])] 
+        else if n == 0 then map[n := "default"]
+        else 
+            // assert n > 0;
+            map[n := if n in m then prettyEVMIR(m[n]) else "default"]  + toTooltip(m, n - 1)
     }
 
     /**
