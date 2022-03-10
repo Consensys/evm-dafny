@@ -34,9 +34,10 @@
 
     /**
      *  Print a DiGraph in DOT format.
-     *  @param  g       A directed graph.
-     *  @param  n       Number of nodes in the graph. Assumption is that node 0 is initial location and node n - 1 is final location.
-     *  @param  name    Label of the graph.
+     *  @param  g           A directed graph.
+     *  @param  n           Number of nodes in the graph. Assumption is that node 0 is initial location and node n - 1 is final location.
+     *  @param  name        Optional label of the graph.
+     *  @param  tooltip     Optional map providing tooltips for nodes.
      */
     method diGraphToDOT(g: LabDiGraph<nat>, n: nat, name: string := "noName") 
     {
