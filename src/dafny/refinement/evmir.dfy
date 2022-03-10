@@ -119,16 +119,22 @@ module EVMIR {
                                             cfgThenElse.exit
                                         );
                     toCFG(cfgIfThenElse, p[1..], indexThenElse)
-                case _ => (CFG(0, [(0, 1, "name1")] , 1), 1)
-            //         //  compute CFG of p[1..] and wire at the end of new CFG for Block(i)
-            //         var cfg1 := toCFG(p[1..]);
-            //         var cfg2 := CFG(p, { DiEdge(p, p[1..])}, p[1..]);
-            //         CFG(p, cfg1.g + cfg2.g, p[1..]) 
-            //     case While(c, b) =>
-            //         var cfg1 := toCFG(b);
-            //         CFG(p, cfg1.g + {DiEdge(p, cfg1.entry), DiEdge(p, cfg1.exit)}, p[1..]) 
-            //     // case IfElse(c, b1, b2) => CFG(p[1..], s + {b1, b2})
-            //     case _ => CFG([], {}, [])
+
+                case While(c, b) => 
+                    //  Build CFG for b from k + 1 when while condition is true 
+                    var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, "TRUE/WHILE")], k + 1);
+                    //  
+                    var (whileBodyCFG, indexBodyExit) := toCFG(tmpCFG, b, k + 1);
+                    var cfgWhile := CFG(
+                                        whileBodyCFG.entry, 
+                                        whileBodyCFG.g + 
+                                            // [(whileBodyCFG.exit, k + 1, "TRUE")] +
+                                            //  Add edge for while condition false
+                                            [(inCFG.exit, indexBodyExit + 1, "FALSE/WHILE")] +
+                                            [(whileBodyCFG.exit, k, "loop")],
+                                        indexBodyExit + 1
+                                        );
+                    toCFG(cfgWhile, p[1..], indexBodyExit + 1)
     }
         
     /**
