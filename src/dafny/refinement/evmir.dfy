@@ -34,6 +34,7 @@ module EVMIR {
 
     datatype EVMIRProg2<!S> =  
         |   Block(i:EVMInst)
+
         // |   Sequence(p1: EVMIRProg, p2: EVMIRProg)
         |   While(cond:  bool, body: seq<EVMIRProg2>)
         |   IfElse(cond: bool, ifBody: seq<EVMIRProg2>, elseBody: seq<EVMIRProg2>) 
@@ -47,10 +48,10 @@ module EVMIR {
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
      */
-    method printCFG(cfg: CFG<nat>) 
+    method printCFG(cfg: CFG<nat>, name: string := "noName") 
         requires |cfg.g| >= 1
     {
-        diGraphToDOT(cfg.g);  
+        diGraphToDOT(cfg.g, cfg.exit + 1, name);  
     }
 
     /**
@@ -103,7 +104,6 @@ module EVMIR {
                 
                 case IfElse(c, b1, b2) => 
                     //  Add true and false edges to current graph
-                    // var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, "TRUE")], k + 1); 
                     //  Build cfgThen starting numbering from k + 1
                     var (cfgThen, indexThen) := toCFG(inCFG, b1, k + 1);
                     //  Build cfgElse starting numbering from indexThen + 1
