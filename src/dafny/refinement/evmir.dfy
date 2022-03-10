@@ -79,27 +79,29 @@ module EVMIR {
     }
 
     /**
-     *  Print map for a CFG of type `S`.
-     *  @param  g   A control flow graph.
-     *  @param  f   A converter from `S` to a printable string.
+     *  Generate a pretty-printed (string) EVMIR program.
+     *  @param  p       The program to pretty-print.
+     *  @param  k       The current indentation.
+     *  @param  name    The name of the program.
+     *  @returns        A string with the pretty-printed program `p`.
      */
-    method {:verify false} printEVMIR(p: seq<EVMIRProg>, name: string := "noName") 
-        {
-            for i := 0 to |p|
-            {
-                match p[i]
-                    case Block(i) => print i.name, " ";
-                    case IfElse(c, b1, b2) => 
-                        print "IfThen(";
-                        printEVMIR(b1);
-                        print ")IfElse(";
-                        printEVMIR(b2);
-                        print ") ";
-                    case _ => print "default";
-                // print "\n";
-            }
-        // print "\n";
-        // diGraphToDOT(cfg.g, cfg.exit + 1, name);  
+    function method {:verify false} prettyEVMIR(p: seq<EVMIRProg>, k: nat := 0, name: string := "noName", tabSize: nat := 2): string
+        decreases p
+    {
+        if p == [] then ""
+        else 
+            (match p[0]
+                case Block(i) => spaces(k * tabSize) + i.name + "\n"
+                case IfElse(c, b1, b2) => 
+                    spaces(k * tabSize)+ "If (*) then\n" +
+                    prettyEVMIR(b1, k + 1) +
+                    spaces(k * tabSize) + "else\n" +
+                    prettyEVMIR(b2, k + 1)
+                case While(c, b) => 
+                    spaces(k * tabSize) + "While (*) do\n" +
+                    prettyEVMIR(b, k + 1) +
+                    spaces(k * tabSize) + "od /* while */\n"
+            ) + prettyEVMIR(p[1..])
     }
 
     /**
