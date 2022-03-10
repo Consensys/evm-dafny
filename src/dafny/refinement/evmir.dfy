@@ -79,8 +79,7 @@ module EVMIR {
      *  
      *  @param  k   First number available to id new state.
      */
-    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat, m: map<nat, EVMIRProg>): (CFG<nat>, nat, map<nat, EVMIRProg>)
-        // decreases p, s - {p}
+    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat, m: map<nat, seq<EVMIRProg>>): (CFG<nat>, nat, map<nat, seq<EVMIRProg>>)
         decreases p 
     {
         if p == [] then (inCFG, k, m)
@@ -92,7 +91,7 @@ module EVMIR {
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, i.name)], k + 1),
                         p[1..],
                         k + 1,
-                        m
+                        m + map[k + 1 := p]
                     )
                 
                 case IfElse(c, b1, b2) => 
@@ -100,7 +99,7 @@ module EVMIR {
                     //  Build cfgThen starting numbering from k + 1
                     var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m);
                     //  Build cfgElse starting numbering from indexThen + 1
-                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m);
+                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
                     var cfgIfThenElse := CFG(

@@ -40,26 +40,26 @@ method {:verify false} Main() {
         //  Sequence of blocks
         var i1 := Inst((x:nat) => x + 1, "SUB");     
         var p2 := [EVMIRProg.Block(i1), EVMIRProg.Block(i), EVMIRProg.Block(i)];
-        var (cfg2, max2) := toCFG(CFG(0, [], 0), p2, 0);
+        var (cfg2, max2, m2) := toCFG(CFG(0, [], 0), p2, 0, map[]);
         printCFG(cfg2);   
 
         //  IfThenElse 
         var i2 := Inst((x:nat) => x + 1, "PUSH");     
         var i3 := Inst((x:nat) => x + 1, "POP");     
         var p3 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i2)], [EVMIRProg.Block(i2)]); 
-        var (cfg3, max3) := toCFG(CFG(0, [], 0), [p3] + [EVMIRProg.Block(i3)], 0);
+        var (cfg3, max3, m3) := toCFG(CFG(0, [], 0), [p3] + [EVMIRProg.Block(i3)], 0, map[]);
         printCFG(cfg3);   
 
         //  While loop
         var p4 := EVMIRProg.While(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i)]); 
-        var (cfg4, max4) := toCFG(CFG(0, [], 0), [p4] + [EVMIRProg.Block(i3)], 0);
+        var (cfg4, max4, m4) := toCFG(CFG(0, [], 0), [p4] + [EVMIRProg.Block(i3)], 0, map[]);
         printCFG(cfg4, "CFG for While true do add; PUSH; od");   
 
         //  A more complicated program
         var p5 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1)], [EVMIRProg.Block(i2)]); 
         var p6 := EVMIRProg.While(_ => true, [EVMIRProg.Block(i1), p5, EVMIRProg.Block(i2)]); 
         // var p6 := EVMIRProg.While(true, [p5]); 
-        var (cfg6, max6) := toCFG(CFG(0, [], 0), [p6], 0);
+        var (cfg6, max6, m6) := toCFG(CFG(0, [], 0), [p6], 0, map[]);
         printCFG(cfg6, "CFG for While true do {if then else} od");   
 
     }
