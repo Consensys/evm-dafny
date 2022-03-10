@@ -12,13 +12,16 @@
  * under the License.
  */
  
-
+/**
+ *  Provide labelled directed graph.
+ */
  module Graphs {
 
+    /** A labelled directed edge: (src, dst, label). */
     type LabDiEdge<!S> = (S, S, string)
 
-    /** A Directed graph. Type of edges must support equality. */
-    type LabDiGraph<!S(==)> = seq<LabDiEdge>
+    /** A Directed graph. Type of edge is not a reference. */
+    type LabDiGraph<!S> = seq<LabDiEdge>
 
     /**
      *  Print an edge in DOT format.
@@ -46,11 +49,12 @@
         print "\tnode [shape=circle,style=filled,fillcolor=black,fontcolor=white]\n";
         print "// Graph\n";
 
+        //  Initial and final locations.
         print "0 [fillcolor=green, style=filled];\n";
         if n > 0 {
                 print n - 1, " [fillcolor=blue, style=filled];\n";
         }
-        //  Edges
+        //  Edges.
         for i := 0 to |g|
         {
             edgeToDOT(g[i]);
