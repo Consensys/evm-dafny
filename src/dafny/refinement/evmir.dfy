@@ -31,12 +31,6 @@ module EVMIR {
         |   While(cond: S -> bool, body: seq<EVMIRProg>)
         |   IfElse(cond: S -> bool, ifBody: seq<EVMIRProg>, elseBody: seq<EVMIRProg>) 
         // |   Skip()
-
-    datatype EVMIRProg2<!S> =  
-        |   Block(i:EVMInst)
-        |   While(cond:  bool, body: seq<EVMIRProg2>)
-        |   IfElse(cond: bool, ifBody: seq<EVMIRProg2>, elseBody: seq<EVMIRProg2>) 
-        // |   Skip()
     
     /** A DiGraph with nat number vertices. */
     datatype CFG<!S(==)> = CFG(entry: S, g: LabDiGraph<S>, exit: S) 
@@ -85,7 +79,7 @@ module EVMIR {
      *  
      *  @param  k   First number available to id new state.
      */
-    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg2>, k: nat): (CFG<nat>, nat)
+    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat): (CFG<nat>, nat)
         // decreases p, s - {p}
         decreases p 
     {
@@ -126,7 +120,6 @@ module EVMIR {
                     var cfgWhile := CFG(
                                         whileBodyCFG.entry, 
                                         whileBodyCFG.g + 
-                                            // [(whileBodyCFG.exit, k + 1, "TRUE")] +
                                             //  Add edge for while condition false
                                             [(inCFG.exit, indexBodyExit + 1, "FALSE/WHILE")] +
                                             [(whileBodyCFG.exit, k, "loop")],
