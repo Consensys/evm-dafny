@@ -53,7 +53,7 @@
         //  Initial and final locations.
         print "0 [fillcolor=green, style=filled];\n";
         if n > 0 {
-            print n - 1, " [fillcolor=blue, style=filled];\n";
+            print n - 1, " [fillcolor=red, style=filled];\n";
 
         for i := 0 to n {
                 if i in tooltip {

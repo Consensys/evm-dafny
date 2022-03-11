@@ -162,6 +162,7 @@ module EVMIR {
     {
         if p == [] then (inCFG, k, m)
         else 
+            var m' :=  m[k := p]; // node for Block is associated with p
             match p[0]
                 case Block(i) => 
                     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
@@ -169,13 +170,13 @@ module EVMIR {
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, i.name)], k + 1),
                         p[1..],
                         k + 1,
-                        m[k := p] // node for Block is associated with p
+                        m'[k +1 := []] // node for Block is associated with p
                     )
                 
                 case IfElse(c, b1, b2) => 
                     //  Add true and false edges to current graph
                     //  Build cfgThen starting numbering from k + 1
-                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m);
+                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m');
                     //  Build cfgElse starting numbering from indexThen + 1
                     var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
@@ -194,7 +195,7 @@ module EVMIR {
                     //  Build CFG for b from k + 1 when while condition is true 
                     var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, "TRUE/WHILE")], k + 1);
                     //  
-                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m);
+                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m');
                     var cfgWhile := CFG(
                                         whileBodyCFG.entry, 
                                         whileBodyCFG.g + 
