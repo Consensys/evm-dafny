@@ -57,9 +57,7 @@ module EVMIR {
     {
         if n == 0 && n in m then map[n := prettyEVMIR(m[n])] 
         else if n == 0 then map[n := "default"]
-        else 
-            // assert n > 0;
-            map[n := if n in m then prettyEVMIR(m[n]) else "default"]  + toTooltip(m, n - 1)
+        else map[n := if n in m then prettyEVMIR(m[n]) else "default"]  + toTooltip(m, n - 1)
     }
 
     /**
@@ -68,7 +66,6 @@ module EVMIR {
      *  @param  f   A converter from `S` to a printable string.
      */
     method {:verify false} printCFGmap(m: map<nat, seq<EVMIRProg>>, name: string := "noName") 
-        // requires |cfg.g| >= 1
         {
             for i := 0 to |m|
             {
@@ -82,7 +79,6 @@ module EVMIR {
                 print "\n";
             }
         print "\n";
-        // diGraphToDOT(cfg.g, cfg.exit + 1, name);  
     }
 
     /**
@@ -90,10 +86,10 @@ module EVMIR {
      *
         @param  k   The number of white spaces to generate. 
      */
-    function method {:tailrecursion true} spaces(k: nat): string
+    function method {:tailrecursion true} whiteSpaces(k: nat): string
     {
         if k == 0 then ""
-        else " " + spaces(k - 1)
+        else " " + whiteSpaces(k - 1)
     }
 
     /**
@@ -109,16 +105,16 @@ module EVMIR {
         if p == [] then ""
         else 
             (match p[0]
-                case Block(i) => spaces(k * tabSize) + i.name + "\n"
+                case Block(i) => whiteSpaces(k * tabSize) + i.name + "\n"
                 case IfElse(c, b1, b2) => 
-                    spaces(k * tabSize)+ "If (*) then\n" +
+                    whiteSpaces(k * tabSize)+ "If (*) then\n" +
                     prettyEVMIR(b1, k + 1) +
-                    spaces(k * tabSize) + "else\n" +
+                    whiteSpaces(k * tabSize) + "else\n" +
                     prettyEVMIR(b2, k + 1)
                 case While(c, b) => 
-                    spaces(k * tabSize) + "While (*) do\n" +
+                    whiteSpaces(k * tabSize) + "While (*) do\n" +
                     prettyEVMIR(b, k + 1) +
-                    spaces(k * tabSize) + "od /* while */\n"
+                    whiteSpaces(k * tabSize) + "od /* while */\n"
             ) + prettyEVMIR(p[1..])
     }
 
