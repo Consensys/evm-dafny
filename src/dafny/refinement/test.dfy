@@ -34,7 +34,7 @@ method {:verify false} Main() {
         var k := CFG(0, g1, 2); 
         printCFG(k);  
 
-        var i := Inst((x:int) => x + 1, "ADD");     
+        var i := Inst((x:nat) => x + 1, "ADD");     
         var p1 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i)], [EVMIRProg.Block(i)]); 
 
         //  Sequence of blocks
@@ -59,11 +59,11 @@ method {:verify false} Main() {
         printCFGmap(m4);
 
         //  A more complicated program
-        var p5 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1)], [EVMIRProg.Block(i2)]); 
-        var p6 := EVMIRProg.While(_ => true, [EVMIRProg.Block(i1), p5, EVMIRProg.Block(i2)]); 
+        var p5 := EVMIRProg<nat>.IfElse(_ => true, [EVMIRProg.Block(i1)], [EVMIRProg.Block(i2)]); 
+        var p6 := EVMIRProg<nat>.While(_ => true, [EVMIRProg.Block(i1), p5, EVMIRProg.Block(i2)]); 
         // var p6 := EVMIRProg.While(true, [p5]); 
         var (cfg6, max6, m6) := toCFG(CFG(0, [], 0), [p6], 0, map[]);
-        printCFG(cfg6, "CFG for While true do {if then else} od");   
+        printCFG(cfg6, "CFG for While true do {if then else} od", m6);   
         printCFGmap(m6);
 
         print "Pretty-print\n";
