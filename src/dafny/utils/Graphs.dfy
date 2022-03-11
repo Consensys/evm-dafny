@@ -27,7 +27,7 @@
      *  Print an edge in DOT format.
      *  @param  e   A directed edge.
      */
-    method edgeToDOT<S>(e: LabDiEdge) 
+    method {:verify false} edgeToDOT<S>(e: LabDiEdge) 
     {
         print e.0, " -> ", e.1, " [label=\"", e.2, "\"]", ";\n";
     }
@@ -39,7 +39,7 @@
      *  @param  name        Optional label of the graph.
      *  @param  tooltip     Optional map providing tooltips for nodes.
      */
-    method diGraphToDOT(g: LabDiGraph<nat>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
+    method {:verify true} diGraphToDOT(g: LabDiGraph<nat>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
     {
         print "digraph G {\n";
         print "\tfontname=helvetica;\n";
@@ -51,13 +51,16 @@
         print "// Graph\n";
 
         //  Initial and final locations.
-        if 0 !in tooltip {
-            print "0 [fillcolor=green, style=filled];\n";
-        } else {
-            print "0 [fillcolor=green, style=filled, tooltip=\"",tooltip[0],"\"];\n";
-        }
+        print "0 [fillcolor=green, style=filled];\n";
         if n > 0 {
-                print n - 1, " [fillcolor=blue, style=filled];\n";
+            print n - 1, " [fillcolor=blue, style=filled];\n";
+
+        for i := 0 to n 
+            {
+                if i in tooltip {
+                    print i, " [tooltip=\"",tooltip[i],"\"];\n";
+                }
+            }
         }
         //  Edges.
         for i := 0 to |g|
