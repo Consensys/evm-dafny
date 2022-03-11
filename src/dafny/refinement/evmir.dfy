@@ -48,6 +48,10 @@ module EVMIR {
 
     /**
      *  Generate tooltip, node -> pretty printed EVMIRProg<nat>
+     *  
+     *  @param  m   A map from nodes to EVMIR code.
+     *  @param  n   The number of nodes, should be the keys in the map too.
+     *  @returns    The map m where every EVMIR code is pretty-printed.
      */
     function method toTooltip(m: map<nat, seq<EVMIRProg>>, n: nat): map<nat, string> 
     {
@@ -83,6 +87,8 @@ module EVMIR {
 
     /**
      *  Generate a string with `k` spaces.
+     *
+        @param  k   The number of white spaces to generate. 
      */
     function method {:tailrecursion true} spaces(k: nat): string
     {
