@@ -55,16 +55,14 @@
         if n > 0 {
             print n - 1, " [fillcolor=blue, style=filled];\n";
 
-        for i := 0 to n 
-            {
+        for i := 0 to n {
                 if i in tooltip {
                     print i, " [tooltip=\"",tooltip[i],"\"];\n";
                 }
             }
         }
         //  Edges.
-        for i := 0 to |g|
-        {
+        for i := 0 to |g| {
             edgeToDOT(g[i]);
         }
         print "}\n";
