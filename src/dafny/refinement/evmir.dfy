@@ -29,7 +29,6 @@ module EVMIR {
         |   Block(i:EVMInst)
         |   While(cond: S -> bool, body: seq<EVMIRProg>)
         |   IfElse(cond: S -> bool, ifBody: seq<EVMIRProg>, elseBody: seq<EVMIRProg>) 
-        // |   Skip()
     
     /** A DiGraph with nat number vertices. */
     datatype CFG<!S(==)> = CFG(entry: S, g: LabDiGraph<S>, exit: S) 
@@ -114,7 +113,6 @@ module EVMIR {
                     whiteSpaces(k * tabSize) + "While (*) do\n" +
                     prettyEVMIR(b, k + 1) +
                     whiteSpaces(k * tabSize) + "od /* while */\n"
-                // case Skip() => whiteSpaces(k * tabSize) + "skip" + "\n"
             ) + prettyEVMIR(p[1..], k)
     }
 
@@ -168,7 +166,7 @@ module EVMIR {
     {
         if p == [] then (inCFG, k, m)
         else 
-            // var m' :=  m[k := p]; // node for Block is associated with p
+            // Current node is associated with the program that is left to be run. 
             var m' := m[k := c];
             match p[0]
                 case Block(i) => 
@@ -220,16 +218,6 @@ module EVMIR {
                     toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
                         m3[indexBodyExit := c], 
                         c[1..])
-                
-                // case Skip() => 
-                //     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
-                //     toCFG(
-                //         CFG(inCFG.entry, inCFG.g + [(k, k + 1, Skip())], k + 1),
-                //         p[1..],
-                //         k + 1,
-                //         m'[k + 1 := c[1..]],
-                //         c[1..]
-                //     )
     }
         
     /**
