@@ -99,7 +99,7 @@ module EVMIR {
      *  @param  name    The name of the program.
      *  @returns        A string with the pretty-printed program `p`.
      */
-    function method {:verify false} prettyEVMIR(p: seq<EVMIRProg>, k: nat := 0, name: string := "noName", tabSize: nat := 2): string
+    function method {:verify true} prettyEVMIR(p: seq<EVMIRProg>, k: nat := 0, name: string := "noName", tabSize: nat := 2): string
         decreases p
     {
         if p == [] then ""
@@ -116,7 +116,7 @@ module EVMIR {
                     prettyEVMIR(b, k + 1) +
                     whiteSpaces(k * tabSize) + "od /* while */\n"
                 case Skip() => whiteSpaces(k * tabSize) + "skip" + "\n"
-            ) + prettyEVMIR(p[1..])
+            ) + prettyEVMIR(p[1..], k)
     }
 
     /**
