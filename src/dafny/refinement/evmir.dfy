@@ -133,7 +133,6 @@ module EVMIR {
         else 
             match p[0]
                 case Block(i) => (runInst(i, s), p[1..])
-                
                 case While(c, b) => 
                         if c(s) then
                             var (s', p') := stepEVMIR(b, s);
@@ -156,6 +155,7 @@ module EVMIR {
      *  @param  p       The program to build the CFG for.
      *  @param  k       First Id (number) available to id newly created state.
      *  @param  m       The simulation for inCFG.
+     *  @param  c       The program that remains to be executed from the current point.
      *  @returns        The CFG `inCFG` extended from its final state (`k`) with the CFG of p, and
      *                  the simulation map extended to the newly created nodes.
      */
