@@ -21,8 +21,16 @@ module EVMSeq {
      *  This can stand for any linear sequence of instructions without jumps.
      */
     datatype EVMInst<!S> = 
-        Inst(i : S -> S, name: string)
-    
+            Inst(i : S -> S, name: string)
+        |   TestInst(name: string)
+        // |   TestFalse(name : string := "FALSE")
+        |   Skip(name: string := "SKIP")  
+
+    // const TestTrue := Inst(_ => true, "TRUE") 
+    // const TestFalse := Inst(_ => false, "FALSE") 
+
+    // const Skip := Inst( x => x, "SKIP")
+
     /**
      *  Compute next state.
      *  
@@ -34,6 +42,9 @@ module EVMSeq {
     {
         match i 
             case Inst(e, _) => e(s)
+            //  Tests and Skip
+            case _ => s 
+
     }
 
 }
