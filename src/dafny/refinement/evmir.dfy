@@ -27,7 +27,6 @@ module EVMIR {
     /** Programs with block of instructions, while loops/ifs. */
     datatype EVMIRProg<!S> =  
         |   Block(i:EVMInst)
-        // |   Sequence(p1: EVMIRProg, p2: EVMIRProg)
         |   While(cond: S -> bool, body: seq<EVMIRProg>)
         |   IfElse(cond: S -> bool, ifBody: seq<EVMIRProg>, elseBody: seq<EVMIRProg>) 
         |   Skip()
