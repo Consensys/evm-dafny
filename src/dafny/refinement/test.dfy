@@ -26,13 +26,13 @@ method {:verify false} Main() {
         /*
          *  build labelled DiGraph and print label which is a string
          */
-        var g1 : LabDiGraph := [
-            (0, 1, "edge"), 
-            (1, 2, "edge2"), 
-            (1, 3, "edge3"),
-            (2, 0, "loop")]; 
-        var k := CFG(0, g1, 2); 
-        printCFG(k);  
+        // var g1 : LabDiGraph := [
+        //     (0, 1, "edge"), 
+        //     (1, 2, "edge2"), 
+        //     (1, 3, "edge3"),
+        //     (2, 0, "loop")]; 
+        // var k := CFG(0, g1, 2); 
+        // // printCFG(k);  
 
         var i := Inst((x:nat) => x + 1, "ADD");     
         var p1 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i)], [EVMIRProg.Block(i)]); 
@@ -40,34 +40,34 @@ method {:verify false} Main() {
         //  Sequence of blocks
         var i1 := Inst((x:nat) => x + 1, "SUB");     
         var p2 := [EVMIRProg.Block(i1), EVMIRProg.Block(i), EVMIRProg.Block(i)];
-        var (cfg2, max2, m2) := toCFG(CFG(0, [], 0), p2, 0, map[]);
-        printCFG(cfg2);   
-        printCFGmap(m2);
+        // var (cfg2, max2, m2) := toCFG(CFG(0, [], 0), p2, 0, map[]);
+        // printCFG(cfg2, "p2", m2);   
+        // printCFGmap(m2);
 
         //  IfThenElse 
         var i2 := Inst((x:nat) => x + 1, "PUSH");     
         var i3 := Inst((x:nat) => x + 1, "POP");     
-        var p3 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i2)], [EVMIRProg.Block(i2)]); 
-        var (cfg3, max3, m3) := toCFG(CFG(0, [], 0), [p3] + [EVMIRProg.Block(i3)], 0, map[]);
-        printCFG(cfg3);   
-        printCFGmap(m3);
+        var p3 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i2)], [EVMIRProg.Block(i2),  EVMIRProg.Block(i1)]); 
+        // var (cfg3, max3, m3) := toCFG(CFG(0, [], 0), [p3] + [EVMIRProg.Block(i3)], 0, map[]);
+        // printCFG(cfg3, "ifThenElse", m3);   
+        // printCFGmap(m3);
 
         //  While loop
         var p4 := EVMIRProg.While(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i)]); 
         var (cfg4, max4, m4) := toCFG(CFG(0, [], 0), [p4] + [EVMIRProg.Block(i3)], 0, map[]);
-        printCFG(cfg4, "CFG for While true do add; PUSH; od");   
-        printCFGmap(m4);
+        // printCFG(cfg4, "CFG for While true do add; PUSH; od", m4);   
+        // printCFGmap(m4);
 
         //  A more complicated program
         var p5 := EVMIRProg<nat>.IfElse(_ => true, [EVMIRProg.Block(i1)], [EVMIRProg.Block(i2)]); 
         var p6 := EVMIRProg<nat>.While(_ => true, [EVMIRProg.Block(i1), p5, EVMIRProg.Block(i2)]); 
-        // var p6 := EVMIRProg.While(true, [p5]); 
+        // // var p6 := EVMIRProg.While(true, [p5]); 
         var (cfg6, max6, m6) := toCFG(CFG(0, [], 0), [p6], 0, map[]);
         printCFG(cfg6, "CFG for While true do {if then else} od", m6);   
-        printCFGmap(m6);
+        // printCFGmap(m6);
 
-        print "Pretty-print\n";
-        print prettyEVMIR([p6]);
+        // print "Pretty-print\n";
+        // print prettyEVMIR([p6]);
         print "\n";
 
     }
