@@ -21,10 +21,10 @@ include "../refinement/evm-seq.dfy"
     import opened EVMSeq 
 
     /** A labelled directed edge: (src, dst, label). */
-    type LabDiEdge<!S> = (S, S, EVMInst<S>)
+    type LabDiEdge<!S> = (nat, nat, EVMInst<S>)
 
     /** A Directed graph. Type of edge is not a reference. */
-    type LabDiGraph<!S> = seq<LabDiEdge>
+    type LabDiGraph<!S> = seq<LabDiEdge<S>>
 
     /**
      *  Print an edge in DOT format.

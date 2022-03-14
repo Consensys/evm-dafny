@@ -31,14 +31,14 @@ module EVMIR {
         |   IfElse(cond: S -> bool, ifBody: seq<EVMIRProg>, elseBody: seq<EVMIRProg>) 
     
     /** A DiGraph with nat number vertices. */
-    datatype CFG<!S(==)> = CFG(entry: S, g: LabDiGraph<S>, exit: S) 
+    datatype CFG<!S(==)> = CFG(entry: nat, g: LabDiGraph<S>, exit: nat) 
 
     /**
      *  Print a CFG of type `S`.
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
      */
-    method printCFG(cfg: CFG<nat>, name: string := "noName", m: map<nat, seq<EVMIRProg<nat>>> := map[]) 
+    method printCFG<S>(cfg: CFG<nat>, name: string := "noName", m: map<nat, seq<EVMIRProg<S>>> := map[]) 
         requires |cfg.g| >= 1
     {
         diGraphToDOT(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));  
@@ -97,7 +97,7 @@ module EVMIR {
      *  @param  name    The name of the program.
      *  @returns        A string with the pretty-printed program `p`.
      */
-    function method {:verify true} prettyEVMIR(p: seq<EVMIRProg>, k: nat := 0, name: string := "noName", tabSize: nat := 2): string
+    function method {:verify true} prettyEVMIR<S>(p: seq<EVMIRProg<S>>, k: nat := 0, name: string := "noName", tabSize: nat := 2): string
         decreases p
     {
         if p == [] then ""
@@ -124,7 +124,7 @@ module EVMIR {
      *  @returns    The state obtained after executing one step of `p` from `s`,
      *              and the program that is left to be executed.
      */
-    function method stepEVMIR<S>(p: seq<EVMIRProg>, s: S): (S, seq<EVMIRProg>) 
+    function method stepEVMIR<S>(p: seq<EVMIRProg<S>>, s: S): (S, seq<EVMIRProg>) 
     {   
         if |p| == 0 then (s, [])
         else 
@@ -146,6 +146,38 @@ module EVMIR {
     }
 
     /**
+     *  Semantics of EVMIR programs.
+     *
+     *  @param  g   A CFG.
+     *  @param  pc  A node in the CFG.
+     *  @param  s   A state.
+     *  @returns    The state obtained after executing the instruction at node
+     *              `pc` and the next `pc`. 
+     */
+    // function method stepCFG<S>(g: CFG, pc: nat, s: S): (S, nat) 
+    //     requires pc in g.g
+    // {   
+    //     if pc == g.exit then (s, g.exit)
+    //     else (s, pc) 
+    //         match 
+    //         // match p[0]
+    //         //     case Block(i) => (runInst(i, s), p[1..])
+    //         //     case While(c, b) => 
+    //         //             if c(s) then
+    //         //                 var (s', p') := stepEVMIR(b, s);
+    //         //                 (s', p' + p)
+    //         //             else 
+    //         //                 (s, p[1..]) 
+    //         //     case IfElse(c, b1, b2) => 
+    //         //         if c(s) then 
+    //         //             var (s', p') := stepEVMIR(b1, s);
+    //         //             (s', p' + p[1..])
+    //         //         else var (s', p') := stepEVMIR(b2, s);
+    //         //             (s', p' + p[1..])
+    //             // case Skip() => stepEVMIR(p[1..], s)
+    // }
+
+    /**
      *  Build the CFG of a EVMIR program.
      *
      *  @param  inCFG   The CFG to extend.
@@ -156,11 +188,11 @@ module EVMIR {
      *  @returns        The CFG `inCFG` extended from its final state (`k`) with the CFG of p, and
      *                  the simulation map extended to the newly created nodes.
      */
-    function method toCFG( 
-            inCFG: CFG<nat>, 
-            p: seq<EVMIRProg<nat>>, 
-            k: nat, m: map<nat, seq<EVMIRProg<nat>>>, 
-            c: seq<EVMIRProg<nat>> := p): (CFG<nat>, nat, map<nat, seq<EVMIRProg<nat>>>)
+    function method toCFG<S>( 
+            inCFG: CFG<S>, 
+            p: seq<EVMIRProg<S>>, 
+            k: nat, m: map<nat, seq<EVMIRProg<S>>>, 
+            c: seq<EVMIRProg<S>> := p): (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>)
         requires |c| >= |p|
         decreases p 
     {
@@ -171,7 +203,7 @@ module EVMIR {
             match p[0]
                 case Block(i) => 
                     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
-                    toCFG(
+                    toCFG( 
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, i)], k + 1),
                         p[1..],
                         k + 1,
