@@ -12,13 +12,16 @@
  * under the License.
  */
  
+include "../refinement/evm-seq.dfy"
 /**
  *  Provide labelled directed graph.
  */
  module Graphs {
 
+    import opened EVMSeq 
+
     /** A labelled directed edge: (src, dst, label). */
-    type LabDiEdge<!S> = (S, S, string)
+    type LabDiEdge<!S> = (S, S, EVMInst<S>)
 
     /** A Directed graph. Type of edge is not a reference. */
     type LabDiGraph<!S> = seq<LabDiEdge>
@@ -27,9 +30,9 @@
      *  Print an edge in DOT format.
      *  @param  e   A directed edge.
      */
-    method {:verify false} edgeToDOT<S>(e: LabDiEdge) 
+    method {:verify true} edgeToDOT<S>(e: LabDiEdge)  
     {
-        print e.0, " -> ", e.1, " [label=\"", e.2, "\"]", ";\n";
+        print e.0, " -> ", e.1, " [label=\"", e.2.name, "\"]", ";\n";
     }
 
     /**
