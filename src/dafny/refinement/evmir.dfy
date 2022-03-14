@@ -159,12 +159,18 @@ module EVMIR {
      *  @returns        The CFG `inCFG` extended from its final state (`k`) with the CFG of p, and
      *                  the simulation map extended to the newly created nodes.
      */
-    function method toCFG(inCFG: CFG<nat>, p: seq<EVMIRProg>, k: nat, m: map<nat, seq<EVMIRProg>>): (CFG<nat>, nat, map<nat, seq<EVMIRProg>>)
+    function method toCFG(
+            inCFG: CFG<nat>, 
+            p: seq<EVMIRProg<nat>>, 
+            k: nat, m: map<nat, seq<EVMIRProg<nat>>>, 
+            c: seq<EVMIRProg<nat>> := p): (CFG<nat>, nat, map<nat, seq<EVMIRProg<nat>>>)
+        requires |c| >= |p|
         decreases p 
     {
         if p == [] then (inCFG, k, m)
         else 
-            var m' :=  m[k := p]; // node for Block is associated with p
+            // var m' :=  m[k := p]; // node for Block is associated with p
+            var m' := m[k := c];
             match p[0]
                 case Block(i) => 
                     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
@@ -172,15 +178,16 @@ module EVMIR {
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, i.name)], k + 1),
                         p[1..],
                         k + 1,
-                        m'[k +1 := []] // node for Block is associated with p
+                        m',
+                        c[1..]  
                     )
                 
-                case IfElse(c, b1, b2) => 
+                case IfElse(_, b1, b2) => 
                     //  Add true and false edges to current graph
-                    //  Build cfgThen starting numbering from k + 1
-                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m');
-                    //  Build cfgElse starting numbering from indexThen + 1
-                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1);
+                    //  Build cfgThen starting numbering from k + 1 for condition true 
+                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m', b1 + c[1..]);
+                    //  Build cfgElse starting numbering from indexThen + 1 for condition false
+                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1, b2 + c[1..]);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
                     var cfgIfThenElse := CFG(
@@ -191,13 +198,18 @@ module EVMIR {
                                                 [(cfgThen.exit, cfgThenElse.exit, "skip")],
                                             cfgThenElse.exit
                                         );
-                    toCFG(cfgIfThenElse, p[1..], indexThenElse, ((m2[k := p])[k + 1 := b1 + p[1..]])[indexThen + 1 := b2 + p[1..]])
+                    toCFG(  cfgIfThenElse, 
+                            p[1..], 
+                            indexThenElse, 
+                            m2[indexThen := c[1..]],
+                            c[1..]
+                        )
 
-                case While(c, b) => 
+                case While(_, b) => 
                     //  Build CFG for b from k + 1 when while condition is true 
                     var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, "TRUE/WHILE")], k + 1);
                     //  
-                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m');
+                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m', b + c);
                     var cfgWhile := CFG(
                                         whileBodyCFG.entry, 
                                         whileBodyCFG.g + 
@@ -206,7 +218,9 @@ module EVMIR {
                                             [(whileBodyCFG.exit, k, "loop")],
                                         indexBodyExit + 1
                                         );
-                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, m3[indexBodyExit + 1 := p[1..]])
+                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
+                        m3[indexBodyExit := c], 
+                        c[1..])
                 
                 case Skip() => 
                     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
@@ -214,7 +228,8 @@ module EVMIR {
                         CFG(inCFG.entry, inCFG.g + [(k, k + 1, "skip")], k + 1),
                         p[1..],
                         k + 1,
-                        m'[k + 1 := []] // node for Block is associated with p
+                        m'[k + 1 := c[1..]],
+                        c[1..]
                     )
     }
         
