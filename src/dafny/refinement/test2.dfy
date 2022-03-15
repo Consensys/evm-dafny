@@ -26,14 +26,16 @@ method {:verify true} Main() {
         /*
          *  build labelled DiGraph and print label which is a string
          */
-        var i : EVMInst<nat> := Inst( (x:int) => x + 1, "ADD");     
-        var g1 : LabDiGraph2<nat> := map[
+        var j : nat -> nat := x => x + 1;
+        var i : EVMInst<nat> := Inst( j, "ADD");     
+
+        var g1 : LabDiGraph<nat> := map[
             0 := [(i, 1)], 
             1 := [(i, 2)],
             2 := []
         ];
 
-        var k : CFG2<nat> := CFG2(0, g1, 2); 
+        var k : CFG<nat> := CFG(0, g1, 2); 
         printCFG2(k, "p1", map[]);  
       
         print "\n";
