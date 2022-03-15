@@ -20,28 +20,17 @@ include "../refinement/evm-seq.dfy"
 
     import opened EVMSeq 
 
-    /** A labelled directed edge: (src, dst, label). */
-    type LabDiEdge<!S> = (nat, nat, EVMInst<S>)
+    /** A labelled directed edge: (label, successor). */
+    type LabDiEdge<!S> = (EVMInst<S>, nat)
 
-    //  label to tgt
-    type LabDiEdge2<!S> = (EVMInst<S>, nat)
-
-    /** A Directed graph. Type of edge is not a reference. */
-    type LabDiGraph<!S> = seq<LabDiEdge<S>>
-
-    //  src -> [(l1, tgt1), (l2, tgt2), ...]
-    type LabDiGraph2<!S> = map<nat, seq<LabDiEdge2<S>>>
+    /** A labelled directed graph as a map src -> [(l1, tgt1), (l2, tgt2), ...] */  
+    type LabDiGraph<!S> = map<nat, seq<LabDiEdge<S>>>
 
     /**
      *  Print an edge in DOT format.
      *  @param  e   A directed edge.
      */
-    method {:verify true} edgeToDOT<S>(e: LabDiEdge)  
-    {
-        print e.0, " -> ", e.1, " [label=\"", e.2.name, "\"]", ";\n";
-    }
-
-    method {:verify true} edgeToDOT2(src: nat, tgt: nat, l: string)  
+    method {:verify true} edgeToDOT(src: nat, tgt: nat, l: string)  
     {
         print src, " -> ", tgt, " [label=\"", l, "\"]", ";\n";
     }
@@ -53,36 +42,7 @@ include "../refinement/evm-seq.dfy"
      *  @param  name        Optional label of the graph.
      *  @param  tooltip     Optional map providing tooltips for nodes.
      */
-    method {:verify true} diGraphToDOT(g: LabDiGraph<nat>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
-    {
-        print "digraph G {\n";
-        print "\tfontname=helvetica;\n";
-        print "\tgraph [pad=\"1.5\", ranksep=\"1.2\", nodesep=\"0.4\"];\n";
-        print "\tfontsize=\"10.0\"\n";
-        print "\tlabel=\"", name, "\";\n";
-        print "\trankdir=\"TB\"\n";
-        print "\tnode [shape=circle,style=filled,fillcolor=black,fontcolor=white]\n";
-        print "// Graph\n";
-
-        //  Initial and final locations.
-        print "0 [fillcolor=green, style=filled];\n";
-        if n > 0 {
-            print n - 1, " [fillcolor=red, style=filled];\n";
-
-        for i := 0 to n {
-                if i in tooltip {
-                    print i, " [tooltip=\"",tooltip[i],"\"];\n";
-                }
-            }
-        }
-        //  Edges.
-        for i := 0 to |g| {
-            edgeToDOT(g[i]);
-        }
-        print "}\n";
-    }
-
-     method {:verify true} diGraphToDOT2<S>(g: LabDiGraph2<S>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
+     method {:verify true} diGraphToDOT<S>(g: LabDiGraph<S>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
     {
         print "digraph G {\n";
         print "\tfontname=helvetica;\n";
@@ -103,13 +63,12 @@ include "../refinement/evm-seq.dfy"
                     print i, " [tooltip=\"",tooltip[i],"\"];\n";
                 }
             }
-        // }
         //  Edges.
         for i := 0 to n {
             if i in g {
                 //  print all the successors
                 for k := 0 to |g[i]| {
-                        edgeToDOT2(i, g[i][k].1, g[i][k].0.name);
+                        edgeToDOT(i, g[i][k].1, g[i][k].0.name);
                 } 
             } else {
                 print "Element", i, " not found in map";
@@ -117,5 +76,4 @@ include "../refinement/evm-seq.dfy"
         }
         print "}\n";
     }
-
  }
