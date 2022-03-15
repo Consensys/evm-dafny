@@ -36,7 +36,7 @@ method {:verify true} Main() {
         ];
 
         var k : CFG<nat> := CFG(0, g1, 2); 
-        printCFG2(k, "p1", map[]);  
+        printCFG(k, "p1", map[]);  
       
         print "\n";
 
