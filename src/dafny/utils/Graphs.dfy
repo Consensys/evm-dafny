@@ -23,8 +23,14 @@ include "../refinement/evm-seq.dfy"
     /** A labelled directed edge: (src, dst, label). */
     type LabDiEdge<!S> = (nat, nat, EVMInst<S>)
 
+    //  label to tgt
+    type LabDiEdge2<!S> = (EVMInst<S>, nat)
+
     /** A Directed graph. Type of edge is not a reference. */
     type LabDiGraph<!S> = seq<LabDiEdge<S>>
+
+    //  src -> [(l1, tgt1), (l2, tgt2), ...]
+    type LabDiGraph2<!S> = map<nat, seq<LabDiEdge2<S>>>
 
     /**
      *  Print an edge in DOT format.
@@ -33,6 +39,11 @@ include "../refinement/evm-seq.dfy"
     method {:verify true} edgeToDOT<S>(e: LabDiEdge)  
     {
         print e.0, " -> ", e.1, " [label=\"", e.2.name, "\"]", ";\n";
+    }
+
+    method {:verify true} edgeToDOT2(src: nat, tgt: nat, l: string)  
+    {
+        print src, " -> ", tgt, " [label=\"", l, "\"]", ";\n";
     }
 
     /**
@@ -67,6 +78,42 @@ include "../refinement/evm-seq.dfy"
         //  Edges.
         for i := 0 to |g| {
             edgeToDOT(g[i]);
+        }
+        print "}\n";
+    }
+
+     method {:verify true} diGraphToDOT2<S>(g: LabDiGraph2<S>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
+    {
+        print "digraph G {\n";
+        print "\tfontname=helvetica;\n";
+        print "\tgraph [pad=\"1.5\", ranksep=\"1.2\", nodesep=\"0.4\"];\n";
+        print "\tfontsize=\"10.0\"\n";
+        print "\tlabel=\"", name, "\";\n";
+        print "\trankdir=\"TB\"\n";
+        print "\tnode [shape=circle,style=filled,fillcolor=black,fontcolor=white]\n";
+        print "// Graph\n";
+
+        //  Initial and final locations.
+        print "0 [fillcolor=green, style=filled];\n";
+        if n > 0 {
+            print n - 1, " [fillcolor=red, style=filled];\n";
+        }
+        for i := 0 to n {
+                if i in tooltip {
+                    print i, " [tooltip=\"",tooltip[i],"\"];\n";
+                }
+            }
+        // }
+        //  Edges.
+        for i := 0 to n {
+            if i in g {
+                //  print all the successors
+                for k := 0 to |g[i]| {
+                        edgeToDOT2(i, g[i][k].1, g[i][k].0.name);
+                } 
+            } else {
+                print "Element", i, " not found in map";
+            }
         }
         print "}\n";
     }
