@@ -22,14 +22,9 @@ module EVMSeq {
      */
     datatype EVMInst<!S> = 
             Inst(i : S -> S, name: string)
-        |   TestInst(name: string)
-        // |   TestFalse(name : string := "FALSE")
+        |   TestInst(c: S -> bool, name: string)
         |   Skip(name: string := "SKIP")  
 
-    // const TestTrue := Inst(_ => true, "TRUE") 
-    // const TestFalse := Inst(_ => false, "FALSE") 
-
-    // const Skip := Inst( x => x, "SKIP")
 
     /**
      *  Compute next state.

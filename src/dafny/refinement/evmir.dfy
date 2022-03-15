@@ -21,7 +21,7 @@ include "../utils/Graphs.dfy"
  */
 module EVMIR {
 
-    import opened EVMSeq
+    import opened EVMSeq 
     import opened Graphs
 
     /** Programs with block of instructions, while loops/ifs. */
@@ -31,25 +31,24 @@ module EVMIR {
         |   IfElse(cond: S -> bool, ifBody: seq<EVMIRProg>, elseBody: seq<EVMIRProg>) 
     
     /** A DiGraph with nat number vertices. */
-    datatype CFG<!S(==)> = CFG(entry: nat, g: LabDiGraph<S>, exit: nat) 
+    // datatype CFG<!S(==)> = CFG(entry: nat, g: LabDiGraph<S>, exit: nat) 
 
-    datatype CFG2<!S(==)> = CFG2(entry: nat, g: LabDiGraph2<S>, exit: nat) 
+    datatype CFG<!S(==)> = CFG(entry: nat, g: LabDiGraph<S>, exit: nat) 
 
     /**
      *  Print a CFG of type `S`.
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
      */
-    method printCFG<S>(cfg: CFG<nat>, name: string := "noName", m: map<nat, seq<EVMIRProg<S>>> := map[]) 
-        requires |cfg.g| >= 1
-    {
-        diGraphToDOT(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));  
-    }
+    // method printCFG<S>(cfg: CFG<nat>, name: string := "noName", m: map<nat, seq<EVMIRProg<S>>> := map[]) 
+    //     requires |cfg.g| >= 1
+    // {
+    //     diGraphToDOT(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));  
+    // }
 
-    method printCFG2<S>(cfg: CFG2<S>, name: string, m: map<nat, seq<EVMIRProg<S>>>) 
-        requires |cfg.g| >= 1
+    method printCFG2<S>(cfg: CFG<S>, name: string, m: map<nat, seq<EVMIRProg<S>>>) 
     {
-        diGraphToDOT2<S>(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));  
+        diGraphToDOT<S>(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));   
     }
 
     /**
@@ -196,75 +195,75 @@ module EVMIR {
      *  @returns        The CFG `inCFG` extended from its final state (`k`) with the CFG of p, and
      *                  the simulation map extended to the newly created nodes.
      */
+    // function method toCFG<S>( 
+    //         inCFG: CFG<S>, 
+    //         p: seq<EVMIRProg<S>>, 
+    //         k: nat, m: map<nat, seq<EVMIRProg<S>>>, 
+    //         c: seq<EVMIRProg<S>> := p): (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>)
+    //     requires |c| >= |p|
+    //     decreases p 
+    // {
+    //     if p == [] then (inCFG, k, m)
+    //     else 
+    //         // Current node is associated with the program that is left to be run. 
+    //         var m' := m[k := c];
+    //         match p[0]
+    //             case Block(i) => 
+    //                 //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
+    //                 toCFG( 
+    //                     CFG(inCFG.entry, inCFG.g + [(k, k + 1, i)], k + 1),
+    //                     p[1..],
+    //                     k + 1,
+    //                     m',
+    //                     c[1..]  
+    //                 )
+                
+    //             case IfElse(_, b1, b2) => 
+    //                 //  Add true and false edges to current graph
+    //                 //  Build cfgThen starting numbering from k + 1 for condition true 
+    //                 var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m', b1 + c[1..]);
+    //                 //  Build cfgElse starting numbering from indexThen + 1 for condition false
+    //                 var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1, b2 + c[1..]);
+    //                 //  Build IfThenElse cfg stitching together previous cfgs and 
+    //                 //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
+    //                 var cfgIfThenElse := CFG(
+    //                                         cfgThenElse.entry, 
+    //                                         cfgThenElse.g + 
+    //                                             [(inCFG.exit, k + 1, TestInst("TRUE"))] +  
+    //                                             [(inCFG.exit, indexThen + 1, TestInst("FALSE"))] + 
+    //                                             [(cfgThen.exit, cfgThenElse.exit, Skip())],
+    //                                         cfgThenElse.exit
+    //                                     );
+    //                 toCFG(  cfgIfThenElse, 
+    //                         p[1..], 
+    //                         indexThenElse, 
+    //                         m2[indexThen := c[1..]],
+    //                         c[1..]
+    //                     )
+
+    //             case While(_, b) => 
+    //                 //  Build CFG for b from k + 1 when while condition is true 
+    //                 var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, TestInst("TRUE"))], k + 1);
+    //                 //  
+    //                 var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m', b + c);
+    //                 var cfgWhile := CFG(
+    //                                     whileBodyCFG.entry, 
+    //                                     whileBodyCFG.g + 
+    //                                         //  Add edge for while condition false
+    //                                         [(inCFG.exit, indexBodyExit + 1, TestInst("FALSE"))] +
+    //                                         [(whileBodyCFG.exit, k, Skip())],
+    //                                     indexBodyExit + 1
+    //                                     );
+    //                 toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
+    //                     m3[indexBodyExit := c], 
+    //                     c[1..])
+    // }
+
     function method toCFG<S>( 
             inCFG: CFG<S>, 
             p: seq<EVMIRProg<S>>, 
             k: nat, m: map<nat, seq<EVMIRProg<S>>>, 
             c: seq<EVMIRProg<S>> := p): (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>)
-        requires |c| >= |p|
-        decreases p 
-    {
-        if p == [] then (inCFG, k, m)
-        else 
-            // Current node is associated with the program that is left to be run. 
-            var m' := m[k := c];
-            match p[0]
-                case Block(i) => 
-                    //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
-                    toCFG( 
-                        CFG(inCFG.entry, inCFG.g + [(k, k + 1, i)], k + 1),
-                        p[1..],
-                        k + 1,
-                        m',
-                        c[1..]  
-                    )
-                
-                case IfElse(_, b1, b2) => 
-                    //  Add true and false edges to current graph
-                    //  Build cfgThen starting numbering from k + 1 for condition true 
-                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m', b1 + c[1..]);
-                    //  Build cfgElse starting numbering from indexThen + 1 for condition false
-                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1, b2 + c[1..]);
-                    //  Build IfThenElse cfg stitching together previous cfgs and 
-                    //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
-                    var cfgIfThenElse := CFG(
-                                            cfgThenElse.entry, 
-                                            cfgThenElse.g + 
-                                                [(inCFG.exit, k + 1, TestInst("TRUE"))] +  
-                                                [(inCFG.exit, indexThen + 1, TestInst("FALSE"))] + 
-                                                [(cfgThen.exit, cfgThenElse.exit, Skip())],
-                                            cfgThenElse.exit
-                                        );
-                    toCFG(  cfgIfThenElse, 
-                            p[1..], 
-                            indexThenElse, 
-                            m2[indexThen := c[1..]],
-                            c[1..]
-                        )
-
-                case While(_, b) => 
-                    //  Build CFG for b from k + 1 when while condition is true 
-                    var tmpCFG := CFG(inCFG.entry, inCFG.g + [(k, k + 1, TestInst("TRUE"))], k + 1);
-                    //  
-                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m', b + c);
-                    var cfgWhile := CFG(
-                                        whileBodyCFG.entry, 
-                                        whileBodyCFG.g + 
-                                            //  Add edge for while condition false
-                                            [(inCFG.exit, indexBodyExit + 1, TestInst("FALSE"))] +
-                                            [(whileBodyCFG.exit, k, Skip())],
-                                        indexBodyExit + 1
-                                        );
-                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
-                        m3[indexBodyExit := c], 
-                        c[1..])
-    }
-
-    function method toCFG2<S>( 
-            inCFG: CFG2<S>, 
-            p: seq<EVMIRProg<S>>, 
-            k: nat, m: map<nat, seq<EVMIRProg<S>>>, 
-            c: seq<EVMIRProg<S>> := p): (CFG2<S>, nat, map<nat, seq<EVMIRProg<S>>>)
         requires |c| >= |p|
         decreases p 
     {
@@ -277,8 +276,8 @@ module EVMIR {
             match p[0]
                 case Block(i) => 
                     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
-                    toCFG2( 
-                        CFG2(inCFG.entry, 
+                    toCFG( 
+                        CFG(inCFG.entry, 
                             inCFG.g[k := [(i, k + 1)]], // + [(k, k + 1, i)], 
                             k + 1),
                         p[1..],
@@ -287,40 +286,40 @@ module EVMIR {
                         c[1..]  
                     )
                 
-                case IfElse(_, b1, b2) => 
+                case IfElse(cond, b1, b2) => 
                     //  Add true and false edges to current graph
                     //  Build cfgThen starting numbering from k + 1 for condition true 
-                    var (cfgThen, indexThen, m1) := toCFG2(inCFG, b1, k + 1, m', b1 + c[1..]);
+                    var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m', b1 + c[1..]);
                     //  Build cfgElse starting numbering from indexThen + 1 for condition false
-                    var (cfgThenElse, indexThenElse, m2) := toCFG2(cfgThen, b2, indexThen + 1, m1, b2 + c[1..]);
+                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1, b2 + c[1..]);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
-                    var cfgIfThenElse := CFG2(
+                    var cfgIfThenElse := CFG(
                                             cfgThenElse.entry, 
                                             cfgThenElse.g[
-                                                inCFG.exit := [(TestInst("TRUE"), k + 1), (TestInst("FALSE"), indexThen + 1)]
+                                                inCFG.exit := [(TestInst(cond, "TRUE"), k + 1), (TestInst(cond, "FALSE"), indexThen + 1)]
                                             ][
                                                 // [(inCFG.exit, indexThen + 1, TestInst("FALSE"))] + 
                                                 cfgThen.exit := [(Skip(), cfgThenElse.exit)]
                                             ],
                                             cfgThenElse.exit
                                         );
-                    toCFG2( cfgIfThenElse, 
+                    toCFG( cfgIfThenElse, 
                             p[1..], 
                             indexThenElse, 
                             m2[indexThen := c[1..]],
                             c[1..]
                         )
 
-                case While(_, b) => 
+                case While(cond, b) =>  
                     //  Build CFG for b from k + 1 when while condition is true 
-                    // var tmpCFG := CFG2(inCFG.entry, inCFG.g, k + 1);
+                    // var tmpCFG := CFG(inCFG.entry, inCFG.g, k + 1);
                     //  
-                    var (whileBodyCFG, indexBodyExit, m3) := toCFG2(inCFG, b, k + 1, m', b + c);
-                    var cfgWhile := CFG2(
+                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(inCFG, b, k + 1, m', b + c);
+                    var cfgWhile := CFG(
                                         whileBodyCFG.entry, 
                                         whileBodyCFG.g[
-                                            inCFG.exit := [(TestInst("TRUE"), k + 1), (TestInst("FALSE"), indexBodyExit + 1)]
+                                            inCFG.exit := [(TestInst(cond, "TRUE"), k + 1), (TestInst(cond, "FALSE"), indexBodyExit + 1)]
                                         ][
                                             whileBodyCFG.exit := [(Skip(), k)]
                                         ],
@@ -329,7 +328,7 @@ module EVMIR {
                                             // [(whileBodyCFG.exit, k, Skip())],
                                         indexBodyExit + 1
                                         );
-                    toCFG2(cfgWhile, p[1..], indexBodyExit + 1, 
+                    toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
                         m3[indexBodyExit := c], 
                         c[1..])
                 // case _ => 
