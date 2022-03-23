@@ -176,13 +176,19 @@ module EVMIR {
     //             // case Skip() => stepEVMIR(p[1..], s)
     // }
 
+    predicate keysEqualRange<S>(m: map<nat, seq<EVMIRProg<S>>>, k: nat) 
+    {
+        &&  |m| == k
+        &&  forall key:: key in m <==> 0 <= key < |m|
+    }
+
     /**
      *  Build the CFG of a EVMIR program.
      *
      *  @param  inCFG   The CFG to extend.
      *  @param  p       The program to build the CFG for.
-     *  @param  k       First Id (number) available to id newly created state.
-     *  @param  m       The simulation for inCFG.
+     *  @param  k       First Id (number) available to id newly created nodes.
+     *  @param  m       The simulation map for inCFG.
      *  @param  c       The program that remains to be executed from the current point.
      *  @returns        The CFG `inCFG` extended from its final state (`k`) with the CFG of p, and
      *                  the simulation map extended to the newly created nodes.
@@ -190,9 +196,17 @@ module EVMIR {
     function method toCFG<S>( 
             inCFG: CFG<S>, 
             p: seq<EVMIRProg<S>>, 
-            k: nat, m: map<nat, seq<EVMIRProg<S>>>, 
-            c: seq<EVMIRProg<S>> := p): (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>)
+            k: nat, 
+            m: map<nat, seq<EVMIRProg<S>>>, 
+            c: seq<EVMIRProg<S>> := p): (r: (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>))
         requires |c| >= |p|
+        // requires forall j:: 0 <= j < k ==> j in m.Keys
+        requires keysEqualRange(m, k) //forall key:: key in m <==> 0 <= key < |m| == k
+        // ensures forall j:: 0 <= j < k ==> j in r.2.Keys
+        // ensures forall key:: key in m ==> key in r.2 && r.2[key] == m[key] 
+        // ensures /* P1 */ forall key:: key in r.2 < ==> 0 <= key < |r.2| == r.1
+        ensures keysEqualRange(r.2, r.1)
+
         decreases p 
     {
         if p == [] then 
@@ -201,10 +215,13 @@ module EVMIR {
         else 
             // Current node is associated with the program that is left to be run. 
             var m' := m[k := c];
+            assert keysEqualRange(m', k + 1);
             match p[0]
                 case Block(i) => 
+                    //  Proof of post condition P1
+                    assert keysEqualRange(m', k + 1);
                     //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
-                    toCFG( 
+                    var r := toCFG( 
                         CFG(inCFG.entry, 
                             inCFG.g[k := [(i, k + 1)]], // + [(k, k + 1, i)], 
                             k + 1),
@@ -212,29 +229,40 @@ module EVMIR {
                         k + 1,
                         m',
                         c[1..]  
-                    )
-                
+                    );
+                    //  Proof 
+                    assert keysEqualRange(r.2, r.1);
+                    // assert forall key:: key in r.2 ==> 0 <= key < |r.2| == r.1;
+                    r
+
                 case IfElse(cond, b1, b2) => 
+                    assert keysEqualRange(m', k + 1);
                     //  Add true and false edges to current graph
                     //  Build cfgThen starting numbering from k + 1 for condition true 
                     var (cfgThen, indexThen, m1) := toCFG(inCFG, b1, k + 1, m', b1 + c[1..]);
+                    assert keysEqualRange(m1, indexThen);
                     //  Build cfgElse starting numbering from indexThen + 1 for condition false
-                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m1, b2 + c[1..]);
+                    // assume keysEqualRange(m1, indexThen + 1);
+                    var m3 := m1[indexThen := c[1..]];
+                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m3, b2 + c[1..]);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
-                    var cfgIfThenElse := CFG(
-                                            cfgThenElse.entry, 
-                                            cfgThenElse.g[
-                                                inCFG.exit := [(TestInst(cond, "TRUE"), k + 1), (TestInst(cond, "FALSE"), indexThen + 1)]
-                                            ][
-                                                cfgThen.exit := [(Skip(), cfgThenElse.exit)]
-                                            ],
-                                            cfgThenElse.exit
-                                        );
+                    var cfgIfThenElse := 
+                                CFG(
+                                    cfgThenElse.entry, 
+                                    cfgThenElse.g[
+                                        inCFG.exit := [(TestInst(cond, "TRUE"), k + 1), (TestInst(cond, "FALSE"), indexThen + 1)]
+                                    ][
+                                        cfgThen.exit := [(Skip(), cfgThenElse.exit)]
+                                    ],
+                                    cfgThenElse.exit
+                                );
+                                // assume  forall key:: key in r.2 ==> 0 <= key < |r.2|;
                     toCFG( cfgIfThenElse, 
                             p[1..], 
                             indexThenElse, 
-                            m2[indexThen := c[1..]],
+                            // m2[indexThen := c[1..]],
+                            m2,
                             c[1..]
                         )
 
