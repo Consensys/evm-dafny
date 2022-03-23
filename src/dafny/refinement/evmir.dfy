@@ -37,10 +37,12 @@ module EVMIR {
      *  Print a CFG of type `S`.
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
+    //  *  @param  
      */
-    method printCFG<S>(cfg: CFG<S>, name: string, m: map<nat, seq<EVMIRProg<S>>>) 
+    method printCFG<S>(cfg: CFG<S>, name: string, m: map<nat, seq<EVMIRProg<S>>>)
     {
-        diGraphToDOT<S>(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));   
+        //  Ignore the status of the pretty-printing
+        var x := diGraphToDOT<S>(cfg.g, cfg.exit + 1, name, toTooltip(m, cfg.exit));  
     }
 
     /**
@@ -146,7 +148,7 @@ module EVMIR {
 
     /**
      *  Semantics of EVMIR programs.
-     *
+     * 
      *  @param  g   A CFG.
      *  @param  pc  A node in the CFG.
      *  @param  s   A state.

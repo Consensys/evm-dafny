@@ -41,9 +41,13 @@ include "../refinement/evm-seq.dfy"
      *  @param  n           Number of nodes in the graph. Assumption is that node 0 is initial location and node n - 1 is final location.
      *  @param  name        Optional label of the graph.
      *  @param  tooltip     Optional map providing tooltips for nodes.
+     *  @returns            Whether there exists a (source) node in `g` that did not have any associated set of edges.
      */
-     method {:verify true} diGraphToDOT<S>(g: LabDiGraph<S>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) 
+    method {:verify true} diGraphToDOT<S>(g: LabDiGraph<S>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) returns (ghost r: bool) 
+        /** If the set of nodes in the graph is exactly [0..n[ then "not found" is never printed out. */
+        ensures (forall k:: k in g <==> 0 <= k < n) ==> r 
     {
+        r := true;
         print "digraph G {\n";
         print "\tfontname=helvetica;\n";
         print "\tgraph [pad=\"1.5\", ranksep=\"1.2\", nodesep=\"0.4\"];\n";
@@ -64,13 +68,16 @@ include "../refinement/evm-seq.dfy"
                 }
             }
         //  Edges.
-        for i := 0 to n {
+        for i := 0 to n 
+             invariant (forall k :: k in g <==> 0 <= k < n) ==> r 
+        {
             if i in g {
                 //  print all the successors
                 for k := 0 to |g[i]| {
                         edgeToDOT(i, g[i][k].1, g[i][k].0.name);
                 } 
             } else {
+                r := false;
                 print "Element", i, " not found in map";
             }
         }
