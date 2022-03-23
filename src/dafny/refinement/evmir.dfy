@@ -37,7 +37,6 @@ module EVMIR {
      *  Print a CFG of type `S`.
      *  @param  g   A control flow graph.
      *  @param  f   A converter from `S` to a printable string.
-    //  *  @param  
      */
     method printCFG<S>(cfg: CFG<S>, name: string, m: map<nat, seq<EVMIRProg<S>>>)
     {
@@ -178,6 +177,11 @@ module EVMIR {
     //             // case Skip() => stepEVMIR(p[1..], s)
     // }
 
+    /**
+     *  @param  m   A map.
+     *  @param  k   A number.
+     *  @returns    Whether k.Keys == 0..k - 1   
+     */
     predicate keysEqualRange<S>(m: map<nat, seq<EVMIRProg<S>>>, k: nat) 
     {
         &&  |m| == k
@@ -202,11 +206,9 @@ module EVMIR {
             m: map<nat, seq<EVMIRProg<S>>>, 
             c: seq<EVMIRProg<S>> := p): (r: (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>))
         requires |c| >= |p|
-        // requires forall j:: 0 <= j < k ==> j in m.Keys
-        requires keysEqualRange(m, k) //forall key:: key in m <==> 0 <= key < |m| == k
-        // ensures forall j:: 0 <= j < k ==> j in r.2.Keys
-        // ensures forall key:: key in m ==> key in r.2 && r.2[key] == m[key] 
-        // ensures /* P1 */ forall key:: key in r.2 < ==> 0 <= key < |r.2| == r.1
+        /** Start with map `m` such that m.Keys == 0..k-1 */
+        requires keysEqualRange(m, k) 
+        /** Ensures that the new map satisfies the same properties.  */ 
         ensures keysEqualRange(r.2, r.1)
 
         decreases p 
@@ -234,7 +236,6 @@ module EVMIR {
                     );
                     //  Proof 
                     assert keysEqualRange(r.2, r.1);
-                    // assert forall key:: key in r.2 ==> 0 <= key < |r.2| == r.1;
                     r
 
                 case IfElse(cond, b1, b2) => 
@@ -245,8 +246,8 @@ module EVMIR {
                     assert keysEqualRange(m1, indexThen);
                     //  Build cfgElse starting numbering from indexThen + 1 for condition false
                     // assume keysEqualRange(m1, indexThen + 1);
-                    var m3 := m1[indexThen := c[1..]];
-                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen, b2, indexThen + 1, m3, b2 + c[1..]);
+                    var m2 := m1[indexThen := c[1..]];
+                    var (cfgThenElse, indexThenElse, m3) := toCFG(cfgThen, b2, indexThen + 1, m2, b2 + c[1..]);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
                     var cfgIfThenElse := 
@@ -259,12 +260,10 @@ module EVMIR {
                                     ],
                                     cfgThenElse.exit
                                 );
-                                // assume  forall key:: key in r.2 ==> 0 <= key < |r.2|;
                     toCFG( cfgIfThenElse, 
                             p[1..], 
                             indexThenElse, 
-                            // m2[indexThen := c[1..]],
-                            m2,
+                            m3,
                             c[1..]
                         )
 
