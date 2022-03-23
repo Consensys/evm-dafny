@@ -25,7 +25,6 @@ module EVMSeq {
         |   TestInst(c: S -> bool, name: string)
         |   Skip(name: string := "SKIP")  
 
-
     /**
      *  Compute next state.
      *  
@@ -41,5 +40,4 @@ module EVMSeq {
             case _ => s 
 
     }
-
 }
