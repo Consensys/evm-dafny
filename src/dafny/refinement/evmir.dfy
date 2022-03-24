@@ -247,7 +247,7 @@ module EVMIR {
             (inCFG, k, m)
         else 
             //  Each node is associated with a program via m. 
-            var m' := m;
+            // var m' := m;
             match p[0]
                 case Block(i) => 
                     //  Add an edge k -> k + 1 to inCFG and set outgoing transitions of k + 1 to []
@@ -258,25 +258,20 @@ module EVMIR {
                         c1,
                         p[1..],
                         k + 1,
-                        m'[k + 1 := c[1..]],    //  program remaining from exit node is c[1..]
+                        m[k + 1 := c[1..]],    //  program remaining from exit node is c[1..]
                         c[1..]  
                     );
                     //  Proof 
                     r
 
                 case IfElse(cond, b1, b2) =>  
-
-                    var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k := []]);
-                    // var tmpCFG := inCFG.(g := inCFG.g[k := []]);
-                    //  Add true and false edges to current graph
-                    //  Build cfgThen starting numbering from k + 1 for condition true 
-                    var (cfgThen, indexThen, m1) := toCFG(tmpCFG, b1, k + 1, m'[k + 1 := b1 + c[1..]], b1 + c[1..]);
-                    //  Build cfgElse starting numbering from indexThen + 1 for condition false
-                    var m2 := m1; 
-                    // var m2 := m1[indexThen := c[1..]]; 
-                    var (cfgThenElse, indexThenElse, m3) := toCFG(cfgThen.(exit := indexThen + 1), b2, indexThen + 1, m2[indexThen + 1 := b2 + c[1..]], b2 + c[1..]);
-                    //  Build IfThenElse cfg stitching together previous cfgs and 
-                    //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
+                    //  Add new exit node k + 1 and build CFG for cond True
+                    var (cfgThen, indexThen, m1) := toCFG(inCFG.(exit := k + 1), b1, k + 1, m[k + 1 := b1 + c[1..]], b1 + c[1..]);
+                    //  Exit node and last number used is indexThen.
+                    //  Build cfgElse for cond false starting numbering from indexThen + 1
+                    var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen.(exit := indexThen + 1), b2, indexThen + 1, m1[indexThen + 1 := b2 + c[1..]], b2 + c[1..]);
+                    //  Build IfThenElse CFG stitching together previous Then and Else graphs 
+                    //  and wiring cfgThen.exit to cfgElse.exit with a skip instruction
                     var cfgIfThenElse := 
                                 CFG(
                                     cfgThenElse.entry, 
@@ -287,10 +282,12 @@ module EVMIR {
                                     ],
                                     cfgThenElse.exit
                                 );
-                    var r := toCFG( cfgIfThenElse, 
+                    //  Build CFG of remaining program from indexThenElse
+                    var r := toCFG(
+                            cfgIfThenElse, 
                             p[1..], 
                             indexThenElse, 
-                            m3[indexThenElse := c[1..]],
+                            m2[indexThenElse := c[1..]],
                             c[1..]
                         );
                     r
@@ -299,7 +296,7 @@ module EVMIR {
                     //  Add node k + 1 
                     var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k + 1 := []]);
                     //  Build CFG of b (condition is true) from k + 1
-                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m'[k + 1 := b + c], b + c);
+                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m[k + 1 := b + c], b + c);
                     //  Add edges k -- True -> k + 1, k -- False -> indexBodyExit + 1, indexBodyExit -- Skip -> k
                     //  Make indexBodyExit + 1 the new exit node (end of the loop) 
                     var cfgWhile := CFG(
@@ -314,7 +311,10 @@ module EVMIR {
                                         indexBodyExit + 1
                                         );
                     // Build remaining from exit node indexBodyExit + 1
-                    var r := toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
+                    var r := toCFG(
+                        cfgWhile, 
+                        p[1..], 
+                        indexBodyExit + 1, 
                         m3[indexBodyExit + 1 := c[1..]], 
                         c[1..]);
                     r
