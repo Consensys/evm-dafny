@@ -227,7 +227,9 @@ module EVMIR {
      *
      *  @note           The inCFG is the CFG built so far. 
      *                  inCFG.exit should be equal to k, and 
+     *                  k is |inCFG.g| - 1 and
      *                  the keys in inCFG.g should be 0..k
+     *                  The map m should be defined for exactly the same keys in inCFG.g.Keys 
      *                  
      *                  m is map from all the nodes of inCFG.g to programs.
      */
@@ -238,99 +240,41 @@ module EVMIR {
             m: map<nat, seq<EVMIRProg<S>>>, 
             c: seq<EVMIRProg<S>> := p): (r: (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>))
         requires |c| >= |p|
-        /** Start with map `m` such that m.Keys == 0..k-1 */
-        // requires keysEqualRange(m, k + 1) 
-
-        // requires validCFG(inCFG)
-        // requires |inCFG.g.Keys| == k 
-        // requires keysEqualRange(inCFG.g, k + 1) 
-
-        /** The exit node of inCFG is k. */
-        // requires inCFG.exit == k 
-        // requires k == |inCFG.g|
-
-        // ensures r.1 == |r.0.g|
-
-        /** The exit node of the result CFG r.0 is r.1 */
-        // ensures r.0.exit == r.1  
-
-        /** A CFG has at least one node. */
-        // ensures |r.0.g| >= 1
-        /** Ensures that the new map satisfies the same properties.  */ 
-        // ensures keysEqualRange(r.2, r.1 + 1)
-        /**  */
-        // ensures keysEqualRange(r.0.g, r.1)
-        // ensures |r.0.g.Keys| == r.1
-        // ensures validCFG(r.0)
-        // ensures correctOutgoingEdges(r.0, r.2) 
 
         decreases p 
     {
         if p == [] then 
-            // assume  keysEqualRange(inCFG.g, k);
-            // var finalCFG := inCFG.(g := inCFG.g[k := []]);
-            // assert keysEqualRange(finalCFG.g, k + 1);
-            // assert c == p;
-            // (finalCFG, k + 1, m[k := []])
-            // (finalCFG, k + 1, m[k := []])
-            // assert keysEqualRange(inCFG.g, |inCFG.g|);
-            // assert validCFG(inCFG);
             (inCFG, k, m)
         else 
-            // assume  keysEqualRange(inCFG.g, k);
-            // Current node is associated with the program that is left to be run. 
-            var m' := m[k := c];
-            // var m' := m;
-            // assert keysEqualRange(m', k + 1);
+            //  Each node is associated with a program via m. 
+            var m' := m;
             match p[0]
                 case Block(i) => 
-                    //  Proof of post condition P1
-                    // assert keysEqualRange(m', k + 1);
-                    // assert k + 1 !in inCFG.g.Keys;
-                    // assert |inCFG.g[k := [(i, k + 1)]]| == k + 2;
+                    //  Add an edge k -> k + 1 to inCFG and set outgoing transitions of k + 1 to []
                     var c1 :=  CFG(inCFG.entry, inCFG.g[k := [(i, k + 1)]][k + 1 := []], k + 1);
-                    assert c1.exit == k + 1;
-                    assert c1.exit in c1.g;
-                    // assert k + 1 !in inCFG.g.Keys;
-                    // assert |c1.g| == k + 1;
-                    // assert c1.g.Keys == inCFG.g.Keys + { k + 1 };
-                    // assert validCFG(c1);
-                    // assume validCFG(CFG(inCFG.entry, inCFG.g[k := [(i, k + 1)]][k + 1 := []], k + 1));
-                    //  Build CFG of Block, append to previous graph, and then append graph of tail(p)
+                    //  New exit node is k + 1
+                    //  Build CFG of remaining program from c1.exit
                     var r := toCFG( 
-                        CFG(inCFG.entry, 
-                            inCFG.g[k := [(i, k + 1)]][k + 1 := []], // + [(k, k + 1, i)], 
-                            k + 1),
+                        c1,
                         p[1..],
                         k + 1,
-                        m',
+                        m'[k + 1 := c[1..]],    //  program remaining from exit node is c[1..]
                         c[1..]  
                     );
                     //  Proof 
-                    // assert keysEqualRange(r.2, r.1);
-                    // assert keysEqualRange(r.0.g, r.1);
-                    // assert keysEqualRange(inCFG.g[k := [(i, k + 1)]], k + 1);
-                    // assert r.0.g == inCFG.g[k := [(i, k + 1)]];
-                    // assert keysEqualRange(r.0.g, r.1);
-                    // assert r.1 == k + 1;
                     r
 
                 case IfElse(cond, b1, b2) =>  
-                    // assert keysEqualRange(m', k + 1);
 
                     var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k := []]);
                     // var tmpCFG := inCFG.(g := inCFG.g[k := []]);
-                    // assert keysEqualRange(tmpCFG.g, k + 1);
                     //  Add true and false edges to current graph
                     //  Build cfgThen starting numbering from k + 1 for condition true 
-                    // assume keysEqualRange(inCFG.g, k + 1);
-                    var (cfgThen, indexThen, m1) := toCFG(tmpCFG, b1, k + 1, m', b1 + c[1..]);
-                    // assert keysEqualRange(m1, indexThen);
+                    var (cfgThen, indexThen, m1) := toCFG(tmpCFG, b1, k + 1, m'[k + 1 := b1 + c[1..]], b1 + c[1..]);
                     //  Build cfgElse starting numbering from indexThen + 1 for condition false
-                    // assume keysEqualRange(m1, indexThen + 1);
-                    var m2 := m1[indexThen := c[1..]]; 
-                    var (cfgThenElse, indexThenElse, m3) := toCFG(cfgThen.(exit := indexThen + 1), b2, indexThen + 1, m2, b2 + c[1..]);
-                    // assert cfgThenElse.exit == indexThenElse;
+                    var m2 := m1; 
+                    // var m2 := m1[indexThen := c[1..]]; 
+                    var (cfgThenElse, indexThenElse, m3) := toCFG(cfgThen.(exit := indexThen + 1), b2, indexThen + 1, m2[indexThen + 1 := b2 + c[1..]], b2 + c[1..]);
                     //  Build IfThenElse cfg stitching together previous cfgs and 
                     //  wiring cfgThen.exit to cfgElse.exit with a skip instruction
                     var cfgIfThenElse := 
@@ -343,28 +287,21 @@ module EVMIR {
                                     ],
                                     cfgThenElse.exit
                                 );
-                    // assume keysEqualRange(cfgIfThenElse.g, indexThenElse);
-                    // assume keysEqualRange(r.0.g, r.1);
-
                     var r := toCFG( cfgIfThenElse, 
                             p[1..], 
                             indexThenElse, 
-                            m3,
+                            m3[indexThenElse := c[1..]],
                             c[1..]
                         );
-                    // assume keysEqualRange(r.0.g, r.1);
                     r
 
                 case While(cond, b) =>  
-                    //  Build CFG for b from k + 1 when while condition is true 
-                    // assert keysEqualRange(inCFG.g, k);
-                    // assume keysEqualRange(inCFG.g, k + 1);
-                    var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k := []][k + 1 := []]);
-                    // assert keysEqualRange(tmpCFG.g, k + 1);
-
-                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m', b + c);
-                    // assert keysEqualRange(whileBodyCFG.g, indexBodyExit);
-                    // assume inCFG.exit in whileBodyCFG.g.Keys;
+                    //  Add node k + 1 
+                    var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k + 1 := []]);
+                    //  Build CFG of b (condition is true) from k + 1
+                    var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m'[k + 1 := b + c], b + c);
+                    //  Add edges k -- True -> k + 1, k -- False -> indexBodyExit + 1, indexBodyExit -- Skip -> k
+                    //  Make indexBodyExit + 1 the new exit node (end of the loop) 
                     var cfgWhile := CFG(
                                         whileBodyCFG.entry, 
                                         whileBodyCFG.g[
@@ -376,16 +313,10 @@ module EVMIR {
                                         ],
                                         indexBodyExit + 1
                                         );
-                    // assert keysEqualRange(whileBodyCFG.g, indexBodyExit);
-                    // assume inCFG.exit in inCFG.g.Keys;
-                    // assume whileBodyCFG.exit in whileBodyCFG.g.Keys;
-                    // assert inCFG.g.Keys <= whileBodyCFG.g.Keys ;
-                    // assume keysEqualRange(cfgWhile.g, indexBodyExit + 1);
-
+                    // Build remaining from exit node indexBodyExit + 1
                     var r := toCFG(cfgWhile, p[1..], indexBodyExit + 1, 
-                        m3[indexBodyExit := c], 
+                        m3[indexBodyExit + 1 := c[1..]], 
                         c[1..]);
-                    // assume keysEqualRange(r.0.g, r.1);
                     r
     }
         
