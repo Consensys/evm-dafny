@@ -38,8 +38,13 @@ module EVM {
         // |   Nop()
 
     /**
-     *  Run one step of a program.
-     *  
+     *  Run one step of an EVM program.
+     *  @param  pc  The program counter.
+     *  @param  p   The program.
+     *  @param  s   A state.
+     *
+     *  @returns    The new program counter and the new state after executing `p[pc]` from `s`.
+     *              If `pc` is not in the range of `p` returns (pc,s).
      *
      *  @note   If the `pc` is outside the set of instructions, stop.
      */
