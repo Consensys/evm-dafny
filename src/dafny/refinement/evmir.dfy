@@ -247,7 +247,6 @@ module EVMIR {
             (inCFG, k, m)
         else 
             //  Each node is associated with a program via m. 
-            // var m' := m;
             match p[0]
                 case Block(i) => 
                     //  Add an edge k -> k + 1 to inCFG and set outgoing transitions of k + 1 to []
