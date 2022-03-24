@@ -44,6 +44,7 @@ include "../refinement/evm-seq.dfy"
      *  @returns            Whether there exists a (source) node in `g` that did not have any associated set of edges.
      */
     method {:verify true} diGraphToDOT<S>(g: LabDiGraph<S>, n: nat, name: string := "noName", tooltip: map<nat, string> := map[]) returns (ghost r: bool) 
+        requires n >= 1
         /** If the set of nodes in the graph is exactly [0..n[ then "not found" is never printed out. */
         ensures (forall k:: k in g <==> 0 <= k < n) ==> r 
     {
@@ -62,11 +63,14 @@ include "../refinement/evm-seq.dfy"
         if n > 0 {
             print n - 1, " [fillcolor=red, style=filled];\n";
         }
-        for i := 0 to n {
+        for i := 0 to n - 1 {
                 if i in tooltip {
                     print i, " [tooltip=\"",tooltip[i],"\"];\n";
                 }
-            }
+        }
+        if n > 0 {
+            print n - 1, " [fillcolor=red, style=filled, tooltip=\"END\"];\n";
+        }
         //  Edges.
         for i := 0 to n 
              invariant (forall k :: k in g <==> 0 <= k < n) ==> r 
