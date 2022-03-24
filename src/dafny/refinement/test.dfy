@@ -45,7 +45,7 @@ method {:verify true} Main() {
         //  Sequence of blocks 
         var i1 := Inst(addOne, "SUB");     
         var p2 := [EVMIRProg.Block(i1), EVMIRProg.Block(i1), EVMIRProg.Block(i1)];
-        // var (cfg2, max2, m2) := toCFG2(CFG2(0, map[], 0), p2, 0, map[]);
+        // var (cfg2, max2, m2) := toCFG(CFG(0, map[0 := []], 0), p2, 0, map[0 := p2]);
         // printCFG(cfg2, "p2", m2);    
         // printCFGmap(m2);
 
@@ -67,7 +67,7 @@ method {:verify true} Main() {
         var p5 := EVMIRProg<nat>.IfElse(_ => true, [EVMIRProg.Block(i1)], [EVMIRProg.Block(i2)]); 
         var p6 := EVMIRProg<nat>.While(_ => true, [EVMIRProg.Block(i1), p5, EVMIRProg.Block(i2)]); 
         // var p6 := EVMIRProg.While(true, [p5]); 
-        var (cfg6, max6, m6) := toCFG(CFG(0, map[], 0), [p6], 0, map[]);
+        var (cfg6, max6, m6) := toCFG(CFG(0, map[0 := []], 0), [p6], 0, map[0 := [p6]]);
         printCFG(cfg6, "CFG for While true do {if then else} od", m6);   
         // printCFGmap(m6);
 
