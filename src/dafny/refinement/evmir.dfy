@@ -203,13 +203,36 @@ module EVMIR {
         // true
     }
 
+    /** A valid CFG. 
+     *  
+     *  The nodes of the CFG should exactly be the interval 0..|c.g| - 1.
+     *  The exit node is the last one.
+     */
     predicate validCFG<S>(c: CFG<S>) 
     {
-        &&  0 in c.g
-        &&  c.exit in c.g 
-        &&  c.exit == |c.g| - 1
-        &&  c.entry in c.g
-        &&  (forall key:: key in c.g <==> 0 <= key < |c.g|)
+        &&  0 in c.g // we could use |c.g| > 0 too.
+        &&  (forall key:: key in c.g <==> 0 <= key < |c.g|) //  c.g.Keys == 0..|c.g| - 1
+        // &&  c.exit in c.g 
+        &&  c.exit == |c.g| - 1 //  last node is c.g the exit node of c
+        &&  c.g[c.exit] == []   //  last node is a sink node
+        &&  c.entry in c.g      //  entry node muts be in c.g
+    }
+
+    //  Lemmas for maps
+    lemma foo101<S>(m: map<nat, S>, k: nat, s: S)
+        requires  (forall key:: key in m <==> 0 <= key < |m|)
+        requires k >= |m|
+        ensures m[k := s].Keys == m.Keys + { k }
+        ensures |m[k := s]| == |m| + 1
+    {
+
+    }
+
+    lemma foo202<S>(m: map<nat, S>, k: nat, s: S)
+        requires k in m.Keys
+        ensures |m[k := s]| == |m|
+    {
+
     }
 
     /**
@@ -228,7 +251,7 @@ module EVMIR {
      *  @note           The inCFG is the CFG built so far. 
      *                  inCFG.exit should be equal to k, and 
      *                  k is |inCFG.g| - 1 and
-     *                  the keys in inCFG.g should be 0..k
+     *                  the keys in inCFG.g should be 0..k (k + 1 keys)
      *                  The map m should be defined for exactly the same keys in inCFG.g.Keys 
      *                  
      *                  m is map from all the nodes of inCFG.g to programs.
@@ -240,6 +263,12 @@ module EVMIR {
             m: map<nat, seq<EVMIRProg<S>>>, 
             c: seq<EVMIRProg<S>> := p): (r: (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>))
         requires |c| >= |p|
+
+        requires validCFG(inCFG)
+        requires k + 1 == |inCFG.g|
+
+        ensures validCFG(r.0)
+        ensures r.1 + 1 == |r.0.g|
 
         decreases p 
     {
@@ -253,6 +282,20 @@ module EVMIR {
                     var c1 :=  CFG(inCFG.entry, inCFG.g[k := [(i, k + 1)]][k + 1 := []], k + 1);
                     //  New exit node is k + 1
                     //  Build CFG of remaining program from c1.exit
+
+                    // calc ==> {
+                    //     |inCFG.g| == k + 1;
+                    //     { assert validCFG(inCFG); }
+                    //     k in inCFG.g.Keys;
+                    //     // k + 1 !in inCFG.g.Keys;
+                    // }
+                    // assert k + 1 == |inCFG.g| ;
+                    // assert k in inCFG.g.Keys;
+                    // foo202(inCFG.g, k, [(i, k + 1)]);
+                    // foo101(inCFG.g[k := [(i, k + 1)]], k + 1, []); 
+                    // assert |c1.g| == |inCFG.g[k := [(i, k + 1)]][k + 1 := []]| == k + 2;
+                    // assert inCFG.g[k + 1 := []].Keys == inCFG.g.Keys + {k + 1};
+                    // assert validCFG(c1);
                     var r := toCFG( 
                         c1,
                         p[1..],
@@ -265,9 +308,11 @@ module EVMIR {
 
                 case IfElse(cond, b1, b2) =>  
                     //  Add new exit node k + 1 and build CFG for cond True
+                    assert validCFG(inCFG.(exit := k + 1));
                     var (cfgThen, indexThen, m1) := toCFG(inCFG.(exit := k + 1), b1, k + 1, m[k + 1 := b1 + c[1..]], b1 + c[1..]);
                     //  Exit node and last number used is indexThen.
                     //  Build cfgElse for cond false starting numbering from indexThen + 1
+                    assume validCFG(cfgThen.(exit := indexThen + 1));
                     var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen.(exit := indexThen + 1), b2, indexThen + 1, m1[indexThen + 1 := b2 + c[1..]], b2 + c[1..]);
                     //  Build IfThenElse CFG stitching together previous Then and Else graphs 
                     //  and wiring cfgThen.exit to cfgElse.exit with a skip instruction
@@ -282,6 +327,7 @@ module EVMIR {
                                     cfgThenElse.exit
                                 );
                     //  Build CFG of remaining program from indexThenElse
+                    assume validCFG(cfgIfThenElse);
                     var r := toCFG(
                             cfgIfThenElse, 
                             p[1..], 
@@ -295,6 +341,7 @@ module EVMIR {
                     //  Add node k + 1 
                     var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k + 1 := []]);
                     //  Build CFG of b (condition is true) from k + 1
+                    assume validCFG(tmpCFG);
                     var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m[k + 1 := b + c], b + c);
                     //  Add edges k -- True -> k + 1, k -- False -> indexBodyExit + 1, indexBodyExit -- Skip -> k
                     //  Make indexBodyExit + 1 the new exit node (end of the loop) 
@@ -310,6 +357,7 @@ module EVMIR {
                                         indexBodyExit + 1
                                         );
                     // Build remaining from exit node indexBodyExit + 1
+                    assume validCFG(cfgWhile);
                     var r := toCFG(
                         cfgWhile, 
                         p[1..], 
