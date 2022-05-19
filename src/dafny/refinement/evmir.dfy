@@ -264,11 +264,11 @@ module EVMIR {
             c: seq<EVMIRProg<S>> := p): (r: (CFG<S>, nat, map<nat, seq<EVMIRProg<S>>>))
         requires |c| >= |p|
 
-        requires validCFG(inCFG)
-        requires k + 1 == |inCFG.g|
+        // requires validCFG(inCFG)
+        // requires k + 1 == |inCFG.g|
 
-        ensures validCFG(r.0)
-        ensures r.1 + 1 == |r.0.g|
+        // ensures validCFG(r.0)
+        // ensures r.1 + 1 == |r.0.g|
 
         decreases p 
     {
@@ -308,11 +308,11 @@ module EVMIR {
 
                 case IfElse(cond, b1, b2) =>  
                     //  Add new exit node k + 1 and build CFG for cond True
-                    assert validCFG(inCFG.(exit := k + 1));
+                    // assert validCFG(inCFG.(exit := k + 1));
                     var (cfgThen, indexThen, m1) := toCFG(inCFG.(exit := k + 1), b1, k + 1, m[k + 1 := b1 + c[1..]], b1 + c[1..]);
                     //  Exit node and last number used is indexThen.
                     //  Build cfgElse for cond false starting numbering from indexThen + 1
-                    assume validCFG(cfgThen.(exit := indexThen + 1));
+                    // assume validCFG(cfgThen.(exit := indexThen + 1));
                     var (cfgThenElse, indexThenElse, m2) := toCFG(cfgThen.(exit := indexThen + 1), b2, indexThen + 1, m1[indexThen + 1 := b2 + c[1..]], b2 + c[1..]);
                     //  Build IfThenElse CFG stitching together previous Then and Else graphs 
                     //  and wiring cfgThen.exit to cfgElse.exit with a skip instruction
@@ -327,7 +327,7 @@ module EVMIR {
                                     cfgThenElse.exit
                                 );
                     //  Build CFG of remaining program from indexThenElse
-                    assume validCFG(cfgIfThenElse);
+                    // assume validCFG(cfgIfThenElse);
                     var r := toCFG(
                             cfgIfThenElse, 
                             p[1..], 
@@ -341,7 +341,7 @@ module EVMIR {
                     //  Add node k + 1 
                     var tmpCFG := inCFG.(exit := k + 1, g := inCFG.g[k + 1 := []]);
                     //  Build CFG of b (condition is true) from k + 1
-                    assume validCFG(tmpCFG);
+                    // assume validCFG(tmpCFG);
                     var (whileBodyCFG, indexBodyExit, m3) := toCFG(tmpCFG, b, k + 1, m[k + 1 := b + c], b + c);
                     //  Add edges k -- True -> k + 1, k -- False -> indexBodyExit + 1, indexBodyExit -- Skip -> k
                     //  Make indexBodyExit + 1 the new exit node (end of the loop) 
@@ -357,7 +357,7 @@ module EVMIR {
                                         indexBodyExit + 1
                                         );
                     // Build remaining from exit node indexBodyExit + 1
-                    assume validCFG(cfgWhile);
+                    // assume validCFG(cfgWhile);
                     var r := toCFG(
                         cfgWhile, 
                         p[1..], 
