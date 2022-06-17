@@ -9,5 +9,6 @@
 # Overview / Objectives
 
 The aim of this project is to develop a functional specification of
-the Ethereum Virtual Machine in
+the [Ethereum Virtual
+Machine](https://ethereum.org/en/developers/docs/evm/) in
 [Dafny](https://github.com/dafny-lang/dafny).
