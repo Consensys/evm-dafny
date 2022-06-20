@@ -14,52 +14,52 @@
 include "int.dfy"
 
 /**
- * Storage on the EVM is a word-addressable (non-volatile) random access memory.
+ * Memory on the EVM is a byte-addressable (volatile) random access memory.
  */
-module Storage {
+module Memory {
     import opened Int
 
     // =============================================================================
     // Random Access Memory
     // =============================================================================
 
-    datatype Raw = Storage(contents:seq<u256>)
+    datatype Raw = Memory(contents:seq<u8>)
 
     type T = m:Raw | |m.contents| < MAX_UINT256
-    witness Storage([])
+    witness Memory([])
 
     /**
-     * Create some storage from an initial sequence of words.
+     * Create a memory from an initial sequence of words.
      */
-    function method create(contents:seq<u256>) : T
+    function method create(contents:seq<u8>) : T
     requires |contents| < MAX_UINT256 {
-        Storage(contents:=contents)
+        Memory(contents:=contents)
     }
 
     /**
-     * Return the size of this storage (in words).
+     * Return the size of this memory (in bytes).
      */
     function size(mem:T) : u256 { |mem.contents| as u256 }
 
     /**
-     * Read the value at a given address in Storage.  This requires that the address
-     * is within bounds of the Storage.
+     * Read the byte at a given address in Memory.  This requires that the address
+     * is within bounds of the Memory.
      */
-    function read(mem:T, address:u256) : u256
+    function read_u8(mem:T, address:u256) : u8
       // Address must be within bounds
-      requires address < size(mem) {
+      requires address < (|mem.contents| as u256) {
         // Read location
         mem.contents[address]
     }
 
     /**
-     * Write a value to a given address in Storage.  This requires that the address
-     * is within bounds of the Storage.
+     * Write a byte to a given address in Memory.  This requires that the address
+     * is within bounds of the Memory.
      */
-    function write(mem:T, address:u256, val:u256) : T
+    function write_u8(mem:T, address:u256, val:u8) : T
       // Address must be within bounds
-      requires address < size(mem) {
+      requires address < (|mem.contents| as u256) {
         // Write location
-        Storage(contents:=mem.contents[address:=val])
+        Memory(contents:=mem.contents[address:=val])
     }
 }
