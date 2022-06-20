@@ -24,7 +24,7 @@ module Stack {
     /**
      * A raw stack consistents of a sequence of data, and a stack pointer.
      */
-    datatype Raw = Stack(contents:seq<uint256>, sp:nat)
+    datatype Raw = Stack(contents:seq<u256>, sp:nat)
 
     /**
      * A valid Stack: (1) must have a stack pointer within bounds;
@@ -48,7 +48,7 @@ module Stack {
      * Push word onto Stack.  This requires that there is sufficient
      * space for that item.
      */
-    function push(st:T, val:uint256) : T
+    function push(st:T, val:u256) : T
         // Sanity check enough space.
         requires size(st) < |st.contents| {
             Stack(contents:=st.contents[st.sp:=val],sp:=st.sp+1)
@@ -58,7 +58,7 @@ module Stack {
      * Peek nth word from top of Stack (where 1 is top item, 2 is next item,
      * and so on).  This requires there are sufficiently many words.
      */
-    function peek(st:T, k:int) : uint256
+    function peek(st:T, k:int) : u256
         // Sanity check enough items to pop!
         requires k > 0 && k <= size(st) {
             st.contents[st.sp-k]
