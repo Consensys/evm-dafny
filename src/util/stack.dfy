@@ -67,7 +67,7 @@ module Stack {
     /**
      * Pop word off of this Stack.  This requires something to pop!
      */
-    function pop<S>(st:T) : T
+    function pop(st:T) : T
         // Sanity check something to pop.
         requires size(st) > 0 {
             Stack(contents:=st.contents,sp:=st.sp-1)
