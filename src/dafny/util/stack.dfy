@@ -24,52 +24,58 @@ module Stack {
     /**
      * A raw stack consistents of a sequence of data, and a stack pointer.
      */
-    datatype Raw = Stack(contents:seq<u256>, sp:nat)
+    datatype Raw = Stack(contents:seq<u256>)
 
     /**
-     * A valid Stack: (1) must have a stack pointer within bounds;
-     * (2) cannot have more than 1024 items.  Note, the stack
-     * pointer identifies the first *unused* slot on the stack.
+     * A valid Stack cannot exceed the capacity.
      */
-    type T = s:Raw | s.sp <= |s.contents| && |s.contents| <= CAPACITY
-    witness Stack([],0)
+    type T = s:Raw | |s.contents| <= CAPACITY
+    witness Stack([])
 
     /**
      * Get number of items currently on this Stack.
      */
-    function size(st:T) : int { st.sp }
+    function method size(st:T) : nat { |st.contents| }
+
+    /**
+     * Get remaining capacity of stack (i.e. number of items we could still
+     * push).
+     */
+    function method capacity(st:T) : nat {
+      CAPACITY - |st.contents|
+    }
 
     /**
      * Create an empty stack.
      */
-    function method create() : T { Stack(contents:=[],sp:=0) }
+    function method create() : T { Stack(contents:=[]) }
 
     /**
      * Push word onto Stack.  This requires that there is sufficient
      * space for that item.
      */
-    function push(st:T, val:u256) : T
+    function method push(st:T, val:u256) : T
         // Sanity check enough space.
-        requires size(st) < |st.contents| {
-            Stack(contents:=st.contents[st.sp:=val],sp:=st.sp+1)
+        requires size(st) < CAPACITY {
+            Stack(contents:=([val] + st.contents))
     }
 
     /**
-     * Peek nth word from top of Stack (where 1 is top item, 2 is next item,
+     * Peek nth word from top of Stack (where 0 is top item, 1 is next item,
      * and so on).  This requires there are sufficiently many words.
      */
-    function peek(st:T, k:int) : u256
+    function method peek(st:T, k:int) : u256
         // Sanity check enough items to pop!
-        requires k > 0 && k <= size(st) {
-            st.contents[st.sp-k]
+        requires k >= 0 && k < size(st) {
+            st.contents[k]
     }
 
     /**
      * Pop word off of this Stack.  This requires something to pop!
      */
-    function pop(st:T) : T
+    function method pop(st:T) : T
         // Sanity check something to pop.
         requires size(st) > 0 {
-            Stack(contents:=st.contents,sp:=st.sp-1)
+            Stack(contents:=st.contents[1..])
     }
 }

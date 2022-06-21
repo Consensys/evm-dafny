@@ -23,43 +23,31 @@ module Storage {
     // Random Access Memory
     // =============================================================================
 
-    datatype Raw = Storage(contents:seq<u256>)
-
-    type T = m:Raw | |m.contents| < MAX_UINT256
-    witness Storage([])
+    datatype T = Storage(contents:map<u256,u256>)
 
     /**
      * Create some storage from an initial sequence of words.
      */
-    function method create(contents:seq<u256>) : T
-    requires |contents| < MAX_UINT256 {
+    function method create(contents:map<u256,u256>) : T {
         Storage(contents:=contents)
     }
 
     /**
-     * Return the size of this storage (in words).
+     * Read the value at a given address in Storage.  If the given location
+     * has not been initialised, then zero is returned as default.
      */
-    function size(mem:T) : u256 { |mem.contents| as u256 }
-
-    /**
-     * Read the value at a given address in Storage.  This requires that the address
-     * is within bounds of the Storage.
-     */
-    function read(mem:T, address:u256) : u256
-      // Address must be within bounds
-      requires address < size(mem) {
-        // Read location
+    function method read(mem:T, address:u256) : u256 {
+      if address in mem.contents
+        then
         mem.contents[address]
+      else
+        0
     }
 
     /**
-     * Write a value to a given address in Storage.  This requires that the address
-     * is within bounds of the Storage.
+     * Write a value to a given address in Storage.
      */
-    function write(mem:T, address:u256, val:u256) : T
-      // Address must be within bounds
-      requires address < size(mem) {
-        // Write location
+    function method write(mem:T, address:u256, val:u256) : T {
         Storage(contents:=mem.contents[address:=val])
     }
 }

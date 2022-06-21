@@ -23,42 +23,32 @@ module Memory {
     // Random Access Memory
     // =============================================================================
 
-    datatype Raw = Memory(contents:seq<u8>)
-
-    type T = m:Raw | |m.contents| < MAX_UINT256
-    witness Memory([])
+    datatype T = Memory(contents:map<u256,u8>)
 
     /**
      * Create a memory from an initial sequence of words.
      */
-    function method create(contents:seq<u8>) : T
-    requires |contents| < MAX_UINT256 {
-        Memory(contents:=contents)
+    function method create() : T {
+        Memory(contents:=map[])
     }
 
     /**
-     * Return the size of this memory (in bytes).
+     * Read the byte at a given address in Memory.  If the given location
+     * has not been initialised, then zero is returned as default.
      */
-    function size(mem:T) : u256 { |mem.contents| as u256 }
-
-    /**
-     * Read the byte at a given address in Memory.  This requires that the address
-     * is within bounds of the Memory.
-     */
-    function read_u8(mem:T, address:u256) : u8
-      // Address must be within bounds
-      requires address < (|mem.contents| as u256) {
+    function method read_u8(mem:T, address:u256) : u8 {
         // Read location
-        mem.contents[address]
+        if address in mem.contents
+        then
+          mem.contents[address]
+        else
+          0
     }
 
     /**
-     * Write a byte to a given address in Memory.  This requires that the address
-     * is within bounds of the Memory.
+     * Write a byte to a given address in Memory.
      */
-    function write_u8(mem:T, address:u256, val:u8) : T
-      // Address must be within bounds
-      requires address < (|mem.contents| as u256) {
+    function method write_u8(mem:T, address:u256, val:u8) : T {
         // Write location
         Memory(contents:=mem.contents[address:=val])
     }
