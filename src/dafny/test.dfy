@@ -5,10 +5,10 @@ import opened EVM
 
 // Check most simple program possible
 method test_01() {
-  // Initialise SVM
-  var vm := create(map[],[PUSH1,0x80]);
+  // Initialise EVM
+  var vm := EVM.create(map[],[PUSH1,0x80]);
   // Execute program
-  vm := unwrap(execute(vm));
+  vm := unwrap(EVM.execute(vm));
   // Check what we know
   assert operands(vm) == 1;
   assert vm.pc == 2;
