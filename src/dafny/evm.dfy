@@ -260,6 +260,8 @@ module EVM {
     else if opcode == DIV then evalDIV(vm')
     //
     else if opcode == PUSH1 then evalPUSH1(vm')
+    //
+    else if opcode == RETURN then evalRETURN(vm')
     else
       // Invalid opcode
       Result.INVALID
@@ -337,6 +339,28 @@ module EVM {
       then
       var k := Code.decode_u8(vm.code,vm.pc);
       Result.OK(goto(push(vm,k as u256),vm.pc+1))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Halt execution returning output data.
+   */
+  function method evalRETURN(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      // Determine amount of data to return.
+      var len := peek(vm,1) as int;
+      var start := peek(vm,0) as int;
+      // Sanity check bounds
+      if (start+len) <= MAX_UINT256
+      then
+        // Read out that data.
+        var data := Memory.slice(vm.memory, start as u256, len);
+        // Done
+        Result.RETURN(gas:=0,data:=data)
+      else
+        Result.INVALID
     else
       Result.INVALID
   }

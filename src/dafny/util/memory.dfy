@@ -52,4 +52,20 @@ module Memory {
         // Write location
         Memory(contents:=mem.contents[address:=val])
     }
+
+    /**
+     * Slice out a section of memory.
+     */
+    function method slice(mem:T, address:u256, len:nat) : seq<u8>
+      requires (address as int + len) <= MAX_UINT256
+      decreases len
+    {
+      if len == 0 then
+        []
+      else if address in mem.contents
+        then
+        [mem.contents[address]] + slice(mem,address+1,len-1)
+      else
+        [0] + slice(mem,address+1,len-1)
+    }
 }
