@@ -32,6 +32,7 @@ module EVM {
     memory  : Memory.T,
     storage : Storage.T,
     code: Code.T,
+    gas: nat,
     pc : u256
   )
 
@@ -39,13 +40,13 @@ module EVM {
    * Create a fresh EVM to execute a given sequence of bytecode instructions.
    * The EVM is  initialised with an empty stack and empty local memory.
    */
-  function method create(storage: map<u256,u256>, code: seq<u8>) : T
+  function method create(storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
   requires |code| <= MAX_UINT256 {
     var stck := Stack.create();
     var mem := Memory.create();
     var sto := Storage.create(storage);
     var cod := Code.create(code);
-    EVM(stack:=stck,memory:=mem,storage:=sto,code:=cod,pc:=0)
+    EVM(stack:=stck,memory:=mem,storage:=sto,code:=cod,gas:=gas,pc:=0)
   }
 
   // =============================================================================
@@ -237,13 +238,16 @@ module EVM {
 	const SELFDESTRUCT : u8 := 0xff;
 
   /**
-   * Captures the possible outcomes from executing a bytecode.
+   * Captures the possible outcomes from executing a bytecode.  Normal execution is indicated
+   * by OK (with the updated machine state).  An exceptional halt is indicated by INVALID
+   * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
+   * with return data are indicated accordingly (along with any gas returned).
    */
-  datatype Result = OK(evm:T) | INVALID | RETURN | REVERT | STOP
+  datatype Result = OK(evm:T) | INVALID | RETURN(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
 
   /**
-   * Execute a single step of the EVM.  This either results in a valid EVM,
-   * or an exception (e.g. REVERT).
+   * Execute a single step of the EVM.  This either results in a valid EVM (i.e. so execution
+   * can continue), or some form of halt (e.g. exceptional, revert, etc).
    */
   function method execute(vm:T) : Result {
     // Decode
@@ -266,63 +270,63 @@ module EVM {
    * return output data.
    */
   function method evalSTOP(vm:T) : Result {
-    Result.STOP
+    Result.RETURN(gas:=vm.gas,data:=[])
   }
 
   /**
    * Unsigned integer addition with modulo arithmetic.
    */
   function method evalADD(vm:T) : Result {
-    if operands(vm) == 2
+    if operands(vm) >= 2
       then
-      var rhs := peek(vm,1) as int;
-      var lhs := peek(vm,2) as int;
+      var rhs := peek(vm,0) as int;
+      var lhs := peek(vm,1) as int;
       var sum := (lhs + rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
-      Result.REVERT // ?
+      Result.INVALID
   }
 
   /**
    * Unsigned integer multiplication with modulo arithmetic.
    */
   function method evalMUL(vm:T) : Result {
-    if operands(vm) == 2
+    if operands(vm) >= 2
       then
-      var rhs := peek(vm,1) as int;
-      var lhs := peek(vm,2) as int;
+      var rhs := peek(vm,0) as int;
+      var lhs := peek(vm,1) as int;
       var sum := (lhs * rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
-      Result.REVERT // ?
+      Result.INVALID
   }
 
   /**
    * Unsigned integer subtraction with modulo arithmetic.
    */
   function method evalSUB(vm:T) : Result {
-    if operands(vm) == 2
+    if operands(vm) >= 2
       then
-      var rhs := peek(vm,1) as int;
-      var lhs := peek(vm,2) as int;
+      var rhs := peek(vm,0) as int;
+      var lhs := peek(vm,1) as int;
       var sum := (lhs - rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
-      Result.REVERT // ?
+      Result.INVALID
   }
 
   /**
    * Unsigned integer division with modulo arithmetic.
    */
   function method evalDIV(vm:T) : Result {
-    if operands(vm) == 2
+    if operands(vm) >= 2
       then
-      var lhs := peek(vm,1);
-      var rhs := peek(vm,2);
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1);
       var sum := div(lhs,rhs);
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
-      Result.REVERT // ?
+      Result.INVALID
   }
 
   /**
@@ -334,7 +338,7 @@ module EVM {
       var k := Code.decode_u8(vm.code,vm.pc);
       Result.OK(goto(push(vm,k as u256),vm.pc+1))
     else
-      Result.STOP
+      Result.INVALID
   }
 
   // =============================================================================
@@ -361,6 +365,7 @@ module EVM {
         storage:=vm.storage,
         memory:=vm.memory,
         code:=vm.code,
+        gas := vm.gas,
         pc := k
         )
   }
@@ -388,6 +393,7 @@ module EVM {
           storage:=vm.storage,
           memory:=vm.memory,
           code:=vm.code,
+          gas := vm.gas,
           pc:=vm.pc)
   }
 
@@ -411,6 +417,7 @@ module EVM {
           storage:=vm.storage,
           memory:=vm.memory,
           code:=vm.code,
+          gas := vm.gas,
           pc:=vm.pc)
   }
 
