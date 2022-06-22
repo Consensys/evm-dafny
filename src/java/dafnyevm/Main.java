@@ -11,6 +11,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package dafnyevm;
+
 import static EVM_Compile.__default.*;
 import EVM_Compile.Result;
 import EVM_Compile.Result_INVALID;
@@ -21,8 +23,6 @@ import EVM_Compile.Result_REVERT;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.Arrays;
 
 import dafny.DafnyMap;
 import dafny.DafnySequence;
