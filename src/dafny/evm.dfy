@@ -11,6 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 include "util/int.dfy"
 include "util/memory.dfy"
 include "util/storage.dfy"
@@ -259,7 +260,10 @@ module EVM {
     else if opcode == SUB then evalSUB(vm')
     else if opcode == DIV then evalDIV(vm')
     //
+    else if opcode == MSTORE then evalMSTORE(vm')
+    //
     else if opcode == PUSH1 then evalPUSH1(vm')
+    else if opcode == PUSH2 then evalPUSH2(vm')
     //
     else if opcode == RETURN then evalRETURN(vm')
     else
@@ -332,13 +336,48 @@ module EVM {
   }
 
   /**
-   * Push byte onto stack.
+   * Save word to memory.
+   */
+  function method evalMSTORE(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var loc := peek(vm,0);
+      var val := peek(vm,1);
+      if (loc as int) + 31 <= MAX_UINT256
+        then
+        // Write big endian order
+        Result.OK(write(pop(pop(vm)),loc,val))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Push one byte onto stack.
    */
   function method evalPUSH1(vm:T) : Result {
-    if vm.pc < Code.size(vm.code) && capacity(vm) >= 1
+    if opcode_operands(vm) >= 1 && capacity(vm) >= 1
       then
       var k := Code.decode_u8(vm.code,vm.pc);
       Result.OK(goto(push(vm,k as u256),vm.pc+1))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Push two bytes onto stack.
+   */
+  function method evalPUSH2(vm:T) : Result {
+    if opcode_operands(vm) >= 2 && capacity(vm) >= 1
+      then
+      // var k1 := Code.decode_u8(vm.code,vm.pc) as bv16;
+      // var k2 := Code.decode_u8(vm.code,vm.pc + 1) as bv16;
+      // var k := (k1 << 8) | k2;
+      var k1 := Code.decode_u8(vm.code,vm.pc) as u256;
+      var k2 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
+      var k := (k1 * 256) + k2;
+      Result.OK(goto(push(vm,k),vm.pc+2))
     else
       Result.INVALID
   }
@@ -444,6 +483,27 @@ module EVM {
           gas := vm.gas,
           pc:=vm.pc)
   }
+
+  /**
+   * Write word to byte address in memory.
+   */
+  function method write(vm:T, address:u256, val: u256) : T
+  requires (address as int) + 31 <= MAX_UINT256 {
+    EVM(stack:=vm.stack,
+      storage:=vm.storage,
+      memory:=Memory.write_u256(vm.memory,address,val),
+      code:=vm.code,
+      gas := vm.gas,
+      pc:=vm.pc)
+  }
+
+  /**
+   * Check how many code operands are available.
+   */
+  function method opcode_operands(vm:T) : int {
+    (Code.size(vm.code) as nat) - (vm.pc as nat)
+  }
+
 
   /**
    * Unsigned integer division with handling for zero.

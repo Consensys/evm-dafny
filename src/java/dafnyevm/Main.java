@@ -188,4 +188,18 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Convert a sequence of bytes into a hexadecimal string.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static String toHexString(byte... bytes) {
+		String r = "";
+		for(int i=0;i!=bytes.length;++i) {
+			int b = bytes[i] & 0xff;
+			r = r + String.format("%02X",b);
+		}
+		return r;
+	}
 }

@@ -45,12 +45,54 @@ module Memory {
           0
     }
 
+    function method write_bv16(mem:T, address:u256, val:bv16) : T
+    // Cannot write passed end of memory.
+    requires (address as int) + 1 <= MAX_UINT256 {
+      var lb := (val & 0xFF) as u8;
+      var hb := (val >> 8) as u8;
+      Memory(contents:=mem.contents[address:=hb][address+1:=lb])
+    }
+
+    function method write_bv32(mem:T, address:u256, val:bv32) : T
+    // Cannot write passed end of memory.
+    requires (address as int) + 3 <= MAX_UINT256 {
+      var mem' := write_bv16(mem,address,(val >> 16) as bv16);
+      write_bv16(mem',address+2,(val & 0xFFFF) as bv16)
+    }
+
+    function method write_bv64(mem:T, address:u256, val:bv64) : T
+    // Cannot write passed end of memory.
+    requires (address as int) + 7 <= MAX_UINT256 {
+      var mem' := write_bv32(mem,address,(val >> 32) as bv32);
+      write_bv32(mem',address+4,(val & 0xFFFF_FFFF) as bv32)
+    }
+
+    function method write_bv128(mem:T, address:u256, val:bv128) : T
+    // Cannot write passed end of memory.
+    requires (address as int) + 15 <= MAX_UINT256 {
+      var mem' :=write_bv64(mem,address,(val >> 64) as bv64);
+      write_bv64(mem',address+8,(val & 0xFFFF_FFFF_FFFF_FFFF) as bv64)
+    }
+
+    function method write_bv256(mem:T, address:u256, val:bv256) : T
+    // Cannot write passed end of memory.
+    requires (address as int) + 31 <= MAX_UINT256 {
+      var mem' := write_bv128(mem,address,(val >> 128) as bv128);
+      write_bv128(mem',address+16,(val & 0xFFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF) as bv128)
+    }
+
     /**
      * Write a byte to a given address in Memory.
      */
     function method write_u8(mem:T, address:u256, val:u8) : T {
         // Write location
         Memory(contents:=mem.contents[address:=val])
+    }
+
+    function method write_u256(mem:T, address:u256, val:u256) : T
+    // Cannot write passed end of memory.
+    requires (address as int) + 31 <= MAX_UINT256 {
+      write_bv256(mem,address,val as bv256)
     }
 
     /**
