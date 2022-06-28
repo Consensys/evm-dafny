@@ -23,8 +23,22 @@ repositories {
     mavenCentral()
 }
 
+
+// sourceSets {
+//     main {
+//         java {
+//             srcDir 'evm-java'
+//             srcDir 'src/main/java'
+//         }
+//     }
+//  }
+sourceSets.main.java.srcDirs += ['evm-java']
+
 test {
     useJUnitPlatform()
+    filter {
+        includeTestsMatching('dafnyevm.Tests')
+    }
 }
 
 // In this section you declare the dependencies for your production and test code
