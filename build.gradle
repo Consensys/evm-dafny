@@ -15,24 +15,26 @@
 // Apply the java plugin to add support for Java
 apply plugin: 'java'
 
-// In this section you declare where to find the dependencies of your project
-repositories {
-    // Use 'jcenter' for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    // jcenter()
-    mavenCentral()
+// ======================================================================
+// Dafny Build
+// ======================================================================
+
+task preBuild {
+    // Generate sources
+    exec {
+        executable 'dafny'
+        args '/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
+    }
 }
 
+// ======================================================================
+// Java Build
+// ======================================================================
 
-// sourceSets {
-//     main {
-//         java {
-//             srcDir 'evm-java'
-//             srcDir 'src/main/java'
-//         }
-//     }
-//  }
-sourceSets.main.java.srcDirs += ['evm-java']
+repositories {
+    // Use MavenCentral for resolving dependencies
+    mavenCentral()
+}
 
 test {
     useJUnitPlatform()
@@ -40,6 +42,8 @@ test {
         includeTestsMatching('dafnyevm.Tests')
     }
 }
+
+sourceSets.main.java.srcDirs += ['evm-java']
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
