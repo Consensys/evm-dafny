@@ -57,26 +57,26 @@ module Int {
   // Conversion to/from byte sequences
   // =========================================================
 
-  function read_u8(bytes: seq<u8>, address:nat) : u8
+  function method read_u8(bytes: seq<u8>, address:nat) : u8
   requires address < |bytes| {
     bytes[address]
   }
 
-  function read_u16(bytes: seq<u8>, address:nat) : u16
+  function method read_u16(bytes: seq<u8>, address:nat) : u16
   requires (address+1) < |bytes| {
     var b1 := bytes[address] as u16;
     var b2 := bytes[address+1] as u16;
     (b1 * (TWO_8 as u16)) + b2
   }
 
-  function read_u32(bytes: seq<u8>, address:nat) : u32
+  function method read_u32(bytes: seq<u8>, address:nat) : u32
   requires (address+3) < |bytes| {
     var b1 := read_u16(bytes, address) as u32;
     var b2 := read_u16(bytes, address+2) as u32;
     (b1 * (TWO_16 as u32)) + b2
   }
 
-  function read_u64(bytes: seq<u8>, address:nat) : u64
+  function method read_u64(bytes: seq<u8>, address:nat) : u64
   requires (address+7) < |bytes| {
     var b1 := read_u32(bytes, address) as u64;
     var b2 := read_u32(bytes, address+4) as u64;
