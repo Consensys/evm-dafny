@@ -17,7 +17,7 @@ import static EVM_Compile.__default.*;
 import EVM_Compile.Result;
 import EVM_Compile.Result_INVALID;
 import EVM_Compile.Result_OK;
-import EVM_Compile.Result_RETURN;
+import EVM_Compile.Result_RETURNS;
 import EVM_Compile.Result_REVERT;
 
 import java.math.BigInteger;
@@ -60,8 +60,8 @@ public class Main {
 			r = execute(evm);
 		}
 		// Decide what happened
-		if(r instanceof Result_RETURN) {
-			Result_RETURN rret = (Result_RETURN) r;
+		if(r instanceof Result_RETURNS) {
+			Result_RETURNS rret = (Result_RETURNS) r;
 			return new Outcome(false,rret.data,rret.gas,evm);
 		} else if(r instanceof Result_REVERT) {
 			Result_REVERT rrev = (Result_REVERT) r;

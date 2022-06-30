@@ -244,7 +244,7 @@ module EVM {
    * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
    * with return data are indicated accordingly (along with any gas returned).
    */
-  datatype Result = OK(evm:T) | INVALID | RETURN(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
+  datatype Result = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
 
   /**
    * Execute a single step of the EVM.  This either results in a valid EVM (i.e. so execution
@@ -261,6 +261,7 @@ module EVM {
     else if opcode == DIV then evalDIV(vm')
     //
     else if opcode == MSTORE then evalMSTORE(vm')
+    else if opcode == MSTORE8 then evalMSTORE8(vm')
     //
     else if opcode == PUSH1 then evalPUSH1(vm')
     else if opcode == PUSH2 then evalPUSH2(vm')
@@ -276,7 +277,7 @@ module EVM {
    * return output data.
    */
   function method evalSTOP(vm:T) : Result {
-    Result.RETURN(gas:=vm.gas,data:=[])
+    Result.RETURNS(gas:=vm.gas,data:=[])
   }
 
   /**
@@ -354,6 +355,24 @@ module EVM {
   }
 
   /**
+   * Save byte to memory.
+   */
+  function method evalMSTORE8(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var loc := peek(vm,0);
+      var val := (peek(vm,1) % 256) as u8;
+      if (loc as int) < MAX_UINT256
+        then
+        // Write byte
+        Result.OK(write8(pop(pop(vm)),loc,val))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
    * Push one byte onto stack.
    */
   function method evalPUSH1(vm:T) : Result {
@@ -397,7 +416,7 @@ module EVM {
         // Read out that data.
         var data := Memory.slice(vm.memory, start as u256, len);
         // Done
-        Result.RETURN(gas:=0,data:=data)
+        Result.RETURNS(gas:=0,data:=data)
       else
         Result.INVALID
     else
@@ -492,6 +511,19 @@ module EVM {
     EVM(stack:=vm.stack,
       storage:=vm.storage,
       memory:=Memory.write_u256(vm.memory,address,val),
+      code:=vm.code,
+      gas := vm.gas,
+      pc:=vm.pc)
+  }
+
+  /**
+   * Write byte to byte address in memory.
+   */
+  function method write8(vm:T, address:u256, val: u8) : T
+  requires (address as int) < MAX_UINT256 {
+    EVM(stack:=vm.stack,
+      storage:=vm.storage,
+      memory:=Memory.write_u8(vm.memory,address,val),
       code:=vm.code,
       gas := vm.gas,
       pc:=vm.pc)

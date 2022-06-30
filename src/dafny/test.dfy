@@ -4,15 +4,25 @@ import opened Int
 import opened EVM
 
 // Check most simple program possible
-method test_01() {
+method test_01(gas: nat) returns (returndata: seq<u8>)
+ensures |returndata| == 0x20
+ensures Int.read_u8(returndata,0) == 0x7b {
   // Initialise EVM
-  var vm := EVM.create(map[],[PUSH1,0x80]);
-  // Execute program
+  var vm := EVM.create(map[],gas,[PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN]);
+  // PUSH1 0x7b
   vm := unwrap(EVM.execute(vm));
-  // Check what we know
-  assert operands(vm) == 1;
-  assert vm.pc == 2;
-  assert peek(vm,0) == 0x80;
+  // PUSH1 0x00
+  vm := unwrap(EVM.execute(vm));
+  // MSTORE
+  vm := unwrap(EVM.execute(vm));
+  // PUSH1 0x20
+  vm := unwrap(EVM.execute(vm));
+  // PUSH1 0x00
+  vm := unwrap(EVM.execute(vm));
+  // RETURN
+  var r := EVM.execute(vm);
+  // Done
+  return data(r);
 }
 
 /**
@@ -21,5 +31,15 @@ method test_01() {
  */
 function method unwrap(r:EVM.Result) : EVM.T
   requires r.OK?{
-  var OK(v) := r; v
+    var OK(v) := r;
+    v
+}
+
+/**
+ * Extract the return data from an EVM Result
+ */
+function method data(r:EVM.Result) : seq<u8>
+  requires r.RETURNS? {
+    var RETURNS(gas,data) := r;
+    data
 }
