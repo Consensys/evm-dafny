@@ -169,18 +169,22 @@ module Memory {
     }
 
     /**
-     * Slice out a section of memory.
+     * Slice out a section of memory.  This is implemented in a subdivision
+     * style as this seems to work better (in terms of theorem prover performance).
      */
     function method slice(mem:T, address:u256, len:nat) : seq<u8>
       requires (address as int + len) <= MAX_UINT256
       decreases len
     {
-      if len == 0 then
+      if len == 0
+      then
         []
-      else if address in mem.contents
+      else if len == 1
         then
-        [mem.contents[address]] + slice(mem,address+1,len-1)
+        [read_u8(mem,address)]
       else
-        [0] + slice(mem,address+1,len-1)
+        var pivot := len / 2;
+        var middle := address + (pivot as u256);
+        slice(mem,address,pivot) + slice(mem,middle, len - pivot)
     }
 }
