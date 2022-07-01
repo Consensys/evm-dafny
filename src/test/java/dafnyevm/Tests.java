@@ -21,54 +21,151 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dafny.DafnySequence;
 import dafnyevm.Main.Outcome;
+import static dafnyevm.Main.parseHex;
 import static dafnyevm.util.Bytecodes.*;
 
 
 public class Tests {
+	/**
+	 * Enable to see additional debug information (e.g. internal states).
+	 */
+	private final boolean DEBUG = true;
+
+	// ========================================================================
+	// STOP
+	// ========================================================================
 
 	@Test
 	public void test_01() {
 		runExpecting(new int[] { STOP });
 	}
 
+	// ========================================================================
+	// PUSH, RETURN, POP
+	// ========================================================================
+
 	@Test
-	public void test_02() {
-		// Return nothing.
+	public void test_10() {
 		runExpecting(new int[] { PUSH1, 0x00, PUSH1, 0x00, RETURN });
 	}
 
 	@Test
-	public void test_03() {
-		// Return 1 zero byte
+	public void test_11() {
 		runExpecting(new int[] { PUSH1, 0x01, PUSH1, 0x00, RETURN }, new byte[] { 0 });
 	}
 
 	@Test
-	public void test_04() {
+	public void test_12() {
+		runExpecting(new int[] { PUSH2, 0x00, 0x02, PUSH1, 0x00, RETURN }, new byte[] { 0, 0 });
+	}
+
+	@Test
+	public void test_13() {
+		runExpecting(new int[] { PUSH1, 0x02, PUSH1, 0x01, POP, PUSH1, 0x00, RETURN }, new byte[] { 0, 0 });
+	}
+
+	// ========================================================================
+	// MLOAD, MSTORE
+	// ========================================================================
+
+	@Test
+	public void test_20() {
 		// Check words stored in big endian format.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x1, PUSH1, 0x00, RETURN }, new byte[] { 0 });
 	}
 
 	@Test
-	public void test_05() {
+	public void test_21() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x7b));
 	}
 
 	@Test
-	public void test_06() {
+	public void test_22() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x4d7b));
 	}
 
 	@Test
-	public void test_07() {
+	public void test_23() {
+		// Check can read and write data to memory
+		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x00, MLOAD, PUSH1, 0x20, MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN }, UINT32(0x4d7b));
+	}
+
+	// ========================================================================
+	// MSTORE8
+	// ========================================================================
+
+	@Test
+	public void test_30() {
+		// Check words stored in big endian format.
+		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x1, PUSH1, 0x00, RETURN }, new byte[] { 0x7b });
+	}
+
+	@Test
+	public void test_31() {
+		// Check can return data from memory.
+		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN },
+				shl(UINT32(0x7b), 31));
+	}
+
+	@Test
+	public void test_32() {
+		// Check can return data from memory.
+		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN },
+				shl(UINT32(0x7b), 31));
+	}
+
+	// ========================================================================
+	// ADD / SUB / DIV / MUL
+	// ========================================================================
+
+	@Test
+	public void test_40() {
 		// Check can add!
 		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, ADD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x3));
 	}
 
 	@Test
-	public void test_08() {
+	public void test_41() {
+		// Check can subtract!
+		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x1, SUB, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x2));
+	}
+
+	@Test
+	public void test_42() {
+		// Check can multiply!
+		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x2, MUL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x6));
+	}
+
+	@Test
+	public void test_43() {
+		// Check can divide!
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, DIV, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x3));
+	}
+
+	// ========================================================================
+	// SLOAD, SSTORE
+	// ========================================================================
+
+	@Test
+	public void test_50() {
+		// test add11 from the reference tests
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x1, ADD, PUSH1, 0x00, SSTORE, STOP }, new byte[0]);
+		//runExpecting("600160010160005500", new byte[0]);
+	}
+
+	@Test
+	public void test_51() {
+		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, SSTORE, PUSH1, 0x00, SLOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x4d7b));
+	}
+
+	// ========================================================================
+	// Misc
+	// ========================================================================
+
+	@Test
+	public void test_100() {
 		// Check out-of-gas for high memory write.
 		runOutOfGas(new int[] {
 				PUSH1, 0x7b,
@@ -81,7 +178,7 @@ public class Tests {
 	}
 
 	@Test
-	public void test_10() {
+	public void test_101() {
 		// Check out-of-gas for high memory write.
 		runOutOfGas(new int[] {
 				PUSH1, 0x7b,
@@ -100,10 +197,10 @@ public class Tests {
 	 * @param bytecode
 	 * @param bytes
 	 */
-	private void runExpecting(int[] words, byte... bytes) {
-		System.out.println("Excuting: " + Main.toHexString(toBytes(words)));
+	private void runExpecting(byte[] code, byte... bytes) {
+		System.out.println("Excuting: " + Main.toHexString(code));
 		// Execute the EVM
-		Outcome r = new Main(new HashMap<>(),toBytes(words)).run();
+		Outcome r = new Main(new HashMap<>(),code).setDebug(DEBUG).run();
 		// Check we haven't reverted
 		assertFalse(r.isRevert());
 		// Check something was returned
@@ -111,6 +208,27 @@ public class Tests {
 		// Ok!
 		assertEquals(DafnySequence.fromBytes(bytes), r.getReturnData());
 	}
+
+	/**
+	 * Overload of <code>runExpecting</code> where input specified as text.
+	 *
+	 * @param hex Bytecode in hexadecimal format.
+	 * @param bytes
+	 */
+	private void runExpecting(String hex, byte... bytes) {
+		runExpecting(parseHex(hex), bytes);
+	}
+
+	/**
+	 * Overload of <code>runExpecting</code> where input specified as word array.
+	 *
+	 * @param words Bytecode as an array of ints.
+	 * @param bytes
+	 */
+	private void runExpecting(int[] words, byte... bytes) {
+		runExpecting(toBytes(words), bytes);
+	}
+
 
 	/**
 	 * Run a bytecode program expecting it to raise an out-of-gas error.
@@ -158,5 +276,24 @@ public class Tests {
 		bytes[29] = (byte) ((x >> 16) & 0xFF);
 		bytes[28] = (byte) ((x >> 24) & 0xFF);
 		return bytes;
+	}
+
+	/**
+	 * Shift an array of bytes to the left a given amount.
+	 *
+	 * @param bytes
+	 * @param k
+	 * @return
+	 */
+	private byte[] shl(byte[] bytes, int k) {
+		if (k <= 0) {
+			throw new IllegalArgumentException();
+		} else {
+			byte[] r = new byte[bytes.length];
+			for (int i = k; i < bytes.length; ++i) {
+				r[i - k] = bytes[k];
+			}
+			return r;
+		}
 	}
 }

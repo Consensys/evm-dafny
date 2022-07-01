@@ -35,6 +35,10 @@ import dafny.DafnySequence;
  */
 public class Main {
 	/**
+	 * Print out intermediate states
+	 */
+	private boolean debug = false;
+	/**
 	 * Initial state of storage prior.
 	 */
 	private final DafnyMap<BigInteger,BigInteger> storage;
@@ -48,6 +52,11 @@ public class Main {
 		this.code = DafnySequence.fromBytes(code);
 	}
 
+	public Main setDebug(boolean debug) {
+		this.debug = debug;
+		return this;
+	}
+
 	public Outcome run() {
 		// Create the EVM
 		EVM_Compile.T evm = create(storage,BigInteger.ONE,code);
@@ -55,6 +64,9 @@ public class Main {
 		Result r = execute(evm);
 		// Continue whilst the EVM is happy.
 		while(r instanceof Result_OK) {
+			if(debug) {
+				System.out.println(toString(evm));
+			}
 			Result_OK rok = (Result_OK) r;
 			evm = rok.evm;
 			r = execute(evm);
@@ -71,6 +83,14 @@ public class Main {
 			Result_INVALID rinv = (Result_INVALID) r;
 			return new Outcome(false,null,null,evm);
 		}
+	}
+
+	public String toString(EVM_Compile.T evm) {
+		final String p = evm.pc.toString();
+		final String m = evm.memory.contents.toString();
+		final String s = evm.storage.contents.toString();
+		final String a = evm.stack.contents.toString();
+		return String.format("pc=%s, storage=%s, memory=%s, stack=%s", p, s, m, a);
 	}
 
 	/**

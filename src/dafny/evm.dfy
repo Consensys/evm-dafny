@@ -259,13 +259,17 @@ module EVM {
     else if opcode == MUL then evalMUL(vm')
     else if opcode == SUB then evalSUB(vm')
     else if opcode == DIV then evalDIV(vm')
-    //
+    // 0x50
+    else if opcode == POP then evalPOP(vm')
+    else if opcode == MLOAD then evalMLOAD(vm')
     else if opcode == MSTORE then evalMSTORE(vm')
     else if opcode == MSTORE8 then evalMSTORE8(vm')
-    //
+    else if opcode == SLOAD then evalSLOAD(vm')
+    else if opcode == SSTORE then evalSSTORE(vm')
+    // 0x60
     else if opcode == PUSH1 then evalPUSH1(vm')
     else if opcode == PUSH2 then evalPUSH2(vm')
-    //
+    // 0xf0
     else if opcode == RETURN then evalRETURN(vm')
     else
       // Invalid opcode
@@ -337,6 +341,36 @@ module EVM {
   }
 
   /**
+   * Pop word from stack.
+   */
+  function method evalPOP(vm:T) : Result {
+    if operands(vm) >= 1
+    then
+      Result.OK(pop(vm))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Get word from memory.
+   */
+  function method evalMLOAD(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var loc := peek(vm,0);
+      if (loc as int) + 31 <= MAX_UINT256
+        then
+        var val := read(vm,loc);
+        // Write big endian order
+        Result.OK(push(pop(vm),val))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+
+  /**
    * Save word to memory.
    */
   function method evalMSTORE(vm:T) : Result {
@@ -373,6 +407,34 @@ module EVM {
   }
 
   /**
+   * Get word from storage.
+   */
+  function method evalSLOAD(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var loc := peek(vm,0);
+      var val := load(vm,loc);
+      // Store word
+      Result.OK(push(pop(vm),val))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Save word to storage.
+   */
+  function method evalSSTORE(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var loc := peek(vm,0);
+      var val := peek(vm,1);
+      // Store word
+      Result.OK(store(pop(pop(vm)),loc,val))
+    else
+      Result.INVALID
+  }
+
+  /**
    * Push one byte onto stack.
    */
   function method evalPUSH1(vm:T) : Result {
@@ -390,9 +452,6 @@ module EVM {
   function method evalPUSH2(vm:T) : Result {
     if opcode_operands(vm) >= 2 && capacity(vm) >= 1
       then
-      // var k1 := Code.decode_u8(vm.code,vm.pc) as bv16;
-      // var k2 := Code.decode_u8(vm.code,vm.pc + 1) as bv16;
-      // var k := (k1 << 8) | k2;
       var k1 := Code.decode_u8(vm.code,vm.pc) as u256;
       var k2 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
       var k := (k1 * 256) + k2;
@@ -504,6 +563,14 @@ module EVM {
   }
 
   /**
+   * Read word from byte address in memory.
+   */
+  function method read(vm:T, address:u256) : u256
+  requires (address as int) + 31 <= MAX_UINT256 {
+    Memory.read_u256(vm.memory,address)
+  }
+
+  /**
    * Write word to byte address in memory.
    */
   function method write(vm:T, address:u256, val: u256) : T
@@ -524,6 +591,25 @@ module EVM {
     EVM(stack:=vm.stack,
       storage:=vm.storage,
       memory:=Memory.write_u8(vm.memory,address,val),
+      code:=vm.code,
+      gas := vm.gas,
+      pc:=vm.pc)
+  }
+
+  /**
+   * Read word from storage
+   */
+  function method load(vm:T, address:u256) : u256 {
+    Storage.read(vm.storage,address)
+  }
+
+  /**
+   * Write word to storage
+   */
+  function method store(vm:T, address:u256, val: u256) : T {
+    EVM(stack:=vm.stack,
+      storage:=Storage.write(vm.storage,address,val),
+      memory:=vm.memory,
       code:=vm.code,
       gas := vm.gas,
       pc:=vm.pc)
