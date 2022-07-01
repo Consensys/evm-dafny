@@ -46,6 +46,61 @@ module Memory {
     }
 
     /**
+     * Read a 16bit word from a given address in Memory assuming
+     * big-endian addressing.
+     */
+    function method read_u16(mem:T, address:u256) : u16
+      requires (address as int) + 1 <= MAX_UINT256 {
+        var w1 := read_u8(mem,address) as u16;
+        var w2 := read_u8(mem,address+1) as u16;
+        (w1 * (TWO_8 as u16)) + w2
+    }
+
+    /**
+     * Read a 32bit word from a given address in Memory assuming
+     * big-endian addressing.
+     */
+    function method read_u32(mem:T, address:u256) : u32
+      requires (address as int) + 3 <= MAX_UINT256 {
+        var w1 := read_u16(mem,address) as u32;
+        var w2 := read_u16(mem,address+2) as u32;
+        (w1 * (TWO_16 as u32)) + w2
+    }
+
+    /**
+     * Read a 64bit word from a given address in Memory assuming
+     * big-endian addressing.
+     */
+    function method read_u64(mem:T, address:u256) : u64
+      requires (address as int) + 7 <= MAX_UINT256 {
+        var w1 := read_u32(mem,address) as u64;
+        var w2 := read_u32(mem,address+4) as u64;
+        (w1 * (TWO_32 as u64)) + w2
+    }
+
+    /**
+     * Read a 128bit word from a given address in Memory assuming
+     * big-endian addressing.
+     */
+    function method read_u128(mem:T, address:u256) : u128
+      requires (address as int) + 15 <= MAX_UINT256 {
+        var w1 := read_u64(mem,address) as u128;
+        var w2 := read_u64(mem,address+8) as u128;
+        (w1 * (TWO_64 as u128)) + w2
+    }
+
+    /**
+     * Read a 256bit word from a given address in Memory assuming
+     * big-endian addressing.
+     */
+    function method read_u256(mem:T, address:u256) : u256
+      requires (address as int) + 31 <= MAX_UINT256 {
+        var w1 := read_u128(mem,address) as u256;
+        var w2 := read_u128(mem,address+16) as u256;
+        (w1 * (TWO_128 as u256)) + w2
+    }
+
+    /**
      * Write a byte to a given address in Memory.
      */
     function method write_u8(mem:T, address:u256, val:u8) : T {
@@ -59,10 +114,10 @@ module Memory {
      */
     function method write_u16(mem:T, address:u256, val:u16) : T
     requires (address as int) + 1 <= MAX_UINT256 {
-      var b1 := val / (TWO_8 as u16);
-      var b2 := val % (TWO_8 as u16);
-      var mem' := write_u8(mem,address,b1 as u8);
-      write_u8(mem,address+1,b2 as u8)
+      var w1 := val / (TWO_8 as u16);
+      var w2 := val % (TWO_8 as u16);
+      var mem' := write_u8(mem,address,w1 as u8);
+      write_u8(mem',address+1,w2 as u8)
     }
 
     /**
@@ -71,10 +126,10 @@ module Memory {
      */
     function method write_u32(mem:T, address:u256, val:u32) : T
     requires (address as int) + 3 <= MAX_UINT256 {
-      var b1 := val / (TWO_16 as u32);
-      var b2 := val % (TWO_16 as u32);
-      var mem' := write_u16(mem,address,b1 as u16);
-      write_u16(mem,address+2,b2 as u16)
+      var w1 := val / (TWO_16 as u32);
+      var w2 := val % (TWO_16 as u32);
+      var mem' := write_u16(mem,address,w1 as u16);
+      write_u16(mem',address+2,w2 as u16)
     }
 
     /**
@@ -83,10 +138,10 @@ module Memory {
      */
     function method write_u64(mem:T, address:u256, val:u64) : T
     requires (address as int) + 7 <= MAX_UINT256 {
-      var b1 := val / (TWO_32 as u64);
-      var b2 := val % (TWO_32 as u64);
-      var mem' := write_u32(mem,address,b1 as u32);
-      write_u32(mem,address+4,b2 as u32)
+      var w1 := val / (TWO_32 as u64);
+      var w2 := val % (TWO_32 as u64);
+      var mem' := write_u32(mem,address,w1 as u32);
+      write_u32(mem',address+4,w2 as u32)
     }
 
     /**
@@ -95,10 +150,10 @@ module Memory {
      */
     function method write_u128(mem:T, address:u256, val:u128) : T
     requires (address as int) + 15 <= MAX_UINT256 {
-      var b1 := val / (TWO_64 as u128);
-      var b2 := val % (TWO_64 as u128);
-      var mem' := write_u64(mem,address,b1 as u64);
-      write_u64(mem,address+8,b2 as u64)
+      var w1 := val / (TWO_64 as u128);
+      var w2 := val % (TWO_64 as u128);
+      var mem' := write_u64(mem,address,w1 as u64);
+      write_u64(mem',address+8,w2 as u64)
     }
 
     /**
@@ -107,10 +162,10 @@ module Memory {
      */
     function method write_u256(mem:T, address:u256, val:u256) : T
     requires (address as int) + 31 <= MAX_UINT256 {
-      var b1 := val / (TWO_128 as u256);
-      var b2 := val % (TWO_128 as u256);
-      var mem' := write_u128(mem,address,b1 as u128);
-      write_u128(mem,address+16,b2 as u128)
+      var w1 := val / (TWO_128 as u256);
+      var w2 := val % (TWO_128 as u256);
+      var mem' := write_u128(mem,address,w1 as u128);
+      write_u128(mem',address+16,w2 as u128)
     }
 
     /**
