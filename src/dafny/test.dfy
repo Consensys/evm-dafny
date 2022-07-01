@@ -5,8 +5,8 @@ import opened EVM
 
 // Check most simple program possible
 method test_01(gas: nat) returns (returndata: seq<u8>)
-//ensures |returndata| > 31
-//ensures Int.read_u8(returndata,31) == 0x7b
+ensures |returndata| == 32
+ensures Int.read_u8(returndata,31) == 0x7b
 {
   // Initialise EVM
   var vm := EVM.create(map[],gas,[PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN]);
@@ -28,10 +28,8 @@ method test_01(gas: nat) returns (returndata: seq<u8>)
   assert EVM.peek(vm,1) == 32;
   // RETURN
   var r := EVM.execute(vm);
-  // // Done
-  var data := data(r);
-  assert |data| > 8;
-  return [];
+  // Done
+  return data(r);
 }
 
 /**
