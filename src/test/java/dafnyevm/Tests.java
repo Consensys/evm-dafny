@@ -36,7 +36,7 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_01() {
+	public void test_stop_01() {
 		runExpecting(new int[] { STOP });
 	}
 
@@ -45,22 +45,22 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_10() {
+	public void test_push1_01() {
 		runExpecting(new int[] { PUSH1, 0x00, PUSH1, 0x00, RETURN });
 	}
 
 	@Test
-	public void test_11() {
+	public void test_push1_02() {
 		runExpecting(new int[] { PUSH1, 0x01, PUSH1, 0x00, RETURN }, new byte[] { 0 });
 	}
 
 	@Test
-	public void test_12() {
+	public void test_push2_01() {
 		runExpecting(new int[] { PUSH2, 0x00, 0x02, PUSH1, 0x00, RETURN }, new byte[] { 0, 0 });
 	}
 
 	@Test
-	public void test_13() {
+	public void test_pop_01() {
 		runExpecting(new int[] { PUSH1, 0x02, PUSH1, 0x01, POP, PUSH1, 0x00, RETURN }, new byte[] { 0, 0 });
 	}
 
@@ -69,25 +69,25 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_20() {
+	public void test_mstore_01() {
 		// Check words stored in big endian format.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x1, PUSH1, 0x00, RETURN }, new byte[] { 0 });
 	}
 
 	@Test
-	public void test_21() {
+	public void test_mstore_02() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x7b));
 	}
 
 	@Test
-	public void test_22() {
+	public void test_mstore_03() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x4d7b));
 	}
 
 	@Test
-	public void test_23() {
+	public void test_mload_01() {
 		// Check can read and write data to memory
 		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x00, MLOAD, PUSH1, 0x20, MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN }, UINT32(0x4d7b));
 	}
@@ -97,20 +97,20 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_30() {
+	public void test_mstore8_01() {
 		// Check words stored in big endian format.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x1, PUSH1, 0x00, RETURN }, new byte[] { 0x7b });
 	}
 
 	@Test
-	public void test_31() {
+	public void test_mstore8_02() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN },
 				shl(UINT32(0x7b), 31));
 	}
 
 	@Test
-	public void test_32() {
+	public void test_mstore8_03() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN },
 				shl(UINT32(0x7b), 31));
@@ -121,25 +121,25 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_40() {
+	public void test_add_01() {
 		// Check can add!
 		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, ADD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x3));
 	}
 
 	@Test
-	public void test_41() {
+	public void test_sub_01() {
 		// Check can subtract!
 		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x1, SUB, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x2));
 	}
 
 	@Test
-	public void test_42() {
+	public void test_mul_01() {
 		// Check can multiply!
 		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x2, MUL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x6));
 	}
 
 	@Test
-	public void test_43() {
+	public void test_div_01() {
 		// Check can divide!
 		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, DIV, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x3));
 	}
@@ -149,14 +149,14 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_50() {
+	public void test_sstore_01() {
 		// test add11 from the reference tests
 		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x1, ADD, PUSH1, 0x00, SSTORE, STOP }, new byte[0]);
 		//runExpecting("600160010160005500", new byte[0]);
 	}
 
 	@Test
-	public void test_51() {
+	public void test_sstore_02() {
 		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, SSTORE, PUSH1, 0x00, SLOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x4d7b));
 	}
 
@@ -165,7 +165,7 @@ public class Tests {
 	// ========================================================================
 
 	@Test
-	public void test_100() {
+	public void test_highmemory_write_01() {
 		// Check out-of-gas for high memory write.
 		runOutOfGas(new int[] {
 				PUSH1, 0x7b,
@@ -178,7 +178,7 @@ public class Tests {
 	}
 
 	@Test
-	public void test_101() {
+	public void test_highmemory_write_02() {
 		// Check out-of-gas for high memory write.
 		runOutOfGas(new int[] {
 				PUSH1, 0x7b,
