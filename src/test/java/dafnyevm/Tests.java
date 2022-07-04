@@ -145,6 +145,70 @@ public class Tests {
 	}
 
 	// ========================================================================
+	// LT / GT / SLT / SGT / EQ / ISZERO
+	// ========================================================================
+
+	@Test
+	public void test_lt_01() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+	}
+
+	@Test
+	public void test_lt_02() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x1, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+	}
+
+	@Test
+	public void test_lt_03() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+	}
+
+	@Test
+	public void test_gt_01() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+	}
+
+	@Test
+	public void test_gt_02() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x1, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+	}
+
+	@Test
+	public void test_gt_03() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+	}
+
+	@Test
+	public void test_eq_01() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, EQ, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+	}
+
+	@Test
+	public void test_eq_02() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, EQ, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+	}
+
+	@Test
+	public void test_iszero_01() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x2, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+	}
+
+	@Test
+	public void test_iszero_02() {
+		// Check can add!
+		runExpecting(new int[] { PUSH1, 0x0, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+	}
+
+	// ========================================================================
 	// SLOAD, SSTORE
 	// ========================================================================
 
