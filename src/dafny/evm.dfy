@@ -259,6 +259,28 @@ module EVM {
     else if opcode == MUL then evalMUL(vm')
     else if opcode == SUB then evalSUB(vm')
     else if opcode == DIV then evalDIV(vm')
+      // SDIV
+      // MOD
+      // SMOD
+      // ADDMOD
+      // MULMOD
+      // EXP
+      // SIGNEXTEND
+    // 0x10
+    else if opcode == LT then evalLT(vm')
+    else if opcode == GT then evalGT(vm')
+    else if opcode == SLT then evalSLT(vm')
+    else if opcode == SGT then evalSGT(vm')
+    else if opcode == EQ then evalEQ(vm')
+    else if opcode == ISZERO then evalISZERO(vm')
+      // AND
+      // OR
+      // XOR
+      // NOT
+      // BYTE
+      // SHL
+      // SHR
+      // SAR
     // 0x50
     else if opcode == POP then evalPOP(vm')
     else if opcode == MLOAD then evalMLOAD(vm')
@@ -290,8 +312,8 @@ module EVM {
   function method evalADD(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var rhs := peek(vm,0) as int;
-      var lhs := peek(vm,1) as int;
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
       var sum := (lhs + rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
@@ -304,8 +326,8 @@ module EVM {
   function method evalMUL(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var rhs := peek(vm,0) as int;
-      var lhs := peek(vm,1) as int;
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
       var sum := (lhs * rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
@@ -318,8 +340,8 @@ module EVM {
   function method evalSUB(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var rhs := peek(vm,0) as int;
-      var lhs := peek(vm,1) as int;
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
       var sum := (lhs - rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
@@ -336,6 +358,107 @@ module EVM {
       var rhs := peek(vm,1);
       var sum := div(lhs,rhs);
       Result.OK(push(pop(pop(vm)),sum as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * (Unsigned) less-than comparison.
+   */
+  function method evalLT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1);
+      if lhs < rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * (Unsigned) greater-than comparison.
+   */
+  function method evalGT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1);
+      if lhs > rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed less-than comparison.
+   */
+  function method evalSLT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Int.wordAsInt256(peek(vm,0));
+      var rhs := Int.wordAsInt256(peek(vm,1));
+      if lhs < rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed greater-than comparison.
+   */
+  function method evalSGT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Int.wordAsInt256(peek(vm,0));
+      var rhs := Int.wordAsInt256(peek(vm,1));
+      if lhs > rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Equality comparison.
+   */
+  function method evalEQ(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1);
+      if lhs == rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Simple not operator.
+   */
+  function method evalISZERO(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var mhs := peek(vm,0);
+      if mhs == 0
+        then
+        Result.OK(push(pop(vm),1))
+      else
+        Result.OK(push(pop(vm),0))
     else
       Result.INVALID
   }
