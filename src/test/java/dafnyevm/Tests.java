@@ -77,19 +77,19 @@ public class Tests {
 	@Test
 	public void test_mstore_02() {
 		// Check can return data from memory.
-		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x7b));
+		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x7b));
 	}
 
 	@Test
 	public void test_mstore_03() {
 		// Check can return data from memory.
-		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x4d7b));
+		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x4d7b));
 	}
 
 	@Test
 	public void test_mload_01() {
 		// Check can read and write data to memory
-		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x00, MLOAD, PUSH1, 0x20, MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN }, UINT32(0x4d7b));
+		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x00, MLOAD, PUSH1, 0x20, MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN }, UINT256(0x4d7b));
 	}
 
 	// ========================================================================
@@ -106,14 +106,14 @@ public class Tests {
 	public void test_mstore8_02() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN },
-				shl(UINT32(0x7b), 31));
+				shl(UINT256(0x7b), 31));
 	}
 
 	@Test
 	public void test_mstore8_03() {
 		// Check can return data from memory.
 		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN },
-				shl(UINT32(0x7b), 31));
+				shl(UINT256(0x7b), 31));
 	}
 
 	// ========================================================================
@@ -122,26 +122,26 @@ public class Tests {
 
 	@Test
 	public void test_add_01() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, ADD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x3));
+		// 2 + 1 => 3
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, ADD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x3));
 	}
 
 	@Test
 	public void test_sub_01() {
-		// Check can subtract!
-		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x1, SUB, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x2));
+		// 3 - 1 => 2
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x3, SUB, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x2));
 	}
 
 	@Test
 	public void test_mul_01() {
-		// Check can multiply!
-		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x2, MUL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x6));
+		// 2 * 3 => 6
+		runExpecting(new int[] { PUSH1, 0x3, PUSH1, 0x2, MUL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x6));
 	}
 
 	@Test
 	public void test_div_01() {
-		// Check can divide!
-		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, DIV, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x3));
+		// 6 / 2 => 3
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, DIV, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x3));
 	}
 
 	// ========================================================================
@@ -150,62 +150,110 @@ public class Tests {
 
 	@Test
 	public void test_lt_01() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+		// 2 < 1 = 0
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
 	}
 
 	@Test
 	public void test_lt_02() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x1, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+		// 1 < 2 = 1
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x1, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
 	}
 
 	@Test
 	public void test_lt_03() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+		// 2 < 2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, LT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
 	}
 
 	@Test
 	public void test_gt_01() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+		// 2 > 1 => 1
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
 	}
 
 	@Test
 	public void test_gt_02() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x1, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+		// 1 > 2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x1, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
 	}
 
 	@Test
 	public void test_gt_03() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+		// 2 > 2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, GT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_slt_01() {
+		// -2 < 1 => 1
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
+	}
+
+	@Test
+	public void test_slt_02() {
+		// 1 < -2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SLT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_slt_03() {
+		// -2 < -1 => 1
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x0, SUB, PUSH1, 0x2, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
+	}
+
+	@Test
+	public void test_slt_04() {
+		// -1 < -2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_sgt_01() {
+		// -2 > 1 => 0
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_sgt_02() {
+		// 1 > -2 => 1
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SGT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
+	}
+
+	@Test
+	public void test_sgt_03() {
+		// -2 > -1 => 0
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x0, SUB, PUSH1, 0x2, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_sgt_04() {
+		// -1 > -2 => 1
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
 	}
 
 	@Test
 	public void test_eq_01() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, EQ, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+		// 2 = 1 => 0
+		runExpecting(new int[] { PUSH1, 0x1, PUSH1, 0x2, EQ, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
 	}
 
 	@Test
 	public void test_eq_02() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, EQ, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+		// 2 = 2 => 1
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x2, EQ, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
 	}
 
 	@Test
 	public void test_iszero_01() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x2, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x0));
+		// 2 = 0 => 0
+		runExpecting(new int[] { PUSH1, 0x2, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
 	}
 
 	@Test
 	public void test_iszero_02() {
-		// Check can add!
-		runExpecting(new int[] { PUSH1, 0x0, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x1));
+		// 0 = 0 => 1
+		runExpecting(new int[] { PUSH1, 0x0, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
 	}
 
 	// ========================================================================
@@ -221,7 +269,7 @@ public class Tests {
 
 	@Test
 	public void test_sstore_02() {
-		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, SSTORE, PUSH1, 0x00, SLOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT32(0x4d7b));
+		runExpecting(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, SSTORE, PUSH1, 0x00, SLOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x4d7b));
 	}
 
 	// ========================================================================
@@ -330,7 +378,7 @@ public class Tests {
 	 * @param x
 	 * @return
 	 */
-	private byte[] UINT32(int x) {
+	private byte[] UINT256(int x) {
 		if(x < 0) {
 			throw new IllegalArgumentException("Argument cannot be negative");
 		}

@@ -13,28 +13,40 @@
  */
 module Int {
   // Powers of Two
+  const TWO_7   : int := 0x0_80;
   const TWO_8   : int := 0x1_00;
+  const TWO_15  : int := 0x0_8000;
   const TWO_16  : int := 0x1_0000;
+  const TWO_31  : int := 0x0_8000_0000;
   const TWO_32  : int := 0x1_0000_0000;
+  const TWO_63  : int := 0x0_8000_0000_0000_0000;
   const TWO_64  : int := 0x1_0000_0000_0000_0000;
+  const TWO_127 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000;
   const TWO_128 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000;
   const TWO_160 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
+  const TWO_255 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
   const TWO_256 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
 
   // Signed Integers
-  const MIN_I8  : int := -0x80;
-  const MAX_I8  : int :=  0x80 - 1;
-  const MIN_I16 : int := -0x8000;
-  const MAX_I16 : int :=  0x8000 - 1;
-  const MIN_I32 : int := -0x80000000;
-  const MAX_I32 : int :=  0x80000000 - 1;
-  const MIN_I64 : int := -0x8000000000000000;
-  const MAX_I64 : int :=  0x8000000000000000 - 1;
+  const MIN_I8   : int := -TWO_7;
+  const MAX_I8   : int :=  TWO_7 - 1;
+  const MIN_I16  : int := -TWO_15;
+  const MAX_I16  : int :=  TWO_15 - 1;
+  const MIN_I32  : int := -TWO_31;
+  const MAX_I32  : int :=  TWO_31 - 1;
+  const MIN_I64  : int := -TWO_63;
+  const MAX_I64  : int :=  TWO_63 - 1;
+  const MIN_I128 : int := -TWO_127;
+  const MAX_I128 : int :=  TWO_127 - 1;
+  const MIN_I256 : int := -TWO_255;
+  const MAX_I256 : int :=  TWO_255 - 1;
 
   newtype{:nativeType "sbyte"} i8 = i:int   | MIN_I8 <= i <= MAX_I8
   newtype{:nativeType "short"} i16 = i:int  | MIN_I16 <= i <= MAX_I16
   newtype{:nativeType "int"}   i32 = i:int  | MIN_I32 <= i <= MAX_I32
   newtype{:nativeType "long"}  i64 = i:int  | MIN_I64 <= i <= MAX_I64
+  newtype i128 = i:int | MIN_I128 <= i <= MAX_I128
+  newtype i256 = i:int | MIN_I256 <= i <= MAX_I256
 
   // Unsigned Integers
   const MAX_U8 : int :=  TWO_8 - 1;
@@ -81,5 +93,35 @@ module Int {
     var b1 := read_u32(bytes, address) as u64;
     var b2 := read_u32(bytes, address+4) as u64;
     (b1 * (TWO_32 as u64)) + b2
+  }
+
+  // =========================================================
+  // Conversion from words (i.e. raw data) to signed data
+  // =========================================================
+
+  // Convert a 256-bit word to a signed 256bit integer.  Since words
+  // are represented as u256, the parameter has type u256.  However,
+  // its important to note that this does not mean the value in
+  // question represents an unsigned 256 bit integer.  Rather, it is a
+  // signed integer encoded into an unsigned integer.
+  function method wordAsInt256(w: u256) : i256 {
+    if w > (MAX_I256 as u256)
+      then
+      var v := 1 + MAX_UINT256 - (w as int);
+      (-v) as i256
+    else
+      w as i256
+  }
+
+
+  // =========================================================
+  // Sanity Checks
+  // =========================================================
+
+  method test() {
+    assert wordAsInt256(0) == 0;
+    assert wordAsInt256(MAX_UINT256 as u256) == -1;
+    assert wordAsInt256(MAX_I256 as u256) == (MAX_I256 as i256);
+    assert wordAsInt256((MAX_I256 + 1) as u256) == (MIN_I256 as i256);
   }
 }

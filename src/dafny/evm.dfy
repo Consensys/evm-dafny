@@ -269,8 +269,8 @@ module EVM {
     // 0x10
     else if opcode == LT then evalLT(vm')
     else if opcode == GT then evalGT(vm')
-    // else if opcode == SLT then evalSLT(vm')
-    // else if opcode == SGT then evalSGT(vm')
+    else if opcode == SLT then evalSLT(vm')
+    else if opcode == SGT then evalSGT(vm')
     else if opcode == EQ then evalEQ(vm')
     else if opcode == ISZERO then evalISZERO(vm')
       // AND
@@ -312,8 +312,8 @@ module EVM {
   function method evalADD(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var rhs := peek(vm,0) as int;
-      var lhs := peek(vm,1) as int;
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
       var sum := (lhs + rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
@@ -326,8 +326,8 @@ module EVM {
   function method evalMUL(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var rhs := peek(vm,0) as int;
-      var lhs := peek(vm,1) as int;
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
       var sum := (lhs * rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
@@ -340,8 +340,8 @@ module EVM {
   function method evalSUB(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var rhs := peek(vm,0) as int;
-      var lhs := peek(vm,1) as int;
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
       var sum := (lhs - rhs) % MAX_UINT256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
@@ -387,6 +387,40 @@ module EVM {
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
+      if lhs > rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed less-than comparison.
+   */
+  function method evalSLT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Int.wordAsInt256(peek(vm,0));
+      var rhs := Int.wordAsInt256(peek(vm,1));
+      if lhs < rhs
+        then
+        Result.OK(push(pop(pop(vm)),1))
+      else
+        Result.OK(push(pop(pop(vm)),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed greater-than comparison.
+   */
+  function method evalSGT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Int.wordAsInt256(peek(vm,0));
+      var rhs := Int.wordAsInt256(peek(vm,1));
       if lhs > rhs
         then
         Result.OK(push(pop(pop(vm)),1))
