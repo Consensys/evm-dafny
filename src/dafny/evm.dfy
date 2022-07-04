@@ -358,6 +358,10 @@ module EVM {
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
+      // NOTE: This condition is not specified in the yellow paper.
+      // Its not clear whether that was intended or not.  However, its
+      // impossible to trigger this in practice (due to the gas costs
+      // involved).
       if (loc as int) + 31 <= MAX_UINT256
         then
         var val := read(vm,loc);
@@ -378,6 +382,10 @@ module EVM {
       then
       var loc := peek(vm,0);
       var val := peek(vm,1);
+      // NOTE: This condition is not specified in the yellow paper.
+      // Its not clear whether that was intended or not.  However, its
+      // impossible to trigger this in practice (due to the gas costs
+      // involved).
       if (loc as int) + 31 <= MAX_UINT256
         then
         // Write big endian order
