@@ -94,34 +94,57 @@ module Int {
     var b2 := read_u32(bytes, address+4) as u64;
     (b1 * (TWO_32 as u64)) + b2
   }
+}
 
-  // =========================================================
-  // Conversion from words (i.e. raw data) to signed data
-  // =========================================================
+// =========================================================
+// Conversion from words (i.e. raw data) to signed data
+// =========================================================
 
-  // Convert a 256-bit word to a signed 256bit integer.  Since words
+module Word {
+  import opened Int
+
+  // Decode a 256bit word as a signed 256bit integer.  Since words
   // are represented as u256, the parameter has type u256.  However,
   // its important to note that this does not mean the value in
   // question represents an unsigned 256 bit integer.  Rather, it is a
   // signed integer encoded into an unsigned integer.
-  function method wordAsInt256(w: u256) : i256 {
+  function method asI256(w: u256) : i256 {
     if w > (MAX_I256 as u256)
-      then
+    then
       var v := 1 + MAX_U256 - (w as int);
       (-v) as i256
     else
       w as i256
   }
 
+  // Encode a 256bit signed integer as a 256bit word.  Since words are
+  // represented as u256, the return is represented as u256.  However,
+  // its important to note that this does not mean the value in
+  // question represents an unsigned 256 bit integer.  Rather, it is a
+  // signed integer encoded into an unsigned integer.
+  function method fromI256(w: Int.i256) : u256 {
+    if w < 0
+    then
+      var v := 1 + MAX_U256 + (w as int);
+      v as u256
+    else
+      w as u256
+  }
 
   // =========================================================
   // Sanity Checks
   // =========================================================
 
   method test() {
-    assert wordAsInt256(0) == 0;
-    assert wordAsInt256(MAX_U256 as u256) == -1;
-    assert wordAsInt256(MAX_I256 as u256) == (MAX_I256 as i256);
-    assert wordAsInt256((MAX_I256 + 1) as u256) == (MIN_I256 as i256);
+    // ==>
+    assert asI256(0) == 0;
+    assert asI256(MAX_U256 as u256) == -1;
+    assert asI256(MAX_I256 as u256) == (MAX_I256 as i256);
+    assert asI256((MAX_I256 + 1) as u256) == (MIN_I256 as i256);
+    // <==
+    assert fromI256(0) == 0;
+    assert fromI256(-1) == (MAX_U256 as u256);
+    assert fromI256(MAX_I256 as i256) == (MAX_I256 as u256);
+    assert fromI256(MIN_I256 as i256) == (TWO_255 as u256);
   }
 }

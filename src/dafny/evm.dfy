@@ -23,6 +23,7 @@ include "util/code.dfy"
  */
 module EVM {
   import opened Int
+  import Word
   import Stack
   import Memory
   import Storage
@@ -259,7 +260,7 @@ module EVM {
     else if opcode == MUL then evalMUL(vm')
     else if opcode == SUB then evalSUB(vm')
     else if opcode == DIV then evalDIV(vm')
-      // SDIV
+    else if opcode == SDIV then evalSDIV(vm')
       // MOD
       // SMOD
       // ADDMOD
@@ -314,8 +315,8 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs + rhs) % MAX_U256;
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := (lhs + rhs) % TWO_256;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
@@ -328,8 +329,8 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs * rhs) % MAX_U256;
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := (lhs * rhs) % TWO_256;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
@@ -342,22 +343,36 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs - rhs) % MAX_U256;
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := (lhs - rhs) % TWO_256;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
 
   /**
-   * Unsigned integer division with modulo arithmetic.
+   * Unsigned integer division.
    */
   function method evalDIV(vm:T) : Result {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
-      var sum := div(lhs,rhs);
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := div(lhs,rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed integer division.
+   */
+  function method evalSDIV(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
+      var res := Word.fromI256(sdiv(lhs,rhs));
+      Result.OK(push(pop(pop(vm)),res))
     else
       Result.INVALID
   }
@@ -402,8 +417,8 @@ module EVM {
   function method evalSLT(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var lhs := Int.wordAsInt256(peek(vm,0));
-      var rhs := Int.wordAsInt256(peek(vm,1));
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
       if lhs < rhs
         then
         Result.OK(push(pop(pop(vm)),1))
@@ -419,8 +434,8 @@ module EVM {
   function method evalSGT(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var lhs := Int.wordAsInt256(peek(vm,0));
-      var rhs := Int.wordAsInt256(peek(vm,1));
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
       if lhs > rhs
         then
         Result.OK(push(pop(pop(vm)),1))
@@ -816,5 +831,17 @@ module EVM {
     if rhs == 0 then 0 as u256
     else
       (lhs / rhs) as u256
+  }
+
+  /**
+   * Signed integer division with handling for zero and overflow.
+   */
+  function method sdiv(lhs:i256, rhs:i256) : i256 {
+    if rhs == 0 then 0 as i256
+    else if rhs == -1 && lhs == (-TWO_255 as i256)
+    then
+      -TWO_255 as i256
+    else
+      (lhs / rhs) as i256
   }
 }
