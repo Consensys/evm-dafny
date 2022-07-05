@@ -26,13 +26,13 @@ module Code {
    */
   datatype Raw = Code(contents:seq<u8>)
 
-  type T = c:Raw | |c.contents| <= MAX_UINT256 witness Code([])
+  type T = c:Raw | |c.contents| <= MAX_U256 witness Code([])
 
   /**
    * Create a code segment from an initial sequence of words.
    */
   function method create(contents:seq<u8>) : T
-    requires |contents| <= MAX_UINT256 {
+    requires |contents| <= MAX_U256 {
         Code(contents:=contents)
   }
 

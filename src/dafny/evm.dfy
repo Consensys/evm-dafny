@@ -42,7 +42,7 @@ module EVM {
    * The EVM is  initialised with an empty stack and empty local memory.
    */
   function method create(storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
-  requires |code| <= MAX_UINT256 {
+  requires |code| <= MAX_U256 {
     var stck := Stack.create();
     var mem := Memory.create();
     var sto := Storage.create(storage);
@@ -314,7 +314,7 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs + rhs) % MAX_UINT256;
+      var sum := (lhs + rhs) % MAX_U256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
       Result.INVALID
@@ -328,7 +328,7 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs * rhs) % MAX_UINT256;
+      var sum := (lhs * rhs) % MAX_U256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
       Result.INVALID
@@ -342,7 +342,7 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs - rhs) % MAX_UINT256;
+      var sum := (lhs - rhs) % MAX_U256;
       Result.OK(push(pop(pop(vm)),sum as u256))
     else
       Result.INVALID
@@ -485,7 +485,7 @@ module EVM {
       // Its not clear whether that was intended or not.  However, its
       // impossible to trigger this in practice (due to the gas costs
       // involved).
-      if (loc as int) + 31 <= MAX_UINT256
+      if (loc as int) + 31 <= MAX_U256
         then
         var val := read(vm,loc);
         // Write big endian order
@@ -509,7 +509,7 @@ module EVM {
       // Its not clear whether that was intended or not.  However, its
       // impossible to trigger this in practice (due to the gas costs
       // involved).
-      if (loc as int) + 31 <= MAX_UINT256
+      if (loc as int) + 31 <= MAX_U256
         then
         // Write big endian order
         Result.OK(write(pop(pop(vm)),loc,val))
@@ -527,7 +527,7 @@ module EVM {
       then
       var loc := peek(vm,0);
       var val := (peek(vm,1) % 256) as u8;
-      if (loc as int) < MAX_UINT256
+      if (loc as int) < MAX_U256
         then
         // Write byte
         Result.OK(write8(pop(pop(vm)),loc,val))
@@ -601,7 +601,7 @@ module EVM {
       var len := peek(vm,1) as int;
       var start := peek(vm,0) as int;
       // Sanity check bounds
-      if (start+len) <= MAX_UINT256
+      if (start+len) <= MAX_U256
       then
         // Read out that data.
         var data := Memory.slice(vm.memory, start as u256, len);
@@ -697,7 +697,7 @@ module EVM {
    * Read word from byte address in memory.
    */
   function method read(vm:T, address:u256) : u256
-  requires (address as int) + 31 <= MAX_UINT256 {
+  requires (address as int) + 31 <= MAX_U256 {
     Memory.read_u256(vm.memory,address)
   }
 
@@ -705,7 +705,7 @@ module EVM {
    * Write word to byte address in memory.
    */
   function method write(vm:T, address:u256, val: u256) : T
-  requires (address as int) + 31 <= MAX_UINT256 {
+  requires (address as int) + 31 <= MAX_U256 {
     EVM(stack:=vm.stack,
       storage:=vm.storage,
       memory:=Memory.write_u256(vm.memory,address,val),
@@ -718,7 +718,7 @@ module EVM {
    * Write byte to byte address in memory.
    */
   function method write8(vm:T, address:u256, val: u8) : T
-  requires (address as int) < MAX_UINT256 {
+  requires (address as int) < MAX_U256 {
     EVM(stack:=vm.stack,
       storage:=vm.storage,
       memory:=Memory.write_u8(vm.memory,address,val),

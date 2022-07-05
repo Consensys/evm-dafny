@@ -53,17 +53,17 @@ module Int {
   const MAX_U16 : int := TWO_16 - 1;
   const MAX_U32 : int := TWO_32 - 1;
   const MAX_U64 : int := TWO_64 - 1;
-  const MAX_UINT128 : int := TWO_128 - 1;
-  const MAX_UINT160: int := TWO_160 - 1;
-  const MAX_UINT256: int := TWO_256 - 1
+  const MAX_U128 : int := TWO_128 - 1;
+  const MAX_U160: int := TWO_160 - 1;
+  const MAX_U256: int := TWO_256 - 1
 
   newtype{:nativeType "byte"} u8 = i:int    | 0 <= i <= MAX_U8
   newtype{:nativeType "ushort"} u16 = i:int | 0 <= i <= MAX_U16
   newtype{:nativeType "uint"} u32 = i:int   | 0 <= i <= MAX_U32
   newtype{:nativeType "ulong"} u64 = i:int  | 0 <= i <= MAX_U64
-  newtype u128 = i:int | 0 <= i <= MAX_UINT128
-  newtype u160 = i:int | 0 <= i <= MAX_UINT160
-  newtype u256 = i:int | 0 <= i <= MAX_UINT256
+  newtype u128 = i:int | 0 <= i <= MAX_U128
+  newtype u160 = i:int | 0 <= i <= MAX_U160
+  newtype u256 = i:int | 0 <= i <= MAX_U256
 
   // =========================================================
   // Conversion to/from byte sequences
@@ -107,7 +107,7 @@ module Int {
   function method wordAsInt256(w: u256) : i256 {
     if w > (MAX_I256 as u256)
       then
-      var v := 1 + MAX_UINT256 - (w as int);
+      var v := 1 + MAX_U256 - (w as int);
       (-v) as i256
     else
       w as i256
@@ -120,7 +120,7 @@ module Int {
 
   method test() {
     assert wordAsInt256(0) == 0;
-    assert wordAsInt256(MAX_UINT256 as u256) == -1;
+    assert wordAsInt256(MAX_U256 as u256) == -1;
     assert wordAsInt256(MAX_I256 as u256) == (MAX_I256 as i256);
     assert wordAsInt256((MAX_I256 + 1) as u256) == (MIN_I256 as i256);
   }
