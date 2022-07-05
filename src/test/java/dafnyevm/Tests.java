@@ -168,6 +168,54 @@ public class Tests {
 		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x3));
 	}
 
+	@Test
+	public void test_mod_01() {
+		// 6 % 2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, MOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_mod_02() {
+		// 6 % 4 => 2
+		runExpecting(new int[] { PUSH1, 0x4, PUSH1, 0x6, MOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x2));
+	}
+
+	@Test
+	public void test_smod_01() {
+		// 6 % 2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, SMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_smod_02() {
+		// 6 % 4 => 2
+		runExpecting(new int[] { PUSH1, 0x4, PUSH1, 0x6, SMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x2));
+	}
+
+	@Test
+	public void test_smod_03() {
+		// -6 % 2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_smod_04() {
+		// -6 % 4 => -2
+		runExpecting(new int[] { PUSH1, 0x4, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, not(UINT256(0x1)));
+	}
+
+	@Test
+	public void test_smod_05() {
+		// -6 % -2 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_smod_06() {
+		// -6 % -4 => 0
+		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
 	// ========================================================================
 	// AND / OR / XOR / NOT
 	// ========================================================================

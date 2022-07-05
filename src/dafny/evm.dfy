@@ -261,7 +261,8 @@ module EVM {
     else if opcode == SUB then evalSUB(vm')
     else if opcode == DIV then evalDIV(vm')
     else if opcode == SDIV then evalSDIV(vm')
-      // MOD
+    else if opcode == MOD then evalMOD(vm')
+    else if opcode == SMOD then evalSMOD(vm')
       // SMOD
       // ADDMOD
       // MULMOD
@@ -372,6 +373,34 @@ module EVM {
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       var res := Word.fromI256(sdiv(lhs,rhs));
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * (Unsigned) Modulo remainder.
+   */
+  function method evalMOD(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1);
+      var res := mod(lhs,rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed integer remainder:
+   */
+  function method evalSMOD(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
+      var res := Word.fromI256(smod(lhs,rhs));
       Result.OK(push(pop(pop(vm)),res))
     else
       Result.INVALID
@@ -834,6 +863,15 @@ module EVM {
   }
 
   /**
+   * Unsigned integer remainder with handling for zero.
+   */
+  function method mod(lhs:u256, rhs:u256) : u256 {
+    if rhs == 0 then 0 as u256
+    else
+      (lhs % rhs) as u256
+  }
+
+  /**
    * Signed integer division with handling for zero and overflow.
    */
   function method sdiv(lhs:i256, rhs:i256) : i256 {
@@ -843,5 +881,14 @@ module EVM {
       -TWO_255 as i256
     else
       (lhs / rhs) as i256
+  }
+
+  /**
+   * Signed integer remainder with handling for zero.
+   */
+  function method smod(lhs:i256, rhs:i256) : i256 {
+    if rhs == 0 then 0 as i256
+    else
+      (lhs % rhs) as i256
   }
 }
