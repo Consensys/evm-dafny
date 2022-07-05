@@ -31,7 +31,7 @@ module EVM {
      *
      *  @note   Jump values are relative to address the instruction is at.
      */
-    datatype EVMProg2<!S> = 
+    datatype EVMProg<!S> = 
             AInst(i: EVMInst)
         |   Jumpi(cond: S -> bool, tgt: int)    
         |   Jump(tgt: int)
@@ -48,7 +48,7 @@ module EVM {
      *
      *  @note   If the `pc` is outside the set of instructions, stop.
      */
-    function method stepEVM<S>(pc: nat, p: seq<EVMProg2>, s: S): (int, S)
+    function method stepEVM<S>(pc: nat, p: seq<EVMProg>, s: S): (int, S)
     {
         if pc < 0 || pc >= |p| then  
             (pc, s)
@@ -61,7 +61,7 @@ module EVM {
                 // case Nop()          =>  (pc + 1, s)
     }
 
-    function method stepEVM2<S, T>(pc: int, p: seq<(EVMProg2, T)>, s: S): (int, S)
+    function method stepEVM2<S, T>(pc: int, p: seq<(EVMProg, T)>, s: S): (int, S)
     {
         if pc < 0 || pc >= |p| then  
             (pc, s)
