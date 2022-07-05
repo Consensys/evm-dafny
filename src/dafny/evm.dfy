@@ -273,10 +273,10 @@ module EVM {
     else if opcode == SGT then evalSGT(vm')
     else if opcode == EQ then evalEQ(vm')
     else if opcode == ISZERO then evalISZERO(vm')
-      // AND
-      // OR
-      // XOR
-      // NOT
+    else if opcode == AND then evalAND(vm')
+    else if opcode == OR then evalOR(vm')
+    else if opcode == XOR then evalXOR(vm')
+    else if opcode == NOT then evalNOT(vm')
       // BYTE
       // SHL
       // SHR
@@ -459,6 +459,61 @@ module EVM {
         Result.OK(push(pop(vm),1))
       else
         Result.OK(push(pop(vm),0))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Bitwise AND operation.
+   */
+  function method evalAND(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0) as bv256;
+      var rhs := peek(vm,1) as bv256;
+      var res := (lhs & rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Bitwise OR operation.
+   */
+  function method {:verify false} evalOR(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0) as bv256;
+      var rhs := peek(vm,1) as bv256;
+      var res := (lhs | rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Bitwise XOR operation.
+   */
+  function method {:verify false} evalXOR(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0) as bv256;
+      var rhs := peek(vm,1) as bv256;
+      var res := (lhs ^ rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Bitwise NOT operation.
+   */
+  function method evalNOT(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var mhs := peek(vm,0) as bv256;
+      var res := (!mhs) as u256;
+      Result.OK(push(pop(vm),res))
     else
       Result.INVALID
   }
