@@ -145,6 +145,76 @@ public class Tests {
 	}
 
 	// ========================================================================
+	// AND / OR / XOR / NOT
+	// ========================================================================
+
+	@Test
+	public void test_and_01() {
+		// 0b0001 & 0b0001  => 0b0001
+		runExpecting(new int[] { PUSH1, 0b0001, PUSH1, 0b0001, AND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0001));
+	}
+
+	@Test
+	public void test_and_02() {
+		// 0b0001 & 0b0011  => 0b0001
+		runExpecting(new int[] { PUSH1, 0b0011, PUSH1, 0b0001, AND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0001));
+	}
+
+	@Test
+	public void test_and_03() {
+		// 0b0101 & 0b0011  => 0b0001
+		runExpecting(new int[] { PUSH1, 0b0011, PUSH1, 0b0101, AND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0001));
+	}
+
+	@Test
+	public void test_or_01() {
+		// 0b0001 | 0b0001  => 0b0001
+		runExpecting(new int[] { PUSH1, 0b0001, PUSH1, 0b0001, OR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0001));
+	}
+
+	@Test
+	public void test_or_02() {
+		// 0b0001 | 0b0011  => 0b0011
+		runExpecting(new int[] { PUSH1, 0b0011, PUSH1, 0b0001, OR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0011));
+	}
+
+	@Test
+	public void test_or_03() {
+		// 0b0101 | 0b0011  => 0b0111
+		runExpecting(new int[] { PUSH1, 0b0011, PUSH1, 0b0101, OR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0111));
+	}
+
+	@Test
+	public void test_xor_01() {
+		// 0b0001 ^ 0b0001  => 0b0000
+		runExpecting(new int[] { PUSH1, 0b0001, PUSH1, 0b0001, XOR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0000));
+	}
+
+	@Test
+	public void test_xor_02() {
+		// 0b0001 ^ 0b0011  => 0b0010
+		runExpecting(new int[] { PUSH1, 0b0011, PUSH1, 0b0001, XOR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0010));
+	}
+
+	@Test
+	public void test_xor_03() {
+		// 0b0101 ^ 0b0011  => 0b0110
+		runExpecting(new int[] { PUSH1, 0b0011, PUSH1, 0b0101, XOR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b0110));
+	}
+
+	@Test
+	public void test_not_01() {
+		// ~0b00000101 => 0b11111010
+		runExpecting(new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x1F, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0b11111010));
+	}
+
+	@Test
+	public void test_not_02() {
+		// ~0b00000101 => 0b11111010
+		runExpecting(new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, not(UINT256(0b00000101)));
+	}
+
+	// ========================================================================
 	// LT / GT / SLT / SGT / EQ / ISZERO
 	// ========================================================================
 
@@ -407,5 +477,13 @@ public class Tests {
 			}
 			return r;
 		}
+	}
+
+	private byte[] not(byte[] bytes) {
+		byte[] r = new byte[bytes.length];
+		for (int i = 0; i < bytes.length; ++i) {
+			r[i] = (byte) ~(bytes[i]);
+		}
+		return r;
 	}
 }
