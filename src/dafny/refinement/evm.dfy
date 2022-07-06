@@ -12,14 +12,14 @@
  * under the License.
  */
  
-include "evm-seq.dfy"
+// include "evm-seq.dfy"
 
 /** 
  *  Provides EVM programs with Jumps.
  */
-module EVM {
-
-    import opened EVMSeq 
+abstract module EVMAbstract {
+// trait T {
+    // import opened EVMSeq 
 
     // datatype EVMProg<!S> = 
     //         AInst(i: EVMInst)
@@ -31,11 +31,14 @@ module EVM {
      *
      *  @note   Jump values are relative to address the instruction is at.
      */
-    datatype EVMProg<!S> = 
-            AInst(i: EVMInst)
+    datatype EVMInst<!S> = 
+            Inst(i: S -> S, name: string)
         |   Jumpi(cond: S -> bool, tgt: int)    
         |   Jump(tgt: int)
-        // |   Nop()
+        // |   Nop()  
+
+    /** A programme is a sequence of instructions.  */
+    type EVMProg<!S> = seq<EVMInst> 
 
     /**
      *  Run one step of an EVM program.
@@ -48,32 +51,32 @@ module EVM {
      *
      *  @note   If the `pc` is outside the set of instructions, stop.
      */
-    function method stepEVM<S>(pc: nat, p: seq<EVMProg>, s: S): (int, S)
+    function method stepEVM<S>(pc: nat, p: EVMProg, s: S): (int, S)
     {
         if pc < 0 || pc >= |p| then  
             (pc, s)
         else 
             match p[pc] 
-                case AInst(i)       =>  (pc + 1, runInst(i, s))
+                case Inst(e, _)       =>  (pc + 1, e(s))
                 case Jumpi(c, tgt)  =>  if !c(s) then (pc + 1, s) 
                                         else (pc + tgt, s)
                 case Jump(tgt)      =>  (pc + tgt, s) 
                 // case Nop()          =>  (pc + 1, s)
     }
 
-    function method stepEVM2<S, T>(pc: int, p: seq<(EVMProg, T)>, s: S): (int, S)
-    {
-        if pc < 0 || pc >= |p| then  
-            (pc, s)
-        else 
-            match p[pc].0 
-                case AInst(i)       =>  (pc + 1, runInst(i, s))
-                case Jumpi(c, tgt)  =>  if !c(s) then (pc + 1, s) 
-                                        else (pc + tgt, s)
-                case Jump(tgt)      =>  (pc + tgt, s) 
-                // case Nop()          =>  (pc + 1, s)
+    // function method stepEVM2<S, T>(pc: int, p: seq<(EVMProg, T)>, s: S): (int, S)
+    // {
+    //     if pc < 0 || pc >= |p| then  
+    //         (pc, s)
+    //     else 
+    //         match p[pc].0 
+    //             case AInst(i)       =>  (pc + 1, runInst(i, s))
+    //             case Jumpi(c, tgt)  =>  if !c(s) then (pc + 1, s) 
+    //                                     else (pc + tgt, s)
+    //             case Jump(tgt)      =>  (pc + tgt, s) 
+    //             // case Nop()          =>  (pc + 1, s)
 
-    }
+    // }
 
     /**
      *  Semantics of EVM programs.

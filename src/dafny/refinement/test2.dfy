@@ -24,7 +24,7 @@ import opened EVMSeq
 method {:verify true} Main() { 
 
         /** 
-          *  build labelled DiGraph and print label which is a string
+          *  build labelled DiGrapwh and print label which is a string
           */
         var j : nat -> nat := x => x + 1;
         var i : EVMInst<nat> := Inst( j, "ADD");     
