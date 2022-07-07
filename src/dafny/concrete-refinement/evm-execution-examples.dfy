@@ -175,11 +175,11 @@ method main5(c: uint8)
 
         // Compute result of test c > 0, same as before the loop.
         e.dup1();       // [count - 1, count - 1]
-        e.iszero();     // [count == 0, count]
-        e.dup1();       // [count == 0, count == 0, count]
-        //  if count == 0 jump to end 
-        e.push(end);    // [end, count == 0, count == 0, count]
-        e.jumpi();      // [count == 0, count]
+        e.iszero();     // [count - 1 == 0, count]- 1 
+        e.dup1();       // [count - 1 == 0, count - 1 == 0, count - 1] 
+        //  if count - 1 == 0 jump to end 
+        e.push(end);    // [end, count - 1 == 0, count - 1 == 0, count- 1] 
+        e.jumpi();      // [count - 1 == 0, count - 1] 
         count := count - 1;
     }
     // end of program
