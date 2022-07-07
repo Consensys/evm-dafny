@@ -169,6 +169,13 @@ public class Tests {
 	}
 
 	@Test
+	public void test_sdiv_04() {
+		// -6 / 4 => -1
+		runExpecting(new int[] { PUSH1, 0x4, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, not(UINT256(0x0)));
+	}
+
+
+	@Test
 	public void test_mod_01() {
 		// 6 % 2 => 0
 		runExpecting(new int[] { PUSH1, 0x2, PUSH1, 0x6, MOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));

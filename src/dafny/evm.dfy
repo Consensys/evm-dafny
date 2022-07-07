@@ -23,6 +23,7 @@ include "util/code.dfy"
  */
 module EVM {
   import opened Int
+  import I256
   import Word
   import Stack
   import Memory
@@ -873,6 +874,12 @@ module EVM {
 
   /**
    * Signed integer division with handling for zero and overflow.
+   * A key challenge here is that, in Dafny, division is Euclidean
+   * (i.e. rounds down).  In contrast, division on the EVM is
+   * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+   * use Dafny's division operator as is for implementing SDIV
+   * (though for DIV it is OK).  Instead, we have to explicitly
+   * manage the cases for negative operands.
    */
   function method sdiv(lhs:i256, rhs:i256) : i256 {
     if rhs == 0 then 0 as i256
@@ -880,15 +887,23 @@ module EVM {
     then
       -TWO_255 as i256
     else
-      (lhs / rhs) as i256
+      // Do not use Dafny's division operator here!
+      I256.div(lhs,rhs)
   }
 
   /**
    * Signed integer remainder with handling for zero.
+   * A key challenge here is that, in Dafny, division is Euclidean
+   * (i.e. rounds down).  In contrast, division on the EVM is
+   * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+   * use Dafny's remainder operator as is for implementing SMOD
+   * (though for MOD it is OK).  Instead, we have to explicitly
+   * manage the cases for negative operands.
    */
   function method smod(lhs:i256, rhs:i256) : i256 {
     if rhs == 0 then 0 as i256
     else
-      (lhs % rhs) as i256
+      // Do not use Dafny's remainder operator here!
+      I256.rem(lhs,rhs)
   }
 }
