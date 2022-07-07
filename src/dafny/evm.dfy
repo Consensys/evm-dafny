@@ -23,6 +23,8 @@ include "util/code.dfy"
  */
 module EVM {
   import opened Int
+  import I256
+  import Word
   import Stack
   import Memory
   import Storage
@@ -259,11 +261,11 @@ module EVM {
     else if opcode == MUL then evalMUL(vm')
     else if opcode == SUB then evalSUB(vm')
     else if opcode == DIV then evalDIV(vm')
-      // SDIV
-      // MOD
-      // SMOD
-      // ADDMOD
-      // MULMOD
+    else if opcode == SDIV then evalSDIV(vm')
+    else if opcode == MOD then evalMOD(vm')
+    else if opcode == SMOD then evalSMOD(vm')
+    else if opcode == ADDMOD then evalADDMOD(vm')
+    else if opcode == MULMOD then evalMULMOD(vm')
       // EXP
       // SIGNEXTEND
     // 0x10
@@ -314,8 +316,8 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs + rhs) % MAX_U256;
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := (lhs + rhs) % TWO_256;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
@@ -328,8 +330,8 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs * rhs) % MAX_U256;
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := (lhs * rhs) % TWO_256;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
@@ -342,22 +344,94 @@ module EVM {
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
-      var sum := (lhs - rhs) % MAX_U256;
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := (lhs - rhs) % TWO_256;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
 
   /**
-   * Unsigned integer division with modulo arithmetic.
+   * Unsigned integer division.
    */
   function method evalDIV(vm:T) : Result {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
-      var sum := div(lhs,rhs);
-      Result.OK(push(pop(pop(vm)),sum as u256))
+      var res := div(lhs,rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed integer division.
+   */
+  function method evalSDIV(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
+      var res := Word.fromI256(sdiv(lhs,rhs));
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * (Unsigned) Modulo remainder.
+   */
+  function method evalMOD(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1);
+      var res := mod(lhs,rhs) as u256;
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Signed integer remainder:
+   */
+  function method evalSMOD(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
+      var res := Word.fromI256(smod(lhs,rhs));
+      Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Unsigned integer modulo addition.
+   */
+  function method evalADDMOD(vm:T) : Result {
+    if operands(vm) >= 3
+      then
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
+      var rem := peek(vm,2) as int;
+      var res := if rem == 0 then 0 else(lhs + rhs) % rem;
+      Result.OK(push(pop(pop(vm)),res as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Unsigned integer modulo multiplication.
+   */
+  function method evalMULMOD(vm:T) : Result {
+    if operands(vm) >= 3
+      then
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
+      var rem := peek(vm,2) as int;
+      var res := if rem == 0 then 0 else(lhs * rhs) % rem;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
@@ -402,8 +476,8 @@ module EVM {
   function method evalSLT(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var lhs := Int.wordAsInt256(peek(vm,0));
-      var rhs := Int.wordAsInt256(peek(vm,1));
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
       if lhs < rhs
         then
         Result.OK(push(pop(pop(vm)),1))
@@ -419,8 +493,8 @@ module EVM {
   function method evalSGT(vm:T) : Result {
     if operands(vm) >= 2
       then
-      var lhs := Int.wordAsInt256(peek(vm,0));
-      var rhs := Int.wordAsInt256(peek(vm,1));
+      var lhs := Word.asI256(peek(vm,0));
+      var rhs := Word.asI256(peek(vm,1));
       if lhs > rhs
         then
         Result.OK(push(pop(pop(vm)),1))
@@ -816,5 +890,49 @@ module EVM {
     if rhs == 0 then 0 as u256
     else
       (lhs / rhs) as u256
+  }
+
+  /**
+   * Unsigned integer remainder with handling for zero.
+   */
+  function method mod(lhs:u256, rhs:u256) : u256 {
+    if rhs == 0 then 0 as u256
+    else
+      (lhs % rhs) as u256
+  }
+
+  /**
+   * Signed integer division with handling for zero and overflow.
+   * A key challenge here is that, in Dafny, division is Euclidean
+   * (i.e. rounds down).  In contrast, division on the EVM is
+   * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+   * use Dafny's division operator as is for implementing SDIV
+   * (though for DIV it is OK).  Instead, we have to explicitly
+   * manage the cases for negative operands.
+   */
+  function method sdiv(lhs:i256, rhs:i256) : i256 {
+    if rhs == 0 then 0 as i256
+    else if rhs == -1 && lhs == (-TWO_255 as i256)
+    then
+      -TWO_255 as i256
+    else
+      // Do not use Dafny's division operator here!
+      I256.div(lhs,rhs)
+  }
+
+  /**
+   * Signed integer remainder with handling for zero.
+   * A key challenge here is that, in Dafny, division is Euclidean
+   * (i.e. rounds down).  In contrast, division on the EVM is
+   * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+   * use Dafny's remainder operator as is for implementing SMOD
+   * (though for MOD it is OK).  Instead, we have to explicitly
+   * manage the cases for negative operands.
+   */
+  function method smod(lhs:i256, rhs:i256) : i256 {
+    if rhs == 0 then 0 as i256
+    else
+      // Do not use Dafny's remainder operator here!
+      I256.rem(lhs,rhs)
   }
 }

@@ -23,7 +23,7 @@ task preBuild {
     // Generate sources
     exec {
         executable 'dafny'
-        args '/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
+        args '/verifyAllModules','/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
     }
 }
 

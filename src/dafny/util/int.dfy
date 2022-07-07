@@ -95,33 +95,156 @@ module Int {
     (b1 * (TWO_32 as u64)) + b2
   }
 
+
   // =========================================================
-  // Conversion from words (i.e. raw data) to signed data
+  // Non-Euclidean Division / Remainder
   // =========================================================
 
-  // Convert a 256-bit word to a signed 256bit integer.  Since words
+  // This provides a non-Euclidean division operator and is necessary
+  // because Dafny (unlike just about every other programming
+  // language) supports Euclidean division.  This operator, therefore,
+  // always divides *towards* zero.
+  function method div(lhs: int, rhs: int) : int
+  requires rhs != 0 {
+    if lhs >= 0 then lhs / rhs
+    else
+      -((-lhs) / rhs)
+  }
+
+  // This provides a non-Euclidean remainder operator and is necessary
+  // because Dafny (unlike just about every other programming
+  // language) supports Euclidean division.  Observe that this is a
+  // true remainder operator, and not a modulus operator.  For
+  // emxaple, this means the result can be negative.
+  function method rem(lhs: int, rhs: int) : int
+  requires rhs != 0 {
+    if lhs >= 0 then (lhs % rhs)
+    else
+      var d := -((-lhs) / rhs);
+      lhs - (d * rhs)
+  }
+
+  // Various sanity tests for division.
+  method div_tests() {
+    // pos-pos
+    assert div(6,2) == 3;
+    assert div(6,3) == 2;
+    assert div(6,4) == 1;
+    assert div(9,4) == 2;
+    // neg-pos
+    assert div(-6,2) == -3;
+    assert div(-6,3) == -2;
+    assert div(-6,4) == -1;
+    assert div(-9,4) == -2;
+    // pos-neg
+    assert div(6,-2) == -3;
+    assert div(6,-3) == -2;
+    assert div(6,-4) == -1;
+    assert div(9,-4) == -2;
+    // neg-neg
+    assert div(-6,-2) == 3;
+    assert div(-6,-3) == 2;
+    assert div(-6,-4) == 1;
+    assert div(-9,-4) == 2;
+  }
+
+  // Various sanity tests for remainder.
+  method rem_tests() {
+    // pos-pos
+    assert rem(6,2) == 0;
+    assert rem(6,3) == 0;
+    assert rem(6,4) == 2;
+    assert rem(9,4) == 1;
+    // neg-pos
+    assert rem(-6,2) == 0;
+    assert rem(-6,3) == 0;
+    assert rem(-6,4) == -2;
+    assert rem(-9,4) == -1;
+    // pos-neg
+    assert rem(6,-2) == 0;
+    assert rem(6,-3) == 0;
+    assert rem(6,-4) == 2;
+    assert rem(9,-4) == 1;
+    // neg-neg
+    assert rem(-6,-2) == 0;
+    assert rem(-6,-3) == 0;
+    assert rem(-6,-4) == -2;
+    assert rem(-9,-4) == -1;
+  }
+}
+
+module I256 {
+  import opened Int
+
+  // This provides a non-Euclidean division operator and is necessary
+  // because Dafny (unlike just about every other programming
+  // language) supports Euclidean division.  This operator, therefore,
+  // always divides *towards* zero.
+  function method div(lhs: i256, rhs: i256) : i256
+    // Cannot divide by zero!
+    requires rhs != 0
+    // Range restriction to prevent overflow
+    requires (rhs != -1 || lhs != (-TWO_255 as i256)) {
+    Int.div(lhs as int, rhs as int) as i256
+  }
+
+  // This provides a non-Euclidean remainder operator and is necessary
+  // because Dafny (unlike just about every other programming
+  // language) supports Euclidean division.  Observe that this is a
+  // true remainder operator, and not a modulus operator.  For
+  // emxaple, this means the result can be negative.
+  function method rem(lhs: i256, rhs: i256) : i256
+    // Cannot divide by zero!
+    requires rhs != 0 {
+    Int.rem(lhs as int, rhs as int) as i256
+  }
+}
+
+module Word {
+  import opened Int
+
+  // Decode a 256bit word as a signed 256bit integer.  Since words
   // are represented as u256, the parameter has type u256.  However,
   // its important to note that this does not mean the value in
   // question represents an unsigned 256 bit integer.  Rather, it is a
   // signed integer encoded into an unsigned integer.
-  function method wordAsInt256(w: u256) : i256 {
+  function method asI256(w: u256) : i256 {
     if w > (MAX_I256 as u256)
-      then
+    then
       var v := 1 + MAX_U256 - (w as int);
       (-v) as i256
     else
       w as i256
   }
 
+  // Encode a 256bit signed integer as a 256bit word.  Since words are
+  // represented as u256, the return is represented as u256.  However,
+  // its important to note that this does not mean the value in
+  // question represents an unsigned 256 bit integer.  Rather, it is a
+  // signed integer encoded into an unsigned integer.
+  function method fromI256(w: Int.i256) : u256 {
+    if w < 0
+    then
+      var v := 1 + MAX_U256 + (w as int);
+      v as u256
+    else
+      w as u256
+  }
 
   // =========================================================
   // Sanity Checks
   // =========================================================
 
   method test() {
-    assert wordAsInt256(0) == 0;
-    assert wordAsInt256(MAX_U256 as u256) == -1;
-    assert wordAsInt256(MAX_I256 as u256) == (MAX_I256 as i256);
-    assert wordAsInt256((MAX_I256 + 1) as u256) == (MIN_I256 as i256);
+    // ==>
+    assert asI256(0) == 0;
+    assert asI256(MAX_U256 as u256) == -1;
+    assert asI256(MAX_I256 as u256) == (MAX_I256 as i256);
+    assert asI256((MAX_I256 + 1) as u256) == (MIN_I256 as i256);
+    // <==
+    assert fromI256(0) == 0;
+    assert fromI256(-1) == (MAX_U256 as u256);
+    assert fromI256(MAX_I256 as i256) == (MAX_I256 as u256);
+    assert fromI256(MIN_I256 as i256) == (TWO_255 as u256);
   }
 }
