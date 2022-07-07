@@ -264,9 +264,8 @@ module EVM {
     else if opcode == SDIV then evalSDIV(vm')
     else if opcode == MOD then evalMOD(vm')
     else if opcode == SMOD then evalSMOD(vm')
-      // SMOD
-      // ADDMOD
-      // MULMOD
+    else if opcode == ADDMOD then evalADDMOD(vm')
+    else if opcode == MULMOD then evalMULMOD(vm')
       // EXP
       // SIGNEXTEND
     // 0x10
@@ -403,6 +402,36 @@ module EVM {
       var rhs := Word.asI256(peek(vm,1));
       var res := Word.fromI256(smod(lhs,rhs));
       Result.OK(push(pop(pop(vm)),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Unsigned integer modulo addition.
+   */
+  function method evalADDMOD(vm:T) : Result {
+    if operands(vm) >= 3
+      then
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
+      var rem := peek(vm,2) as int;
+      var res := if rem == 0 then 0 else(lhs + rhs) % rem;
+      Result.OK(push(pop(pop(vm)),res as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Unsigned integer modulo multiplication.
+   */
+  function method evalMULMOD(vm:T) : Result {
+    if operands(vm) >= 3
+      then
+      var lhs := peek(vm,0) as int;
+      var rhs := peek(vm,1) as int;
+      var rem := peek(vm,2) as int;
+      var res := if rem == 0 then 0 else(lhs * rhs) % rem;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
