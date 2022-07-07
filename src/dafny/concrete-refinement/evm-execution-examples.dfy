@@ -17,7 +17,7 @@ include "../evms/mini-evm-with-gas.dfy"
 import opened EVMOpcodes
 
 /**
- *  State equality for two evms.
+ *  State relation for two evms.
  *  Ignore pc. 
  */
 predicate equiv(e1: EVM, e2: EVM) 
