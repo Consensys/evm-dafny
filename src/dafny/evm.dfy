@@ -293,6 +293,23 @@ module EVM {
     // 0x60
     else if opcode == PUSH1 then evalPUSH1(vm')
     else if opcode == PUSH2 then evalPUSH2(vm')
+    // 0x90
+    else if opcode == SWAP1 then evalSWAP(vm',1)
+    else if opcode == SWAP2 then evalSWAP(vm',2)
+    else if opcode == SWAP3 then evalSWAP(vm',3)
+    else if opcode == SWAP4 then evalSWAP(vm',4)
+    else if opcode == SWAP5 then evalSWAP(vm',5)
+    else if opcode == SWAP6 then evalSWAP(vm',6)
+    else if opcode == SWAP7 then evalSWAP(vm',7)
+    else if opcode == SWAP8 then evalSWAP(vm',8)
+    else if opcode == SWAP9 then evalSWAP(vm',9)
+    else if opcode == SWAP10 then evalSWAP(vm',10)
+    else if opcode == SWAP11 then evalSWAP(vm',11)
+    else if opcode == SWAP12 then evalSWAP(vm',12)
+    else if opcode == SWAP13 then evalSWAP(vm',13)
+    else if opcode == SWAP14 then evalSWAP(vm',14)
+    else if opcode == SWAP15 then evalSWAP(vm',15)
+    else if opcode == SWAP16 then evalSWAP(vm',16)
     // 0xf0
     else if opcode == RETURN then evalRETURN(vm')
     else
@@ -721,6 +738,17 @@ module EVM {
   }
 
   /**
+   * Swap two items on the stack
+   */
+  function method evalSWAP(vm:T, k: nat) : Result {
+    if operands(vm) > k
+      then
+      Result.OK(swap(vm,k))
+    else
+      Result.INVALID
+  }
+
+  /**
    * Halt execution returning output data.
    */
   function method evalRETURN(vm:T) : Result {
@@ -820,6 +848,17 @@ module EVM {
           code:=vm.code,
           gas := vm.gas,
           pc:=vm.pc)
+  }
+
+  // Swap top item with kth item.
+  function method swap(vm:T, k:nat) : T
+  requires operands(vm) > k {
+    EVM(stack:=Stack.swap(vm.stack,k),
+      storage:=vm.storage,
+      memory:=vm.memory,
+      code:=vm.code,
+      gas := vm.gas,
+      pc:=vm.pc)
   }
 
   /**
