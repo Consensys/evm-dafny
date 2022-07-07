@@ -20,8 +20,8 @@ include "../evms/mini-evm-with-gas.dfy"
 method main1() 
 {
     var e := new EVM(0, false);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     ghost var g := e.stack;
 
@@ -29,7 +29,7 @@ method main1()
     e.push(b);
     e.add();
 
-    assert e.stack[0] == a + b; 
+    assert e.stack[0] == (a + b) as uint256; 
 
     e.pop();
     assert e.stack == g;
@@ -41,8 +41,8 @@ method main1()
 method main2(c: uint256) 
 {
     var e := new EVM(0, false);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
     var count: uint256 := c;
 
     ghost var g := e.stack;
@@ -61,54 +61,17 @@ method main2(c: uint256)
 }
 
 /**
- *  Compute cout := count -1 with the stack.
- *  In this first implementation we use a variant of SUB, subR
- *  that computes stack1 - stack0 instead of stack0 - stack1.
- */
-method main3(c: uint256) 
-{
-    var e := new EVM(0, false);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-
-    e.push(c);
-    ghost var g := e.stack;
-    ghost var count := c;
-
-    assert count == e.stack[0];
-
-    while e.stack[0] > 0 
-        invariant  |e.stack| > 0  
-        invariant count == e.stack[0]
-        invariant e.stack == [count]
-    {
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
-
-        //  count := count - 1 ;
-        e.push(0x1);
-        e.subR();
-        count := count - 1;
-        
-    }
-    assert count == 0;
-    assert e.stack == [0];
-}
-
-/**
  *  Add swap1 instructin and use real semantics for SUB.
  */
-method main4(c: uint256)  
+method main4(c: uint8)  
 {
     var e := new EVM(0, false);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     e.push(c);
     ghost var g := e.stack;
-    ghost var count := c;
+    ghost var count := c as uint256;
 
     assert count == e.stack[0];
 
@@ -135,18 +98,18 @@ method main4(c: uint256)
  *  Test top of stack with LT/GT
  *  instead of count > 0.
  */
-method main5(c: uint256)  
+method main5(c: uint8)  
 {
     var e := new EVM(0, false);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     e.push(c);
     ghost var g := e.stack;
-    ghost var count := c;
+    ghost var count := c as uint256;
 
     //  stack = [count]
-    assert count == e.stack[0];
+    assert count == e.stack[0] as uint256;
 
     //  compute count > 0 
 
@@ -209,15 +172,15 @@ method main5(c: uint256)
 /**
  * Use gas cost.
  */
-method main6(c: uint256, g: uint256)  
+method main6(c: uint8, g: uint256)  
 {
     var e := new EVM(0, false);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     e.push(c);
     ghost var g := e.stack;
-    ghost var count := c;
+    ghost var count := c as uint256;
 
     //  stack = [count]
     assert count == e.stack[0];
