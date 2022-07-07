@@ -13,573 +13,175 @@
  */
 
 include "../evms/mini-evm-with-gas.dfy"   
-include "../refinement/evm.dfy"    
 
-trait T {
+import opened EVMOpcodes
 
-    var pc: nat 
-
-    var stack: seq<uint256> 
-
-    var gas: nat 
-
-    var checkGas: bool 
-
-    /** 
-     *  PUSH opcode.
-     *  This is code for push32 but as other pushes 
-     *  are syntactic sugar we implement only this one.
-     *
-     *  @param  v   The value to push on the stack.
-     *  @return     Add `v` to the top of the stack.
-     */
-    method push(v: uint256) 
-        requires !checkGas || gas >= 1
-
-        ensures |stack| == |old(stack)| + 1
-        ensures stack == [v] + old(stack)
-        ensures !checkGas || gas == old(gas) - 1
-
-        modifies `stack, `gas
-    {
-        stack := [v] + stack;
-        gas := gas - (if checkGas then 1 else 0);
-    }
+/**
+ *  State equality for two evms.
+ *  Ignore pc. 
+ */
+predicate equiv(e1: EVM, e2: EVM) 
+    reads e1, e2
+{
+    && e1.stack == e2.stack
+    && e1.gas >= e2.gas 
 }
 
-module EVMBytecode refines EVMAbstract {
-
-    // import opened EVMAbstract 
-
-    const addF := (x:nat) => x + 1;
-    const ADD := EVMInst<nat>.Inst(x => x + 1, "ADD");
-    const PUSH := EVMInst<nat>.Inst(x => x + 1, "ADD");
-
-    // var stack: seq<int>
-    class EVM {
-
-        // var ADD: Inst(x:nat => x + 1, "ADD")
-        // const PUSH := 
-    }
-    
-}  
-
-method main101a() {
-
-        var addOne : nat -> nat := x => x + 1;
-
-        // var i := Inst(addOne, "ADD");     
-        // var p1 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i)], [EVMIRProg.Block(i)]); 
-
-        //  Sequence of blocks 
-        // var i1 := Inst(addOne, "SUB");     
-        // var p2 := [EVMIRProg.Block(i1), EVMIRProg.Block(i1), EVMIRProg.Block(i1)];
-        // var (cfg2, max2, m2) := toCFG(CFG(0, map[0 := []], 0), p2, 0, map[0 := p2]);
-        // printCFG(cfg2, "p2", m2);    
-        // printCFGmap(m2);
-
-        //  IfThenElse 
-        // var i2 := Inst(addOne, "PUSH");     
-        // var i3 := Inst(addOne, "POP");     
-        // var p3 := EVMIRProg.IfElse(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i2)], [EVMIRProg.Block(i2),  EVMIRProg.Block(i1)]); 
-        // var (cfg3, max3, m3) := toCFG(CFG(0, map[0 := []], 0), [p3] + [EVMIRProg.Block(i3)], 0, map[0 := [p3] + [EVMIRProg.Block(i3)]]);
-        // printCFG(cfg3, "ifThenElse", m3);   
-        // printCFGmap(m3);
-
-        //  While loop
-        // var p4 := EVMIRProg.While(_ => true, [EVMIRProg.Block(i1), EVMIRProg.Block(i1)]); 
-        // var (cfg4, max4, m4) := toCFG(CFG(0, map[0 := []], 0), [p4] + [EVMIRProg.Block(i3)], 0, map[0 := [p4] + [EVMIRProg.Block(i3)]]);
-        // printCFG(cfg4, "CFG for While true do add; PUSH; od", m4);   
-
-}
 /**
  *  A very simple program manipulating the stack.
- *  psuh(a), push(b), add(), pop() 
+ *  There is no loop in this program and not branching.
+ *
+ *  If this program is correct, then the program P1 in main1,
+ *  simulates the program P2 (in e2).     
+ *
+ *  The simulation is encoded as a two-player game:
+ *  0. the two programs P1 and P2 start in initial state of machines e1 and e2
+ *  1. e2 makes a move
+ *  2. e1 chooses a move to match (simulate) it (or nothing, see STOP at the
+ *      end of main1).
+ *  We define the simulation relation to be `equiv`.
+ *  P1 simulates P2 if, starting in states (s1, s2) with equiv(s1, s2), if
+ *  P2 makes a move s2 - i2 -> s2' (executes an instruction i), then P1 can 
+ *  make a move s1 - i1 -> s1' and equiv(s1', s2').
+ *
+ *  To check the previous property we assert `equiv` after each move.  
+ *  
  */
 method main1(g: uint256) 
-    requires g >= 4
+    requires g >= 5
 {
-    var e := new EVM(g, true); 
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    //  EVM #1
+    var e1 := new EVM(g, true); 
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
+
+    //  EVM #2
+    var e2 := new EVM(g, true, [PUSH1, 1, PUSH1, 2, ADD, POP, STOP]);
+    
+    ghost var g := e1.stack;
+
+    //  First check 
+    assert equiv(e1, e2); 
+
+    e2.push(a);
+    e1.push(a);
+    assert equiv(e1, e2);
+ 
+    e2.push(b); 
+    e1.push(b);
+    assert equiv(e1, e2);
+    
+    e2.add();
+    e1.add();  
+    assert equiv(e1, e2);
+
+    assert e1.stack[0] == a as uint256 + b as uint256;
+    assert e2.stack[0] == a as uint256 + b as uint256;
+
+    e2.pop();
+    e1.pop();
+    assert equiv(e1, e2); 
+
+    e2.stop();
+    // e1 chooses not to do anything
+    assert equiv(e1, e2); 
+
+    assert e1.stack == g;
+    assert e1.gas >= 0;
+
+    assert e2.stack == g;
+    assert e2.gas >= 0;
+}
+
+/**
+ *  In this next example, we use a variation of the previous game.
+ *  The objective is to prove that the program in main5 simulates 
+ *  the bytecode running in e.
+ *
+ *  To do so, we still play a game between main5 (P1) and the bytecode (P2) but 
+ *  we can encode it in a single instruction.
+ *  To do we use a special mode of e: track bytecode (`checkCode` is set).
+ *  The execution of an instruction like e.push(c) in main5 is interpreted as follows:
+ *      1. P2 executes the instruction at pc (and pc is modified)
+ *      2. P1 matches it by a push(c)
+ *      3. the `checkCode` features in e checks that the current 
+ *          instruction at pc is indeed a push(c)
+ *  If P1 can always guess the right instruction, 
+ *  then main5 simulates the bytecode!
+ *  Overall, this reduces to checking that main5 is correct.
+ *  
+ *  
+ */
+method main5(c: uint8)  
+{
+    var end : uint8 := 16;
+
+    var e := new EVM(0, false,
+        // []
+        [
+            PUSH1, c,       //  0
+            DUP1,           //  2
+            ISZERO,         //  3
+            DUP1,           //  4
+            PUSH1, end,     //  5
+            JUMPI,          //  7
+            POP,            //  8
+            PUSH1, 1,       //  9
+            SWAP1,          // 11
+            SUB,            // 12
+            PUSH1, 2,       // 14 
+            JUMP,           // 15
+            STOP            // 16
+        ]
+        );
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     ghost var g := e.stack;
+    ghost var count :uint256 := c as uint256;
 
-    e.push(a);
-    e.push(b);
-    e.add(); 
-
-    assert e.stack[0] == a + b;
-
-    e.pop();
-    assert e.stack == g;
-    assert e.gas >= 0;
-}
-
-/**
- *  A loop.
- */
-method main2(c: uint256, g: uint256) 
-    requires g as nat >= c as nat * 4
-{
-    //  The pre-condition constrains input c
-    assert c as nat * 4 <= MAX_UINT256;
-    var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-    var count: uint256 := c;
-
-    ghost var s := e.stack;
-
-    while count > 0 
-        invariant  e.stack == s
-        invariant e.gas  >= count * 4
-    {
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
-        count := count - 1 ;
-    }
-    assert e.gas >= 0 ;
-    assert e.stack == s;
-}
-
-/**
- *  Compute cout := count -1 with the stack.
- *  In this first implementation we use a variant of SUB, subR
- *  that computes stack1 - stack0 instead of stack0 - stack1.
- */
-method main3(c: uint256, g: uint256) 
-    requires g as nat >= 1 + 6 * c as nat
-{
-    var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-
-    e.push(c);
-    // ghost var s := e.stack;
-    ghost var count := c;
-
+    //  push input on the stack
+    e.push(c);  // [count]
     assert count == e.stack[0];
+  
+    // Compute result of test c > 0
+    e.dup1();   // [count, count]
+    e.iszero(); // [count == 0, count]
+    e.dup1();   // [count == 0, count == 0, count]
+    //  if count == 0 jump to end 
+    e.push(end);  // [end, count == 0, count == 0, count]
+    e.jumpi();  // [count == 0, count]
+    assert count == e.stack[1];
 
-    while e.stack[0] > 0 
-        invariant  |e.stack| > 0  
-        invariant count == e.stack[0]
-        invariant e.stack == [count]
-        invariant e.gas  >= 6 * count 
-    {
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
-
-        //  count := count - 1 ;
-        e.push(0x1);
-        e.subR();
-        count := count - 1;
-        
-    }
-    assert count == 0;
-    assert e.stack == [0];
-    assert e.gas >= 0;
-}
-
-/**
- *  Add swap1 instructin and use real semantics for SUB.
- */
-method main4(c: uint256, g: uint256)  
-    requires g as nat >= 1 + c as nat * 7
-{
-    var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-
-    e.push(c);
-    ghost var count := c;
-
-    assert count == e.stack[0];
-
-    while e.stack[0] > 0 
-        invariant  |e.stack| > 0  
-        invariant count == e.stack[0]
-        invariant e.gas >= count * 7
-    {
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
-
-        //  count := count - 1 ;
-        e.push(0x1);
-        e.swap1();
-        e.sub();
-
-        count := count - 1;
-        
-    }
-    assert e.gas >= 0;
-}
-
-/**
- *  Test top of stack with LT/GT
- *  instead of count > 0.
- */
-method main5(c: uint256, g: uint256)  
-    requires g as nat >= 5 + 11 * c as nat
-{
-    var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-
-    e.push(c);
-    ghost var count := c;
-
-    //  stack = [count]
-    assert count == e.stack[0];
-
-    //  compute count > 0 
-
-    //  top of the stack has the result of count > 0
-    //  push 0, then duplicate second element on top
-    e.push(0x0);
-    e.dup2();
-    //  stack = [count, 0, count]
-    //  compute stack[0] > stack[1]
-    e.gt();
-    //  stack = [count > 0, count]
-
-    assert(count == e.stack[1]); 
-
-    while e.stack[0] > 0 
+    //  this test/while loop is in main5 only, not in the bytecode.
+    //  it corresponds to P1 choosing its strategy to match the bytecode.
+    while e.stack[0] == 0   
         invariant  |e.stack| > 1  
-        invariant count == e.stack[1] >= 0
-        invariant e.stack[0] > 0 <==> count > 0
-        invariant |e.stack| == 2
-        invariant e.gas >= 1 + 11 * count 
-
+        invariant count == e.stack[1]
+        invariant count == 0 <==> e.stack[0] > 0 
+        invariant e.stack[0] == 0 <==> e.pc == 8
+        invariant e.stack[0] > 0 <==> e.pc == 16
         decreases count
     {
-        //  top of the stack is the last result of stack[0] > stack[1]
-        e.pop();
-        //  stack = [count] 
-        //  a + b and discard result
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
+        assert e.pc == 8;
+        //  [count == 0, count]
+        e.pop();        // [count]
+        e.push(0x1);    // [1, count]
+        e.swap1();      // [count, 1]
+        e.sub();        // [count - 1] 
+        //  jump to 2   
+        e.push(2); // [2, count - 1]
+        e.jump();       // [count - 1]
 
-        assert count == e.stack[0] ;
-        assert count > 0;
-        //  count := count - 1 ;
-        e.push(0x1);
-        e.swap1();
-        //  stack = [count, 1]
-        e.sub();
-        //  stack = [count - 1]
-
-        //  prepare comparison count > 0. count is at the top
-        e.push(0x0);
-        e.dup2();
-        //  stack = [count - 1, 0, count - 1]
-        //  compute stack[0] > stack[1]
-        e.gt();        
-        //  stack = [count - 1 > 0, count - 1]
+        // Compute result of test c > 0, same as before the loop.
+        e.dup1();       // [count - 1, count - 1]
+        e.iszero();     // [count == 0, count]
+        e.dup1();       // [count == 0, count == 0, count]
+        //  if count == 0 jump to end 
+        e.push(end);    // [end, count == 0, count == 0, count]
+        e.jumpi();      // [count == 0, count]
         count := count - 1;
-        
     }
-    assert count == e.stack[1];
-    e.pop();
-    assert e.stack[0] == count;
-    assert count == 0;
-    assert |e.stack| == 1;
-    assert e.stack == [0];
-    assert e.gas >= 0;
-
-}
-
-/**
- *  Enable gas cost.
- */
-method main6(c: uint256, g: uint256) 
-    requires g as nat >= 5 + 11 * c as nat  
-{
-    var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-
-    e.push(c);
-    ghost var g := e.stack;
-    ghost var count := c;
-
-    //  stack = [count]
-    assert count == e.stack[0];
-
-    //  compute count > 0 
-
-    //  top of the stack has the result of count > 0
-    //  push 0, then duplicate second element on top
-    e.push(0x0);
-    e.dup2();
-    //  stack = [count, 0, count]
-    //  compute stack[0] > stack[1]
-    e.gt();
-    //  stack = [count > 0, count]
-
-    assert(count == e.stack[1]); 
-
-    while e.stack[0] > 0 
-        invariant  |e.stack| > 1  
-        invariant count == e.stack[1] >= 0
-        invariant e.stack[0] > 0 <==> count > 0
-        invariant |e.stack| == 2
-        invariant e.gas >= 1 + 11 * count
-
-        decreases count
-    {
-        //  top of the stack is the last result of stack[0] > stack[1]
-        e.pop();
-        //  stack = [count] 
-        //  a + b and discard result
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
-
-        assert count == e.stack[0] ;
-        assert count > 0;
-        //  count := count - 1 ;
-        e.push(0x1);
-        e.swap1();
-        //  stack = [count, 1]
-        e.sub();
-        //  stack = [count - 1]
-
-        //  prepare comparison count > 0. count is at the top
-        e.push(0x0);
-        e.dup2();
-        //  stack = [count - 1, 0, count - 1]
-        //  compute stack[0] > stack[1]
-        e.gt();        
-        //  stack = [count - 1 > 0, count - 1]
-        count := count - 1;
-        
-    }
-    assert count == e.stack[1];
-    e.pop();
-    assert e.stack[0] == count;
-    assert count == 0;
-    assert |e.stack| == 1;
-    assert e.stack == [0];
-    assert e.gas >= 0;
-
-}
-
-/**
- *  Compute c in a loop.
- */
-method foo(c: uint256) returns (i: uint256)
-    ensures i == fooSpec(c)
-{
-    i := 0;
-    var c' := c;
-
-    while c' > 0 
-        invariant c' as nat + i as nat == c as nat  
-    {
-        i := i + 1;
-        c' := c' - 1;
-    }
-    assert i == c;
-
-}
-
-/**
- *  Compute c in a loop.
- */
-method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
-    requires g as nat >= 2 + 7 * c as nat  
-    ensures i == c
-{
-    i := 0;
-    ghost var c' := c;
-
-    var e := new EVM(g, true);
-
-    e.push(c);
-    assert e.stack[0] == c == c';
-
-    //  push i
-    assert e.gas >= 1;
-    e.push(0x0);
-
-    while e.stack[1] > 0
-        invariant |e.stack| > 1
-        invariant c' == e.stack[1]
-        invariant i == e.stack[0]
-        invariant c' as nat + i as nat == c as nat  
-        invariant e.gas >= 7 * c'
-    {
-        i := i + 1;
-        //  compute i + 1
-        e.push(0x01);
-        e.add();
-
-        //  i + 1 is at top opf the stack 
-
-        c' := c' - 1;
-        //  compute c' update on the stack
-        e.swap1();
-        //  c' is at top of stack
-        e.push(0x1);
-        e.swap1();
-        e.sub();
-        //  e.stack[0] should contain c'
-        assert e.stack[0] == c';
-        e.swap1();
-    }
-}
-
-/**
- *  Compute c in a loop.
- */
-method foo3(c: uint256, e: EVM) 
-    requires e.checkGas && e.gas as nat >= 2 + 7 * c as nat 
-    ensures |e.stack| > 0 && e.stack[0] == fooSpec(c)
-
-    modifies e
-{
-    //  original algorithm variables become verification/ghost variable 
-    ghost var i := 0;
-    ghost var c' := c;
-
-    e.push(c);
-    assert e.stack[0] == c == c';
-
-    //  push i
-    e.push(0x0);
-
-    while e.stack[1] > 0
-        invariant |e.stack| > 1
-        //  locate original variables in the stack
-        invariant c' == e.stack[1]
-        invariant i == e.stack[0]
-        invariant e.gas >= 7 * c'
-        invariant c' as nat + i as nat == c as nat  
-    {
-        i := i + 1;
-        //  compute i + 1
-        e.push(0x01);
-        e.add();
-        //  i + 1 is at top of the stack 
-
-        c' := c' - 1;
-        //  compute c' update on the stack
-        e.swap1();
-        //  c' is at top of stack
-        e.push(0x1);
-        e.swap1();
-        e.sub();
-        //  e.stack[0] should contain c'
-        assert e.stack[0] == c';
-        e.swap1();
-    }
-}
-
-/**
- *  Pass parameter on stack
- */
-method foo4(e: EVM) 
-    requires |e.stack| > 0 
-    requires e.checkGas && e.gas as nat >= 2 + 10 * e.stack[0] as nat 
-    ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0])
-    ensures e.stack[1..] == old(e.stack[1..])
-
-    modifies e
-{
-    //  original algorithm variables become verification/ghost variable 
-    ghost var i := 0;
-    ghost var c := e.stack[0];
-    ghost var c' := e.stack[0];
-    // e.push(c);
-    assert e.stack[0] == c' == c;
-
-    //  push i
-    e.push(0x00); 
-    //  [i, c' , -]
-    ghost var oldS := e.stack[2..];
-
-    while e.stack[1] > 0
-        invariant |e.stack| > 1
-        //  locate original variables in the stack
-        invariant c' == e.stack[1]
-        invariant i == e.stack[0]
-        invariant e.gas >= 1 + 10 * c'
-        invariant e.stack[2..] == oldS
-        invariant c' as nat + i as nat == c as nat  
-    {
-        // assume e.stack[2..] == oldS;
-        //  [i, c', -]
-        i := i + 1;
-        //  compute i + 1
-        e.incr(0, 0x01);
-        //  [i + 1, i, c', -]
-        // assert e.stack[3..] == oldS;
-        e.swap1(); 
-        //  [i, i + 1, c', -]
-        e.pop();
-        //  [i + 1, c', -]
-        //  i + 1 is at top of the stack 
-        assert e.stack[2..] == oldS;
-        //  compute c' update on the stack
-        e.swap1();
-        assert e.stack[0] == c';
-        c' := c' - 1;
-        assert e.stack[0] == c' + 1;
-        //  [ c', i, -] 
-        //  c' is at top of stack
-        e.push(0x1);
-        assert e.stack[3..] == oldS; 
-        e.swap1();
-        assume e.stack[0] >= e.stack[1];
-        e.sub();
-        //  [ c' - 1, i + 1, -]
-        //  e.stack[0] should contain c'
-        assert e.stack[0] == c';
-        e.swap1();
-        //  [ i + 1, c' - 1, -]
-        assert e.stack[2..] == oldS;
-    }
-    e.pop();
-}
-
-lemma foobar(xa: seq<uint256>)
-    requires |xa| > 0
-    ensures old(xa)[1..] == old(xa[1..])
-{
-    
-}
-
-/**
- *  Functional spec of foo
- */
- function fooSpec(c: uint256) : uint256
- {
-    c
- }
-
-method main101(e: EVM, e2: EVM) 
-    // requires |e.stack| > 0  
-    requires e.gas as nat >= 3
-    // ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0])
-    // ensures e.stack[1..] == old(e.stack[1..])
-
-    modifies e
-{
-    e.push(0x01);
-    e.push(0x02);
-    e.add();
-
-    
-    assert e.stack[0] == 3;
+    // end of program
+    e.stop();
 }
