@@ -293,23 +293,12 @@ module EVM {
     // 0x60
     else if opcode == PUSH1 then evalPUSH1(vm')
     else if opcode == PUSH2 then evalPUSH2(vm')
+    // 0x80
+    else if DUP1 <= opcode <= DUP16 then
+      var k := (opcode - DUP1) as int; evalDUP(vm',k)
     // 0x90
-    else if opcode == SWAP1 then evalSWAP(vm',1)
-    else if opcode == SWAP2 then evalSWAP(vm',2)
-    else if opcode == SWAP3 then evalSWAP(vm',3)
-    else if opcode == SWAP4 then evalSWAP(vm',4)
-    else if opcode == SWAP5 then evalSWAP(vm',5)
-    else if opcode == SWAP6 then evalSWAP(vm',6)
-    else if opcode == SWAP7 then evalSWAP(vm',7)
-    else if opcode == SWAP8 then evalSWAP(vm',8)
-    else if opcode == SWAP9 then evalSWAP(vm',9)
-    else if opcode == SWAP10 then evalSWAP(vm',10)
-    else if opcode == SWAP11 then evalSWAP(vm',11)
-    else if opcode == SWAP12 then evalSWAP(vm',12)
-    else if opcode == SWAP13 then evalSWAP(vm',13)
-    else if opcode == SWAP14 then evalSWAP(vm',14)
-    else if opcode == SWAP15 then evalSWAP(vm',15)
-    else if opcode == SWAP16 then evalSWAP(vm',16)
+    else if SWAP1 <= opcode <= SWAP16 then
+      var k := (opcode - SWAP1) as int; evalSWAP(vm',k+1)
     // 0xf0
     else if opcode == RETURN then evalRETURN(vm')
     else
@@ -733,6 +722,18 @@ module EVM {
       var k2 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
       var k := (k1 * 256) + k2;
       Result.OK(goto(push(vm,k),vm.pc+2))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Duplicate item on stack.
+   */
+  function method evalDUP(vm:T, k: nat) : Result {
+    if operands(vm) > k && capacity(vm) >= 1
+      then
+      var kth := peek(vm,k);
+      Result.OK(push(vm,kth))
     else
       Result.INVALID
   }
