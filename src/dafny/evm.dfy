@@ -119,6 +119,9 @@ module EVM {
 	const XOR : u8 := 0x18;
 	const NOT : u8 := 0x19;
 	const BYTE : u8 := 0x1a;
+	const SHL : u8 := 0x1b;
+  const SHR : u8 := 0x1c;
+  const SAR : u8 := 0x1d;
 	// 20s: SHA3
 	const SHA3 : u8 := 0x20;
 	// 30s: Environment Information
@@ -281,8 +284,8 @@ module EVM {
     else if opcode == XOR then evalXOR(vm')
     else if opcode == NOT then evalNOT(vm')
     else if opcode == BYTE then evalBYTE(vm')
-      // SHL
-      // SHR
+    else if opcode == SHL then evalSHL(vm')
+    else if opcode == SHR then evalSHR(vm')
       // SAR
     // 0x50
     else if opcode == POP then evalPOP(vm')
@@ -609,6 +612,36 @@ module EVM {
       var k := peek(vm,0);
       var res := if k < 32 then U256.nth_u8(val,k as int) else 0;
       Result.OK(push(pop(vm),res as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Left shift operation.
+   */
+  function method evalSHL(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1) as bv256;
+      // NOTE: unclear whether shifting is optimal choice here.
+      var res := if lhs < 256 then (rhs << lhs) else 0;
+      Result.OK(push(pop(pop(vm)),res as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Right shift operation.
+   */
+  function method evalSHR(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var lhs := peek(vm,0);
+      var rhs := peek(vm,1) as bv256;
+      // NOTE: unclear whether shifting is optimal choice here.
+      var res := if lhs < 256 then (rhs >> lhs) else 0;
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }

@@ -40,6 +40,9 @@ public class Bytecodes {
 	public static final int XOR = 0x18;
 	public static final int NOT = 0x19;
 	public static final int BYTE = 0x1a;
+	public static final int SHL = 0x1b;
+	public static final int SHR = 0x1c;
+	public static final int SAR = 0x1d;
 	// 20s: SHA3
 	public static final int SHA3 = 0x20;
 	// 30s: Environment Information
