@@ -316,6 +316,18 @@ public class Tests {
 		runExpecting(new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, not(UINT256(0b00000101)));
 	}
 
+	@Test
+	public void test_byte_01() {
+		// Read byte 31 (0x1f) from 0x0102.
+		runExpecting(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1F, BYTE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x02));
+	}
+
+	@Test
+	public void test_byte_02() {
+		// Read byte 30 (0x1e) from 0x0102.
+		runExpecting(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1E, BYTE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x01));
+	}
+
 	// ========================================================================
 	// LT / GT / SLT / SGT / EQ / ISZERO
 	// ========================================================================

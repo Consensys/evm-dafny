@@ -173,6 +173,176 @@ module Int {
   }
 }
 
+/**
+ * Various helper methods related to unsigned 16bit integers.
+ */
+module U16 {
+  import opened Int
+
+  // Read nth 8bit word (i.e. byte) out of this u16, where 0
+  // identifies the most significant byte.
+  function method nth_u8(v:u16, k: nat) : u8
+    // Cannot read more than two words!
+  requires k < 2 {
+    if k == 0
+        then (v / (TWO_8 as u16)) as u8
+      else
+        (v % (TWO_8 as u16)) as u8
+  }
+
+  method tests_nth_u8() {
+    assert nth_u8(0xde80,0) == 0xde;
+    assert nth_u8(0xde80,1) == 0x80;
+  }
+}
+
+/**
+ * Various helper methods related to unsigned 32bit integers.
+ */
+module U32 {
+  import opened Int
+
+  // Read nth 16bit word out of this u32, where 0 identifies the most
+  // significant word.
+  function method nth_u16(v:u32, k: nat) : u16
+    // Cannot read more than two words!
+  requires k < 2 {
+    if k == 0
+        then (v / (TWO_16 as u32)) as u16
+      else
+        (v % (TWO_16 as u32)) as u16
+  }
+
+  method tests_nth_u16() {
+    assert nth_u16(0x1230de80,0) == 0x1230;
+    assert nth_u16(0x1230de80,1) == 0xde80;
+  }
+}
+
+/**
+ * Various helper methods related to unsigned 64bit integers.
+ */
+module U64 {
+  import opened Int
+
+  // Read nth 32bit word out of this u64, where 0 identifies the most
+  // significant word.
+  function method nth_u32(v:u64, k: nat) : u32
+    // Cannot read more than two words!
+  requires k < 2 {
+    if k == 0
+        then (v / (TWO_32 as u64)) as u32
+      else
+        (v % (TWO_32 as u64)) as u32
+  }
+
+  method tests_nth_u32() {
+    assert nth_u32(0x00112233_44556677,0) == 0x00112233;
+    assert nth_u32(0x00112233_44556677,1) == 0x44556677;
+  }
+}
+
+/**
+ * Various helper methods related to unsigned 128bit integers.
+ */
+module U128 {
+  import opened Int
+
+  // Read nth 64bit word out of this u128, where 0 identifies the most
+  // significant word.
+  function method nth_u64(v:u128, k: nat) : u64
+    // Cannot read more than two words!
+  requires k < 2 {
+    if k == 0
+        then (v / (TWO_64 as u128)) as u64
+      else
+        (v % (TWO_64 as u128)) as u64
+  }
+
+  method tests_nth_u64() {
+    assert nth_u64(0x0011223344556677_8899AABBCCDDEEFF,0) == 0x0011223344556677;
+    assert nth_u64(0x0011223344556677_8899AABBCCDDEEFF,1) == 0x8899AABBCCDDEEFF;
+  }
+}
+
+/**
+ * Various helper methods related to unsigned 256bit integers.
+ */
+module U256 {
+  import opened Int
+  import U128
+  import U64
+  import U32
+  import U16
+
+  // Read nth 128bit word out of this u256, where 0 identifies the most
+  // significant word.
+  function method nth_u128(v:u256, k: nat) : u128
+    // Cannot read more than two words!
+    requires k < 2 {
+      if k == 0
+        then (v / (TWO_128 as u256)) as u128
+      else
+        (v % (TWO_128 as u256)) as u128
+  }
+
+  // Read nth byte out of this u256, where 0 identifies the most
+  // significant byte.
+  function method nth_u8(v:u256, k: nat) : u8
+    // Cannot read more than 32bytes!
+    requires k < 32 {
+      // This is perhaps a tad ugly.  Happy to take suggestions on
+      // a better approach :)
+      var w128 := nth_u128(v,k / 16);
+      var w64 := U128.nth_u64(w128,(k % 16) / 8);
+      var w32 :=  U64.nth_u32(w64,(k % 8) / 4);
+      var w16 :=  U32.nth_u16(w32,(k % 4) / 2);
+      U16.nth_u8(w16,k%2)
+  }
+
+  method tests_nth_u128() {
+    assert nth_u128(0x00112233445566778899AABBCCDDEEFF_FFEEDDCCBBAA99887766554433221100,0) == 0x00112233445566778899AABBCCDDEEFF;
+    assert nth_u128(0x00112233445566778899AABBCCDDEEFF_FFEEDDCCBBAA99887766554433221100,1) == 0xFFEEDDCCBBAA99887766554433221100;
+  }
+
+  method tests_nth_u8() {
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,00) == 0x00;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,01) == 0x01;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,02) == 0x02;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,03) == 0x03;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,04) == 0x04;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,05) == 0x05;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,06) == 0x06;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,07) == 0x07;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,08) == 0x08;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,09) == 0x09;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,10) == 0x0A;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,11) == 0x0B;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,12) == 0x0C;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,13) == 0x0D;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,14) == 0x0E;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,15) == 0x0F;
+    //
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,16) == 0x10;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,17) == 0x11;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,18) == 0x12;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,19) == 0x13;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,20) == 0x14;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,21) == 0x15;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,22) == 0x16;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,23) == 0x17;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,24) == 0x18;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,25) == 0x19;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,26) == 0x1A;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,27) == 0x1B;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,28) == 0x1C;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,29) == 0x1D;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,30) == 0x1E;
+    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,31) == 0x1F;
+
+  }
+}
+
 module I256 {
   import opened Int
 

@@ -23,6 +23,7 @@ include "util/code.dfy"
  */
 module EVM {
   import opened Int
+  import U256
   import I256
   import Word
   import Stack
@@ -279,7 +280,7 @@ module EVM {
     else if opcode == OR then evalOR(vm')
     else if opcode == XOR then evalXOR(vm')
     else if opcode == NOT then evalNOT(vm')
-      // BYTE
+    else if opcode == BYTE then evalBYTE(vm')
       // SHL
       // SHR
       // SAR
@@ -594,6 +595,20 @@ module EVM {
       var mhs := peek(vm,0) as bv256;
       var res := (!mhs) as u256;
       Result.OK(push(pop(vm),res))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Retrieve single byte from word.
+   */
+  function method evalBYTE(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var val := peek(vm,1);
+      var k := peek(vm,0);
+      var res := if k < 32 then U256.nth_u8(val,k as int) else 0;
+      Result.OK(push(pop(vm),res as u256))
     else
       Result.INVALID
   }
