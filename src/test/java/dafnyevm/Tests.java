@@ -316,6 +316,38 @@ public class Tests {
 		runExpecting(new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, not(UINT256(0b00000101)));
 	}
 
+	@Test
+	public void test_byte_01() {
+		// Read byte 31 (0x1f) from 0x0102.
+		runExpecting(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1F, BYTE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x02));
+	}
+
+	@Test
+	public void test_byte_02() {
+		// Read byte 30 (0x1e) from 0x0102.
+		runExpecting(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1E, BYTE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x01));
+	}
+
+	@Test
+	public void test_shl_01() {
+		// 0xFE << 1 = 0x1FC
+		runExpecting(new int[] { PUSH1, 0xFE, PUSH1, 0x1, SHL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1FC));
+	}
+
+	@Test
+	public void test_shl_02() {
+		// 0xFE << 2 = 0x3F8
+		runExpecting(new int[] { PUSH1, 0xFE, PUSH1, 0x2, SHL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x3F8));
+	}
+
+	@Test
+	public void test_shl_03() {
+		// 0xFE << 3 = 0x7F0
+		runExpecting(new int[] { PUSH1, 0xFE, PUSH1, 0x3, SHL, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x7F0));
+	}
+
+	// Add more shift tests here!
+
 	// ========================================================================
 	// LT / GT / SLT / SGT / EQ / ISZERO
 	// ========================================================================
