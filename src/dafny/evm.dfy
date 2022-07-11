@@ -294,6 +294,10 @@ module EVM {
     else if opcode == MSTORE8 then evalMSTORE8(vm')
     else if opcode == SLOAD then evalSLOAD(vm')
     else if opcode == SSTORE then evalSSTORE(vm')
+    else if opcode == JUMP then evalJUMP(vm')
+    else if opcode == JUMPI then evalJUMPI(vm')
+    else if opcode == PC then evalPC(vm')
+    else if opcode == JUMPDEST then evalJUMPDEST(vm')
     // 0x60
     else if opcode == PUSH1 then evalPUSH1(vm')
     else if opcode == PUSH2 then evalPUSH2(vm')
@@ -634,7 +638,7 @@ module EVM {
   /**
    * Right shift operation.
    */
-  function method evalSHR(vm:T) : Result {
+  function method {:verify false} evalSHR(vm:T) : Result {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
@@ -749,6 +753,63 @@ module EVM {
   }
 
   /**
+   * Unconditional branch.
+   */
+  function method evalJUMP(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var pc := peek(vm,0);
+      // Check valid branch target
+      if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
+      then
+        Result.OK(goto(pop(vm),pc))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Unconditional branch.
+   */
+  function method evalJUMPI(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      var pc := peek(vm,0);
+      var val := peek(vm,1);
+      // Check branch taken or not
+      if val == 0 then Result.OK(pop(pop(vm)))
+      // Check valid branch target
+      else if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
+      then
+        Result.OK(goto(pop(pop(vm)),pc))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Gets value of program counter prior to this instruction being executed.
+   */
+  function method evalPC(vm:T) : Result
+  requires vm.pc > 0 {
+    if capacity(vm) >= 1
+    then
+      Result.OK(push(vm, vm.pc-1))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Marks a valid destination for a jump, but otherwise has no effect
+   * on machine state.
+   */
+  function method evalJUMPDEST(vm:T) : Result {
+    Result.OK(vm)
+  }
+
+  /**
    * Push one byte onto stack.
    */
   function method evalPUSH1(vm:T) : Result {
@@ -831,7 +892,7 @@ module EVM {
     then
       (goto(vm,vm.pc+1),Code.decode_u8(vm.code,vm.pc))
     else
-      (vm,STOP)
+      (vm,INVALID)
   }
 
   /**

@@ -135,6 +135,15 @@ public class Main {
 		}
 
 		/**
+		 * Indicates exceptional outcome.
+		 *
+		 * @return
+		 */
+		public boolean isInvalid() {
+			return data == null;
+		}
+
+		/**
 		 * Get any return data from this contract call. <code>null</code> indicates
 		 * something went wrong.
 		 *
