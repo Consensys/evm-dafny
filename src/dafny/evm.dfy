@@ -286,7 +286,7 @@ module EVM {
     else if opcode == BYTE then evalBYTE(vm')
     else if opcode == SHL then evalSHL(vm')
     else if opcode == SHR then evalSHR(vm')
-      // SAR
+    // else if opcode == SAR then evalSAR(vm')
     // 0x50
     else if opcode == POP then evalPOP(vm')
     else if opcode == MLOAD then evalMLOAD(vm')

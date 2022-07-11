@@ -3,33 +3,23 @@ include "evm.dfy"
 import opened Int
 import opened EVM
 
+// Arbitrary limit for now
+const GASLIMIT : nat := 100;
+
 // Check most simple program possible
-method test_01(gas: nat) returns (returndata: seq<u8>)
-ensures |returndata| == 32
-ensures Int.read_u8(returndata,31) == 0x7b
+method test_01(x: u8)
 {
   // Initialise EVM
-  var vm := EVM.create(map[],gas,[PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN]);
-  // PUSH1 0x7b
+  var vm := EVM.create(map[],GASLIMIT,[PUSH1, x, PUSH1, 0x1, ADD]);
+  // PUSH1
   vm := unwrap(EVM.execute(vm));
-  // PUSH1 0x00
+  // PUSH1
   vm := unwrap(EVM.execute(vm));
-  // MSTORE
+  // ADD
   vm := unwrap(EVM.execute(vm));
   assert vm.pc == 5;
-  // PUSH1 0x20
-  vm := unwrap(EVM.execute(vm));
-  assert vm.pc == 7;
-  assert EVM.peek(vm,0) == 32;
-  // PUSH1 0x00
-  vm := unwrap(EVM.execute(vm));
-  assert vm.pc == 9;
-  assert EVM.peek(vm,0) == 0;
-  assert EVM.peek(vm,1) == 32;
-  // RETURN
-  var r := EVM.execute(vm);
-  // Done
-  return data(r);
+  //
+  assert EVM.peek(vm,0) == (x as u256) + 1;
 }
 
 /**
