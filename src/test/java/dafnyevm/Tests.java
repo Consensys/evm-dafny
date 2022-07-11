@@ -32,12 +32,23 @@ public class Tests {
 	private final boolean DEBUG = true;
 
 	// ========================================================================
-	// STOP
+	// STOP / INVALID
 	// ========================================================================
 
 	@Test
 	public void test_stop_01() {
 		runExpecting(new int[] { STOP });
+	}
+
+	@Test
+	public void test_invalid_01() {
+		runInvalid(new int[] { INVALID });
+	}
+
+	@Test
+	public void test_invalid_02() {
+		// Run of end of code sequence.
+		runInvalid(new int[] { PUSH1, 0x01 });
 	}
 
 	// ========================================================================
@@ -62,6 +73,12 @@ public class Tests {
 	@Test
 	public void test_pop_01() {
 		runExpecting(new int[] { PUSH1, 0x02, PUSH1, 0x01, POP, PUSH1, 0x00, RETURN }, new byte[] { 0, 0 });
+	}
+
+	@Test
+	public void test_pop_invalid_01() {
+		// Insufficient operands
+		runInvalid(new int[] { POP });
 	}
 
 	// ========================================================================
@@ -645,6 +662,84 @@ public class Tests {
 	}
 
 	// ========================================================================
+	// JUMP
+	// ========================================================================
+
+	@Test
+	public void test_jump_01() {
+		// Branch over invalid
+		runExpecting(new int[] { PUSH1, 0x4, JUMP, INVALID, JUMPDEST, STOP });
+	}
+
+	@Test
+	public void test_jump_invalid_01() {
+		// Invalid destination
+		runInvalid(new int[] { PUSH1, 0x3, JUMP });
+	}
+
+	@Test
+	public void test_jump_invalid_02() {
+		// JUMPDEST required
+		runInvalid(new int[] { PUSH1, 0x3, JUMP, STOP });
+	}
+
+	// ========================================================================
+	// JUMPI
+	// ========================================================================
+
+	@Test
+	public void test_jumpi_01() {
+		// Condition branch (taken) over invalid
+		runExpecting(new int[] { PUSH1, 0x01, PUSH1, 0x6, JUMPI, INVALID, JUMPDEST, STOP });
+	}
+
+	@Test
+	public void test_jumpi_02() {
+		// Condition branch (not taken) avoids invalid
+		runExpecting(new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, STOP, JUMPDEST, INVALID });
+	}
+
+	@Test
+	public void test_jumpi_03() {
+		// Condition branch (not taken) doesn't require JUMPDEST.
+		runExpecting(new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, STOP });
+	}
+
+	@Test
+	public void test_jumpi_invalid_01() {
+		// Condition branch (taken) hits invalid
+		runInvalid(new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, INVALID, JUMPDEST, STOP });
+	}
+
+	@Test
+	public void test_jumpi_invalid_02() {
+		// Condition branch (not taken) hits invalid
+		runInvalid(new int[] { PUSH1, 0x01, PUSH1, 0x6, JUMPI, STOP, JUMPDEST, INVALID });
+	}
+
+	// ========================================================================
+	// PC
+	// ========================================================================
+
+	@Test
+	public void test_pc_01() {
+		// PC = 0
+		runExpecting(new int[] { PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x0));
+	}
+
+	@Test
+	public void test_pc_02() {
+		// PC = 1
+		runExpecting(new int[] { JUMPDEST, PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x1));
+	}
+
+	@Test
+	public void test_pc_03() {
+		// PC = 2
+		runExpecting(new int[] { PUSH1, 0x1, PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN }, UINT256(0x2));
+	}
+
+	// ========================================================================
 	// Misc
 	// ========================================================================
 
@@ -713,6 +808,18 @@ public class Tests {
 		runExpecting(toBytes(words), bytes);
 	}
 
+	/**
+	 * Run a bytecode program expecting to reach an invalid bytecode.
+	 *
+	 * @param code
+	 * @param bytes
+	 */
+	private void runInvalid(int[] words, byte... bytes) {
+		// Execute the EVM
+		Outcome r = new Main(new HashMap<>(),toBytes(words)).run();
+		// Check expected outcome
+		assert r.isInvalid();
+	}
 
 	/**
 	 * Run a bytecode program expecting it to raise an out-of-gas error.
