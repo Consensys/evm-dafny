@@ -8,18 +8,24 @@ const GASLIMIT : nat := 100;
 
 // Check most simple program possible
 method test_01(x: u8)
+requires x > 1
 {
   // Initialise EVM
-  var vm := EVM.create(map[],GASLIMIT,[PUSH1, x, PUSH1, 0x1, ADD]);
-  // PUSH1
+  var vm := EVM.create(map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  // PUSH1 x
   vm := unwrap(EVM.execute(vm));
-  // PUSH1
+  // PUSH1 0x2
   vm := unwrap(EVM.execute(vm));
-  // ADD
+  // MSTORE
   vm := unwrap(EVM.execute(vm));
-  assert vm.pc == 5;
+  // PUSH
+  vm := unwrap(EVM.execute(vm));
+  // PUSH
+  vm := unwrap(EVM.execute(vm));
+  // RETURN
+  var r := EVM.execute(vm);
   //
-  assert EVM.peek(vm,0) == (x as u256) + 1;
+  assert data(r) == [x];
 }
 
 /**

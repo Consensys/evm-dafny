@@ -898,139 +898,104 @@ module EVM {
   /**
    * Move program counter to a given location.
    */
-  function method goto(vm:T, k:u256) : T
-    requires k <= Code.size(vm.code) {
-      EVM(stack:=vm.stack,
-        storage:=vm.storage,
-        memory:=vm.memory,
-        code:=vm.code,
-        gas := vm.gas,
-        pc := k
-        )
+  function method goto(evm:T, k:u256) : T
+    requires k <= Code.size(evm.code) {
+      evm.(pc := k)
   }
 
   /**
    * Check at least k operands on the stack.
    */
-  function method operands(vm:T) : nat {
-    Stack.size(vm.stack)
+  function method operands(evm:T) : nat {
+    Stack.size(evm.stack)
   }
 
   /**
    * Check capacity remaining on stack.
    */
-  function method capacity(vm:T) : nat {
-    Stack.capacity(vm.stack)
+  function method capacity(evm:T) : nat {
+    Stack.capacity(evm.stack)
   }
 
   /**
    * Push word onto stack.
    */
-  function method push(vm:T, v:u256) : T
-    requires capacity(vm) > 0 {
-        EVM(stack:=Stack.push(vm.stack,v),
-          storage:=vm.storage,
-          memory:=vm.memory,
-          code:=vm.code,
-          gas := vm.gas,
-          pc:=vm.pc)
+  function method push(evm:T, v:u256) : T
+    requires capacity(evm) > 0 {
+      evm.(stack:=Stack.push(evm.stack,v))
   }
 
   /**
    * Peek word from a given position on the stack, where "1" is the
    * topmost position, "2" is the next position and so on.
    */
-  function method peek(vm:T, k:int) : u256
+  function method peek(evm:T, k:int) : u256
     // Sanity check peek possible
-    requires k >= 0 && k < Stack.size(vm.stack) {
-        Stack.peek(vm.stack,k)
+    requires k >= 0 && k < Stack.size(evm.stack) {
+        Stack.peek(evm.stack,k)
   }
 
   /**
    * Pop word from stack.
    */
-  function method pop(vm:T) : T
+  function method pop(evm:T) : T
     // Cannot pop from empty stack
-    requires Stack.size(vm.stack) >= 1 {
-        EVM(stack:=Stack.pop(vm.stack),
-          storage:=vm.storage,
-          memory:=vm.memory,
-          code:=vm.code,
-          gas := vm.gas,
-          pc:=vm.pc)
+    requires Stack.size(evm.stack) >= 1 {
+        evm.(stack:=Stack.pop(evm.stack))
   }
 
-  // Swap top item with kth item.
-  function method swap(vm:T, k:nat) : T
-  requires operands(vm) > k {
-    EVM(stack:=Stack.swap(vm.stack,k),
-      storage:=vm.storage,
-      memory:=vm.memory,
-      code:=vm.code,
-      gas := vm.gas,
-      pc:=vm.pc)
+  /**
+   * Swap top item with kth item.
+   */
+  function method swap(evm:T, k:nat) : T
+    requires operands(evm) > k {
+      evm.(stack:=Stack.swap(evm.stack,k))
   }
 
   /**
    * Read word from byte address in memory.
    */
-  function method read(vm:T, address:u256) : u256
+  function method read(evm:T, address:u256) : u256
   requires (address as int) + 31 <= MAX_U256 {
-    Memory.read_u256(vm.memory,address)
+    Memory.read_u256(evm.memory,address)
   }
 
   /**
    * Write word to byte address in memory.
    */
-  function method write(vm:T, address:u256, val: u256) : T
-  requires (address as int) + 31 <= MAX_U256 {
-    EVM(stack:=vm.stack,
-      storage:=vm.storage,
-      memory:=Memory.write_u256(vm.memory,address,val),
-      code:=vm.code,
-      gas := vm.gas,
-      pc:=vm.pc)
+  function method write(evm:T, address:u256, val: u256) : T
+    requires (address as int) + 31 <= MAX_U256 {
+      evm.(memory:=Memory.write_u256(evm.memory,address,val))
   }
 
   /**
    * Write byte to byte address in memory.
    */
-  function method write8(vm:T, address:u256, val: u8) : T
+  function method write8(evm:T, address:u256, val: u8) : T
   requires (address as int) < MAX_U256 {
-    EVM(stack:=vm.stack,
-      storage:=vm.storage,
-      memory:=Memory.write_u8(vm.memory,address,val),
-      code:=vm.code,
-      gas := vm.gas,
-      pc:=vm.pc)
+    evm.(memory := Memory.write_u8(evm.memory,address,val))
   }
 
   /**
    * Read word from storage
    */
-  function method load(vm:T, address:u256) : u256 {
-    Storage.read(vm.storage,address)
+  function method load(evm:T, address:u256) : u256 {
+    Storage.read(evm.storage,address)
   }
 
   /**
    * Write word to storage
    */
-  function method store(vm:T, address:u256, val: u256) : T {
-    EVM(stack:=vm.stack,
-      storage:=Storage.write(vm.storage,address,val),
-      memory:=vm.memory,
-      code:=vm.code,
-      gas := vm.gas,
-      pc:=vm.pc)
+  function method store(evm:T, address:u256, val: u256) : T {
+    evm.(storage:=Storage.write(evm.storage,address,val))
   }
 
   /**
    * Check how many code operands are available.
    */
-  function method opcode_operands(vm:T) : int {
-    (Code.size(vm.code) as nat) - (vm.pc as nat)
+  function method opcode_operands(evm:T) : int {
+    (Code.size(evm.code) as nat) - (evm.pc as nat)
   }
-
 
   /**
    * Unsigned integer division with handling for zero.
