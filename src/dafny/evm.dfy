@@ -259,7 +259,7 @@ module EVM {
   function method execute(vm:T) : Result {
     // Decode
     var (vm',opcode) := decode(vm);
-    // Dispatch
+    // 0x00s: STOP & Arithmetic
     if opcode == STOP then evalSTOP(vm')
     else if opcode == ADD then evalADD(vm')
     else if opcode == MUL then evalMUL(vm')
@@ -270,9 +270,9 @@ module EVM {
     else if opcode == SMOD then evalSMOD(vm')
     else if opcode == ADDMOD then evalADDMOD(vm')
     else if opcode == MULMOD then evalMULMOD(vm')
-      // EXP
-      // SIGNEXTEND
-    // 0x10
+    // else if opcode == EXP then evalEXP(vm')
+    // else if opcode == SIGNEXTEND then evalSIGNEXTEND(vm')
+    // 0x10s: Comparison & Bitwise Logic
     else if opcode == LT then evalLT(vm')
     else if opcode == GT then evalGT(vm')
     else if opcode == SLT then evalSLT(vm')
@@ -287,7 +287,34 @@ module EVM {
     else if opcode == SHL then evalSHL(vm')
     else if opcode == SHR then evalSHR(vm')
     // else if opcode == SAR then evalSAR(vm')
-    // 0x50
+    // 0x20s
+    // else if opcode == KECCAK256 then evalKECCAK256(vm')
+    // 0x30s: Environment Information
+    // else if opcode == ADDRESS then evalADDRESS(vm')
+    // else if opcode == BALANCE then evalBALANCE(vm')
+    // else if opcode == ORIGIN then evalORIGIN(vm')
+    // else if opcode == CALLER then evalCALLER(vm')
+    // else if opcode == CALLVALUE then evalCALLVALUE(vm')
+    // else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
+    // else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
+    // else if opcode == CODESIZE then evalCALLCODESIZE(vm')
+    // else if opcode == CODECOPY then evalCALLCODECOPY(vm')
+    // else if opcode == GASPRICE then evalGASPRICE(vm')
+    // else if opcode == EXTCODESIZE then evalEXTCODESIZE(vm')
+    // else if opcode == EXTCODECOPY then evalEXTCODECOPY(vm')
+    // else if opcode == RETURNDATASIZE then evalRETURNDATASIZE(vm')
+    // else if opcode == RETURNDATACOPY then evalRETURNDATACOPY(vm')
+    // else if opcode == EXTCODEHASH then evalEXTCODEHASH(vm')
+    // 0x40s: Block Information
+    // else if opcode == BLOCKHASH then evalBLOCKHASH(vm')
+    // else if opcode == COINBASE then evalCOINBASE(vm')
+    // else if opcode == TIMESTAMP then evalTIMESTAMP(vm')
+    // else if opcode == NUMBER then evalNUMBER(vm')
+    // else if opcode == DIFFICULTY then evalDIFFICULTY(vm')
+    // else if opcode == GASLIMIT then evalGASLIMIT(vm')
+    // else if opcode == CHAINID then evalCHAINID(vm')
+    // else if opcode == SELFBALANCE then evalSELFBALANCE(vm')
+    // 0x50s: Stack, Memory, Storage and Flow
     else if opcode == POP then evalPOP(vm')
     else if opcode == MLOAD then evalMLOAD(vm')
     else if opcode == MSTORE then evalMSTORE(vm')
@@ -298,17 +325,28 @@ module EVM {
     else if opcode == JUMPI then evalJUMPI(vm')
     else if opcode == PC then evalPC(vm')
     else if opcode == JUMPDEST then evalJUMPDEST(vm')
-    // 0x60
+    // 0x60s & 0x70s: Push operations
     else if opcode == PUSH1 then evalPUSH1(vm')
     else if opcode == PUSH2 then evalPUSH2(vm')
-    // 0x80
+    // 0x80s: Duplicate operations
     else if DUP1 <= opcode <= DUP16 then
       var k := (opcode - DUP1) as int; evalDUP(vm',k)
-    // 0x90
+    // 0x90s: Exchange operations
     else if SWAP1 <= opcode <= SWAP16 then
       var k := (opcode - SWAP1) as int; evalSWAP(vm',k+1)
+    // 0xA0s: Log operations
+    // else if LOG0 <= opcode <= LOG4 then
+    //   var k := (opcode - LOG0) as int; evalLOG(vm',k)
     // 0xf0
+    // else if opcode == CREATE then evalCREATE(vm')
+    // else if opcode == CALL then evalCALL(vm')
+    // else if opcode == CALLCODE then evalCALLCODE(vm')
     else if opcode == RETURN then evalRETURN(vm')
+    //else if opcode == DELEGATECALL then evalDELEGATECALL(vm')
+    //else if opcode == CREATE2 then evalCREATE2(vm')
+    //else if opcode == STATICCALL then evalSTATICCALL(vm')
+    //else if opcode == REVERT then evalREVERT(vm')
+    //else if opcode == SELFDESTRUCT then evalSELFDESTRUCT(vm')
     else
       // Invalid opcode
       Result.INVALID
