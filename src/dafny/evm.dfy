@@ -16,6 +16,7 @@ include "util/int.dfy"
 include "util/memory.dfy"
 include "util/storage.dfy"
 include "util/stack.dfy"
+include "util/context.dfy"
 include "util/code.dfy"
 
 /**
@@ -29,12 +30,14 @@ module EVM {
   import Stack
   import Memory
   import Storage
+  import Context
   import Code
 
   datatype T = EVM(
     stack   : Stack.T,
     memory  : Memory.T,
     storage : Storage.T,
+    context: Context.T,
     code: Code.T,
     gas: nat,
     pc : u256
