@@ -345,7 +345,7 @@ module EVM {
     //else if opcode == DELEGATECALL then evalDELEGATECALL(vm')
     //else if opcode == CREATE2 then evalCREATE2(vm')
     //else if opcode == STATICCALL then evalSTATICCALL(vm')
-    //else if opcode == REVERT then evalREVERT(vm')
+    else if opcode == REVERT then evalREVERT(vm')
     //else if opcode == SELFDESTRUCT then evalSELFDESTRUCT(vm')
     else
       // Invalid opcode
@@ -911,7 +911,29 @@ module EVM {
         // Read out that data.
         var data := Memory.slice(vm.memory, start as u256, len);
         // Done
-        Result.RETURNS(gas:=0,data:=data)
+        Result.RETURNS(gas:=vm.gas,data:=data)
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Revert execution returning output data.
+   */
+  function method evalREVERT(vm:T) : Result {
+    if operands(vm) >= 2
+      then
+      // Determine amount of data to return.
+      var len := peek(vm,1) as int;
+      var start := peek(vm,0) as int;
+      // Sanity check bounds
+      if (start+len) <= MAX_U256
+      then
+        // Read out that data.
+        var data := Memory.slice(vm.memory, start as u256, len);
+        // Done
+        Result.REVERT(gas:=vm.gas,data:=data)
       else
         Result.INVALID
     else

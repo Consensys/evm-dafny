@@ -77,7 +77,7 @@ public class Main {
 			return new Outcome(false,rret.data,rret.gas,evm);
 		} else if(r instanceof Result_REVERT) {
 			Result_REVERT rrev = (Result_REVERT) r;
-			return new Outcome(false,rrev.data,rrev.gas,evm);
+			return new Outcome(true,rrev.data,rrev.gas,evm);
 		} else {
 			// Sanity check is invalid
 			Result_INVALID rinv = (Result_INVALID) r;

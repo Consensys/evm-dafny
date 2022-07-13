@@ -81,6 +81,21 @@ public class Tests {
 		runInvalid(new int[] { POP });
 	}
 
+	@Test
+	public void test_revert_01() {
+		runExpectingRevert(new int[] { PUSH1, 0x00, PUSH1, 0x00, REVERT });
+	}
+
+	@Test
+	public void test_revert_02() {
+		runExpectingRevert(new int[] { PUSH1, 0x01, PUSH1, 0x00, REVERT }, new byte[] { 0 });
+	}
+
+	@Test
+	public void test_revert_03() {
+		runExpectingRevert(new int[] { PUSH2, 0x00, 0x02, PUSH1, 0x00, REVERT }, new byte[] { 0, 0 });
+	}
+
 	// ========================================================================
 	// MLOAD, MSTORE
 	// ========================================================================
@@ -806,6 +821,35 @@ public class Tests {
 	 */
 	private void runExpecting(int[] words, byte... bytes) {
 		runExpecting(toBytes(words), bytes);
+	}
+
+	/**
+	 * Run a given sequence of bytecodes, expecting things to go OK and to produce
+	 * the given output.
+	 *
+	 * @param bytecode
+	 * @param bytes
+	 */
+	private void runExpectingRevert(byte[] code, byte... bytes) {
+		System.out.println("Excuting: " + Main.toHexString(code));
+		// Execute the EVM
+		Outcome r = new Main(new HashMap<>(),code).setDebug(DEBUG).run();
+		// Check we have reverted
+		assertTrue(r.isRevert());
+		// Check something was returned
+		assertTrue(r.getReturnData() != null);
+		// Ok!
+		assertEquals(DafnySequence.fromBytes(bytes), r.getReturnData());
+	}
+
+	/**
+	 * Overload of <code>runExpecting</code> where input specified as word array.
+	 *
+	 * @param words Bytecode as an array of ints.
+	 * @param bytes
+	 */
+	private void runExpectingRevert(int[] words, byte... bytes) {
+		runExpectingRevert(toBytes(words), bytes);
 	}
 
 	/**
