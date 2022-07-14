@@ -34,10 +34,10 @@ module EVM {
   import Code
 
   datatype T = EVM(
+    context: Context.T,
+    storage : Storage.T,
     stack   : Stack.T,
     memory  : Memory.T,
-    storage : Storage.T,
-    context: Context.T,
     code: Code.T,
     gas: nat,
     pc : u256
@@ -45,15 +45,15 @@ module EVM {
 
   /**
    * Create a fresh EVM to execute a given sequence of bytecode instructions.
-   * The EVM is  initialised with an empty stack and empty local memory.
+   * The EVM is initialised with an empty stack and empty local memory.
    */
-  function method create(storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
+  function method create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
   requires |code| <= MAX_U256 {
     var stck := Stack.create();
     var mem := Memory.create();
     var sto := Storage.create(storage);
     var cod := Code.create(code);
-    EVM(stack:=stck,memory:=mem,storage:=sto,code:=cod,gas:=gas,pc:=0)
+    EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0)
   }
 
   // =============================================================================
