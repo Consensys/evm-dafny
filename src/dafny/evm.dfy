@@ -298,7 +298,7 @@ module EVM {
     // else if opcode == ORIGIN then evalORIGIN(vm')
     // else if opcode == CALLER then evalCALLER(vm')
     // else if opcode == CALLVALUE then evalCALLVALUE(vm')
-    // else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
+    else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
     else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
     // else if opcode == CODESIZE then evalCALLCODESIZE(vm')
     // else if opcode == CODECOPY then evalCALLCODECOPY(vm')
@@ -692,9 +692,23 @@ module EVM {
   }
 
   /**
+   * Get input data from the current environment.
+   */
+  function method evalCALLDATALOAD(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var loc := peek(vm,0);
+      var val := if loc >= Context.data_size(vm.context) then 0
+        else Context.data_read(vm.context,loc);
+      Result.OK(push(pop(vm),val))
+    else
+      Result.INVALID
+  }
+
+  /**
    * Get size of input data in current environment.
    */
-  function method {:verify false} evalCALLDATASIZE(vm:T) : Result {
+  function method evalCALLDATASIZE(vm:T) : Result {
     if capacity(vm) >= 1
       then
       var len := |vm.context.calldata|;

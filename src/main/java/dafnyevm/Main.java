@@ -59,7 +59,7 @@ public class Main {
 
 	public Outcome call(BigInteger from, byte[] calldata) {
 		// Create call context.
-		Context_Compile.T ctx = new Context_Compile.T(from, from, from, DafnySequence.fromBytes(calldata));
+		Context_Compile.Raw ctx = Context_Compile.__default.create(from, DafnySequence.fromBytes(calldata));
 		// Create the EVM
 		EVM_Compile.T evm = create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
