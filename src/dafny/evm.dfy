@@ -299,7 +299,7 @@ module EVM {
     // else if opcode == CALLER then evalCALLER(vm')
     // else if opcode == CALLVALUE then evalCALLVALUE(vm')
     // else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
-    // else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
+    else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
     // else if opcode == CODESIZE then evalCALLCODESIZE(vm')
     // else if opcode == CODECOPY then evalCALLCODECOPY(vm')
     // else if opcode == GASPRICE then evalGASPRICE(vm')
@@ -687,6 +687,18 @@ module EVM {
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs >> lhs) else 0;
       Result.OK(push(pop(pop(vm)),res as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Get size of input data in current environment.
+   */
+  function method {:verify false} evalCALLDATASIZE(vm:T) : Result {
+    if capacity(vm) >= 1
+      then
+      var len := |vm.context.calldata|;
+      Result.OK(push(vm,len as u256))
     else
       Result.INVALID
   }
