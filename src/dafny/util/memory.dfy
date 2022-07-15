@@ -187,4 +187,19 @@ module Memory {
         var middle := address + (pivot as u256);
         slice(mem,address,pivot) + slice(mem,middle, len - pivot)
     }
+
+    /**
+     * Copy a sequence of bytes into this memory at a given address.
+     */
+    function method copy(mem:T, address:u256, data:seq<u8>) : T
+      requires (address as int + |data|) <= MAX_U256
+      decreases |data| {
+        if |data| == 0 then mem
+        else if |data| == 1 then write_u8(mem,address,data[0])
+        else
+          var pivot := |data| / 2;
+          var middle := address + (pivot as u256);
+          var nmem := copy(mem,address,data[0..pivot]);
+          copy(nmem,middle,data[pivot..])
+    }
 }

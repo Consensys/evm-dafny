@@ -300,6 +300,7 @@ module EVM {
     // else if opcode == CALLVALUE then evalCALLVALUE(vm')
     else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
     else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
+    else if opcode == CALLDATACOPY then evalCALLDATACOPY(vm')
     // else if opcode == CODESIZE then evalCALLCODESIZE(vm')
     // else if opcode == CODECOPY then evalCALLCODECOPY(vm')
     // else if opcode == GASPRICE then evalGASPRICE(vm')
@@ -718,6 +719,33 @@ module EVM {
   }
 
   /**
+   * Get size of input data in current environment.
+   */
+  function method evalCALLDATACOPY(vm:T) : Result {
+    if operands(vm) >= 3
+      then
+      var m_loc := peek(vm,0);
+      var d_loc := peek(vm,1);
+      var len := peek(vm,2);
+      // NOTE: This condition is not specified in the yellow paper.
+      // Its not clear whether that was intended or not.  However, its
+      // impossible to trigger this in practice (due to the gas costs
+      // involved).
+      if (m_loc as int) + (len as int) < MAX_U256
+      then
+        // Slice bytes out of call data (with padding as needed)
+        var data := Context.data_slice(vm.context,d_loc,len);
+        // Sanity check
+        assert |data| == (len as int);
+        // Copy slice into memory
+        Result.OK(copy(vm,m_loc,data))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
    * Pop word from stack.
    */
   function method evalPOP(vm:T) : Result {
@@ -1063,6 +1091,15 @@ module EVM {
   function method write8(evm:T, address:u256, val: u8) : T
   requires (address as int) < MAX_U256 {
     evm.(memory := Memory.write_u8(evm.memory,address,val))
+  }
+
+  /**
+   * Copy byte sequence to byte address in memory.  Any bytes
+   * that overflow are dropped.
+   */
+  function method copy(evm:T, address:u256, data: seq<u8>) : T
+    requires (address as int) + |data| <= MAX_U256 {
+      evm.(memory:=Memory.copy(evm.memory,address,data))
   }
 
   /**

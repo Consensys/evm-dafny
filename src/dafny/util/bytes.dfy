@@ -31,7 +31,8 @@ module Bytes {
 
     /**
      * Read a 16bit word from a given address in Memory assuming
-     * big-endian addressing.
+     * big-endian addressing.  If the read overflows the available
+     * data, then it is padded with zeros.
      */
     function method read_u16(mem:seq<u8>, address:nat) : u16 {
         var w1 := read_u8(mem,address) as u16;
@@ -51,7 +52,8 @@ module Bytes {
 
     /**
      * Read a 64bit word from a given address in Memory assuming
-     * big-endian addressing.
+     * big-endian addressing.  If the read overflows the available
+     * data, then it is padded with zeros.
      */
     function method read_u64(mem:seq<u8>, address:nat) : u64 {
         var w1 := read_u32(mem,address) as u64;
@@ -61,7 +63,8 @@ module Bytes {
 
     /**
      * Read a 128bit word from a given address in Memory assuming
-     * big-endian addressing.
+     * big-endian addressing.  If the read overflows the available
+     * data, then it is padded with zeros.
      */
     function method read_u128(mem:seq<u8>, address:nat) : u128 {
         var w1 := read_u64(mem,address) as u128;
@@ -71,11 +74,31 @@ module Bytes {
 
     /**
      * Read a 256bit word from a given address in Memory assuming
-     * big-endian addressing.
+     * big-endian addressing.  If the read overflows the available
+     * data, then it is padded with zeros.
      */
     function method read_u256(mem:seq<u8>, address:nat) : u256 {
         var w1 := read_u128(mem,address) as u256;
         var w2 := read_u128(mem,address+16) as u256;
         (w1 * (TWO_128 as u256)) + w2
     }
+
+    /**
+     * Slice out a subsequence of bytes from a given sequence.
+     * If the requested subsequence overflows available memory,
+     * it is padded out with zeros.
+     */
+    function method slice(mem:seq<u8>, address:nat, len:nat) : seq<u8> {
+      var n := address + len;
+      // Sanity check for overflow
+      if n <= |mem| then mem[address..n]
+      // Yes overflow, so manage it.
+      else if address < |mem| then mem[address..] + padding(n-|mem|)
+      else padding(len)
+    }
+
+    /**
+     * Construct a sequence of an arbitrary sized padded out with zeros.
+     */
+    function method padding(n:nat) : seq<u8> { seq(n, i => 0) }
 }

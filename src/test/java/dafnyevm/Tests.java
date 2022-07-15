@@ -562,7 +562,6 @@ public class Tests {
 	}
 
 
-
 	// ========================================================================
 	// SLOAD, SSTORE
 	// ========================================================================
@@ -618,6 +617,78 @@ public class Tests {
 		byte[] output = call(0, new byte[] { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x74 },
 				new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x7400));
+	}
+
+	@Test
+	public void test_calldataload_03() {
+		// Calldata has 31bytes, so CALLDATALOAD adds two additional zero bytes.
+		byte[] output = call(0, new byte[] { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x74 },
+				new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0x740000));
+	}
+
+	@Test
+	public void test_calldataload_04() {
+		// Read from non-zero offset in calldata (which results in padding)
+		byte[] output = call(0, UINT256(0xab4f7b),
+				new int[] { PUSH1, 1, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0xab4f7b00L));
+	}
+
+	@Test
+	public void test_calldataload_05() {
+		// Load multiple items from calldata
+		byte[] output = call(0, append(UINT256(0xab4f7b),UINT256(0x7c4ead)),
+				new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x20, CALLDATALOAD, ADD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN});
+		assertArrayEquals(output, UINT256(0xab4f7b + 0x7c4ead));
+	}
+
+	@Test
+	public void test_calldatacopy_01() {
+		// Copy call data into memory and return.
+		byte[] output = call(0, UINT256(0xab4f7b),
+				new int[] { PUSH1, 0x20, PUSH1, 0x0, PUSH1, 0x0, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0xab4f7b));
+	}
+
+	@Test
+	public void test_calldatacopy_02() {
+		// Partially copy call data into memory and return.
+		byte[] output = call(0, UINT256(0xab4f7b),
+				new int[] { PUSH1, 0x1F, PUSH1, 0x0, PUSH1, 0x0, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0xab4f00));
+	}
+
+	@Test
+	public void test_calldatacopy_03() {
+		// Copy call data into memory at non-zero offset and return.
+		byte[] output = call(0, new byte[] { 0x4f, 0x7b },
+				new int[] { PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1F, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0x7b));
+	}
+
+	@Test
+	public void test_calldatacopy_04() {
+		// Copy call data into memory at non-zero offset and return.
+		byte[] output = call(0, new byte[] { 0x4f, 0x7b },
+				new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x1F, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0x4f));
+	}
+
+	@Test
+	public void test_calldatacopy_05() {
+		// Copy call data into memory at non-zero offset and return.
+		byte[] output = call(0, new byte[] { 0x4f, 0x7b },
+				new int[] { PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1E, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0x7b00));
+	}
+
+	@Test
+	public void test_calldatacopy_06() {
+		// Copy call data into memory at non-zero offset and return.
+		byte[] output = call(0, new byte[] { 0x4f },
+				new int[] { PUSH1, 0x2, PUSH1, 0x0, PUSH1, 0x1E, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(output,UINT256(0x4f00));
 	}
 
 	// ========================================================================
@@ -1089,6 +1160,28 @@ public class Tests {
 	}
 
 	/**
+	 * Construct a 256bit representation (in big endian form) of an unsigned Java long.
+	 * @param x
+	 * @return
+	 */
+	private byte[] UINT256(long x) {
+		if(x < 0) {
+			throw new IllegalArgumentException("Argument cannot be negative");
+		}
+		byte[] bytes = new byte[32];
+		bytes[31] = (byte) (x & 0xFF);
+		bytes[30] = (byte) ((x >> 8) & 0xFF);
+		bytes[29] = (byte) ((x >> 16) & 0xFF);
+		bytes[28] = (byte) ((x >> 24) & 0xFF);
+
+		bytes[27] = (byte) ((x >> 32) & 0xFF);
+		bytes[26] = (byte) ((x >> 40) & 0xFF);
+		bytes[25] = (byte) ((x >> 48) & 0xFF);
+		bytes[24] = (byte) ((x >> 56) & 0xFF);
+		return bytes;
+	}
+
+	/**
 	 * Shift an array of bytes to the left a given amount.
 	 *
 	 * @param bytes
@@ -1113,5 +1206,12 @@ public class Tests {
 			r[i] = (byte) ~(bytes[i]);
 		}
 		return r;
+	}
+
+	private byte[] append(byte[] lhs, byte[] rhs) {
+		byte[] res = new byte[lhs.length + rhs.length];
+		System.arraycopy(lhs, 0, res, 0, lhs.length);
+		System.arraycopy(rhs, 0, res, lhs.length, rhs.length);
+		return res;
 	}
 }

@@ -56,4 +56,11 @@ module Context {
     function method data_read(ctx: T, loc: u256) : u256 {
       Bytes.read_u256(ctx.calldata,loc as nat)
     }
+
+    /**
+     * Slice a sequence of bytes from the call data associated with this context.
+     */
+    function method data_slice(ctx: T, loc: u256, len: u256) : seq<u8> {
+      Bytes.slice(ctx.calldata,loc as nat, len as nat)
+    }
 }
