@@ -16,6 +16,7 @@ include "util/int.dfy"
 include "util/memory.dfy"
 include "util/storage.dfy"
 include "util/stack.dfy"
+include "util/context.dfy"
 include "util/code.dfy"
 
 /**
@@ -29,12 +30,14 @@ module EVM {
   import Stack
   import Memory
   import Storage
+  import Context
   import Code
 
   datatype T = EVM(
+    context: Context.T,
+    storage : Storage.T,
     stack   : Stack.T,
     memory  : Memory.T,
-    storage : Storage.T,
     code: Code.T,
     gas: nat,
     pc : u256
@@ -42,15 +45,15 @@ module EVM {
 
   /**
    * Create a fresh EVM to execute a given sequence of bytecode instructions.
-   * The EVM is  initialised with an empty stack and empty local memory.
+   * The EVM is initialised with an empty stack and empty local memory.
    */
-  function method create(storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
+  function method create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
   requires |code| <= MAX_U256 {
     var stck := Stack.create();
     var mem := Memory.create();
     var sto := Storage.create(storage);
     var cod := Code.create(code);
-    EVM(stack:=stck,memory:=mem,storage:=sto,code:=cod,gas:=gas,pc:=0)
+    EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0)
   }
 
   // =============================================================================
@@ -295,8 +298,9 @@ module EVM {
     // else if opcode == ORIGIN then evalORIGIN(vm')
     // else if opcode == CALLER then evalCALLER(vm')
     // else if opcode == CALLVALUE then evalCALLVALUE(vm')
-    // else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
-    // else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
+    else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
+    else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
+    else if opcode == CALLDATACOPY then evalCALLDATACOPY(vm')
     // else if opcode == CODESIZE then evalCALLCODESIZE(vm')
     // else if opcode == CODECOPY then evalCALLCODECOPY(vm')
     // else if opcode == GASPRICE then evalGASPRICE(vm')
@@ -689,6 +693,59 @@ module EVM {
   }
 
   /**
+   * Get input data from the current environment.
+   */
+  function method evalCALLDATALOAD(vm:T) : Result {
+    if operands(vm) >= 1
+      then
+      var loc := peek(vm,0);
+      var val := if loc >= Context.data_size(vm.context) then 0
+        else Context.data_read(vm.context,loc);
+      Result.OK(push(pop(vm),val))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Get size of input data in current environment.
+   */
+  function method evalCALLDATASIZE(vm:T) : Result {
+    if capacity(vm) >= 1
+      then
+      var len := |vm.context.calldata|;
+      Result.OK(push(vm,len as u256))
+    else
+      Result.INVALID
+  }
+
+  /**
+   * Get size of input data in current environment.
+   */
+  function method evalCALLDATACOPY(vm:T) : Result {
+    if operands(vm) >= 3
+      then
+      var m_loc := peek(vm,0);
+      var d_loc := peek(vm,1);
+      var len := peek(vm,2);
+      // NOTE: This condition is not specified in the yellow paper.
+      // Its not clear whether that was intended or not.  However, its
+      // impossible to trigger this in practice (due to the gas costs
+      // involved).
+      if (m_loc as int) + (len as int) < MAX_U256
+      then
+        // Slice bytes out of call data (with padding as needed)
+        var data := Context.data_slice(vm.context,d_loc,len);
+        // Sanity check
+        assert |data| == (len as int);
+        // Copy slice into memory
+        Result.OK(copy(vm,m_loc,data))
+      else
+        Result.INVALID
+    else
+      Result.INVALID
+  }
+
+  /**
    * Pop word from stack.
    */
   function method evalPOP(vm:T) : Result {
@@ -1034,6 +1091,15 @@ module EVM {
   function method write8(evm:T, address:u256, val: u8) : T
   requires (address as int) < MAX_U256 {
     evm.(memory := Memory.write_u8(evm.memory,address,val))
+  }
+
+  /**
+   * Copy byte sequence to byte address in memory.  Any bytes
+   * that overflow are dropped.
+   */
+  function method copy(evm:T, address:u256, data: seq<u8>) : T
+    requires (address as int) + |data| <= MAX_U256 {
+      evm.(memory:=Memory.copy(evm.memory,address,data))
   }
 
   /**

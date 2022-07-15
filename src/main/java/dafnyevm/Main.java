@@ -57,9 +57,11 @@ public class Main {
 		return this;
 	}
 
-	public Outcome run() {
+	public Outcome call(BigInteger from, byte[] calldata) {
+		// Create call context.
+		Context_Compile.Raw ctx = Context_Compile.__default.create(from, DafnySequence.fromBytes(calldata));
 		// Create the EVM
-		EVM_Compile.T evm = create(storage,BigInteger.ONE,code);
+		EVM_Compile.T evm = create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
 		Result r = execute(evm);
 		// Continue whilst the EVM is happy.
@@ -182,10 +184,12 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
+		BigInteger origin = BigInteger.TEN;
+		byte[] calldata = new byte[0];
 		// Parse input string
 		byte[] bytes = parseHex(args[0]);
 		// Execute the EVM
-		Outcome r = new Main(new HashMap<>(),bytes).run();
+		Outcome r = new Main(new HashMap<>(), bytes).call(origin, calldata);
 		//
 		System.out.println("REVERT : " + r.isRevert());
 		System.out.println("RETDATA: " + r.getReturnData());
