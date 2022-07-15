@@ -472,7 +472,7 @@ module EVM {
       var rhs := peek(vm,1) as int;
       var rem := peek(vm,2) as int;
       var res := if rem == 0 then 0 else(lhs + rhs) % rem;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      Result.OK(push(pop(pop(pop(vm))),res as u256))
     else
       Result.INVALID
   }
@@ -487,7 +487,7 @@ module EVM {
       var rhs := peek(vm,1) as int;
       var rem := peek(vm,2) as int;
       var res := if rem == 0 then 0 else(lhs * rhs) % rem;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      Result.OK(push(pop(pop(pop(vm))),res as u256))
     else
       Result.INVALID
   }
@@ -657,7 +657,7 @@ module EVM {
       var val := peek(vm,1);
       var k := peek(vm,0);
       var res := if k < 32 then U256.nth_u8(val,k as int) else 0;
-      Result.OK(push(pop(vm),res as u256))
+      Result.OK(push(pop(pop(vm)),res as u256))
     else
       Result.INVALID
   }
@@ -738,7 +738,7 @@ module EVM {
         // Sanity check
         assert |data| == (len as int);
         // Copy slice into memory
-        Result.OK(copy(vm,m_loc,data))
+        Result.OK(copy(pop(pop(pop(vm))),m_loc,data))
       else
         Result.INVALID
     else
