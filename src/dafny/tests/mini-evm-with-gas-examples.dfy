@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../evms/mini-evm-with-gas.dfy"   
+include "../evms/imperative/mini-evm-with-gas.dfy"   
 
 /**
  *   A very simple program manipulating the stack.
@@ -21,8 +21,8 @@ method main1(g: uint256)
     requires g >= 4
 {
     var e := new EVM(g, true); 
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     ghost var g := e.stack;
 
@@ -30,7 +30,7 @@ method main1(g: uint256)
     e.push(b);
     e.add(); 
 
-    assert e.stack[0] == a + b;
+    assert e.stack[0] == (a + b) as uint256;
 
     e.pop();
     assert e.stack == g;
@@ -46,8 +46,8 @@ method main2(c: uint256, g: uint256)
     //  The pre-condition constrains input c
     assert c as nat * 4 <= MAX_UINT256;
     var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
     var count: uint256 := c;
 
     ghost var s := e.stack;
@@ -67,57 +67,17 @@ method main2(c: uint256, g: uint256)
 }
 
 /**
- *  Compute cout := count -1 with the stack.
- *  In this first implementation we use a variant of SUB, subR
- *  that computes stack1 - stack0 instead of stack0 - stack1.
- */
-method main3(c: uint256, g: uint256) 
-    requires g as nat >= 1 + 6 * c as nat
-{
-    var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
-
-    e.push(c);
-    // ghost var s := e.stack;
-    ghost var count := c;
-
-    assert count == e.stack[0];
-
-    while e.stack[0] > 0 
-        invariant  |e.stack| > 0  
-        invariant count == e.stack[0]
-        invariant e.stack == [count]
-        invariant e.gas  >= 6 * count 
-    {
-        e.push(a);
-        e.push(b);
-        e.add();
-        e.pop();
-
-        //  count := count - 1 ;
-        e.push(0x1);
-        e.subR();
-        count := count - 1;
-        
-    }
-    assert count == 0;
-    assert e.stack == [0];
-    assert e.gas >= 0;
-}
-
-/**
  *  Add swap1 instructin and use real semantics for SUB.
  */
-method main4(c: uint256, g: uint256)  
+method main4(c: uint8, g: uint256)  
     requires g as nat >= 1 + c as nat * 7
 {
     var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     e.push(c);
-    ghost var count := c;
+    ghost var count := c as uint256;
 
     assert count == e.stack[0];
 
@@ -146,15 +106,15 @@ method main4(c: uint256, g: uint256)
  *  Test top of stack with LT/GT
  *  instead of count > 0.
  */
-method main5(c: uint256, g: uint256)  
+method main5(c: uint8, g: uint256)  
     requires g as nat >= 5 + 11 * c as nat
 {
     var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     e.push(c);
-    ghost var count := c;
+    ghost var count := c as uint256;
 
     //  stack = [count]
     assert count == e.stack[0];
@@ -222,16 +182,16 @@ method main5(c: uint256, g: uint256)
 /**
  *  Enable gas cost.
  */
-method main6(c: uint256, g: uint256) 
+method main6(c: uint8, g: uint256) 
     requires g as nat >= 5 + 11 * c as nat  
 {
     var e := new EVM(g, true);
-    var a: uint256 := 0x01;
-    var b : uint256 := 0x02;
+    var a: uint8 := 0x01;
+    var b : uint8 := 0x02;
 
     e.push(c);
     ghost var g := e.stack;
-    ghost var count := c;
+    ghost var count := c as uint256;
 
     //  stack = [count]
     assert count == e.stack[0];
@@ -299,8 +259,8 @@ method main6(c: uint256, g: uint256)
 /**
  *  Compute c in a loop.
  */
-method foo(c: uint256) returns (i: uint256)
-    ensures i == fooSpec(c)
+method foo(c: uint8) returns (i: uint256)
+    ensures i == fooSpec(c as uint256) 
 {
     i := 0;
     var c' := c;
@@ -311,24 +271,24 @@ method foo(c: uint256) returns (i: uint256)
         i := i + 1;
         c' := c' - 1;
     }
-    assert i == c;
+    assert i == c as uint256;
 
 }
 
 /**
  *  Compute c in a loop.
  */
-method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
+method foo2(c: uint8, g: uint256) returns (ghost i: uint256)
     requires g as nat >= 2 + 7 * c as nat  
-    ensures i == c
+    ensures i == c as uint256
 {
     i := 0;
-    ghost var c' := c;
+    ghost var c' := c as uint256;
 
     var e := new EVM(g, true);
 
     e.push(c);
-    assert e.stack[0] == c == c';
+    assert e.stack[0] == c as uint256 == c';
 
     //  push i
     assert e.gas >= 1;
@@ -364,18 +324,19 @@ method foo2(c: uint256, g: uint256) returns (ghost i: uint256)
 /**
  *  Compute c in a loop.
  */
-method foo3(c: uint256, e: EVM) 
+method foo3(c: uint8, e: EVM) 
+    requires !e.checkCode
     requires e.checkGas && e.gas as nat >= 2 + 7 * c as nat 
-    ensures |e.stack| > 0 && e.stack[0] == fooSpec(c)
+    ensures |e.stack| > 0 && e.stack[0] == fooSpec(c as uint256) as uint256
 
     modifies e
 {
     //  original algorithm variables become verification/ghost variable 
     ghost var i := 0;
-    ghost var c' := c;
+    ghost var c' := c as uint256;
 
     e.push(c);
-    assert e.stack[0] == c == c';
+    assert e.stack[0] == c as uint256 == c';
 
     //  push i
     e.push(0x0);
@@ -410,69 +371,69 @@ method foo3(c: uint256, e: EVM)
 /**
  *  Pass parameter on stack
  */
-method foo4(e: EVM) 
-    requires |e.stack| > 0 
-    requires e.checkGas && e.gas as nat >= 2 + 10 * e.stack[0] as nat 
-    ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0])
-    ensures e.stack[1..] == old(e.stack[1..])
+// method foo4(e: EVM) 
+//     requires |e.stack| > 0 
+//     requires e.checkGas && e.gas as nat >= 2 + 10 * e.stack[0] as nat 
+//     ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0]) as uint256
+//     ensures e.stack[1..] == old(e.stack[1..])
 
-    modifies e
-{
-    //  original algorithm variables become verification/ghost variable 
-    ghost var i := 0;
-    ghost var c := e.stack[0];
-    ghost var c' := e.stack[0];
-    // e.push(c);
-    assert e.stack[0] == c' == c;
+//     modifies e
+// {
+//     //  original algorithm variables become verification/ghost variable 
+//     ghost var i := 0;
+//     ghost var c := e.stack[0];
+//     ghost var c' := e.stack[0];
+//     // e.push(c);
+//     assert e.stack[0] == c' == c;
 
-    //  push i
-    e.push(0x00); 
-    //  [i, c' , -]
-    ghost var oldS := e.stack[2..];
+//     //  push i
+//     e.push(0x00); 
+//     //  [i, c' , -]
+//     ghost var oldS := e.stack[2..];
 
-    while e.stack[1] > 0
-        invariant |e.stack| > 1
-        //  locate original variables in the stack
-        invariant c' == e.stack[1]
-        invariant i == e.stack[0]
-        invariant e.gas >= 1 + 10 * c'
-        invariant e.stack[2..] == oldS
-        invariant c' as nat + i as nat == c as nat  
-    {
-        // assume e.stack[2..] == oldS;
-        //  [i, c', -]
-        i := i + 1;
-        //  compute i + 1
-        e.incr(0, 0x01);
-        //  [i + 1, i, c', -]
-        // assert e.stack[3..] == oldS;
-        e.swap1(); 
-        //  [i, i + 1, c', -]
-        e.pop();
-        //  [i + 1, c', -]
-        //  i + 1 is at top of the stack 
-        assert e.stack[2..] == oldS;
-        //  compute c' update on the stack
-        e.swap1();
-        assert e.stack[0] == c';
-        c' := c' - 1;
-        assert e.stack[0] == c' + 1;
-        //  [ c', i, -] 
-        //  c' is at top of stack
-        e.push(0x1);
-        assert e.stack[3..] == oldS; 
-        e.swap1();
-        assume e.stack[0] >= e.stack[1];
-        e.sub();
-        //  [ c' - 1, i + 1, -]
-        //  e.stack[0] should contain c'
-        assert e.stack[0] == c';
-        e.swap1();
-        //  [ i + 1, c' - 1, -]
-        assert e.stack[2..] == oldS;
-    }
-    e.pop();
-}
+//     while e.stack[1] > 0
+//         invariant |e.stack| > 1
+//         //  locate original variables in the stack
+//         invariant c' == e.stack[1]
+//         invariant i == e.stack[0]
+//         invariant e.gas >= 1 + 10 * c'
+//         invariant e.stack[2..] == oldS
+//         invariant c' as nat + i as nat == c as nat  
+//     {
+//         // assume e.stack[2..] == oldS;
+//         //  [i, c', -]
+//         i := i + 1;
+//         //  compute i + 1
+//         e.incr(0, 0x01);
+//         //  [i + 1, i, c', -]
+//         // assert e.stack[3..] == oldS;
+//         e.swap1(); 
+//         //  [i, i + 1, c', -]
+//         e.pop();
+//         //  [i + 1, c', -]
+//         //  i + 1 is at top of the stack 
+//         assert e.stack[2..] == oldS;
+//         //  compute c' update on the stack
+//         e.swap1();
+//         assert e.stack[0] == c';
+//         c' := c' - 1;
+//         assert e.stack[0] == c' + 1;
+//         //  [ c', i, -] 
+//         //  c' is at top of stack
+//         e.push(0x1);
+//         assert e.stack[3..] == oldS; 
+//         e.swap1();
+//         assume e.stack[0] >= e.stack[1];
+//         e.sub();
+//         //  [ c' - 1, i + 1, -]
+//         //  e.stack[0] should contain c'
+//         assert e.stack[0] == c';
+//         e.swap1();
+//         //  [ i + 1, c' - 1, -]
+//         assert e.stack[2..] == oldS;
+//     }
+//     e.pop();
+// }
 
 lemma foobar(xa: seq<uint256>)
     requires |xa| > 0
@@ -492,6 +453,7 @@ lemma foobar(xa: seq<uint256>)
 method main101(e: EVM, e2: EVM) 
     // requires |e.stack| > 0  
     requires e.gas as nat >= 3
+    requires !e.checkCode
     // ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0])
     // ensures e.stack[1..] == old(e.stack[1..])
 
