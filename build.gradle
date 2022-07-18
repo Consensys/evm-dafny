@@ -23,11 +23,21 @@ apply plugin: 'application'
 // Dafny Build
 // ======================================================================
 
-task preBuild {
-    // Generate sources
-    exec {
-        executable 'dafny'
-        args '/verifyAllModules','/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
+task compileDafny {
+    // Specify inputs
+    inputs.files(fileTree('src/dafny/') { include '**/*.dfy' } )
+    // Specify outputs
+    outputs.files(fileTree('evm-java') { include '**/*.java' } )
+    // Enable caching
+    outputs.cacheIf { true }
+    // Specify actions
+    doLast {
+        print "Verifying and compiler Dafny code.."
+        // Generate Dafny Source
+        exec {
+            executable 'dafny'
+            args '/verifyAllModules','/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
+        }
     }
 }
 
@@ -47,7 +57,18 @@ test {
     }
 }
 
-sourceSets.main.java.srcDirs += ['evm-java']
+// Specify that should run compileDafny before compileJava.
+// Otherwise, the Java compiler cannot find up-to-date Dafny tests!
+compileJava.dependsOn compileDafny
+
+sourceSets {
+    main {
+        java {
+            // Add Dafny output directory to Java build path.
+            srcDirs("evm-java")
+        }
+    }
+}
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
