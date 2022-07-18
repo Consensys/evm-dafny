@@ -12,13 +12,14 @@
  * under the License.
  */
 
-include "../../util/NativeTypes.dfy"
-include "../../util/NonNativeTypes.dfy"
+include "../../util/int.dfy"
 include "../EVMOpcodes.dfy"
 
-import opened NativeTypes
-import opened NonNativeTypes
+include "../functional/evm.dfy"  
+
+import opened Int
 import opened EVMOpcodes
+import EVMF = EVM 
 
 /** An OO version of the EVM.
  * 
@@ -27,22 +28,22 @@ import opened EVMOpcodes
  *  @note   This EVM supports interpretation of EVM-IR (using while loops, if-then-else)
  *          as well as raw bytecode. 
  */
-type EVMStack = seq<uint256>
+type EVMStack = seq<u256>
 
 /** 
  *  Provide an initialiased EVM with a small instruction set.
  *  Gas can be enabled or disabled.
  */
-class EVM {
+class EVMI {  
 
     /** The stack of this VM. */
     var stack: EVMStack
 
     /** The gas left in this EVM.  */
-    var gas: uint256
+    var gas: u256
 
     /** The program counter, if interpreting bytecode. */
-    var pc: nat 
+    var pc: nat
 
     /** Enable/disable gas check. */
     const checkGas: bool
@@ -51,7 +52,10 @@ class EVM {
     const checkCode: bool
 
     /** The optional (can be empty sequence) bytecode. */
-    const code: seq<uint8>
+    const code: seq<u8>
+
+    const ctx := Context.Context(0, 0, 0, [])
+    const eevm :EVMF.T := EVMF.create(Context.Context(0, 0, 0, []), map[], 0 as nat, [])
 
     /** Init the VM. 
      *  
@@ -67,13 +71,18 @@ class EVM {
      *                  this.push(v) can only be executed if current pc is such that code[pc] is PUSH1
      *                  and code[pc + 1] == v 
      */
-    constructor (g: uint256, check: bool, c: seq<uint8> := [], check': bool := false) 
+    constructor (g: u256, check: bool, c: seq<u8> := [], check': bool := false) 
+        requires |c| <= MAX_U256
         ensures stack == []
         ensures gas == g 
         ensures checkGas == check
         ensures pc == 0
         ensures checkCode == check'
         ensures code == c
+        ensures gas as nat == EVMF.create(Context.Context(0, 0, 0, []), map[], g as nat, []).gas
+        ensures Stack.Stack(stack) == EVMF.create(ctx, map[], g as nat, c).stack
+        ensures Code.Code(c) == EVMF.create(ctx, map[], g as nat, c).code
+        // ensures pc as u256 == EVMF.create(ctx, map[], g as nat, c).pc
     {
         pc := 0;
         stack := []; 
@@ -91,21 +100,20 @@ class EVM {
      *  PUSH1 opcode.
      *
      *  @param  v   The value to push on the stack.
-     *  @return     Add `v` to the top of the stack (and convert to uint256).
+     *  @return     Add `v` to the top of the stack (and convert to u256).
      */
-    method push(v: uint8) 
+    method push(v: u8, ghost evmf: EVMF.T := eevm) 
         requires !checkGas || gas >= 1
         requires !checkCode || (pc + 1 < |code| && code[pc] == PUSH1 && code[pc + 1] == v) 
         ensures |stack| == |old(stack)| + 1
-        ensures stack == [v as uint256] + old(stack)
+        ensures stack == [v as u256] + old(stack)
         ensures !checkGas || gas == old(gas) - 1
         ensures pc == old(pc) + 2
-
-        modifies this
+        modifies this 
     {
-        stack := [v as uint256] + stack;
+        stack := [v as u256] + stack;
         gas := gas - (if checkGas then 1 else 0);
-        pc := pc + 2;
+        pc := pc + 2;   
     }
 
     /**
@@ -156,7 +164,7 @@ class EVM {
      */
     method add()  
         requires |stack| >= 2
-        requires stack[0] as nat + stack[1] as nat <= MAX_UINT256
+        requires stack[0] as nat + stack[1] as nat <= MAX_U256
         requires !checkGas || gas >= 1
         requires !checkCode || (pc < |code| && code[pc] == ADD) 
 
@@ -298,7 +306,7 @@ class EVM {
         ensures |stack| == |old(stack)| - 2
         ensures stack == old(stack)[2..]
         ensures !checkGas || gas == old(gas) - 1
-        ensures pc == if old(stack[1]) != 0 then old(stack[0]) as nat else old(pc) + 1 
+        ensures pc == if old(stack[1]) != 0 then old(stack[0]) as nat else old(pc) as nat  + 1 
 
         modifies this
     {
@@ -314,7 +322,7 @@ class EVM {
     method jump()  
         requires |stack| >= 1
         requires !checkGas || gas >= 1
-        requires !checkCode || (pc < |code| && code[pc] == JUMP) 
+        requires !checkCode || (pc as nat < |code| && code[pc] == JUMP) 
 
         ensures |stack| == |old(stack)| - 1
         ensures stack == old(stack)[1..]
@@ -323,7 +331,7 @@ class EVM {
 
         modifies this
     {
-        pc := stack[0] as nat ;
+        pc := stack[0] as nat;
         stack := stack[1..];
         gas := gas - (if checkGas then 1 else 0);
     }
@@ -332,9 +340,11 @@ class EVM {
      *  Replaces the top of stack `t` by the status `t == 0`.
      */
     method iszero()  
+        requires pc as nat < MAX_U256
+        requires |code| <= MAX_U256
         requires |stack| >= 1
         requires !checkGas || gas >= 1
-        requires !checkCode || (pc < |code| && code[pc] == ISZERO) 
+        requires !checkCode || (pc as nat < |code| && code[pc] == ISZERO) 
 
         ensures |stack| == |old(stack)|
         ensures stack == [if old(stack[0]) == 0 then 1 else 0] + old(stack[1..])
@@ -355,7 +365,7 @@ class EVM {
      */
     method stop()  
         requires !checkGas || gas >= 1
-        requires !checkCode || (pc < |code| && code[pc] == STOP) 
+        requires !checkCode || (pc as nat < |code| && code[pc] == STOP) 
 
         ensures |stack| == |old(stack)|
         ensures !checkGas || gas == old(gas) - 1
