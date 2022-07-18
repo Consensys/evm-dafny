@@ -128,10 +128,10 @@ method main5(c: u8, g: u256)
     //  push 0, then duplicate second element on top
     e.push(0x0);
     e.dup2();
-    //  stack = [count, 0, count]
+    assert e.stack == [count, 0, count];
     //  compute stack[0] > stack[1]
     e.gt();
-    //  stack = [count > 0, count]
+    assert e.stack == [if count > 0 then 1 else 0, count];
 
     assert(count == e.stack[1]); 
 
@@ -146,7 +146,7 @@ method main5(c: u8, g: u256)
     {
         //  top of the stack is the last result of stack[0] > stack[1]
         e.pop();
-        //  stack = [count] 
+        assert e.stack == [count];
         //  a + b and discard result
         e.push(a);
         e.push(b);
@@ -158,17 +158,17 @@ method main5(c: u8, g: u256)
         //  count := count - 1 ;
         e.push(0x1);
         e.swap1();
-        //  stack = [count, 1]
+        assert e.stack == [count, 1];
         e.sub();
-        //  stack = [count - 1]
+        assert e.stack == [count - 1];
 
         //  prepare comparison count > 0. count is at the top
         e.push(0x0);
         e.dup2();
-        //  stack = [count - 1, 0, count - 1]
+        assert e.stack == [count - 1, 0, count - 1];
         //  compute stack[0] > stack[1]
         e.gt();        
-        //  stack = [count - 1 > 0, count - 1]
+        assert e.stack == [if count - 1 > 0 then 1 else 0, count - 1];
         count := count - 1;
         
     }
@@ -205,10 +205,10 @@ method main6(c: u8, g: u256)
     //  push 0, then duplicate second element on top
     e.push(0x0);
     e.dup2();
-    //  stack = [count, 0, count]
+    assert e.stack == [count, 0, count];
     //  compute stack[0] > stack[1]
     e.gt();
-    //  stack = [count > 0, count]
+    assert e.stack == [if count > 0 then 1 else 0, count];
 
     assert(count == e.stack[1]); 
 
@@ -223,7 +223,7 @@ method main6(c: u8, g: u256)
     {
         //  top of the stack is the last result of stack[0] > stack[1]
         e.pop();
-        //  stack = [count] 
+        assert e.stack == [count]; 
         //  a + b and discard result
         e.push(a);
         e.push(b);
@@ -235,17 +235,17 @@ method main6(c: u8, g: u256)
         //  count := count - 1 ;
         e.push(0x1);
         e.swap1();
-        //  stack = [count, 1]
+        assert e.stack == [count, 1];
         e.sub();
-        //  stack = [count - 1]
+        assert e.stack == [count - 1];
 
         //  prepare comparison count > 0. count is at the top
         e.push(0x0);
         e.dup2();
-        //  stack = [count - 1, 0, count - 1]
+        assert e.stack == [count - 1, 0, count - 1];
         //  compute stack[0] > stack[1]
         e.gt();        
-        //  stack = [count - 1 > 0, count - 1]
+        assert e.stack == [if count - 1 > 0 then 1 else 0, count - 1];
         count := count - 1;
         
     }
