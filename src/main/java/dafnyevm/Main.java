@@ -13,6 +13,7 @@
  */
 package dafnyevm;
 
+import org.apache.commons.cli.*;
 import static EVM_Compile.__default.*;
 import EVM_Compile.Result;
 import EVM_Compile.Result_INVALID;
@@ -20,6 +21,7 @@ import EVM_Compile.Result_OK;
 import EVM_Compile.Result_RETURNS;
 import EVM_Compile.Result_REVERT;
 
+import java.util.Arrays;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
@@ -183,19 +185,59 @@ public class Main {
 		}
 	}
 
+	private static final Option[] OPTIONS = new Option[] {
+			//new Option("sender", true, "The transaction origin."),
+			new Option("input", true, "Input data for the transaction."),
+	};
+
+	public static CommandLine parseCommandLine(String[] args) {
+		// Configure command-line options.
+		Options options = new Options();
+		for(Option o : OPTIONS) { options.addOption(o); }
+		CommandLineParser parser = new BasicParser();
+		// use to read Command Line Arguments
+		HelpFormatter formatter = new HelpFormatter();  // // Use to Format
+		try {
+			return parser.parse(options, args);  //it will parse according to the options and parse option value
+		} catch (ParseException e) {
+			System.out.println(e.getMessage());
+			formatter.printHelp("dafnyevm", options);
+			System.exit(1);
+			return null;
+		}
+	}
+
 	public static void main(String[] args) {
-		BigInteger origin = BigInteger.TEN;
-		byte[] calldata = new byte[0];
+		// Parse command-line arguments.
+		CommandLine cmd = parseCommandLine(args);
+		// Extract transaction sender.
+		BigInteger sender = decodeBigInt(cmd.getOptionValue("sender", "0xdeff"));
+		// Extract call data (if applicable)
+		byte[] calldata = parseHex(cmd.getOptionValue("input", "0x"));
+		// Continue processing remaining arguments.
+		args = cmd.getArgs();
 		// Parse input string
 		byte[] bytes = parseHex(args[0]);
 		// Execute the EVM
-		Outcome r = new Main(new HashMap<>(), bytes).call(origin, calldata);
+		Outcome r = new Main(new HashMap<>(), bytes).call(sender, calldata);
 		//
 		System.out.println("REVERT : " + r.isRevert());
 		System.out.println("RETDATA: " + r.getReturnData());
 		System.out.println("STORAGE: " + r.getStorage());
 		System.out.println("MEMORY : " + r.getMemory());
 		System.out.println("STACK  : " + r.getStack());
+	}
+
+	/**
+	 * Decode a hexidecimal string (possibly starting with "0x") into a BigInteger.
+	 *
+	 * @param hex
+	 * @return
+	 */
+	private static BigInteger decodeBigInt(String hex) {
+		// Skip "0x" if string starts with it.
+		if (hex.startsWith("0x")) { hex = hex.substring(2); }
+		return new BigInteger(hex, 16);
 	}
 
 	/**
@@ -209,6 +251,11 @@ public class Main {
 		if (s.length() % 2 != 0) {
 			throw new IllegalArgumentException("invalid hex string");
 		} else {
+			// Skip "0x" if string starts with it.
+			if(s.startsWith("0x")) {
+				s = s.substring(2);
+			}
+			// Parse the string.
 			final int n = s.length();
 			byte[] data = new byte[n >> 1];
 			for (int i = 0; i < n; i = i + 2) {
