@@ -12,9 +12,9 @@
  * under the License.
  */
 
-include "../utils/NativeTypes.dfy"
-include "../utils/NonNativeTypes.dfy"
-include "./EVMOpcodes.dfy"
+include "../../utils/NativeTypes.dfy"
+include "../../utils/NonNativeTypes.dfy"
+include "../EVMOpcodes.dfy"
 
 import opened NativeTypes
 import opened NonNativeTypes
