@@ -17,7 +17,7 @@ include "../evms/imperative/mini-evm-with-gas.dfy"
 /**
  *   A very simple program manipulating a stack.
  */
-method main1() 
+method main1()  
 {
     var e := new EVM(0, false);
     var a: uint8 := 0x01;

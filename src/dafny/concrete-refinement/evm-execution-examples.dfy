@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../evms/mini-evm-with-gas.dfy"   
+include "../evms/imperative/mini-evm-with-gas.dfy"   
 
 import opened EVMOpcodes
 
