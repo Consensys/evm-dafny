@@ -12,17 +12,20 @@
  * under the License.
  */
 
-include "../../../../../src/dafny/evms/imperative/mini-evm-with-gas.dfy"    
+include "../../../../../src/dafny/evms/imperative/mini-evm-with-gas.dfy"     
+include "../../../../../src/dafny/util/int.dfy"
+
+import opened Int
 
 /**
- *   A very simple program manipulating the stack.
+ *   A very simple program manipulating the stack.  
  */
-method main1(g: uint256) 
-    requires g >= 4
+method main1(g: u256)  
+    requires g >= 4 
 {
-    var e := new EVM(g, true); 
-    var a: uint8 := 0x01;
-    var b : uint8 := 0x02;
+    var e := new EVMI(g, true);  
+    var a: u8 := 0x01;
+    var b : u8 := 0x02;
 
     ghost var g := e.stack;
 
@@ -30,25 +33,25 @@ method main1(g: uint256)
     e.push(b);
     e.add(); 
 
-    assert e.stack[0] == (a + b) as uint256;
+    assert e.stack[0] == (a + b) as u256;
 
     e.pop();
-    assert e.stack == g;
+    assert e.stack == g; 
     assert e.gas >= 0;
 }
 
 /**
  *  A loop.
  */
-method main2(c: uint256, g: uint256) 
+method main2(c: u256, g: u256) 
     requires g as nat >= c as nat * 4
 {
     //  The pre-condition constrains input c
-    assert c as nat * 4 <= MAX_UINT256;
-    var e := new EVM(g, true);
-    var a: uint8 := 0x01;
-    var b : uint8 := 0x02;
-    var count: uint256 := c;
+    assert c as nat * 4 <= MAX_U256;
+    var e := new EVMI(g, true);
+    var a: u8 := 0x01;
+    var b : u8 := 0x02;
+    var count: u256 := c;
 
     ghost var s := e.stack;
 
@@ -69,15 +72,15 @@ method main2(c: uint256, g: uint256)
 /**
  *  Add swap1 instructin and use real semantics for SUB.
  */
-method main4(c: uint8, g: uint256)  
+method main4(c: u8, g: u256)  
     requires g as nat >= 1 + c as nat * 7
 {
-    var e := new EVM(g, true);
-    var a: uint8 := 0x01;
-    var b : uint8 := 0x02;
+    var e := new EVMI(g, true);
+    var a: u8 := 0x01;
+    var b : u8 := 0x02;
 
     e.push(c);
-    ghost var count := c as uint256;
+    ghost var count := c as u256;
 
     assert count == e.stack[0];
 
@@ -106,15 +109,15 @@ method main4(c: uint8, g: uint256)
  *  Test top of stack with LT/GT
  *  instead of count > 0.
  */
-method main5(c: uint8, g: uint256)  
+method main5(c: u8, g: u256)  
     requires g as nat >= 5 + 11 * c as nat
 {
-    var e := new EVM(g, true);
-    var a: uint8 := 0x01;
-    var b : uint8 := 0x02;
+    var e := new EVMI(g, true);
+    var a: u8 := 0x01;
+    var b : u8 := 0x02;
 
     e.push(c);
-    ghost var count := c as uint256;
+    ghost var count := c as u256;
 
     //  stack = [count]
     assert count == e.stack[0];
@@ -182,16 +185,16 @@ method main5(c: uint8, g: uint256)
 /**
  *  Enable gas cost.
  */
-method main6(c: uint8, g: uint256) 
+method main6(c: u8, g: u256) 
     requires g as nat >= 5 + 11 * c as nat  
 {
-    var e := new EVM(g, true);
-    var a: uint8 := 0x01;
-    var b : uint8 := 0x02;
+    var e := new EVMI(g, true);
+    var a: u8 := 0x01;
+    var b : u8 := 0x02;
 
     e.push(c);
     ghost var g := e.stack;
-    ghost var count := c as uint256;
+    ghost var count := c as u256;
 
     //  stack = [count]
     assert count == e.stack[0];
@@ -259,8 +262,8 @@ method main6(c: uint8, g: uint256)
 /**
  *  Compute c in a loop.
  */
-method foo(c: uint8) returns (i: uint256)
-    ensures i == fooSpec(c as uint256) 
+method foo(c: u8) returns (i: u256)
+    ensures i == fooSpec(c as u256) 
 {
     i := 0;
     var c' := c;
@@ -271,24 +274,24 @@ method foo(c: uint8) returns (i: uint256)
         i := i + 1;
         c' := c' - 1;
     }
-    assert i == c as uint256;
+    assert i == c as u256;
 
 }
 
 /**
  *  Compute c in a loop.
  */
-method foo2(c: uint8, g: uint256) returns (ghost i: uint256)
+method foo2(c: u8, g: u256) returns (ghost i: u256)
     requires g as nat >= 2 + 7 * c as nat  
-    ensures i == c as uint256
+    ensures i == c as u256
 {
     i := 0;
-    ghost var c' := c as uint256;
+    ghost var c' := c as u256;
 
-    var e := new EVM(g, true);
+    var e := new EVMI(g, true);
 
     e.push(c);
-    assert e.stack[0] == c as uint256 == c';
+    assert e.stack[0] == c as u256 == c';
 
     //  push i
     assert e.gas >= 1;
@@ -324,19 +327,19 @@ method foo2(c: uint8, g: uint256) returns (ghost i: uint256)
 /**
  *  Compute c in a loop.
  */
-method foo3(c: uint8, e: EVM) 
+method foo3(c: u8, e: EVMI) 
     requires !e.checkCode
     requires e.checkGas && e.gas as nat >= 2 + 7 * c as nat 
-    ensures |e.stack| > 0 && e.stack[0] == fooSpec(c as uint256) as uint256
+    ensures |e.stack| > 0 && e.stack[0] == fooSpec(c as u256) as u256
 
     modifies e
 {
     //  original algorithm variables become verification/ghost variable 
     ghost var i := 0;
-    ghost var c' := c as uint256;
+    ghost var c' := c as u256;
 
     e.push(c);
-    assert e.stack[0] == c as uint256 == c';
+    assert e.stack[0] == c as u256 == c';
 
     //  push i
     e.push(0x0);
@@ -374,7 +377,7 @@ method foo3(c: uint8, e: EVM)
 // method foo4(e: EVM) 
 //     requires |e.stack| > 0 
 //     requires e.checkGas && e.gas as nat >= 2 + 10 * e.stack[0] as nat 
-//     ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0]) as uint256
+//     ensures |e.stack| > 0 && e.stack[0] == fooSpec(e.stack[0]) as u256
 //     ensures e.stack[1..] == old(e.stack[1..])
 
 //     modifies e
@@ -435,7 +438,7 @@ method foo3(c: uint8, e: EVM)
 //     e.pop();
 // }
 
-lemma foobar(xa: seq<uint256>)
+lemma foobar(xa: seq<u256>)
     requires |xa| > 0
     ensures old(xa)[1..] == old(xa[1..])
 {
@@ -445,12 +448,12 @@ lemma foobar(xa: seq<uint256>)
 /**
  *  Functional spec of foo
  */
- function fooSpec(c: uint256) : uint256
+ function fooSpec(c: u256) : u256
  {
     c
  }
 
-method main101(e: EVM, e2: EVM) 
+method main101(e: EVMI, e2: EVMI) 
     // requires |e.stack| > 0  
     requires e.gas as nat >= 3
     requires !e.checkCode
@@ -462,7 +465,7 @@ method main101(e: EVM, e2: EVM)
     e.push(0x01);
     e.push(0x02);
     e.add();
-
+ 
     
     assert e.stack[0] == 3;
 }
