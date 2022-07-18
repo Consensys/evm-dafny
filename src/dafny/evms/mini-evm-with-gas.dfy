@@ -20,10 +20,12 @@ import opened NativeTypes
 import opened NonNativeTypes
 import opened EVMOpcodes
 
-/** The type for the EVM stack. 
+/** An OO version of the EVM.
  * 
  *  @note   The stack can contain at most 1024 items which is not captured
  *          by this type definition. 
+ *  @note   This EVM supports interpretation of EVM-IR (using while loops, if-then-else)
+ *          as well as raw bytecode. 
  */
 type EVMStack = seq<uint256>
 
@@ -33,13 +35,13 @@ type EVMStack = seq<uint256>
  */
 class EVM {
 
-    /** The stack of the VM. */
+    /** The stack of this VM. */
     var stack: EVMStack
 
-    /** The gas left in the EVM.  */
+    /** The gas left in this EVM.  */
     var gas: uint256
 
-    /** The program counter. */
+    /** The program counter, if interpreting bytecode. */
     var pc: nat 
 
     /** Enable/disable gas check. */
@@ -56,6 +58,8 @@ class EVM {
      *  @param  g       Initial gas in the EVM.add
      *  @param  check   Whether the machine requires gas or not.
      *  @param  c       The bytecode.
+     *  @param  checkB  Whether to check the bytecode (useful for refinement proofs).
+     *
      *
      *  @note           If bytecode not empty, every execution of an instruction
      *                  is checked against the bytecode.
@@ -63,12 +67,12 @@ class EVM {
      *                  this.push(v) can only be executed if current pc is such that code[pc] is PUSH1
      *                  and code[pc + 1] == v 
      */
-    constructor (g: uint256, check: bool, c: seq<uint8> := []) 
+    constructor (g: uint256, check: bool, c: seq<uint8> := [], check': bool := false) 
         ensures stack == []
         ensures gas == g 
         ensures checkGas == check
         ensures pc == 0
-        ensures checkCode == (|c| > 0)
+        ensures checkCode == check'
         ensures code == c
     {
         pc := 0;
@@ -76,12 +80,13 @@ class EVM {
         gas := g;
         checkGas := check;
         code := c;
-        checkCode := |c| > 0;
+        checkCode := check';
     }
 
-    //  The semantics of the following instructions are
-    //  defined by their pre- and post-conditions.
-
+    //  The semantics of the following instructions are defined by their pre- and post-conditions.
+    //  One pre-condition checks for gas availability and can be disabled by turning the
+    //  `checkGas` flag off. The code check can also be turned off.
+    
     /** 
      *  PUSH1 opcode.
      *
@@ -169,27 +174,6 @@ class EVM {
     }
 
     /**
-     *  SUB opcode. compute stack[1] - stack[0], which is not the semantics
-     *  of SUB that is stack[0] - stack[1]
-     */
-    // method subR()  
-    //     requires |stack| >= 2
-    //     requires stack[1] as nat - stack[0] as nat >= 0
-    //     requires !checkGas || gas >= 1
-
-    //     ensures |stack| == |old(stack)| - 1
-    //     ensures stack[0] == old(stack)[1] - old(stack)[0]
-    //     ensures stack[1..] == old(stack)[2..]
-    //     ensures !checkGas || gas == old(gas) - 1
-
-    //     modifies `stack, `gas
-    //     // modifies if checkGas then {`stack, `gas} else {this`stack} 
-    // {
-    //     stack := [stack[1] - stack[0]] + stack[2..];
-    //     gas := gas - (if checkGas then 1 else 0);
-    // }
-
-    /**
      *  SUB opcode. compute stack[0] - stack[1], which is the
      *  real semantics of sub 
      *
@@ -214,6 +198,7 @@ class EVM {
         gas := gas - (if checkGas then 1 else 0);
         pc := pc + 1;
     }
+
     /**
      *  DUP1 opcode. Duplicate the second element of the stack.
      */
@@ -303,7 +288,7 @@ class EVM {
     /**
      *  JUMPI opcode.
      *  JUMPI uses the top of the stack to determine where to branch.
-     *  JUMPI destination condition
+     *  Siganture is: JUMPI destination condition
      */
     method jumpi()  
         requires |stack| >= 2
@@ -322,6 +307,10 @@ class EVM {
         gas := gas - (if checkGas then 1 else 0);
     }
 
+    /**
+     *  JUMP instruction.
+     *  Jumps to the instruction `a` where `a` is the value at the top of the stack.
+     */
     method jump()  
         requires |stack| >= 1
         requires !checkGas || gas >= 1
@@ -339,6 +328,9 @@ class EVM {
         gas := gas - (if checkGas then 1 else 0);
     }
 
+    /**
+     *  Replaces the top of stack `t` by the status `t == 0`.
+     */
     method iszero()  
         requires |stack| >= 1
         requires !checkGas || gas >= 1
@@ -357,56 +349,21 @@ class EVM {
         gas := gas - (if checkGas then 1 else 0);
     }
 
+    /**
+     *  Terminates the program.
+     *  @todo   Check that this is what STOP does. 
+     */
     method stop()  
-        // requires |stack| >= 1
         requires !checkGas || gas >= 1
         requires !checkCode || (pc < |code| && code[pc] == STOP) 
 
         ensures |stack| == |old(stack)|
-        // ensures stack == [if old(stack[0]) == 0 then 1 else 0] + old(stack[1..])
         ensures !checkGas || gas == old(gas) - 1
-        ensures pc == old(pc) + 1 
-        // ensures stack[0] > 0 <==> old(stack[0]) == 0
+        // ensures pc == old(pc) + 1 
 
         modifies this
     {
-        pc := pc + 1 ;
-        // stack := [if stack[0] == 0 then 1 else 0] + stack[1..];
         gas := gas - (if checkGas then 1 else 0);
     }
-
-    //  Macros
-
-    /** Increment a counter. 
-     *  
-     *  @param  i   An index 0 = top.
-     *  @param  v   Value to add to stack[i]
-     *
-     *  @returns    
-     *  Counter must be one of the last 16 items pushed on the stack.
-     *  
-     */
-    // method incr(i: nat, v: uint256)
-    //     requires 0 <= i <= 15
-    //     requires !checkGas || gas >= 3
-    //     requires |stack| > i as nat
-    //     requires stack[i] as nat + v as nat <= MAX_UINT256 
-    //     requires !checkCode
-    //     ensures |stack| == |old(stack)| + 1
-    //     ensures stack == [old(stack[i]) + v] + old(stack)
-    //     ensures stack[1..] == old(stack)
-    //     ensures !checkGas || gas == old(gas) - 3
-
-    //     modifies this
-    // {
-    //     //  Stack is [x_0, x_1, ..., x _i] + xs
-    //     //  put element i on top of stack
-    //     dup(i);
-    //     //  Stack is [x_i, x_0, x_1, ..., x _i] + xs
-    //     push(v);
-    //     // Stack is [v, x_i, x_0, x_1, ..., x _i] + xs
-    //     add();
-    //     // Stack is [x_i + v, x_0, x_1, ..., x _i] + xs
-    // }
 
 }

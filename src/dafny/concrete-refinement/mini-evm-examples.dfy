@@ -61,7 +61,7 @@ method main2(c: uint256)
 }
 
 /**
- *  Add swap1 instructin and use real semantics for SUB.
+ *  Add swap1 instruction and use real semantics for SUB.
  */
 method main4(c: uint8)  
 {
