@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../utils/NativeTypes.dfy" 
+include "../util/NativeTypes.dfy" 
 
 /** Opcodes from David's branch. */
 module EVMOpcodes {
