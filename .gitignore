@@ -74,3 +74,4 @@ arbitrum-dafny.code-workspace
 src/dafny/dafny-evm.code-workspace
 src/dafny/refinement/cfg1.pdf
 src/dafny/refinement/cfg.dot
+dafny-evm.code-workspace
