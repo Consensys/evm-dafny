@@ -164,5 +164,4 @@ public class Bytecodes {
 	public static final int REVERT = 0xfd;
 	public static final int INVALID = 0xfe;
 	public static final int SELFDESTRUCT = 0xff;
-
 }
