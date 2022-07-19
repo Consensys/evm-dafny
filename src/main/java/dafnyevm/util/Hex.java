@@ -67,8 +67,18 @@ public class Hex {
 		String r = "";
 		for(int i=0;i!=bytes.length;++i) {
 			int b = bytes[i] & 0xff;
-			r = r + String.format("%02X",b);
+			r = r + String.format("%02x",b);
 		}
-		return r;
+		return "0x" + r;
+	}
+
+	/**
+	 * Convert a biginteger into a hexadecimal string.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static String toHexString(BigInteger i) {
+		return "0x" + i.toString(16);
 	}
 }

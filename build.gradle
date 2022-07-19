@@ -73,6 +73,7 @@ sourceSets {
 // In this section you declare the dependencies for your production and test code
 dependencies {
     implementation("commons-cli:commons-cli:1.5.0")
+    implementation("org.json:org.json:chargebee-1.0")
     implementation files('lib/DafnyRuntime.jar')
     //
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")

@@ -15,7 +15,7 @@ package dafnyevm;
 
 import org.apache.commons.cli.*;
 
-import dafnyevm.util.DebugTracer;
+import dafnyevm.util.Tracers;
 import dafnyevm.util.Hex;
 
 import java.math.BigInteger;
@@ -26,14 +26,15 @@ public class Main {
 	private static final Option[] OPTIONS = new Option[] {
 			new Option("input", true, "Input data for the transaction."),
 			new Option("sender", true, "The transaction origin."),
-			new Option("trace", false, "Generate trace output")
+			new Option("debug", false, "Generate trace output"),
+			new Option("json", false, "Generate JSON output conforming to EIP-3155")
 	};
 
 	public static CommandLine parseCommandLine(String[] args) {
 		// Configure command-line options.
 		Options options = new Options();
 		for(Option o : OPTIONS) { options.addOption(o); }
-		CommandLineParser parser = new BasicParser();
+		CommandLineParser parser = new DefaultParser();
 		// use to read Command Line Arguments
 		HelpFormatter formatter = new HelpFormatter();  // // Use to Format
 		try {
@@ -60,16 +61,12 @@ public class Main {
 		// Construct EVM
 		DafnyEvm evm = new DafnyEvm(new HashMap<>(), bytes);
 		//
-		if(cmd.hasOption("trace")) {
-			evm.setTracer(new DebugTracer());
+		if(cmd.hasOption("json")) {
+			evm.setTracer(new Tracers.JSON());
+		} else if(cmd.hasOption("debug")) {
+			evm.setTracer(new Tracers.Debug());
 		}
 		// Execute the EVM
-		DafnyEvm.State r = evm.call(sender, calldata);
-		//
-		System.out.println("REVERT : " + r.isRevert());
-		System.out.println("RETDATA: " + r.getReturnData());
-		System.out.println("STORAGE: " + r.getStorage());
-		System.out.println("MEMORY : " + r.getMemory());
-		System.out.println("STACK  : " + r.getStack());
+		evm.call(sender, calldata);
 	}
 }
