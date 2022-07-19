@@ -248,18 +248,18 @@ module EVM {
 	const SELFDESTRUCT : u8 := 0xff;
 
   /**
-   * Captures the possible outcomes from executing a bytecode.  Normal execution is indicated
-   * by OK (with the updated machine state).  An exceptional halt is indicated by INVALID
+   * Captures the possible state of the machine.  Normal execution is indicated
+   * by OK (with the current machine data).  An exceptional halt is indicated by INVALID
    * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
    * with return data are indicated accordingly (along with any gas returned).
    */
-  datatype Result = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
+  datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
 
   /**
-   * Execute a single step of the EVM.  This either results in a valid EVM (i.e. so execution
+   * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
    * can continue), or some form of halt (e.g. exceptional, revert, etc).
    */
-  function method execute(vm:T) : Result {
+  function method execute(vm:T) : State {
     // Decode
     var (vm',opcode) := decode(vm);
     // 0x00s: STOP & Arithmetic
@@ -353,375 +353,375 @@ module EVM {
     //else if opcode == SELFDESTRUCT then evalSELFDESTRUCT(vm')
     else
       // Invalid opcode
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Evaluate the STOP bytecode.  This halts the machine without
    * return output data.
    */
-  function method evalSTOP(vm:T) : Result {
-    Result.RETURNS(gas:=vm.gas,data:=[])
+  function method evalSTOP(vm:T) : State {
+    State.RETURNS(gas:=vm.gas,data:=[])
   }
 
   /**
    * Unsigned integer addition with modulo arithmetic.
    */
-  function method evalADD(vm:T) : Result {
+  function method evalADD(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var res := (lhs + rhs) % TWO_256;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      State.OK(push(pop(pop(vm)),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unsigned integer multiplication with modulo arithmetic.
    */
-  function method evalMUL(vm:T) : Result {
+  function method evalMUL(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var res := (lhs * rhs) % TWO_256;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      State.OK(push(pop(pop(vm)),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unsigned integer subtraction with modulo arithmetic.
    */
-  function method evalSUB(vm:T) : Result {
+  function method evalSUB(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var res := (lhs - rhs) % TWO_256;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      State.OK(push(pop(pop(vm)),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unsigned integer division.
    */
-  function method evalDIV(vm:T) : Result {
+  function method evalDIV(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       var res := div(lhs,rhs) as u256;
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Signed integer division.
    */
-  function method evalSDIV(vm:T) : Result {
+  function method evalSDIV(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       var res := Word.fromI256(sdiv(lhs,rhs));
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * (Unsigned) Modulo remainder.
    */
-  function method evalMOD(vm:T) : Result {
+  function method evalMOD(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       var res := mod(lhs,rhs) as u256;
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Signed integer remainder:
    */
-  function method evalSMOD(vm:T) : Result {
+  function method evalSMOD(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       var res := Word.fromI256(smod(lhs,rhs));
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unsigned integer modulo addition.
    */
-  function method evalADDMOD(vm:T) : Result {
+  function method evalADDMOD(vm:T) : State {
     if operands(vm) >= 3
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var rem := peek(vm,2) as int;
       var res := if rem == 0 then 0 else(lhs + rhs) % rem;
-      Result.OK(push(pop(pop(pop(vm))),res as u256))
+      State.OK(push(pop(pop(pop(vm))),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unsigned integer modulo multiplication.
    */
-  function method evalMULMOD(vm:T) : Result {
+  function method evalMULMOD(vm:T) : State {
     if operands(vm) >= 3
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var rem := peek(vm,2) as int;
       var res := if rem == 0 then 0 else(lhs * rhs) % rem;
-      Result.OK(push(pop(pop(pop(vm))),res as u256))
+      State.OK(push(pop(pop(pop(vm))),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * (Unsigned) less-than comparison.
    */
-  function method evalLT(vm:T) : Result {
+  function method evalLT(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       if lhs < rhs
         then
-        Result.OK(push(pop(pop(vm)),1))
+        State.OK(push(pop(pop(vm)),1))
       else
-        Result.OK(push(pop(pop(vm)),0))
+        State.OK(push(pop(pop(vm)),0))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * (Unsigned) greater-than comparison.
    */
-  function method evalGT(vm:T) : Result {
+  function method evalGT(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       if lhs > rhs
         then
-        Result.OK(push(pop(pop(vm)),1))
+        State.OK(push(pop(pop(vm)),1))
       else
-        Result.OK(push(pop(pop(vm)),0))
+        State.OK(push(pop(pop(vm)),0))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Signed less-than comparison.
    */
-  function method evalSLT(vm:T) : Result {
+  function method evalSLT(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       if lhs < rhs
         then
-        Result.OK(push(pop(pop(vm)),1))
+        State.OK(push(pop(pop(vm)),1))
       else
-        Result.OK(push(pop(pop(vm)),0))
+        State.OK(push(pop(pop(vm)),0))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Signed greater-than comparison.
    */
-  function method evalSGT(vm:T) : Result {
+  function method evalSGT(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       if lhs > rhs
         then
-        Result.OK(push(pop(pop(vm)),1))
+        State.OK(push(pop(pop(vm)),1))
       else
-        Result.OK(push(pop(pop(vm)),0))
+        State.OK(push(pop(pop(vm)),0))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Equality comparison.
    */
-  function method evalEQ(vm:T) : Result {
+  function method evalEQ(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       if lhs == rhs
         then
-        Result.OK(push(pop(pop(vm)),1))
+        State.OK(push(pop(pop(vm)),1))
       else
-        Result.OK(push(pop(pop(vm)),0))
+        State.OK(push(pop(pop(vm)),0))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Simple not operator.
    */
-  function method evalISZERO(vm:T) : Result {
+  function method evalISZERO(vm:T) : State {
     if operands(vm) >= 1
       then
       var mhs := peek(vm,0);
       if mhs == 0
         then
-        Result.OK(push(pop(vm),1))
+        State.OK(push(pop(vm),1))
       else
-        Result.OK(push(pop(vm),0))
+        State.OK(push(pop(vm),0))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Bitwise AND operation.
    */
-  function method evalAND(vm:T) : Result {
+  function method evalAND(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as bv256;
       var rhs := peek(vm,1) as bv256;
       var res := (lhs & rhs) as u256;
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Bitwise OR operation.
    */
-  function method {:verify false} evalOR(vm:T) : Result {
+  function method {:verify false} evalOR(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as bv256;
       var rhs := peek(vm,1) as bv256;
       var res := (lhs | rhs) as u256;
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Bitwise XOR operation.
    */
-  function method {:verify false} evalXOR(vm:T) : Result {
+  function method {:verify false} evalXOR(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as bv256;
       var rhs := peek(vm,1) as bv256;
       var res := (lhs ^ rhs) as u256;
-      Result.OK(push(pop(pop(vm)),res))
+      State.OK(push(pop(pop(vm)),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Bitwise NOT operation.
    */
-  function method evalNOT(vm:T) : Result {
+  function method evalNOT(vm:T) : State {
     if operands(vm) >= 1
       then
       var mhs := peek(vm,0) as bv256;
       var res := (!mhs) as u256;
-      Result.OK(push(pop(vm),res))
+      State.OK(push(pop(vm),res))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Retrieve single byte from word.
    */
-  function method evalBYTE(vm:T) : Result {
+  function method evalBYTE(vm:T) : State {
     if operands(vm) >= 2
       then
       var val := peek(vm,1);
       var k := peek(vm,0);
       var res := if k < 32 then U256.nth_u8(val,k as int) else 0;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      State.OK(push(pop(pop(vm)),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Left shift operation.
    */
-  function method evalSHL(vm:T) : Result {
+  function method evalSHL(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1) as bv256;
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs << lhs) else 0;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      State.OK(push(pop(pop(vm)),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Right shift operation.
    */
-  function method {:verify false} evalSHR(vm:T) : Result {
+  function method {:verify false} evalSHR(vm:T) : State {
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1) as bv256;
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs >> lhs) else 0;
-      Result.OK(push(pop(pop(vm)),res as u256))
+      State.OK(push(pop(pop(vm)),res as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Get input data from the current environment.
    */
-  function method evalCALLDATALOAD(vm:T) : Result {
+  function method evalCALLDATALOAD(vm:T) : State {
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
       var val := if loc >= Context.data_size(vm.context) then 0
         else Context.data_read(vm.context,loc);
-      Result.OK(push(pop(vm),val))
+      State.OK(push(pop(vm),val))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Get size of input data in current environment.
    */
-  function method evalCALLDATASIZE(vm:T) : Result {
+  function method evalCALLDATASIZE(vm:T) : State {
     if capacity(vm) >= 1
       then
       var len := |vm.context.calldata|;
-      Result.OK(push(vm,len as u256))
+      State.OK(push(vm,len as u256))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Get size of input data in current environment.
    */
-  function method evalCALLDATACOPY(vm:T) : Result {
+  function method evalCALLDATACOPY(vm:T) : State {
     if operands(vm) >= 3
       then
       var m_loc := peek(vm,0);
@@ -738,28 +738,28 @@ module EVM {
         // Sanity check
         assert |data| == (len as int);
         // Copy slice into memory
-        Result.OK(copy(pop(pop(pop(vm))),m_loc,data))
+        State.OK(copy(pop(pop(pop(vm))),m_loc,data))
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Pop word from stack.
    */
-  function method evalPOP(vm:T) : Result {
+  function method evalPOP(vm:T) : State {
     if operands(vm) >= 1
     then
-      Result.OK(pop(vm))
+      State.OK(pop(vm))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Get word from memory.
    */
-  function method evalMLOAD(vm:T) : Result {
+  function method evalMLOAD(vm:T) : State {
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
@@ -771,18 +771,18 @@ module EVM {
         then
         var val := read(vm,loc);
         // Write big endian order
-        Result.OK(push(pop(vm),val))
+        State.OK(push(pop(vm),val))
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
 
   /**
    * Save word to memory.
    */
-  function method evalMSTORE(vm:T) : Result {
+  function method evalMSTORE(vm:T) : State {
     if operands(vm) >= 2
       then
       var loc := peek(vm,0);
@@ -794,17 +794,17 @@ module EVM {
       if (loc as int) + 31 <= MAX_U256
         then
         // Write big endian order
-        Result.OK(write(pop(pop(vm)),loc,val))
+        State.OK(write(pop(pop(vm)),loc,val))
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Save byte to memory.
    */
-  function method evalMSTORE8(vm:T) : Result {
+  function method evalMSTORE8(vm:T) : State {
     if operands(vm) >= 2
       then
       var loc := peek(vm,0);
@@ -812,151 +812,151 @@ module EVM {
       if (loc as int) < MAX_U256
         then
         // Write byte
-        Result.OK(write8(pop(pop(vm)),loc,val))
+        State.OK(write8(pop(pop(vm)),loc,val))
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Get word from storage.
    */
-  function method evalSLOAD(vm:T) : Result {
+  function method evalSLOAD(vm:T) : State {
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
       var val := load(vm,loc);
       // Store word
-      Result.OK(push(pop(vm),val))
+      State.OK(push(pop(vm),val))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Save word to storage.
    */
-  function method evalSSTORE(vm:T) : Result {
+  function method evalSSTORE(vm:T) : State {
     if operands(vm) >= 2
       then
       var loc := peek(vm,0);
       var val := peek(vm,1);
       // Store word
-      Result.OK(store(pop(pop(vm)),loc,val))
+      State.OK(store(pop(pop(vm)),loc,val))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unconditional branch.
    */
-  function method evalJUMP(vm:T) : Result {
+  function method evalJUMP(vm:T) : State {
     if operands(vm) >= 1
       then
       var pc := peek(vm,0);
       // Check valid branch target
       if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
       then
-        Result.OK(goto(pop(vm),pc))
+        State.OK(goto(pop(vm),pc))
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Unconditional branch.
    */
-  function method evalJUMPI(vm:T) : Result {
+  function method evalJUMPI(vm:T) : State {
     if operands(vm) >= 2
       then
       var pc := peek(vm,0);
       var val := peek(vm,1);
       // Check branch taken or not
-      if val == 0 then Result.OK(pop(pop(vm)))
+      if val == 0 then State.OK(pop(pop(vm)))
       // Check valid branch target
       else if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
       then
-        Result.OK(goto(pop(pop(vm)),pc))
+        State.OK(goto(pop(pop(vm)),pc))
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Gets value of program counter prior to this instruction being executed.
    */
-  function method evalPC(vm:T) : Result
+  function method evalPC(vm:T) : State
   requires vm.pc > 0 {
     if capacity(vm) >= 1
     then
-      Result.OK(push(vm, vm.pc-1))
+      State.OK(push(vm, vm.pc-1))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Marks a valid destination for a jump, but otherwise has no effect
    * on machine state.
    */
-  function method evalJUMPDEST(vm:T) : Result {
-    Result.OK(vm)
+  function method evalJUMPDEST(vm:T) : State {
+    State.OK(vm)
   }
 
   /**
    * Push one byte onto stack.
    */
-  function method evalPUSH1(vm:T) : Result {
+  function method evalPUSH1(vm:T) : State {
     if opcode_operands(vm) >= 1 && capacity(vm) >= 1
       then
       var k := Code.decode_u8(vm.code,vm.pc);
-      Result.OK(goto(push(vm,k as u256),vm.pc+1))
+      State.OK(goto(push(vm,k as u256),vm.pc+1))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Push two bytes onto stack.
    */
-  function method evalPUSH2(vm:T) : Result {
+  function method evalPUSH2(vm:T) : State {
     if opcode_operands(vm) >= 2 && capacity(vm) >= 1
       then
       var k1 := Code.decode_u8(vm.code,vm.pc) as u256;
       var k2 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
       var k := (k1 * 256) + k2;
-      Result.OK(goto(push(vm,k),vm.pc+2))
+      State.OK(goto(push(vm,k),vm.pc+2))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Duplicate item on stack.
    */
-  function method evalDUP(vm:T, k: nat) : Result {
+  function method evalDUP(vm:T, k: nat) : State {
     if operands(vm) > k && capacity(vm) >= 1
       then
       var kth := peek(vm,k);
-      Result.OK(push(vm,kth))
+      State.OK(push(vm,kth))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Swap two items on the stack
    */
-  function method evalSWAP(vm:T, k: nat) : Result {
+  function method evalSWAP(vm:T, k: nat) : State {
     if operands(vm) > k
       then
-      Result.OK(swap(vm,k))
+      State.OK(swap(vm,k))
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Halt execution returning output data.
    */
-  function method evalRETURN(vm:T) : Result {
+  function method evalRETURN(vm:T) : State {
     if operands(vm) >= 2
       then
       // Determine amount of data to return.
@@ -968,17 +968,17 @@ module EVM {
         // Read out that data.
         var data := Memory.slice(vm.memory, start as u256, len);
         // Done
-        Result.RETURNS(gas:=vm.gas,data:=data)
+        State.RETURNS(gas:=vm.gas,data:=data)
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   /**
    * Revert execution returning output data.
    */
-  function method evalREVERT(vm:T) : Result {
+  function method evalREVERT(vm:T) : State {
     if operands(vm) >= 2
       then
       // Determine amount of data to return.
@@ -990,11 +990,11 @@ module EVM {
         // Read out that data.
         var data := Memory.slice(vm.memory, start as u256, len);
         // Done
-        Result.REVERT(gas:=vm.gas,data:=data)
+        State.REVERT(gas:=vm.gas,data:=data)
       else
-        Result.INVALID
+        State.INVALID
     else
-      Result.INVALID
+      State.INVALID
   }
 
   // =============================================================================
