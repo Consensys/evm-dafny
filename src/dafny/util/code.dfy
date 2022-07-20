@@ -41,10 +41,18 @@ module Code {
    */
   function method size(c:T) : u256 { |c.contents| as u256 }
 
-  function method decode_u8(c:T, pc:u256) : u8
+  function method decode_u8(c:T, address:nat) : u8
     // Decode position must be valid.
-    requires pc < size(c) {
+    requires address < |c.contents| {
       // Read word at given location
-      c.contents[pc]
+      c.contents[address]
+  }
+
+  function method decode_u16(c:T, address:nat) : u16
+    // Decode position must be valid.
+    requires address+1 < |c.contents| {
+      var k1 := decode_u8(c,address) as u16;
+      var k2 := decode_u8(c,address+1) as u16;
+      (k1 * 256) + k2
   }
 }
