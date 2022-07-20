@@ -11,7 +11,8 @@ method test_01(x: u8)
 requires x > 1
 {
   // Initialise EVM
-  var vm := EVM.create(map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  var tx := Context.create(0xabcd,[]);
+  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
   // PUSH1 x
   vm := unwrap(EVM.execute(vm));
   // PUSH1 0x2

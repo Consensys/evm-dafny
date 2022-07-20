@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dafny.DafnySequence;
-import dafnyevm.DafnyEvm.State;
+import dafnyevm.DafnyEvm.SnapShot;
 import dafnyevm.util.Hex;
 
 import static dafnyevm.util.Bytecodes.*;
@@ -1019,7 +1019,7 @@ public class Tests {
 	private byte[] call(BigInteger from, byte[] calldata, byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		State r = new DafnyEvm(new HashMap<>(), code).call(from, calldata);
+		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(from, calldata);
 		// Check we haven't reverted
 		assertFalse(r.isRevert());
 		// Check something was returned
@@ -1067,7 +1067,7 @@ public class Tests {
 	private byte[] revertingCall(byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		State r = new DafnyEvm(new HashMap<>(), code).call(BigInteger.TEN, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(BigInteger.TEN, new byte[0]);
 		// Check we have reverted
 		assertTrue(r.isRevert());
 		// Check something was returned
@@ -1094,7 +1094,7 @@ public class Tests {
 	 */
 	private void invalidCall(int[] words) {
 		// Execute the EVM
-		State r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, new byte[0]);
 		// Check expected outcome
 		assert r.isInvalid();
 	}
@@ -1107,7 +1107,7 @@ public class Tests {
 	private void insufficientGasCall(int[] words) {
 		System.out.println("Excuting: " + Hex.toHexString(toBytes(words)));
 		// Execute the EVM
-		State r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, new byte[0]);
 		// FIXME: better reporting for out-of-gas.
 		assert(r.getReturnData() == null);
 	}
