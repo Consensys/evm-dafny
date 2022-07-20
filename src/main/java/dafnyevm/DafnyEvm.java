@@ -85,66 +85,34 @@ public class DafnyEvm {
 		// Create call context.
 		Context_Compile.Raw ctx = Context_Compile.__default.create(from, DafnySequence.fromBytes(calldata));
 		// Create the EVM
-		EVM_Compile.T evm = create(ctx, storage, BigInteger.ONE, code);
+		State r = create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
-		State r = execute(new State_OK(evm));
+		r = execute(r);
 		// Continue whilst the EVM is happy.
 		while(r instanceof State_OK) {
-			tracer.step(((State_OK)r).evm);
+			tracer.step(r);
 			r = execute(r);
 		}
 		// Final step
-		tracer.step(evm);
-		// Decide what happened
-		if(r instanceof State_RETURNS) {
-			State_RETURNS rret = (State_RETURNS) r;
-			tracer.end(rret.data,BigInteger.ZERO);
-			return new SnapShot(false,rret.data,rret.gas,evm);
-		} else if(r instanceof State_REVERT) {
-			State_REVERT rrev = (State_REVERT) r;
-			tracer.revert(rrev.data,BigInteger.ZERO);
-			return new SnapShot(true,rrev.data,rrev.gas,evm);
-		} else {
-			// Sanity check is invalid
-			State_INVALID rinv = (State_INVALID) r;
-			tracer.exception(BigInteger.ZERO);
-			return new SnapShot(false,null,null,evm);
-		}
+		tracer.step(r);
+		// Done
+		return new SnapShot(r);
 	}
 
 	/**
-	 * A simple class capturing the output of an execution, including the full
-	 * machine state.
+	 * A snapshot of the current EVM state. This is effectively a wrapper around the
+	 * <code>EVM.State</code> structure which exists on the Dafny side.
 	 *
 	 * @author David J. Pearce
 	 *
 	 */
 	public static class SnapShot {
 		/**
-		 * Indicates if a revert occurred.
-		 */
-		private final boolean revert;
-		/**
-		 * Return data (which is null if none).
-		 */
-		private final DafnySequence<? extends Byte> data;
-		/**
-		 * Gas returned (null if none).
-		 */
-		private final BigInteger gas;
-		/**
 		 * State of the EVM (so we can query it).
 		 */
-		private final EVM_Compile.T state;
+		private final State state;
 
-		public SnapShot(EVM_Compile.T state) {
-			this(false,null,null,state);
-		}
-
-		public SnapShot(boolean revert, DafnySequence<? extends Byte> data, BigInteger gas, EVM_Compile.T state) {
-			this.revert = revert;
-			this.data = data;
-			this.gas = gas;
+		public SnapShot(State state) {
 			this.state = state;
 		}
 
@@ -154,7 +122,7 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public boolean isRevert() {
-			return revert;
+			return state instanceof State_REVERT;
 		}
 
 		/**
@@ -163,14 +131,15 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public boolean isInvalid() {
-			return data == null;
+			return state instanceof State_INVALID;
 		}
 
 		/**
 		 * Get current <code>pc</code> value.
 		 */
 		public BigInteger getPC() {
-			return state.pc;
+			State_OK sok = (State_OK) state;
+			return sok.evm.pc;
 		}
 
 		/**
@@ -179,7 +148,8 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public int getOpcode() {
-			return state.code.contents.select(state.pc).intValue() & 0xff;
+			State_OK sok = (State_OK) state;
+			return sok.evm.code.contents.select(sok.evm.pc).intValue() & 0xff;
 		}
 
 		/**
@@ -188,7 +158,8 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public BigInteger getRemainingGas() {
-			return state.gas;
+			State_OK sok = (State_OK) state;
+			return sok.evm.gas;
 		}
 
 		/**
@@ -198,7 +169,15 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public DafnySequence<? extends Byte> getReturnData() {
-			return data;
+			if(state instanceof State_RETURNS) {
+				State_RETURNS sr = (State_RETURNS) state;
+				return sr.data;
+			} else if(state instanceof State_REVERT) {
+				State_REVERT sr = (State_REVERT) state;
+				return sr.data;
+			} else{
+				return null;
+			}
 		}
 
 		/**
@@ -207,7 +186,8 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public DafnyMap<? extends BigInteger,? extends BigInteger> getStorage() {
-			return state.storage.contents;
+			State_OK sok = (State_OK) state;
+			return sok.evm.storage.contents;
 		}
 
 		/**
@@ -216,23 +196,27 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public byte[] getMemory() {
+			State_OK sok = (State_OK) state;
+			DafnyMap<? extends BigInteger, ? extends Byte> memory = sok.evm.memory.contents;
 			// FIXME: this is something of a hack for now due to the way in which I have
 			// implemented memory (i.e. as a map). This should be corrected at some point to
 			// be a sequence.
 			byte[] bytes = new byte[getMemorySize()];
 			//
-			DafnySet<? extends BigInteger> keys =state.memory.contents.keySet();
+			DafnySet<? extends BigInteger> keys = memory.keySet();
 			// Determine largest address in use!
 			for (BigInteger key : keys.Elements()) {
 				int address = key.intValueExact();
-				bytes[address] = state.memory.contents.get(key);
+				bytes[address] = memory.get(key);
 			}
 			// Done
 			return bytes;
 		}
 
 		public int getMemorySize() {
-			DafnySet<? extends BigInteger> keys =state.memory.contents.keySet();
+			State_OK sok = (State_OK) state;
+			DafnyMap<? extends BigInteger, ? extends Byte> memory = sok.evm.memory.contents;
+			DafnySet<? extends BigInteger> keys = memory.keySet();
 			BigInteger max = BigInteger.ZERO;
 			// Determine largest address in use!
 			for (BigInteger addr : keys.Elements()) {
@@ -251,16 +235,8 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public DafnySequence<? extends BigInteger> getStack() {
-			return state.stack.contents;
-		}
-
-		@Override
-		public String toString() {
-			final String p = state.pc.toString();
-			final String m = state.memory.contents.toString();
-			final String s = state.storage.contents.toString();
-			final String a = state.stack.contents.toString();
-			return String.format("pc=%s, storage=%s, memory=%s, stack=%s", p, s, m, a);
+			State_OK sok = (State_OK) state;
+			return sok.evm.stack.contents;
 		}
 	}
 
@@ -277,33 +253,7 @@ public class DafnyEvm {
 		 *
 		 * @param evm
 		 */
-		public void step(EVM_Compile.T evm);
-
-		/**
-		 * Identifies that execution of the outermost contract call has ended with
-		 * either a STOP or RETURN.
-		 *
-		 * @param output  --- Any return data provided.
-		 * @param gasUsed --- The amount of gas used for the call.
-		 */
-		public void end(DafnySequence<? extends Byte> output, BigInteger gasUsed);
-
-		/**
-		 * Identifies that execution of the outermost contract call has ended with a
-		 * REVERT.
-		 *
-		 * @param output  --- Any return data provided.
-		 * @param gasUsed --- The amount of gas used for the call.
-		 */
-		public void revert(DafnySequence<? extends Byte> output, BigInteger gasUsed);
-
-		/**
-		 * Identifies that execution of the outermost contract call has ended with an
-		 * exception.
-		 *
-		 * @param gasUsed --- The amount of gas used for the call.
-		 */
-		public void exception(BigInteger gasUsed);
+		public void step(State st);
 	}
 
 	/**
@@ -312,25 +262,22 @@ public class DafnyEvm {
 	public static final Tracer DEFAULT_TRACER = new Tracer() {
 
 		@Override
-		public void step(EVM_Compile.T evm) {}
-
-		@Override
-		public void end(DafnySequence<? extends Byte> output, BigInteger gasUsed) {
-			byte[] bytes = output.toByteArray((DafnySequence<Byte>) output);
-			System.out.println(Hex.toHexString(bytes));
-		}
-
-		@Override
-		public void revert(DafnySequence<? extends Byte> output, BigInteger gasUsed) {
-			byte[] bytes = output.toByteArray((DafnySequence<Byte>) output);
-			System.out.println(Hex.toHexString(bytes));
-			System.out.println("error: execution reverted");
-		}
-
-		@Override
-		public void exception(BigInteger gasUsed) {
-			// TODO: add error information
-			System.out.println("error");
+		public void step(State st) {
+			if(st instanceof State_OK) {
+				// Do nothing.
+			} else if(st instanceof State_RETURNS) {
+				State_RETURNS sr = (State_RETURNS) st;
+				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
+				System.out.println(Hex.toHexString(bytes));
+			} else if(st instanceof State_REVERT) {
+				State_REVERT sr = (State_REVERT) st;
+				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
+				System.out.println(Hex.toHexString(bytes));
+				System.out.println("error: execution reverted");
+			} else {
+				// TODO: add error information
+				System.out.println("error");
+			}
 		}
 	};
 
@@ -344,18 +291,20 @@ public class DafnyEvm {
 	 */
 	public static abstract class TraceAdaptor implements Tracer {
 		@Override
-		public final void step(EVM_Compile.T evm) {
-			this.step(new SnapShot(evm));
-		}
-
-		@Override
-		public final void end(DafnySequence<? extends Byte> output, BigInteger gasUsed) {
-			end(output.toByteArray((DafnySequence<Byte>) output),gasUsed);
-		}
-
-		@Override
-		public void revert(DafnySequence<? extends Byte> output, BigInteger gasUsed) {
-			revert(output.toByteArray((DafnySequence<Byte>) output),gasUsed);
+		public final void step(State st) {
+			if(st instanceof State_OK) {
+				step(new SnapShot(st));
+			} else if(st instanceof State_RETURNS) {
+				State_RETURNS sr = (State_RETURNS) st;
+				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
+				end(bytes,BigInteger.ZERO);
+			} else if(st instanceof State_REVERT) {
+				State_REVERT sr = (State_REVERT) st;
+				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
+				revert(bytes,BigInteger.ZERO);
+			} else {
+				exception(BigInteger.ZERO);
+			}
 		}
 
 		public abstract void step(SnapShot state);
@@ -363,6 +312,8 @@ public class DafnyEvm {
 		public abstract void end(byte[] output, BigInteger gasUsed);
 
 		public abstract void revert(byte[] output, BigInteger gasUsed);
+
+		public abstract void exception(BigInteger gasUsed);
 	}
 
 }
