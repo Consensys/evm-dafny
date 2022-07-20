@@ -47,13 +47,15 @@ module EVM {
    * Create a fresh EVM to execute a given sequence of bytecode instructions.
    * The EVM is initialised with an empty stack and empty local memory.
    */
-  function method create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : T
+  function method create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
   requires |code| <= MAX_U256 {
     var stck := Stack.create();
     var mem := Memory.create();
     var sto := Storage.create(storage);
     var cod := Code.create(code);
-    EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0)
+    var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0);
+    // Off we go!
+    State.OK(evm)
   }
 
   // =============================================================================
@@ -262,6 +264,7 @@ module EVM {
   function method execute(st:State) : State
   // To execute a bytecode requires the machine is in a non-terminal state.
   requires st.OK? {
+    var OK(vm) := st;
     // Decode
     var opcode := decode(st);
     // 0x00s: STOP & Arithmetic
@@ -332,8 +335,12 @@ module EVM {
     else if opcode == PC then Pc(st)
     else if opcode == JUMPDEST then JumpDest(st)
     // 0x60s & 0x70s: Push operations
-    else if opcode == PUSH1 then Push1(st)
-    else if opcode == PUSH2 then Push2(st)
+    else if opcode == PUSH1 && opcode_operands(vm) >= 1 then
+      var k := Code.decode_u8(vm.code, (vm.pc + 1) as nat);
+      Push1(st, k)
+    else if opcode == PUSH2 && opcode_operands(vm) >= 2 then
+      var k := Code.decode_u16(vm.code, (vm.pc + 1) as nat);
+      Push2(st, k)
     // 0x80s: Duplicate operations
     else if DUP1 <= opcode <= DUP16 then
       var k := (opcode - DUP1) as int; Dup(st,k)
@@ -957,7 +964,7 @@ module EVM {
       then
       var pc := peek(vm,0);
       // Check valid branch target
-      if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
+      if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc as nat) == JUMPDEST
       then
         goto(pop(vm),pc)
       else
@@ -980,7 +987,7 @@ module EVM {
       // Check branch taken or not
       if val == 0 then next(pop(pop(vm)))
       // Check valid branch target
-      else if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
+      else if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc as nat) == JUMPDEST
       then
         goto(pop(pop(vm)),pc)
       else
@@ -1015,14 +1022,13 @@ module EVM {
   /**
    * Push one byte onto stack.
    */
-  function method Push1(st: State) : State
+  function method Push1(st: State, k: u8) : State
   requires st.OK? {
     var OK(vm) := st;
     //
-    if opcode_operands(vm) >= 1 && capacity(vm) >= 1
+    if capacity(vm) >= 1
       then
-      var k := Code.decode_u8(vm.code,vm.pc+1);
-      goto(push(vm,k as u256),vm.pc+2)
+      skip(push(vm,k as u256),2)
     else
       State.INVALID
   }
@@ -1030,16 +1036,13 @@ module EVM {
   /**
    * Push two bytes onto stack.
    */
-  function method Push2(st: State) : State
+  function method Push2(st: State, k: u16) : State
   requires st.OK? {
     var OK(vm) := st;
     //
-    if opcode_operands(vm) >= 2 && capacity(vm) >= 1
+    if capacity(vm) >= 1
       then
-      var k1 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
-      var k2 := Code.decode_u8(vm.code,vm.pc + 2) as u256;
-      var k := (k1 * 256) + k2;
-      goto(push(vm,k),vm.pc+3)
+      skip(push(vm,k as u256),3)
     else
       State.INVALID
   }
@@ -1138,7 +1141,7 @@ module EVM {
     // Sanity check pc location
     if vm.pc < Code.size(vm.code)
     then
-      Code.decode_u8(vm.code,vm.pc)
+      Code.decode_u8(vm.code,vm.pc as nat)
     else
       INVALID
   }
@@ -1146,17 +1149,29 @@ module EVM {
   /**
    * Move program counter to a given location.
    */
-  function method goto(evm:T, k:u256) : State
-    requires k <= Code.size(evm.code) {
-      State.OK(evm.(pc := k))
+  function method goto(evm:T, k:u256) : State {
+    // Sanity check valid target address
+    if k <= Code.size(evm.code)
+    then State.OK(evm.(pc := k))
+    else State.INVALID
   }
 
  /**
    * Move program counter to next instruction.
    */
   function method next(evm:T) : State {
-    if evm.pc < (MAX_U256 as u256)
+    if evm.pc < Code.size(evm.code)
     then State.OK(evm.(pc := evm.pc + 1))
+    else State.INVALID
+  }
+
+  /**
+   * Move program counter over k instructions / operands.
+   */
+  function method skip(evm:T, k:nat) : State {
+    var pc_k := (evm.pc as nat) + k;
+    if pc_k < |evm.code.contents|
+    then State.OK(evm.(pc := pc_k as u256))
     else State.INVALID
   }
 
