@@ -265,32 +265,32 @@ module EVM {
     // Decode
     var opcode := decode(st);
     // 0x00s: STOP & Arithmetic
-    if opcode == STOP then evalSTOP(st)
-    else if opcode == ADD then evalADD(st)
-    else if opcode == MUL then evalMUL(st)
-    else if opcode == SUB then evalSUB(st)
-    else if opcode == DIV then evalDIV(st)
-    else if opcode == SDIV then evalSDIV(st)
-    else if opcode == MOD then evalMOD(st)
-    else if opcode == SMOD then evalSMOD(st)
-    else if opcode == ADDMOD then evalADDMOD(st)
-    else if opcode == MULMOD then evalMULMOD(st)
+    if opcode == STOP then Stop(st)
+    else if opcode == ADD then Add(st)
+    else if opcode == MUL then Mul(st)
+    else if opcode == SUB then Sub(st)
+    else if opcode == DIV then Div(st)
+    else if opcode == SDIV then SDiv(st)
+    else if opcode == MOD then Mod(st)
+    else if opcode == SMOD then SMod(st)
+    else if opcode == ADDMOD then AddMod(st)
+    else if opcode == MULMOD then MulMod(st)
     // else if opcode == EXP then evalEXP(st)
     // else if opcode == SIGNEXTEND then evalSIGNEXTEND(st)
     // 0x10s: Comparison & Bitwise Logic
-    else if opcode == LT then evalLT(st)
-    else if opcode == GT then evalGT(st)
-    else if opcode == SLT then evalSLT(st)
-    else if opcode == SGT then evalSGT(st)
-    else if opcode == EQ then evalEQ(st)
-    else if opcode == ISZERO then evalISZERO(st)
-    else if opcode == AND then evalAND(st)
-    else if opcode == OR then evalOR(st)
-    else if opcode == XOR then evalXOR(st)
-    else if opcode == NOT then evalNOT(st)
-    else if opcode == BYTE then evalBYTE(st)
-    else if opcode == SHL then evalSHL(st)
-    else if opcode == SHR then evalSHR(st)
+    else if opcode == LT then Lt(st)
+    else if opcode == GT then Gt(st)
+    else if opcode == SLT then SLt(st)
+    else if opcode == SGT then SGt(st)
+    else if opcode == EQ then Eq(st)
+    else if opcode == ISZERO then IsZero(st)
+    else if opcode == AND then And(st)
+    else if opcode == OR then Or(st)
+    else if opcode == XOR then Xor(st)
+    else if opcode == NOT then Not(st)
+    else if opcode == BYTE then Byte(st)
+    else if opcode == SHL then Shl(st)
+    else if opcode == SHR then Shr(st)
     // else if opcode == SAR then evalSAR(st)
     // 0x20s
     // else if opcode == KECCAK256 then evalKECCAK256(st)
@@ -300,11 +300,11 @@ module EVM {
     // else if opcode == ORIGIN then evalORIGIN(st)
     // else if opcode == CALLER then evalCALLER(st)
     // else if opcode == CALLVALUE then evalCALLVALUE(st)
-    else if opcode == CALLDATALOAD then evalCALLDATALOAD(st)
-    else if opcode == CALLDATASIZE then evalCALLDATASIZE(st)
-    else if opcode == CALLDATACOPY then evalCALLDATACOPY(st)
-    // else if opcode == CODESIZE then evalCALLCODESIZE(st)
-    // else if opcode == CODECOPY then evalCALLCODECOPY(st)
+    else if opcode == CALLDATALOAD then CallDataLoad(st)
+    else if opcode == CALLDATASIZE then CallDataSize(st)
+    else if opcode == CALLDATACOPY then CallDataCopy(st)
+    // else if opcode == CODESIZE then evalCODESIZE(st)
+    // else if opcode == CODECOPY then evalCODECOPY(st)
     // else if opcode == GASPRICE then evalGASPRICE(st)
     // else if opcode == EXTCODESIZE then evalEXTCODESIZE(st)
     // else if opcode == EXTCODECOPY then evalEXTCODECOPY(st)
@@ -321,25 +321,25 @@ module EVM {
     // else if opcode == CHAINID then evalCHAINID(st)
     // else if opcode == SELFBALANCE then evalSELFBALANCE(st)
     // 0x50s: Stack, Memory, Storage and Flow
-    else if opcode == POP then evalPOP(st)
-    else if opcode == MLOAD then evalMLOAD(st)
-    else if opcode == MSTORE then evalMSTORE(st)
-    else if opcode == MSTORE8 then evalMSTORE8(st)
-    else if opcode == SLOAD then evalSLOAD(st)
-    else if opcode == SSTORE then evalSSTORE(st)
-    else if opcode == JUMP then evalJUMP(st)
-    else if opcode == JUMPI then evalJUMPI(st)
-    else if opcode == PC then evalPC(st)
-    else if opcode == JUMPDEST then evalJUMPDEST(st)
+    else if opcode == POP then Pop(st)
+    else if opcode == MLOAD then MLoad(st)
+    else if opcode == MSTORE then MStore(st)
+    else if opcode == MSTORE8 then MStore8(st)
+    else if opcode == SLOAD then SLoad(st)
+    else if opcode == SSTORE then SStore(st)
+    else if opcode == JUMP then Jump(st)
+    else if opcode == JUMPI then JumpI(st)
+    else if opcode == PC then Pc(st)
+    else if opcode == JUMPDEST then JumpDest(st)
     // 0x60s & 0x70s: Push operations
-    else if opcode == PUSH1 then evalPUSH1(st)
-    else if opcode == PUSH2 then evalPUSH2(st)
+    else if opcode == PUSH1 then Push1(st)
+    else if opcode == PUSH2 then Push2(st)
     // 0x80s: Duplicate operations
     else if DUP1 <= opcode <= DUP16 then
-      var k := (opcode - DUP1) as int; evalDUP(st,k)
+      var k := (opcode - DUP1) as int; Dup(st,k)
     // 0x90s: Exchange operations
     else if SWAP1 <= opcode <= SWAP16 then
-      var k := (opcode - SWAP1) as int; evalSWAP(st,k+1)
+      var k := (opcode - SWAP1) as int; Swap(st,k+1)
     // 0xA0s: Log operations
     // else if LOG0 <= opcode <= LOG4 then
     //   var k := (opcode - LOG0) as int; evalLOG(st,k)
@@ -347,11 +347,11 @@ module EVM {
     // else if opcode == CREATE then evalCREATE(st)
     // else if opcode == CALL then evalCALL(st)
     // else if opcode == CALLCODE then evalCALLCODE(st)
-    else if opcode == RETURN then evalRETURN(st)
+    else if opcode == RETURN then Return(st)
     //else if opcode == DELEGATECALL then evalDELEGATECALL(st)
     //else if opcode == CREATE2 then evalCREATE2(st)
     //else if opcode == STATICCALL then evalSTATICCALL(st)
-    else if opcode == REVERT then evalREVERT(st)
+    else if opcode == REVERT then Revert(st)
     //else if opcode == SELFDESTRUCT then evalSELFDESTRUCT(st)
     else
       // Invalid opcode
@@ -362,7 +362,7 @@ module EVM {
    * Evaluate the STOP bytecode.  This halts the machine without
    * return output data.
    */
-  function method evalSTOP(st: State) : State
+  function method Stop(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -372,7 +372,7 @@ module EVM {
   /**
    * Unsigned integer addition with modulo arithmetic.
    */
-  function method evalADD(st: State) : State
+  function method Add(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -389,7 +389,7 @@ module EVM {
   /**
    * Unsigned integer multiplication with modulo arithmetic.
    */
-  function method evalMUL(st: State) : State
+  function method Mul(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -406,7 +406,7 @@ module EVM {
   /**
    * Unsigned integer subtraction with modulo arithmetic.
    */
-  function method evalSUB(st: State) : State
+  function method Sub(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -423,7 +423,7 @@ module EVM {
   /**
    * Unsigned integer division.
    */
-  function method evalDIV(st: State) : State
+  function method Div(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -440,7 +440,7 @@ module EVM {
   /**
    * Signed integer division.
    */
-  function method evalSDIV(st: State) : State
+  function method SDiv(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -457,7 +457,7 @@ module EVM {
   /**
    * (Unsigned) Modulo remainder.
    */
-  function method evalMOD(st: State) : State
+  function method Mod(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -474,7 +474,7 @@ module EVM {
   /**
    * Signed integer remainder:
    */
-  function method evalSMOD(st: State) : State
+  function method SMod(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -491,7 +491,7 @@ module EVM {
   /**
    * Unsigned integer modulo addition.
    */
-  function method evalADDMOD(st: State) : State
+  function method AddMod(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -509,7 +509,7 @@ module EVM {
   /**
    * Unsigned integer modulo multiplication.
    */
-  function method evalMULMOD(st: State) : State
+  function method MulMod(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -527,7 +527,7 @@ module EVM {
   /**
    * (Unsigned) less-than comparison.
    */
-  function method evalLT(st: State) : State
+  function method Lt(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -547,7 +547,7 @@ module EVM {
   /**
    * (Unsigned) greater-than comparison.
    */
-  function method evalGT(st: State) : State
+  function method Gt(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -567,7 +567,7 @@ module EVM {
   /**
    * Signed less-than comparison.
    */
-  function method evalSLT(st: State) : State
+  function method SLt(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -587,7 +587,7 @@ module EVM {
   /**
    * Signed greater-than comparison.
    */
-  function method evalSGT(st: State) : State
+  function method SGt(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -607,7 +607,7 @@ module EVM {
   /**
    * Equality comparison.
    */
-  function method evalEQ(st: State) : State
+  function method Eq(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -627,7 +627,7 @@ module EVM {
   /**
    * Simple not operator.
    */
-  function method evalISZERO(st: State) : State
+  function method IsZero(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -646,7 +646,7 @@ module EVM {
   /**
    * Bitwise AND operation.
    */
-  function method evalAND(st: State) : State
+  function method And(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -663,7 +663,7 @@ module EVM {
   /**
    * Bitwise OR operation.
    */
-  function method {:verify false} evalOR(st: State) : State
+  function method {:verify false} Or(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -680,7 +680,7 @@ module EVM {
   /**
    * Bitwise XOR operation.
    */
-  function method {:verify false} evalXOR(st: State) : State
+  function method {:verify false} Xor(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -697,7 +697,7 @@ module EVM {
   /**
    * Bitwise NOT operation.
    */
-  function method evalNOT(st: State) : State
+  function method Not(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -713,7 +713,7 @@ module EVM {
   /**
    * Retrieve single byte from word.
    */
-  function method evalBYTE(st: State) : State
+  function method Byte(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -730,7 +730,7 @@ module EVM {
   /**
    * Left shift operation.
    */
-  function method evalSHL(st: State) : State
+  function method Shl(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -748,7 +748,7 @@ module EVM {
   /**
    * Right shift operation.
    */
-  function method {:verify false} evalSHR(st: State) : State
+  function method {:verify false} Shr(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -766,7 +766,7 @@ module EVM {
   /**
    * Get input data from the current environment.
    */
-  function method evalCALLDATALOAD(st: State) : State
+  function method CallDataLoad(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -783,7 +783,7 @@ module EVM {
   /**
    * Get size of input data in current environment.
    */
-  function method evalCALLDATASIZE(st: State) : State
+  function method CallDataSize(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -798,7 +798,7 @@ module EVM {
   /**
    * Get size of input data in current environment.
    */
-  function method evalCALLDATACOPY(st: State) : State
+  function method CallDataCopy(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -828,7 +828,7 @@ module EVM {
   /**
    * Pop word from stack.
    */
-  function method evalPOP(st: State) : State
+  function method Pop(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -842,7 +842,7 @@ module EVM {
   /**
    * Get word from memory.
    */
-  function method evalMLOAD(st: State) : State
+  function method MLoad(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -868,7 +868,7 @@ module EVM {
   /**
    * Save word to memory.
    */
-  function method evalMSTORE(st: State) : State
+  function method MStore(st: State) : State
   requires st.OK? {
 
     var OK(vm) := st;
@@ -894,7 +894,7 @@ module EVM {
   /**
    * Save byte to memory.
    */
-  function method evalMSTORE8(st: State) : State
+  function method MStore8(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -915,7 +915,7 @@ module EVM {
   /**
    * Get word from storage.
    */
-  function method evalSLOAD(st: State) : State
+  function method SLoad(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -932,7 +932,7 @@ module EVM {
   /**
    * Save word to storage.
    */
-  function method evalSSTORE(st: State) : State
+  function method SStore(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -949,7 +949,7 @@ module EVM {
   /**
    * Unconditional branch.
    */
-  function method evalJUMP(st: State) : State
+  function method Jump(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -969,7 +969,7 @@ module EVM {
   /**
    * Unconditional branch.
    */
-  function method evalJUMPI(st: State) : State
+  function method JumpI(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -992,7 +992,7 @@ module EVM {
   /**
    * Gets value of program counter prior to this instruction being executed.
    */
-  function method evalPC(st: State) : State
+  function method Pc(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -1007,7 +1007,7 @@ module EVM {
    * Marks a valid destination for a jump, but otherwise has no effect
    * on machine state.
    */
-  function method evalJUMPDEST(st: State) : State
+  function method JumpDest(st: State) : State
   requires st.OK? {
     var OK(vm) := st; next(vm)
   }
@@ -1015,7 +1015,7 @@ module EVM {
   /**
    * Push one byte onto stack.
    */
-  function method evalPUSH1(st: State) : State
+  function method Push1(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -1030,7 +1030,7 @@ module EVM {
   /**
    * Push two bytes onto stack.
    */
-  function method evalPUSH2(st: State) : State
+  function method Push2(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -1047,7 +1047,7 @@ module EVM {
   /**
    * Duplicate item on stack.
    */
-  function method evalDUP(st: State, k: nat) : State
+  function method Dup(st: State, k: nat) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -1062,7 +1062,7 @@ module EVM {
   /**
    * Swap two items on the stack
    */
-  function method evalSWAP(st: State, k: nat) : State
+  function method Swap(st: State, k: nat) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -1076,7 +1076,7 @@ module EVM {
   /**
    * Halt execution returning output data.
    */
-  function method evalRETURN(st: State) : State
+  function method Return(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
@@ -1101,7 +1101,7 @@ module EVM {
   /**
    * Revert execution returning output data.
    */
-  function method evalREVERT(st: State) : State
+  function method Revert(st: State) : State
   requires st.OK? {
     var OK(vm) := st;
     //
