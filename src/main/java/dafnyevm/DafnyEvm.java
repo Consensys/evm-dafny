@@ -28,6 +28,7 @@ import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.DafnySet;
 import dafnyevm.util.Hex;
+import dafnyevm.util.Tracers;
 
 
 /**
@@ -41,7 +42,7 @@ public class DafnyEvm {
 	/**
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
-	private Tracer tracer = DEFAULT_TRACER;
+	private Tracer tracer = new Tracers.Default();
 	/**
 	 * Initial state of storage prior.
 	 */
@@ -255,31 +256,6 @@ public class DafnyEvm {
 		 */
 		public void step(State st);
 	}
-
-	/**
-	 * The default tracer does nothing at all.
-	 */
-	public static final Tracer DEFAULT_TRACER = new Tracer() {
-
-		@Override
-		public void step(State st) {
-			if(st instanceof State_OK) {
-				// Do nothing.
-			} else if(st instanceof State_RETURNS) {
-				State_RETURNS sr = (State_RETURNS) st;
-				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
-				System.out.println(Hex.toHexString(bytes));
-			} else if(st instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) st;
-				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
-				System.out.println(Hex.toHexString(bytes));
-				System.out.println("error: execution reverted");
-			} else {
-				// TODO: add error information
-				System.out.println("error");
-			}
-		}
-	};
 
 	/**
 	 * The trace adaptor provides a more convenient API over the internal tracer
