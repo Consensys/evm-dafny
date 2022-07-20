@@ -19,14 +19,15 @@ import static EVM_Compile.__default.execute;
 import java.math.BigInteger;
 import java.util.Map;
 
-import EVM_Compile.Result;
-import EVM_Compile.Result_INVALID;
-import EVM_Compile.Result_OK;
-import EVM_Compile.Result_RETURNS;
-import EVM_Compile.Result_REVERT;
+import EVM_Compile.State;
+import EVM_Compile.State_INVALID;
+import EVM_Compile.State_OK;
+import EVM_Compile.State_RETURNS;
+import EVM_Compile.State_REVERT;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.DafnySet;
+import dafnyevm.util.Hex;
 
 
 /**
@@ -80,36 +81,34 @@ public class DafnyEvm {
 	 * @param calldata Input supplied with the call.
 	 * @return
 	 */
-	public State call(BigInteger from, byte[] calldata) {
+	public SnapShot call(BigInteger from, byte[] calldata) {
 		// Create call context.
 		Context_Compile.Raw ctx = Context_Compile.__default.create(from, DafnySequence.fromBytes(calldata));
 		// Create the EVM
 		EVM_Compile.T evm = create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
-		Result r = execute(evm);
+		State r = execute(new State_OK(evm));
 		// Continue whilst the EVM is happy.
-		while(r instanceof Result_OK) {
-			tracer.step(evm);
-			Result_OK rok = (Result_OK) r;
-			evm = rok.evm;
-			r = execute(evm);
+		while(r instanceof State_OK) {
+			tracer.step(((State_OK)r).evm);
+			r = execute(r);
 		}
 		// Final step
 		tracer.step(evm);
 		// Decide what happened
-		if(r instanceof Result_RETURNS) {
-			Result_RETURNS rret = (Result_RETURNS) r;
+		if(r instanceof State_RETURNS) {
+			State_RETURNS rret = (State_RETURNS) r;
 			tracer.end(rret.data,BigInteger.ZERO);
-			return new State(false,rret.data,rret.gas,evm);
-		} else if(r instanceof Result_REVERT) {
-			Result_REVERT rrev = (Result_REVERT) r;
+			return new SnapShot(false,rret.data,rret.gas,evm);
+		} else if(r instanceof State_REVERT) {
+			State_REVERT rrev = (State_REVERT) r;
 			tracer.revert(rrev.data,BigInteger.ZERO);
-			return new State(true,rrev.data,rrev.gas,evm);
+			return new SnapShot(true,rrev.data,rrev.gas,evm);
 		} else {
 			// Sanity check is invalid
-			Result_INVALID rinv = (Result_INVALID) r;
+			State_INVALID rinv = (State_INVALID) r;
 			tracer.exception(BigInteger.ZERO);
-			return new State(false,null,null,evm);
+			return new SnapShot(false,null,null,evm);
 		}
 	}
 
@@ -120,7 +119,7 @@ public class DafnyEvm {
 	 * @author David J. Pearce
 	 *
 	 */
-	public static class State {
+	public static class SnapShot {
 		/**
 		 * Indicates if a revert occurred.
 		 */
@@ -138,11 +137,11 @@ public class DafnyEvm {
 		 */
 		private final EVM_Compile.T state;
 
-		public State(EVM_Compile.T state) {
+		public SnapShot(EVM_Compile.T state) {
 			this(false,null,null,state);
 		}
 
-		public State(boolean revert, DafnySequence<? extends Byte> data, BigInteger gas, EVM_Compile.T state) {
+		public SnapShot(boolean revert, DafnySequence<? extends Byte> data, BigInteger gas, EVM_Compile.T state) {
 			this.revert = revert;
 			this.data = data;
 			this.gas = gas;
@@ -317,12 +316,14 @@ public class DafnyEvm {
 
 		@Override
 		public void end(DafnySequence<? extends Byte> output, BigInteger gasUsed) {
-			System.out.println(output.toByteArray((DafnySequence<Byte>) output));
+			byte[] bytes = output.toByteArray((DafnySequence<Byte>) output);
+			System.out.println(Hex.toHexString(bytes));
 		}
 
 		@Override
 		public void revert(DafnySequence<? extends Byte> output, BigInteger gasUsed) {
-			System.out.println(output.toByteArray((DafnySequence<Byte>) output));
+			byte[] bytes = output.toByteArray((DafnySequence<Byte>) output);
+			System.out.println(Hex.toHexString(bytes));
 			System.out.println("error: execution reverted");
 		}
 
@@ -344,7 +345,7 @@ public class DafnyEvm {
 	public static abstract class TraceAdaptor implements Tracer {
 		@Override
 		public final void step(EVM_Compile.T evm) {
-			this.step(new State(evm));
+			this.step(new SnapShot(evm));
 		}
 
 		@Override
@@ -357,7 +358,7 @@ public class DafnyEvm {
 			revert(output.toByteArray((DafnySequence<Byte>) output),gasUsed);
 		}
 
-		public abstract void step(State state);
+		public abstract void step(SnapShot state);
 
 		public abstract void end(byte[] output, BigInteger gasUsed);
 

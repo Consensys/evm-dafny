@@ -23,7 +23,7 @@ import org.json.JSONWriter;
 
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
-import dafnyevm.DafnyEvm.State;
+import dafnyevm.DafnyEvm.SnapShot;
 
 public class Tracers {
 	/**
@@ -33,7 +33,7 @@ public class Tracers {
 	public static class Debug extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(State state) {
+		public void step(SnapShot state) {
 			System.err.println(state);
 		}
 
@@ -69,7 +69,7 @@ public class Tracers {
 		}
 
 		@Override
-		public void step(State state) {
+		public void step(SnapShot state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();

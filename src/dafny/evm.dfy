@@ -259,98 +259,100 @@ module EVM {
    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
    * can continue), or some form of halt (e.g. exceptional, revert, etc).
    */
-  function method execute(vm:T) : State {
+  function method execute(st:State) : State
+  // To execute a bytecode requires the machine is in a non-terminal state.
+  requires st.OK? {
     // Decode
-    var (vm',opcode) := decode(vm);
+    var opcode := decode(st);
     // 0x00s: STOP & Arithmetic
-    if opcode == STOP then evalSTOP(vm')
-    else if opcode == ADD then evalADD(vm')
-    else if opcode == MUL then evalMUL(vm')
-    else if opcode == SUB then evalSUB(vm')
-    else if opcode == DIV then evalDIV(vm')
-    else if opcode == SDIV then evalSDIV(vm')
-    else if opcode == MOD then evalMOD(vm')
-    else if opcode == SMOD then evalSMOD(vm')
-    else if opcode == ADDMOD then evalADDMOD(vm')
-    else if opcode == MULMOD then evalMULMOD(vm')
-    // else if opcode == EXP then evalEXP(vm')
-    // else if opcode == SIGNEXTEND then evalSIGNEXTEND(vm')
+    if opcode == STOP then evalSTOP(st)
+    else if opcode == ADD then evalADD(st)
+    else if opcode == MUL then evalMUL(st)
+    else if opcode == SUB then evalSUB(st)
+    else if opcode == DIV then evalDIV(st)
+    else if opcode == SDIV then evalSDIV(st)
+    else if opcode == MOD then evalMOD(st)
+    else if opcode == SMOD then evalSMOD(st)
+    else if opcode == ADDMOD then evalADDMOD(st)
+    else if opcode == MULMOD then evalMULMOD(st)
+    // else if opcode == EXP then evalEXP(st)
+    // else if opcode == SIGNEXTEND then evalSIGNEXTEND(st)
     // 0x10s: Comparison & Bitwise Logic
-    else if opcode == LT then evalLT(vm')
-    else if opcode == GT then evalGT(vm')
-    else if opcode == SLT then evalSLT(vm')
-    else if opcode == SGT then evalSGT(vm')
-    else if opcode == EQ then evalEQ(vm')
-    else if opcode == ISZERO then evalISZERO(vm')
-    else if opcode == AND then evalAND(vm')
-    else if opcode == OR then evalOR(vm')
-    else if opcode == XOR then evalXOR(vm')
-    else if opcode == NOT then evalNOT(vm')
-    else if opcode == BYTE then evalBYTE(vm')
-    else if opcode == SHL then evalSHL(vm')
-    else if opcode == SHR then evalSHR(vm')
-    // else if opcode == SAR then evalSAR(vm')
+    else if opcode == LT then evalLT(st)
+    else if opcode == GT then evalGT(st)
+    else if opcode == SLT then evalSLT(st)
+    else if opcode == SGT then evalSGT(st)
+    else if opcode == EQ then evalEQ(st)
+    else if opcode == ISZERO then evalISZERO(st)
+    else if opcode == AND then evalAND(st)
+    else if opcode == OR then evalOR(st)
+    else if opcode == XOR then evalXOR(st)
+    else if opcode == NOT then evalNOT(st)
+    else if opcode == BYTE then evalBYTE(st)
+    else if opcode == SHL then evalSHL(st)
+    else if opcode == SHR then evalSHR(st)
+    // else if opcode == SAR then evalSAR(st)
     // 0x20s
-    // else if opcode == KECCAK256 then evalKECCAK256(vm')
+    // else if opcode == KECCAK256 then evalKECCAK256(st)
     // 0x30s: Environment Information
-    // else if opcode == ADDRESS then evalADDRESS(vm')
-    // else if opcode == BALANCE then evalBALANCE(vm')
-    // else if opcode == ORIGIN then evalORIGIN(vm')
-    // else if opcode == CALLER then evalCALLER(vm')
-    // else if opcode == CALLVALUE then evalCALLVALUE(vm')
-    else if opcode == CALLDATALOAD then evalCALLDATALOAD(vm')
-    else if opcode == CALLDATASIZE then evalCALLDATASIZE(vm')
-    else if opcode == CALLDATACOPY then evalCALLDATACOPY(vm')
-    // else if opcode == CODESIZE then evalCALLCODESIZE(vm')
-    // else if opcode == CODECOPY then evalCALLCODECOPY(vm')
-    // else if opcode == GASPRICE then evalGASPRICE(vm')
-    // else if opcode == EXTCODESIZE then evalEXTCODESIZE(vm')
-    // else if opcode == EXTCODECOPY then evalEXTCODECOPY(vm')
-    // else if opcode == RETURNDATASIZE then evalRETURNDATASIZE(vm')
-    // else if opcode == RETURNDATACOPY then evalRETURNDATACOPY(vm')
-    // else if opcode == EXTCODEHASH then evalEXTCODEHASH(vm')
+    // else if opcode == ADDRESS then evalADDRESS(st)
+    // else if opcode == BALANCE then evalBALANCE(st)
+    // else if opcode == ORIGIN then evalORIGIN(st)
+    // else if opcode == CALLER then evalCALLER(st)
+    // else if opcode == CALLVALUE then evalCALLVALUE(st)
+    else if opcode == CALLDATALOAD then evalCALLDATALOAD(st)
+    else if opcode == CALLDATASIZE then evalCALLDATASIZE(st)
+    else if opcode == CALLDATACOPY then evalCALLDATACOPY(st)
+    // else if opcode == CODESIZE then evalCALLCODESIZE(st)
+    // else if opcode == CODECOPY then evalCALLCODECOPY(st)
+    // else if opcode == GASPRICE then evalGASPRICE(st)
+    // else if opcode == EXTCODESIZE then evalEXTCODESIZE(st)
+    // else if opcode == EXTCODECOPY then evalEXTCODECOPY(st)
+    // else if opcode == RETURNDATASIZE then evalRETURNDATASIZE(st)
+    // else if opcode == RETURNDATACOPY then evalRETURNDATACOPY(st)
+    // else if opcode == EXTCODEHASH then evalEXTCODEHASH(st)
     // 0x40s: Block Information
-    // else if opcode == BLOCKHASH then evalBLOCKHASH(vm')
-    // else if opcode == COINBASE then evalCOINBASE(vm')
-    // else if opcode == TIMESTAMP then evalTIMESTAMP(vm')
-    // else if opcode == NUMBER then evalNUMBER(vm')
-    // else if opcode == DIFFICULTY then evalDIFFICULTY(vm')
-    // else if opcode == GASLIMIT then evalGASLIMIT(vm')
-    // else if opcode == CHAINID then evalCHAINID(vm')
-    // else if opcode == SELFBALANCE then evalSELFBALANCE(vm')
+    // else if opcode == BLOCKHASH then evalBLOCKHASH(st)
+    // else if opcode == COINBASE then evalCOINBASE(st)
+    // else if opcode == TIMESTAMP then evalTIMESTAMP(st)
+    // else if opcode == NUMBER then evalNUMBER(st)
+    // else if opcode == DIFFICULTY then evalDIFFICULTY(st)
+    // else if opcode == GASLIMIT then evalGASLIMIT(st)
+    // else if opcode == CHAINID then evalCHAINID(st)
+    // else if opcode == SELFBALANCE then evalSELFBALANCE(st)
     // 0x50s: Stack, Memory, Storage and Flow
-    else if opcode == POP then evalPOP(vm')
-    else if opcode == MLOAD then evalMLOAD(vm')
-    else if opcode == MSTORE then evalMSTORE(vm')
-    else if opcode == MSTORE8 then evalMSTORE8(vm')
-    else if opcode == SLOAD then evalSLOAD(vm')
-    else if opcode == SSTORE then evalSSTORE(vm')
-    else if opcode == JUMP then evalJUMP(vm')
-    else if opcode == JUMPI then evalJUMPI(vm')
-    else if opcode == PC then evalPC(vm')
-    else if opcode == JUMPDEST then evalJUMPDEST(vm')
+    else if opcode == POP then evalPOP(st)
+    else if opcode == MLOAD then evalMLOAD(st)
+    else if opcode == MSTORE then evalMSTORE(st)
+    else if opcode == MSTORE8 then evalMSTORE8(st)
+    else if opcode == SLOAD then evalSLOAD(st)
+    else if opcode == SSTORE then evalSSTORE(st)
+    else if opcode == JUMP then evalJUMP(st)
+    else if opcode == JUMPI then evalJUMPI(st)
+    else if opcode == PC then evalPC(st)
+    else if opcode == JUMPDEST then evalJUMPDEST(st)
     // 0x60s & 0x70s: Push operations
-    else if opcode == PUSH1 then evalPUSH1(vm')
-    else if opcode == PUSH2 then evalPUSH2(vm')
+    else if opcode == PUSH1 then evalPUSH1(st)
+    else if opcode == PUSH2 then evalPUSH2(st)
     // 0x80s: Duplicate operations
     else if DUP1 <= opcode <= DUP16 then
-      var k := (opcode - DUP1) as int; evalDUP(vm',k)
+      var k := (opcode - DUP1) as int; evalDUP(st,k)
     // 0x90s: Exchange operations
     else if SWAP1 <= opcode <= SWAP16 then
-      var k := (opcode - SWAP1) as int; evalSWAP(vm',k+1)
+      var k := (opcode - SWAP1) as int; evalSWAP(st,k+1)
     // 0xA0s: Log operations
     // else if LOG0 <= opcode <= LOG4 then
-    //   var k := (opcode - LOG0) as int; evalLOG(vm',k)
+    //   var k := (opcode - LOG0) as int; evalLOG(st,k)
     // 0xf0
-    // else if opcode == CREATE then evalCREATE(vm')
-    // else if opcode == CALL then evalCALL(vm')
-    // else if opcode == CALLCODE then evalCALLCODE(vm')
-    else if opcode == RETURN then evalRETURN(vm')
-    //else if opcode == DELEGATECALL then evalDELEGATECALL(vm')
-    //else if opcode == CREATE2 then evalCREATE2(vm')
-    //else if opcode == STATICCALL then evalSTATICCALL(vm')
-    else if opcode == REVERT then evalREVERT(vm')
-    //else if opcode == SELFDESTRUCT then evalSELFDESTRUCT(vm')
+    // else if opcode == CREATE then evalCREATE(st)
+    // else if opcode == CALL then evalCALL(st)
+    // else if opcode == CALLCODE then evalCALLCODE(st)
+    else if opcode == RETURN then evalRETURN(st)
+    //else if opcode == DELEGATECALL then evalDELEGATECALL(st)
+    //else if opcode == CREATE2 then evalCREATE2(st)
+    //else if opcode == STATICCALL then evalSTATICCALL(st)
+    else if opcode == REVERT then evalREVERT(st)
+    //else if opcode == SELFDESTRUCT then evalSELFDESTRUCT(st)
     else
       // Invalid opcode
       State.INVALID
@@ -360,20 +362,26 @@ module EVM {
    * Evaluate the STOP bytecode.  This halts the machine without
    * return output data.
    */
-  function method evalSTOP(vm:T) : State {
+  function method evalSTOP(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     State.RETURNS(gas:=vm.gas,data:=[])
   }
 
   /**
    * Unsigned integer addition with modulo arithmetic.
    */
-  function method evalADD(vm:T) : State {
+  function method evalADD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var res := (lhs + rhs) % TWO_256;
-      State.OK(push(pop(pop(vm)),res as u256))
+      next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
   }
@@ -381,13 +389,16 @@ module EVM {
   /**
    * Unsigned integer multiplication with modulo arithmetic.
    */
-  function method evalMUL(vm:T) : State {
+  function method evalMUL(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var res := (lhs * rhs) % TWO_256;
-      State.OK(push(pop(pop(vm)),res as u256))
+      next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
   }
@@ -395,13 +406,16 @@ module EVM {
   /**
    * Unsigned integer subtraction with modulo arithmetic.
    */
-  function method evalSUB(vm:T) : State {
+  function method evalSUB(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var res := (lhs - rhs) % TWO_256;
-      State.OK(push(pop(pop(vm)),res as u256))
+      next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
   }
@@ -409,13 +423,16 @@ module EVM {
   /**
    * Unsigned integer division.
    */
-  function method evalDIV(vm:T) : State {
+  function method evalDIV(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       var res := div(lhs,rhs) as u256;
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -423,13 +440,16 @@ module EVM {
   /**
    * Signed integer division.
    */
-  function method evalSDIV(vm:T) : State {
+  function method evalSDIV(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       var res := Word.fromI256(sdiv(lhs,rhs));
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -437,13 +457,16 @@ module EVM {
   /**
    * (Unsigned) Modulo remainder.
    */
-  function method evalMOD(vm:T) : State {
+  function method evalMOD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       var res := mod(lhs,rhs) as u256;
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -451,13 +474,16 @@ module EVM {
   /**
    * Signed integer remainder:
    */
-  function method evalSMOD(vm:T) : State {
+  function method evalSMOD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       var res := Word.fromI256(smod(lhs,rhs));
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -465,14 +491,17 @@ module EVM {
   /**
    * Unsigned integer modulo addition.
    */
-  function method evalADDMOD(vm:T) : State {
+  function method evalADDMOD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 3
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var rem := peek(vm,2) as int;
       var res := if rem == 0 then 0 else(lhs + rhs) % rem;
-      State.OK(push(pop(pop(pop(vm))),res as u256))
+      next(push(pop(pop(pop(vm))),res as u256))
     else
       State.INVALID
   }
@@ -480,14 +509,17 @@ module EVM {
   /**
    * Unsigned integer modulo multiplication.
    */
-  function method evalMULMOD(vm:T) : State {
+  function method evalMULMOD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 3
       then
       var lhs := peek(vm,0) as int;
       var rhs := peek(vm,1) as int;
       var rem := peek(vm,2) as int;
       var res := if rem == 0 then 0 else(lhs * rhs) % rem;
-      State.OK(push(pop(pop(pop(vm))),res as u256))
+      next(push(pop(pop(pop(vm))),res as u256))
     else
       State.INVALID
   }
@@ -495,16 +527,19 @@ module EVM {
   /**
    * (Unsigned) less-than comparison.
    */
-  function method evalLT(vm:T) : State {
+  function method evalLT(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       if lhs < rhs
         then
-        State.OK(push(pop(pop(vm)),1))
+        next(push(pop(pop(vm)),1))
       else
-        State.OK(push(pop(pop(vm)),0))
+        next(push(pop(pop(vm)),0))
     else
       State.INVALID
   }
@@ -512,16 +547,19 @@ module EVM {
   /**
    * (Unsigned) greater-than comparison.
    */
-  function method evalGT(vm:T) : State {
+  function method evalGT(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       if lhs > rhs
         then
-        State.OK(push(pop(pop(vm)),1))
+        next(push(pop(pop(vm)),1))
       else
-        State.OK(push(pop(pop(vm)),0))
+        next(push(pop(pop(vm)),0))
     else
       State.INVALID
   }
@@ -529,16 +567,19 @@ module EVM {
   /**
    * Signed less-than comparison.
    */
-  function method evalSLT(vm:T) : State {
+  function method evalSLT(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       if lhs < rhs
         then
-        State.OK(push(pop(pop(vm)),1))
+        next(push(pop(pop(vm)),1))
       else
-        State.OK(push(pop(pop(vm)),0))
+        next(push(pop(pop(vm)),0))
     else
       State.INVALID
   }
@@ -546,16 +587,19 @@ module EVM {
   /**
    * Signed greater-than comparison.
    */
-  function method evalSGT(vm:T) : State {
+  function method evalSGT(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := Word.asI256(peek(vm,0));
       var rhs := Word.asI256(peek(vm,1));
       if lhs > rhs
         then
-        State.OK(push(pop(pop(vm)),1))
+        next(push(pop(pop(vm)),1))
       else
-        State.OK(push(pop(pop(vm)),0))
+        next(push(pop(pop(vm)),0))
     else
       State.INVALID
   }
@@ -563,16 +607,19 @@ module EVM {
   /**
    * Equality comparison.
    */
-  function method evalEQ(vm:T) : State {
+  function method evalEQ(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1);
       if lhs == rhs
         then
-        State.OK(push(pop(pop(vm)),1))
+        next(push(pop(pop(vm)),1))
       else
-        State.OK(push(pop(pop(vm)),0))
+        next(push(pop(pop(vm)),0))
     else
       State.INVALID
   }
@@ -580,15 +627,18 @@ module EVM {
   /**
    * Simple not operator.
    */
-  function method evalISZERO(vm:T) : State {
+  function method evalISZERO(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
       then
       var mhs := peek(vm,0);
       if mhs == 0
         then
-        State.OK(push(pop(vm),1))
+        next(push(pop(vm),1))
       else
-        State.OK(push(pop(vm),0))
+        next(push(pop(vm),0))
     else
       State.INVALID
   }
@@ -596,13 +646,16 @@ module EVM {
   /**
    * Bitwise AND operation.
    */
-  function method evalAND(vm:T) : State {
+  function method evalAND(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as bv256;
       var rhs := peek(vm,1) as bv256;
       var res := (lhs & rhs) as u256;
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -610,13 +663,16 @@ module EVM {
   /**
    * Bitwise OR operation.
    */
-  function method {:verify false} evalOR(vm:T) : State {
+  function method {:verify false} evalOR(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as bv256;
       var rhs := peek(vm,1) as bv256;
       var res := (lhs | rhs) as u256;
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -624,13 +680,16 @@ module EVM {
   /**
    * Bitwise XOR operation.
    */
-  function method {:verify false} evalXOR(vm:T) : State {
+  function method {:verify false} evalXOR(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0) as bv256;
       var rhs := peek(vm,1) as bv256;
       var res := (lhs ^ rhs) as u256;
-      State.OK(push(pop(pop(vm)),res))
+      next(push(pop(pop(vm)),res))
     else
       State.INVALID
   }
@@ -638,12 +697,15 @@ module EVM {
   /**
    * Bitwise NOT operation.
    */
-  function method evalNOT(vm:T) : State {
+  function method evalNOT(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
       then
       var mhs := peek(vm,0) as bv256;
       var res := (!mhs) as u256;
-      State.OK(push(pop(vm),res))
+      next(push(pop(vm),res))
     else
       State.INVALID
   }
@@ -651,13 +713,16 @@ module EVM {
   /**
    * Retrieve single byte from word.
    */
-  function method evalBYTE(vm:T) : State {
+  function method evalBYTE(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var val := peek(vm,1);
       var k := peek(vm,0);
       var res := if k < 32 then U256.nth_u8(val,k as int) else 0;
-      State.OK(push(pop(pop(vm)),res as u256))
+      next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
   }
@@ -665,14 +730,17 @@ module EVM {
   /**
    * Left shift operation.
    */
-  function method evalSHL(vm:T) : State {
+  function method evalSHL(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1) as bv256;
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs << lhs) else 0;
-      State.OK(push(pop(pop(vm)),res as u256))
+      next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
   }
@@ -680,14 +748,17 @@ module EVM {
   /**
    * Right shift operation.
    */
-  function method {:verify false} evalSHR(vm:T) : State {
+  function method {:verify false} evalSHR(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var lhs := peek(vm,0);
       var rhs := peek(vm,1) as bv256;
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs >> lhs) else 0;
-      State.OK(push(pop(pop(vm)),res as u256))
+      next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
   }
@@ -695,13 +766,16 @@ module EVM {
   /**
    * Get input data from the current environment.
    */
-  function method evalCALLDATALOAD(vm:T) : State {
+  function method evalCALLDATALOAD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
       var val := if loc >= Context.data_size(vm.context) then 0
         else Context.data_read(vm.context,loc);
-      State.OK(push(pop(vm),val))
+      next(push(pop(vm),val))
     else
       State.INVALID
   }
@@ -709,11 +783,14 @@ module EVM {
   /**
    * Get size of input data in current environment.
    */
-  function method evalCALLDATASIZE(vm:T) : State {
+  function method evalCALLDATASIZE(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if capacity(vm) >= 1
       then
       var len := |vm.context.calldata|;
-      State.OK(push(vm,len as u256))
+      next(push(vm,len as u256))
     else
       State.INVALID
   }
@@ -721,7 +798,10 @@ module EVM {
   /**
    * Get size of input data in current environment.
    */
-  function method evalCALLDATACOPY(vm:T) : State {
+  function method evalCALLDATACOPY(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 3
       then
       var m_loc := peek(vm,0);
@@ -738,7 +818,7 @@ module EVM {
         // Sanity check
         assert |data| == (len as int);
         // Copy slice into memory
-        State.OK(copy(pop(pop(pop(vm))),m_loc,data))
+        next(copy(pop(pop(pop(vm))),m_loc,data))
       else
         State.INVALID
     else
@@ -748,10 +828,13 @@ module EVM {
   /**
    * Pop word from stack.
    */
-  function method evalPOP(vm:T) : State {
+  function method evalPOP(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
     then
-      State.OK(pop(vm))
+      next(pop(vm))
     else
       State.INVALID
   }
@@ -759,7 +842,10 @@ module EVM {
   /**
    * Get word from memory.
    */
-  function method evalMLOAD(vm:T) : State {
+  function method evalMLOAD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
@@ -771,7 +857,7 @@ module EVM {
         then
         var val := read(vm,loc);
         // Write big endian order
-        State.OK(push(pop(vm),val))
+        next(push(pop(vm),val))
       else
         State.INVALID
     else
@@ -782,7 +868,11 @@ module EVM {
   /**
    * Save word to memory.
    */
-  function method evalMSTORE(vm:T) : State {
+  function method evalMSTORE(st: State) : State
+  requires st.OK? {
+
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var loc := peek(vm,0);
@@ -794,7 +884,7 @@ module EVM {
       if (loc as int) + 31 <= MAX_U256
         then
         // Write big endian order
-        State.OK(write(pop(pop(vm)),loc,val))
+        next(write(pop(pop(vm)),loc,val))
       else
         State.INVALID
     else
@@ -804,7 +894,10 @@ module EVM {
   /**
    * Save byte to memory.
    */
-  function method evalMSTORE8(vm:T) : State {
+  function method evalMSTORE8(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var loc := peek(vm,0);
@@ -812,7 +905,7 @@ module EVM {
       if (loc as int) < MAX_U256
         then
         // Write byte
-        State.OK(write8(pop(pop(vm)),loc,val))
+        next(write8(pop(pop(vm)),loc,val))
       else
         State.INVALID
     else
@@ -822,13 +915,16 @@ module EVM {
   /**
    * Get word from storage.
    */
-  function method evalSLOAD(vm:T) : State {
+  function method evalSLOAD(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
       var val := load(vm,loc);
       // Store word
-      State.OK(push(pop(vm),val))
+      next(push(pop(vm),val))
     else
       State.INVALID
   }
@@ -836,13 +932,16 @@ module EVM {
   /**
    * Save word to storage.
    */
-  function method evalSSTORE(vm:T) : State {
+  function method evalSSTORE(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var loc := peek(vm,0);
       var val := peek(vm,1);
       // Store word
-      State.OK(store(pop(pop(vm)),loc,val))
+      next(store(pop(pop(vm)),loc,val))
     else
       State.INVALID
   }
@@ -850,14 +949,17 @@ module EVM {
   /**
    * Unconditional branch.
    */
-  function method evalJUMP(vm:T) : State {
+  function method evalJUMP(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 1
       then
       var pc := peek(vm,0);
       // Check valid branch target
       if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
       then
-        State.OK(goto(pop(vm),pc))
+        goto(pop(vm),pc)
       else
         State.INVALID
     else
@@ -867,17 +969,20 @@ module EVM {
   /**
    * Unconditional branch.
    */
-  function method evalJUMPI(vm:T) : State {
+  function method evalJUMPI(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       var pc := peek(vm,0);
       var val := peek(vm,1);
       // Check branch taken or not
-      if val == 0 then State.OK(pop(pop(vm)))
+      if val == 0 then next(pop(pop(vm)))
       // Check valid branch target
       else if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc) == JUMPDEST
       then
-        State.OK(goto(pop(pop(vm)),pc))
+        goto(pop(pop(vm)),pc)
       else
         State.INVALID
     else
@@ -887,11 +992,13 @@ module EVM {
   /**
    * Gets value of program counter prior to this instruction being executed.
    */
-  function method evalPC(vm:T) : State
-  requires vm.pc > 0 {
+  function method evalPC(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if capacity(vm) >= 1
     then
-      State.OK(push(vm, vm.pc-1))
+      next(push(vm, vm.pc))
     else
       State.INVALID
   }
@@ -900,18 +1007,22 @@ module EVM {
    * Marks a valid destination for a jump, but otherwise has no effect
    * on machine state.
    */
-  function method evalJUMPDEST(vm:T) : State {
-    State.OK(vm)
+  function method evalJUMPDEST(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st; next(vm)
   }
 
   /**
    * Push one byte onto stack.
    */
-  function method evalPUSH1(vm:T) : State {
+  function method evalPUSH1(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if opcode_operands(vm) >= 1 && capacity(vm) >= 1
       then
-      var k := Code.decode_u8(vm.code,vm.pc);
-      State.OK(goto(push(vm,k as u256),vm.pc+1))
+      var k := Code.decode_u8(vm.code,vm.pc+1);
+      goto(push(vm,k as u256),vm.pc+2)
     else
       State.INVALID
   }
@@ -919,13 +1030,16 @@ module EVM {
   /**
    * Push two bytes onto stack.
    */
-  function method evalPUSH2(vm:T) : State {
+  function method evalPUSH2(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if opcode_operands(vm) >= 2 && capacity(vm) >= 1
       then
-      var k1 := Code.decode_u8(vm.code,vm.pc) as u256;
-      var k2 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
+      var k1 := Code.decode_u8(vm.code,vm.pc + 1) as u256;
+      var k2 := Code.decode_u8(vm.code,vm.pc + 2) as u256;
       var k := (k1 * 256) + k2;
-      State.OK(goto(push(vm,k),vm.pc+2))
+      goto(push(vm,k),vm.pc+3)
     else
       State.INVALID
   }
@@ -933,11 +1047,14 @@ module EVM {
   /**
    * Duplicate item on stack.
    */
-  function method evalDUP(vm:T, k: nat) : State {
+  function method evalDUP(st: State, k: nat) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) > k && capacity(vm) >= 1
       then
       var kth := peek(vm,k);
-      State.OK(push(vm,kth))
+      next(push(vm,kth))
     else
       State.INVALID
   }
@@ -945,10 +1062,13 @@ module EVM {
   /**
    * Swap two items on the stack
    */
-  function method evalSWAP(vm:T, k: nat) : State {
+  function method evalSWAP(st: State, k: nat) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) > k
       then
-      State.OK(swap(vm,k))
+      next(swap(vm,k))
     else
       State.INVALID
   }
@@ -956,7 +1076,10 @@ module EVM {
   /**
    * Halt execution returning output data.
    */
-  function method evalRETURN(vm:T) : State {
+  function method evalRETURN(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       // Determine amount of data to return.
@@ -978,7 +1101,10 @@ module EVM {
   /**
    * Revert execution returning output data.
    */
-  function method evalREVERT(vm:T) : State {
+  function method evalREVERT(st: State) : State
+  requires st.OK? {
+    var OK(vm) := st;
+    //
     if operands(vm) >= 2
       then
       // Determine amount of data to return.
@@ -1004,20 +1130,34 @@ module EVM {
   /**
    * Decode next opcode from machine.
    */
-  function method decode(vm:T) : (T,u8) {
+  function method decode(st:State) : u8
+   // To execute a bytecode requires the machine is in a non-terminal state.
+  requires st.OK? {
+    // Destructure incoming state.
+    var OK(vm) := st;
+    // Sanity check pc location
     if vm.pc < Code.size(vm.code)
     then
-      (goto(vm,vm.pc+1),Code.decode_u8(vm.code,vm.pc))
+      Code.decode_u8(vm.code,vm.pc)
     else
-      (vm,INVALID)
+      INVALID
   }
 
   /**
    * Move program counter to a given location.
    */
-  function method goto(evm:T, k:u256) : T
+  function method goto(evm:T, k:u256) : State
     requires k <= Code.size(evm.code) {
-      evm.(pc := k)
+      State.OK(evm.(pc := k))
+  }
+
+ /**
+   * Move program counter to next instruction.
+   */
+  function method next(evm:T) : State {
+    if evm.pc < (MAX_U256 as u256)
+    then State.OK(evm.(pc := evm.pc + 1))
+    else State.INVALID
   }
 
   /**
@@ -1120,7 +1260,7 @@ module EVM {
    * Check how many code operands are available.
    */
   function method opcode_operands(evm:T) : int {
-    (Code.size(evm.code) as nat) - (evm.pc as nat)
+    (Code.size(evm.code) as nat) - ((evm.pc as nat) + 1)
   }
 
   /**
