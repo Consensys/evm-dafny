@@ -1,4 +1,4 @@
-include "evm.dfy"
+include "../../dafny/evm.dfy"
 
 import opened Int
 import opened EVM
@@ -44,6 +44,24 @@ requires x > 1
   var r := EVM.Return(vm);
   //
   assert data(r) == [x];
+}
+
+method test_03(x: u8)
+requires x > 1
+{
+  // Initialise EVM
+  var tx := Context.create(0xabcd,[]);
+  var vm := EVM.create(tx,map[],GASLIMIT,seq(1000, i=>0));
+  //
+  vm := EVM.Push1(vm,x);
+  vm := EVM.Push1(vm,0);
+  vm := EVM.MStore(vm);
+  vm := EVM.Push1(vm,0x1);
+  vm := EVM.Push1(vm,0x1F);
+  var r := EVM.Return(vm);
+  //
+  assert data(r) == [x];
+  assert Stack.peek(vm.OK?.stack,0) > 1;
 }
 
 /**
