@@ -343,7 +343,7 @@ module EVM {
       Push2(st, k)
     // 0x80s: Duplicate operations
     else if DUP1 <= opcode <= DUP16 then
-      var k := (opcode - DUP1) as int; Dup(st,k)
+      var k := (opcode - DUP1) as int; Dup(st,k+1)
     // 0x90s: Exchange operations
     else if SWAP1 <= opcode <= SWAP16 then
       var k := (opcode - SWAP1) as int; Swap(st,k+1)
@@ -1051,12 +1051,13 @@ module EVM {
    * Duplicate item on stack.
    */
   function method Dup(st: State, k: nat) : State
-  requires st.OK? {
+  requires st.OK?
+  requires k > 0 {
     var OK(vm) := st;
     //
-    if operands(vm) > k && capacity(vm) >= 1
+    if operands(vm) > (k-1) && capacity(vm) >= 1
       then
-      var kth := peek(vm,k);
+      var kth := peek(vm,k-1);
       next(push(vm,kth))
     else
       State.INVALID
