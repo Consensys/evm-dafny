@@ -32,11 +32,31 @@ task compileDafny {
     outputs.cacheIf { true }
     // Specify actions
     doLast {
-        print "Verifying and compiler Dafny code.."
         // Generate Dafny Source
         exec {
             executable 'dafny'
             args '/verifyAllModules','/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
+        }
+    }
+}
+
+// ======================================================================
+// Dafny Tests
+// ======================================================================
+
+task testDafny {
+    // Specify inputs
+    inputs.files(fileTree('src') { include '**/*.dfy' } )
+    // No outputs
+    outputs.files([])
+    // Require code gen
+    dependsOn compileDafny
+    // Specify actions
+    doLast {
+        // Verify Dafny Tests (disable code gen)
+        exec {
+            executable 'dafny'
+            args '/compile:0','src/test/dafny/test.dfy'
         }
     }
 }
@@ -59,7 +79,7 @@ test {
 
 // Specify that should run compileDafny before compileJava.
 // Otherwise, the Java compiler cannot find up-to-date Dafny tests!
-compileJava.dependsOn compileDafny
+compileJava.dependsOn testDafny
 
 sourceSets {
     main {
