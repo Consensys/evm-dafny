@@ -255,7 +255,7 @@ module EVM {
    * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
    * with return data are indicated accordingly (along with any gas returned).
    */
-  datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
+  datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERTS(gas:nat,data:seq<u8>)
 
   /**
    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
@@ -1119,7 +1119,7 @@ module EVM {
         // Read out that data.
         var data := Memory.slice(vm.memory, start as u256, len);
         // Done
-        State.REVERT(gas:=vm.gas,data:=data)
+        State.REVERTS(gas:=vm.gas,data:=data)
       else
         State.INVALID
     else

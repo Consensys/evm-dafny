@@ -23,13 +23,12 @@ import EVM_Compile.State;
 import EVM_Compile.State_INVALID;
 import EVM_Compile.State_OK;
 import EVM_Compile.State_RETURNS;
-import EVM_Compile.State_REVERT;
+import EVM_Compile.State_REVERTS;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.DafnySet;
 import dafnyevm.util.Hex;
 import dafnyevm.util.Tracers;
-
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
@@ -123,7 +122,7 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public boolean isRevert() {
-			return state instanceof State_REVERT;
+			return state instanceof State_REVERTS;
 		}
 
 		/**
@@ -173,8 +172,8 @@ public class DafnyEvm {
 			if(state instanceof State_RETURNS) {
 				State_RETURNS sr = (State_RETURNS) state;
 				return sr.data;
-			} else if(state instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) state;
+			} else if(state instanceof State_REVERTS) {
+				State_REVERTS sr = (State_REVERTS) state;
 				return sr.data;
 			} else{
 				return null;
@@ -274,8 +273,8 @@ public class DafnyEvm {
 				State_RETURNS sr = (State_RETURNS) st;
 				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
 				end(bytes,BigInteger.ZERO);
-			} else if(st instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) st;
+			} else if(st instanceof State_REVERTS) {
+				State_REVERTS sr = (State_REVERTS) st;
 				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
 				revert(bytes,BigInteger.ZERO);
 			} else {

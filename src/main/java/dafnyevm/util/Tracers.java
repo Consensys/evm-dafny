@@ -25,7 +25,7 @@ import org.json.JSONWriter;
 import EVM_Compile.State;
 import EVM_Compile.State_OK;
 import EVM_Compile.State_RETURNS;
-import EVM_Compile.State_REVERT;
+import EVM_Compile.State_REVERTS;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
 import dafnyevm.DafnyEvm.SnapShot;
@@ -46,8 +46,8 @@ public class Tracers {
 				State_RETURNS sr = (State_RETURNS) st;
 				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
 				System.out.println(Hex.toHexString(bytes));
-			} else if (st instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) st;
+			} else if (st instanceof State_REVERTS) {
+				State_REVERTS sr = (State_REVERTS) st;
 				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
 				System.out.println(Hex.toHexString(bytes));
 				System.out.println("error: execution reverted");
