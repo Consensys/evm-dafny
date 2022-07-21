@@ -34,7 +34,7 @@ requires x > 1
 // ===========================================================================
 
 // Write parameter into return data
-method test_straightline_01(x: u8)
+method test_basic_01(x: u8)
 requires x > 1
 {
   var tx := Context.create(0xabcd,[]);
@@ -51,7 +51,7 @@ requires x > 1
 }
 
 // Add two values and return
-method test_straightline_02(x: u8, y: u8) returns (z:u16)
+method test_basic_02(x: u8, y: u8) returns (z:u16)
 ensures z == (x as u16) + (y as u16)
 {
   var tx := Context.create(0xabcd,[]);
@@ -70,9 +70,65 @@ ensures z == (x as u16) + (y as u16)
   return Bytes.read_u16(vm.data,0);
 }
 
+method test_basic_03(x: u8, y: u8) returns (z:u8)
+requires x >= y
+ensures z <= x
+{
+  var tx := Context.create(0xabcd,[]);
+  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, y, PUSH1, x, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  //
+  vm := EVM.Push1(vm,y);
+  vm := EVM.Push1(vm,x);
+  vm := EVM.Sub(vm); // x - y
+  vm := EVM.Push1(vm,0);
+  vm := EVM.MStore(vm);
+  vm := EVM.Push1(vm,0x1);
+  vm := EVM.Push1(vm,0x1F);
+  vm := EVM.Return(vm);
+  //
+  return Bytes.read_u8(vm.data,0);
+}
+
 // ===========================================================================
 // Branching Tests
 // ===========================================================================
+
+// This is an underflow test.  Either the contract reverts, or there was no underflow.
+method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
+  // Check revert only when overflow would have occurred.
+  ensures revert ==> y > x
+  // If didn't revert, then result is less.
+  ensures !revert ==> (z <= x)
+{
+  var tx := Context.create(0xabcd,[]);
+  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, GT, ISZERO, PUSH1, 0x0A, JUMPI, REVERT, JUMPDEST, PUSH1, x, PUSH1, y, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  //
+  vm := EVM.Push1(vm,x);   // 0x00
+  vm := EVM.Push1(vm,y);   // 0x02
+  vm := EVM.Gt(vm);        // 0x04
+  vm := EVM.IsZero(vm);    // 0x05
+  vm := EVM.Push1(vm,0xA); // 0x06
+  vm := EVM.JumpI(vm);     // 0x08
+  //
+  if vm.evm.pc == 0x09 {
+    vm := EVM.Revert(vm);  // 0x09
+    return 0,true;
+  } else {
+    // Happy path
+    vm := EVM.JumpDest(vm); // 0xA
+    assert x >= y;
+    vm := EVM.Push1(vm,y);
+    vm := EVM.Push1(vm,x);
+    vm := EVM.Sub(vm); // x - y
+    vm := EVM.Push1(vm,0);
+    vm := EVM.MStore(vm);
+    vm := EVM.Push1(vm,0x1);
+    vm := EVM.Push1(vm,0x1F);
+    vm := EVM.Return (vm);
+    //
+    return Bytes.read_u8(vm.data,0), false;
+  }
+}
 
 // ===========================================================================
 // Looping Tests
