@@ -19,6 +19,9 @@ include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 
+include "./evm-opcodes.dfy"
+include "./evm-types.dfy"
+
 /**
  * Top-level definition of an Ethereum Virtual Machine.
  */
@@ -33,15 +36,18 @@ module EVM {
   import Context
   import Code
 
-  datatype T = EVM(
-    context: Context.T,
-    storage : Storage.T,
-    stack   : Stack.T,
-    memory  : Memory.T,
-    code: Code.T,
-    gas: nat,
-    pc : u256
-  )
+  import opened EVM_TYPES
+  import opened EVM_OPCODES 
+
+  // datatype T = EVM(
+  //   context: Context.T,
+  //   storage : Storage.T,
+  //   stack   : Stack.T,
+  //   memory  : Memory.T,
+  //   code: Code.T,
+  //   gas: nat,
+  //   pc : u256
+  // )
 
   /**
    * Create a fresh EVM to execute a given sequence of bytecode instructions.
@@ -255,7 +261,7 @@ module EVM {
    * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
    * with return data are indicated accordingly (along with any gas returned).
    */
-  datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
+  // datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
 
   /**
    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution

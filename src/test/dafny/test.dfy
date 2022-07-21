@@ -1,4 +1,5 @@
-include "evm.dfy"
+
+include "../../dafny/evm.dfy"
 
 import opened Int
 import opened EVM
@@ -49,7 +50,7 @@ requires x > 1
 /**
  * Extract the return data from an EVM Result
  */
-function method data(r:EVM.State) : seq<u8>
+function method data(r:EVM_TYPES.State) : seq<u8>
   requires r.RETURNS? {
     var RETURNS(gas,data) := r;
     data
