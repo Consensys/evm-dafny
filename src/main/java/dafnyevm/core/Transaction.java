@@ -24,10 +24,24 @@ import dafnyevm.util.Hex;
 public class Transaction {
 	public final BigInteger sender;
 	public final BigInteger to;
+	/**
+	 * Maximum amount of gas to expend trying to complete the transaction.
+	 */
 	public final BigInteger gasLimit;
+	/**
+	 * Price per unit of Gas (in Wei).
+	 */
 	public final BigInteger gasPrice;
+
 	public final BigInteger nonce;
+	/**
+	 * Funds being transferred (in Wei)
+	 */
 	public final BigInteger value;
+	/**
+	 * Call data provided for the contract call (e.g. which typically follows the
+	 * Solidity ABI).
+	 */
 	public final byte[] data;
 
 	public Transaction(BigInteger sender, BigInteger to, BigInteger gasLimit, BigInteger gasPrice, BigInteger nonce,

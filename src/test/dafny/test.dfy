@@ -51,7 +51,7 @@ requires x > 1
 {
   // Initialise EVM
   var tx := Context.create(0xabcd,[]);
-  var vm := EVM.create(tx,map[],GASLIMIT,seq(1000, i=>nondet()));
+  var vm := EVM.create(tx,map[],GASLIMIT,seq(1000, i=>0));
   //
   vm := EVM.Push1(vm,x);
   vm := EVM.Push1(vm,0);
@@ -61,6 +61,7 @@ requires x > 1
   var r := EVM.Return(vm);
   //
   assert data(r) == [x];
+  assert Stack.peek(vm.OK?.stack,0) > 1;
 }
 
 /**
