@@ -1,0 +1,9 @@
+{"pc":0,"op":58,"gas":"0x3c9ebc","gasCost":"0x2","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"GASPRICE"}
+{"pc":1,"op":96,"gas":"0x3c9eba","gasCost":"0x3","memSize":0,"stack":["0x3f2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":3,"op":85,"gas":"0x3c9eb7","gasCost":"0x4e20","memSize":0,"stack":["0x3f2","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":4,"op":72,"gas":"0x3c5097","gasCost":"0x2","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"BASEFEE"}
+{"pc":5,"op":96,"gas":"0x3c5095","gasCost":"0x3","memSize":0,"stack":["0x3e8"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":85,"gas":"0x3c5092","gasCost":"0x4e20","memSize":0,"stack":["0x3e8","0x1"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":8,"op":0,"gas":"0x3c0272","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x9c4a","time":158050}
+{"stateRoot": "0d22f12f002f077e46b14cf06a35c7b9dbc3b1c80100c44fde15aff21696641b"}

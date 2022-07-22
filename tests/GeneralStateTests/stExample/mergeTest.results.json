@@ -1,0 +1,8 @@
+[
+  {
+    "name": "mergeTest",
+    "pass": false,
+    "fork": "Merge",
+    "error": "unsupported fork \"Merge\""
+  }
+]

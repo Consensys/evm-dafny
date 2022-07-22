@@ -1,0 +1,12 @@
+[
+  {
+    "name": "indexesOmitExample",
+    "pass": true,
+    "fork": "Berlin"
+  },
+  {
+    "name": "indexesOmitExample",
+    "pass": true,
+    "fork": "London"
+  }
+]
