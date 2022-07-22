@@ -23,12 +23,12 @@ import EVM_Compile.State;
 import EVM_Compile.State_INVALID;
 import EVM_Compile.State_OK;
 import EVM_Compile.State_RETURNS;
-import EVM_Compile.State_REVERT;
+import EVM_Compile.State_REVERTS;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.DafnySet;
 import dafnyevm.util.Hex;
-
+import dafnyevm.util.Tracers;
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
@@ -41,7 +41,7 @@ public class DafnyEvm {
 	/**
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
-	private Tracer tracer = DEFAULT_TRACER;
+	private Tracer tracer = new Tracers.Default();
 	/**
 	 * Initial state of storage prior.
 	 */
@@ -87,6 +87,7 @@ public class DafnyEvm {
 		// Create the EVM
 		State r = create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
+		tracer.step(r);
 		r = execute(r);
 		// Continue whilst the EVM is happy.
 		while(r instanceof State_OK) {
@@ -122,7 +123,7 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public boolean isRevert() {
-			return state instanceof State_REVERT;
+			return state instanceof State_REVERTS;
 		}
 
 		/**
@@ -172,8 +173,8 @@ public class DafnyEvm {
 			if(state instanceof State_RETURNS) {
 				State_RETURNS sr = (State_RETURNS) state;
 				return sr.data;
-			} else if(state instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) state;
+			} else if(state instanceof State_REVERTS) {
+				State_REVERTS sr = (State_REVERTS) state;
 				return sr.data;
 			} else{
 				return null;
@@ -257,31 +258,6 @@ public class DafnyEvm {
 	}
 
 	/**
-	 * The default tracer does nothing at all.
-	 */
-	public static final Tracer DEFAULT_TRACER = new Tracer() {
-
-		@Override
-		public void step(State st) {
-			if(st instanceof State_OK) {
-				// Do nothing.
-			} else if(st instanceof State_RETURNS) {
-				State_RETURNS sr = (State_RETURNS) st;
-				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
-				System.out.println(Hex.toHexString(bytes));
-			} else if(st instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) st;
-				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
-				System.out.println(Hex.toHexString(bytes));
-				System.out.println("error: execution reverted");
-			} else {
-				// TODO: add error information
-				System.out.println("error");
-			}
-		}
-	};
-
-	/**
 	 * The trace adaptor provides a more convenient API over the internal tracer
 	 * API. The reason for this class existing is just to improve performance when
 	 * the default tracer is being used.
@@ -298,8 +274,8 @@ public class DafnyEvm {
 				State_RETURNS sr = (State_RETURNS) st;
 				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
 				end(bytes,BigInteger.ZERO);
-			} else if(st instanceof State_REVERT) {
-				State_REVERT sr = (State_REVERT) st;
+			} else if(st instanceof State_REVERTS) {
+				State_REVERTS sr = (State_REVERTS) st;
 				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
 				revert(bytes,BigInteger.ZERO);
 			} else {
