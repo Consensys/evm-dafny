@@ -1,4 +1,4 @@
-include "evm.dfy"
+include "../../dafny/evm.dfy"
 
 import opened Int
 import opened EVM
