@@ -65,8 +65,13 @@ public class Transaction {
 	public static Transaction fromJSON(JSONObject json) throws JSONException {
 		BigInteger to = Hex.toBigInt(json.getString("to"));
 		BigInteger sender = Hex.toBigInt(json.getString("sender"));
-		BigInteger gasPrice = Hex.toBigInt(json.getString("gasPrice"));
-		// BigInteger gasLimit = Hex.toBigInt(json.getString("gasLimit"));
+		BigInteger gasPrice;
+		if(json.has("gasPrice")) {
+			gasPrice = Hex.toBigInt(json.getString("gasPrice"));
+		} else {
+			System.out.println("*** MISSING GAS PRICE");
+			gasPrice = BigInteger.ZERO;
+		}
 		BigInteger nonce = Hex.toBigInt(json.getString("nonce"));
 		BigInteger value = parseValueArray(json.getJSONArray("value"));
 		byte[] data = parseDataArray(json.getJSONArray("data"));

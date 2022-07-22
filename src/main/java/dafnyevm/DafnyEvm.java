@@ -87,6 +87,7 @@ public class DafnyEvm {
 		// Create the EVM
 		State r = create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
+		tracer.step(r);
 		r = execute(r);
 		// Continue whilst the EVM is happy.
 		while(r instanceof State_OK) {

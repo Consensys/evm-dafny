@@ -16,6 +16,7 @@ package dafnyevm.util;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,8 +29,9 @@ import EVM_Compile.State_RETURNS;
 import EVM_Compile.State_REVERTS;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
-import dafnyevm.DafnyEvm.SnapShot;
 import dafnyevm.DafnyEvm.Tracer;
+import dafnyevm.core.Trace;
+import dafnyevm.core.Trace.Step;
 
 public class Tracers {
 
@@ -65,7 +67,7 @@ public class Tracers {
 	public static class Debug extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(SnapShot state) {
+		public void step(DafnyEvm.SnapShot state) {
 			final String p = state.getPC().toString();
 			final String m = Arrays.toString(state.getMemory());
 			final String s = state.getStorage().toString();
@@ -91,13 +93,44 @@ public class Tracers {
 		}
 	}
 
+	public static class Structured extends DafnyEvm.TraceAdaptor {
+		private final List<Trace> out;
+
+		public Structured(List<Trace> out) {
+			this.out = out;
+		}
+
+		@Override
+		public void step(DafnyEvm.SnapShot state) {
+			int pc = state.getPC().intValueExact();
+			byte[] memory = state.getMemory();
+			BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
+			out.add(new Trace.Step(pc,stack,memory));
+		}
+
+		@Override
+		public void end(byte[] output, BigInteger gasUsed) {
+			out.add(new Trace.Returns(output));
+		}
+
+		@Override
+		public void revert(byte[] output, BigInteger gasUsed) {
+			out.add(new Trace.Reverts(output));
+		}
+
+		@Override
+		public void exception(BigInteger gasUsed) {
+			out.add(new Trace.Exception());
+		}
+	}
+
 	/**
 	 * Generate JSON output according to EIP-3155.
 	 */
 	public static class JSON extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(SnapShot state) {
+		public void step(DafnyEvm.SnapShot state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();

@@ -1,0 +1,32 @@
+{"pc":0,"op":96,"gas":"0x59f70","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x59f6d","gasCost":"0x3","memSize":0,"stack":["0x1"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":1,"gas":"0x59f6a","gasCost":"0x3","memSize":0,"stack":["0x1","0x1"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":5,"op":96,"gas":"0x59f67","gasCost":"0x3","memSize":0,"stack":["0x2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":85,"gas":"0x59f64","gasCost":"0x4e20","memSize":0,"stack":["0x2","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":8,"op":0,"gas":"0x55144","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x4e2c","time":142400}
+{"stateRoot": "92575ea202220f5f34292941b2ed9d6821c29f221d3ea417682b872d18094c55"}
+{"pc":0,"op":96,"gas":"0x5b7a8","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x5b7a5","gasCost":"0x3","memSize":0,"stack":["0x1"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":1,"gas":"0x5b7a2","gasCost":"0x3","memSize":0,"stack":["0x1","0x1"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":5,"op":96,"gas":"0x5b79f","gasCost":"0x3","memSize":0,"stack":["0x2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":85,"gas":"0x5b79c","gasCost":"0x5654","memSize":0,"stack":["0x2","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":8,"op":0,"gas":"0x56148","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x5660","time":35030}
+{"stateRoot": "036bf17c08e7ee19bb2e2cd209947cf71ac16426a30afad455ae183bde397993"}
+{"pc":0,"op":96,"gas":"0x59f70","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x59f6d","gasCost":"0x3","memSize":0,"stack":["0x1"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":1,"gas":"0x59f6a","gasCost":"0x3","memSize":0,"stack":["0x1","0x1"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":5,"op":96,"gas":"0x59f67","gasCost":"0x3","memSize":0,"stack":["0x2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":85,"gas":"0x59f64","gasCost":"0x4e20","memSize":0,"stack":["0x2","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":8,"op":0,"gas":"0x55144","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x4e2c","time":59470}
+{"stateRoot": "2a7d9d52c698e77f941c8337d58ed4875781ec766c39064ad85b19edb513cac3"}
+{"pc":0,"op":96,"gas":"0x5b7a8","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x5b7a5","gasCost":"0x3","memSize":0,"stack":["0x1"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":1,"gas":"0x5b7a2","gasCost":"0x3","memSize":0,"stack":["0x1","0x1"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":5,"op":96,"gas":"0x5b79f","gasCost":"0x3","memSize":0,"stack":["0x2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":85,"gas":"0x5b79c","gasCost":"0x5654","memSize":0,"stack":["0x2","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":8,"op":0,"gas":"0x56148","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x5660","time":35960}
+{"stateRoot": "46ffc1400ed4ed57e528040b544067131b9e209b0a600ec3ff117cc38326e475"}
