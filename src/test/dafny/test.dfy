@@ -2,7 +2,7 @@
 include "../../dafny/evm.dfy"
 
 import opened Int
-import opened EVM
+import opened EVM_OPCODES 
 
 // Arbitrary limit for now
 const GASLIMIT : nat := 100;
@@ -19,7 +19,7 @@ requires x > 1
   // PUSH1 0x2
   vm := EVM.execute(vm);
   // MSTORE
-  vm := EVM.execute(vm);
+  vm := EVM.execute(vm); 
   // PUSH
   vm := EVM.execute(vm);
   // PUSH

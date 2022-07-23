@@ -13,31 +13,19 @@
  */
 
 include "util/int.dfy"
-// include "util/memory.dfy"
-// include "util/storage.dfy"
-// include "util/stack.dfy"
-// include "util/context.dfy"
-// include "util/code.dfy"
 
 /**
- * Top-level definition of an Ethereum Virtual Machine.
+ * Provide Mnemonics for Opcodes of the Ethreum Virtual Machine.
  */
 module EVM_OPCODES {
-  import opened Int
-//   import U256
-//   import I256
-//   import Word
-//   import Stack
-//   import Memory
-//   import Storage
-//   import Context
-//   import Code
+	
+  	import opened Int
 
-  // =============================================================================
-  // Bytecode Semantics
-  // =============================================================================
+  	// =============================================================================
+  	// Bytecode Semantics
+  	// =============================================================================
 
-  const G_zero : int := 0;
+  	const G_zero : int := 0;
 	const G_base : int := 2;
 	const G_verylow : int := 3;
 	const G_low : int := 5;
@@ -100,8 +88,8 @@ module EVM_OPCODES {
 	const NOT : u8 := 0x19;
 	const BYTE : u8 := 0x1a;
 	const SHL : u8 := 0x1b;
-  const SHR : u8 := 0x1c;
-  const SAR : u8 := 0x1d;
+  	const SHR : u8 := 0x1c;
+  	const SAR : u8 := 0x1d;
 	// 20s: SHA3
 	const SHA3 : u8 := 0x20;
 	// 30s: Environment Information
@@ -221,16 +209,6 @@ module EVM_OPCODES {
 	const DELEGATECALL : u8 := 0xf4;
 	const STATICCALL : u8 := 0xfa;
 	const REVERT : u8 := 0xfd;
-	const INVALID2 : u8 := 0xfe;
+	const INVALID : u8 := 0xfe;
 	const SELFDESTRUCT : u8 := 0xff;
-
-  /**
-   * Captures the possible state of the machine.  Normal execution is indicated
-   * by OK (with the current machine data).  An exceptional halt is indicated by INVALID
-   * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
-   * with return data are indicated accordingly (along with any gas returned).
-   */
-//   datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT2(gas:nat,data:seq<u8>)
-
-  
 }
