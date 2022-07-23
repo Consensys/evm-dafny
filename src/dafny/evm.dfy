@@ -54,15 +54,6 @@ module EVM {
     State.OK(evm)
   }
 
-  
-  /**
-   * Captures the possible state of the machine.  Normal execution is indicated
-   * by OK (with the current machine data).  An exceptional halt is indicated by INVALID
-   * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
-   * with return data are indicated accordingly (along with any gas returned).
-   */
-  // datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERT(gas:nat,data:seq<u8>)
-
   /**
    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
    * can continue), or some form of halt (e.g. exceptional, revert, etc).
