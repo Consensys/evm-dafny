@@ -93,6 +93,7 @@ sourceSets {
 // In this section you declare the dependencies for your production and test code
 dependencies {
     implementation("commons-cli:commons-cli:1.5.0")
+    implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("org.json:org.json:chargebee-1.0")
     implementation files('evm-java/DafnyRuntime.jar')
     //
