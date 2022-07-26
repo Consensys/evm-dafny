@@ -94,9 +94,9 @@ public class Tracers {
 	}
 
 	public static class Structured extends DafnyEvm.TraceAdaptor {
-		private final List<Trace> out;
+		private final List<Trace.Element> out;
 
-		public Structured(List<Trace> out) {
+		public Structured(List<Trace.Element> out) {
 			this.out = out;
 		}
 

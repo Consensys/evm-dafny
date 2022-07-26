@@ -14,7 +14,9 @@
 package dafnyevm.core;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +33,60 @@ import dafnyevm.util.Hex;
  *
  */
 public class Trace {
+	private final List<Element> elements;
+
+	public Trace(List<Element> elements) {
+		this.elements = new ArrayList<>(elements);
+	}
+
+	public List<Element> getElements() {
+		return elements;
+	}
+
+	/**
+	 * Represents a single element of a trace (e.g. a single step of execution).
+	 *
+	 * @author David J. Pearce
+	 *
+	 */
+	public static interface Element {
+
+		/**
+		 * Convert a <code>JSON</code> object into a <code>Trace</code> object. An
+		 * example corresponding to a <code>Trace.Step</code> is the following:
+		 *
+		 * <pre>
+		 * {"pc":0,"op":96,"gas":"0x5c878","gasCost":"0x3","memSize":0,"stack":[]}
+		 * </pre>
+		 *
+		 * See EIP-3155 for more information on the format used <a href=
+		 * "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3155.md">here</here>.
+		 *
+		 * @param json
+		 * @return
+		 * @throws JSONException
+		 */
+		public static Trace.Element fromJSON(JSONObject json) throws JSONException {
+			if (json.has("error")) {
+				if (json.getString("error").equals("execution reverted")) {
+					byte[] data = Hex.toBytes(json.getString("output"));
+					return new Trace.Reverts(data);
+				} else {
+					return new Trace.Exception();
+				}
+			} else if(json.has("output")) {
+				byte[] data = Hex.toBytes(json.getString("output"));
+				return new Trace.Returns(data);
+			} else {
+				int pc = json.getInt("pc");
+				// Memory is not usually reported until it is actually assigned something.
+				byte[] memory = Hex.toBytes(json.optString("memory","0x"));
+				BigInteger[] stack = parseStackArray(json.getJSONArray("stack"));
+				//
+				return new Trace.Step(pc, stack, memory);
+			}
+		}
+	}
 
 	/**
 	 * Captures a single (non-terminating) execution step by the EVM.
@@ -38,7 +94,7 @@ public class Trace {
 	 * @author David J. Pearce
 	 *
 	 */
-	public static class Step extends Trace {
+	public static class Step implements Element {
 		public final int pc;
 		public final BigInteger[] stack;
 		public final byte[] memory;
@@ -83,7 +139,7 @@ public class Trace {
 	 * @author David J. Pearce
 	 *
 	 */
-	public static class Returns extends Trace {
+	public static class Returns implements Element {
 		public final byte[] data;
 
 		public Returns(byte[] data) {
@@ -113,7 +169,7 @@ public class Trace {
 	 * @author David J. Pearce
 	 *
 	 */
-	public static class Reverts extends Trace {
+	public static class Reverts implements Element {
 		public final byte[] data;
 
 		public Reverts(byte[] data) {
@@ -144,7 +200,7 @@ public class Trace {
 	 * @author David J. Pearce
 	 *
 	 */
-	public static class Exception extends Trace {
+	public static class Exception implements Element {
 
 		@Override
 		public String toString() {
@@ -159,46 +215,6 @@ public class Trace {
 		@Override
 		public int hashCode() {
 			return 0;
-		}
-	}
-
-	/**
-	 * Convert a <code>JSON</code> object into a <code>Trace</code> object. An
-	 * example corresponding to a <code>Trace.Step</code> is the following:
-	 *
-	 * <pre>
-	 * {"pc":0,"op":96,"gas":"0x5c878","gasCost":"0x3","memSize":0,"stack":[]}
-	 * </pre>
-	 *
-	 * See EIP-3155 for more information on the format used <a href=
-	 * "https://github.com/ethereum/EIPs/blob/master/EIPS/eip-3155.md">here</here>.
-	 *
-	 * @param json
-	 * @return
-	 * @throws JSONException
-	 */
-	public static Trace fromJSON(JSONObject json) throws JSONException {
-		if (json.has("error")) {
-			if (json.getString("error").equals("execution reverted")) {
-				byte[] data = Hex.toBytes(json.getString("output"));
-				return new Trace.Reverts(data);
-			} else {
-				return new Trace.Exception();
-			}
-		} else if(json.has("output")) {
-			byte[] data = Hex.toBytes(json.getString("output"));
-			return new Trace.Returns(data);
-		} else {
-			int pc = json.getInt("pc");
-			byte[] memory;
-			if(json.has("memory")) {
-				throw new UnsupportedOperationException();
-			} else {
-				memory = new byte[0];
-			}
-			BigInteger[] stack = parseStackArray(json.getJSONArray("stack"));
-			//
-			return new Trace.Step(pc, stack, memory);
 		}
 	}
 

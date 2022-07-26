@@ -23,6 +23,7 @@ import dafnyevm.DafnyEvm.SnapShot;
 import dafnyevm.DafnyEvm.Tracer;
 import dafnyevm.core.Transaction;
 import dafnyevm.core.Account;
+import dafnyevm.core.StateTest;
 import dafnyevm.util.Hex;
 
 import java.io.IOException;
@@ -34,6 +35,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Main {
+	/**
+	 * Fork which (for now) I'm assuming we are running on. All others are ignored.
+	 */
+	public final static String FORK = "Berlin";
 
 	private static final Option[] OPTIONS = new Option[] {
 			new Option("input", true, "Input data for the transaction."),
@@ -110,22 +115,33 @@ public class Main {
 			JSONObject json = new JSONObject(contents);
 			// Run the test
 			for(String testname : JSONObject.getNames(json)) {
-				runStateTest(testname, tracer, json.getJSONObject(testname));
+				runStateTest(testname, FORK, tracer, json.getJSONObject(testname));
 			}
 		}
 	}
 
-	public static void runStateTest(String name, Tracer tracer, JSONObject json) throws JSONException {
-		// Parse transaction data
-		Transaction tx = Transaction.fromJSON(json.getJSONObject("transaction"));
+	public static void runStateTest(String name, String fork, Tracer tracer, JSONObject json) throws JSONException {
+		// Parse transaction template
+		Transaction.Template txt = Transaction.Template.fromJSON(json.getJSONObject("transaction"));
 		// Parse world state
-		Map<BigInteger,Account> pre = parsePreState(json.getJSONObject("pre"));
+		Map<BigInteger, Account> pre = parsePreState(json.getJSONObject("pre"));
+		// Parse state test info
+		Map<String, StateTest[]> post = parsePostState(json.getJSONObject("post"));
+		//
+		for (StateTest test : post.get(fork)) {
+			runStateTest(txt, test, pre, tracer);
+		}
+	}
+
+	public static void runStateTest(Transaction.Template txt, StateTest test, Map<BigInteger, Account> worldstate,
+			Tracer tracer) {
 		// FIXME: the following is hack to workaround the fact that the DafnyEvm
 		// currently does not have a concept of the "world state".
-		byte[] code = pre.get(tx.to).code;
-		Map<BigInteger,BigInteger> storage = pre.get(tx.to).storage;
+		Transaction tx = txt.instantiate(test.indexes);
+		byte[] code = worldstate.get(tx.to).code;
+		Map<BigInteger, BigInteger> storage = worldstate.get(tx.to).storage;
 		// Construct EVM
-		DafnyEvm evm = new DafnyEvm(storage,code).setTracer(tracer);
+		DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer);
 		// Run the transaction!
 		System.out.println("RUNNING CODE: " + Hex.toHexString(code));
 		SnapShot r = evm.call(tx.sender, tx.data);
@@ -140,5 +156,18 @@ public class Main {
 			world.put(hexAddr, Account.fromJSON(contents));
 		}
 		return world;
+	}
+
+	public static Map<String, StateTest[]> parsePostState(JSONObject json) throws JSONException {
+		HashMap<String, StateTest[]> forks = new HashMap<>();
+		for (String fork : JSONObject.getNames(json)) {
+			JSONArray tests = json.getJSONArray(fork);
+			StateTest[] sts = new StateTest[tests.length()];
+			for (int i = 0; i != sts.length; ++i) {
+				sts[i] = StateTest.fromJSON(tests.getJSONObject(i));
+			}
+			forks.put(fork, sts);
+		}
+		return forks;
 	}
 }
