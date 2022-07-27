@@ -60,13 +60,13 @@ ensures z == (x as u16) + (y as u16)
   vm := EVM.Push1(vm,x);
   vm := EVM.Push1(vm,y);
   vm := EVM.Add(vm);
-  assert EVM.peek(vm.evm,0) == (x as u256) + (y as u256);
+  assert vm.Peek(0) == (x as u256) + (y as u256);
   vm := EVM.Push1(vm,0);
   vm := EVM.MStore(vm);
   vm := EVM.Push1(vm,0x2);
   vm := EVM.Push1(vm,0x1E);
   vm := EVM.Return(vm);
-  //
+  // //
   return Bytes.ReadUint16(vm.data,0);
 }
 
