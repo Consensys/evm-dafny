@@ -31,7 +31,7 @@ module Code {
   /**
    * Create a code segment from an initial sequence of words.
    */
-  function method create(contents:seq<u8>) : T
+  function method Create(contents:seq<u8>) : T
     requires |contents| <= MAX_U256 {
         Code(contents:=contents)
   }
@@ -39,20 +39,20 @@ module Code {
   /**
    * Get the size of this code segment.
    */
-  function method size(c:T) : u256 { |c.contents| as u256 }
+  function method Size(c:T) : u256 { |c.contents| as u256 }
 
-  function method decode_u8(c:T, address:nat) : u8
+  function method DecodeUint8(c:T, address:nat) : u8
     // Decode position must be valid.
     requires address < |c.contents| {
       // Read word at given location
       c.contents[address]
   }
 
-  function method decode_u16(c:T, address:nat) : u16
+  function method DecodeUint16(c:T, address:nat) : u16
     // Decode position must be valid.
     requires address+1 < |c.contents| {
-      var k1 := decode_u8(c,address) as u16;
-      var k2 := decode_u8(c,address+1) as u16;
+      var k1 := DecodeUint8(c,address) as u16;
+      var k2 := DecodeUint8(c,address+1) as u16;
       (k1 * 256) + k2
   }
 }

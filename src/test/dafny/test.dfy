@@ -7,24 +7,24 @@ import opened EVM
 const GASLIMIT : nat := 100;
 
 // Check most simple program possible
-method test_execute_01(x: u8)
+method test_Execute_01(x: u8)
 requires x > 1
 {
   // Initialise EVM
-  var tx := Context.create(0xabcd,[]);
-  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  var tx := Context.Create(0xabcd,[]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
   // PUSH1 x
-  vm := EVM.execute(vm);
+  vm := EVM.Execute(vm);
   // PUSH1 0x2
-  vm := EVM.execute(vm);
+  vm := EVM.Execute(vm);
   // MSTORE
-  vm := EVM.execute(vm);
+  vm := EVM.Execute(vm);
   // PUSH
-  vm := EVM.execute(vm);
+  vm := EVM.Execute(vm);
   // PUSH
-  vm := EVM.execute(vm);
+  vm := EVM.Execute(vm);
   // RETURN
-  vm := EVM.execute(vm);
+  vm := EVM.Execute(vm);
   //
   assert vm.data == [x];
 }
@@ -37,8 +37,8 @@ requires x > 1
 method test_basic_01(x: u8)
 requires x > 1
 {
-  var tx := Context.create(0xabcd,[]);
-  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  var tx := Context.Create(0xabcd,[]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
   //
   vm := EVM.Push1(vm,x);
   vm := EVM.Push1(vm,0);
@@ -54,8 +54,8 @@ requires x > 1
 method test_basic_02(x: u8, y: u8) returns (z:u16)
 ensures z == (x as u16) + (y as u16)
 {
-  var tx := Context.create(0xabcd,[]);
-  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, ADD, PUSH1, 0x0, MSTORE, PUSH1, 0x2, PUSH1, 0x1E, RETURN]);
+  var tx := Context.Create(0xabcd,[]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, ADD, PUSH1, 0x0, MSTORE, PUSH1, 0x2, PUSH1, 0x1E, RETURN]);
   //
   vm := EVM.Push1(vm,x);
   vm := EVM.Push1(vm,y);
@@ -67,15 +67,15 @@ ensures z == (x as u16) + (y as u16)
   vm := EVM.Push1(vm,0x1E);
   vm := EVM.Return(vm);
   //
-  return Bytes.read_u16(vm.data,0);
+  return Bytes.ReadUint16(vm.data,0);
 }
 
 method test_basic_03(x: u8, y: u8) returns (z:u8)
 requires x >= y
 ensures z <= x
 {
-  var tx := Context.create(0xabcd,[]);
-  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, y, PUSH1, x, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  var tx := Context.Create(0xabcd,[]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, y, PUSH1, x, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
   //
   vm := EVM.Push1(vm,y);
   vm := EVM.Push1(vm,x);
@@ -86,7 +86,7 @@ ensures z <= x
   vm := EVM.Push1(vm,0x1F);
   vm := EVM.Return(vm);
   //
-  return Bytes.read_u8(vm.data,0);
+  return Bytes.ReadUint8(vm.data,0);
 }
 
 // ===========================================================================
@@ -100,8 +100,8 @@ method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
   // If didn't revert, then result is less.
   ensures !revert ==> (z <= x)
 {
-  var tx := Context.create(0xabcd,[]);
-  var vm := EVM.create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, GT, ISZERO, PUSH1, 0x0A, JUMPI, REVERT, JUMPDEST, PUSH1, x, PUSH1, y, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  var tx := Context.Create(0xabcd,[]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, GT, ISZERO, PUSH1, 0x0A, JUMPI, REVERT, JUMPDEST, PUSH1, x, PUSH1, y, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
   //
   vm := EVM.Push1(vm,x);   // 0x00
   vm := EVM.Push1(vm,y);   // 0x02
@@ -126,7 +126,7 @@ method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
     vm := EVM.Push1(vm,0x1F);
     vm := EVM.Return (vm);
     //
-    return Bytes.read_u8(vm.data,0), false;
+    return Bytes.ReadUint8(vm.data,0), false;
   }
 }
 

@@ -13,8 +13,8 @@
  */
 package dafnyevm;
 
-import static EVM_Compile.__default.create;
-import static EVM_Compile.__default.execute;
+import static EVM_Compile.__default.Create;
+import static EVM_Compile.__default.Execute;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -83,16 +83,16 @@ public class DafnyEvm {
 	 */
 	public SnapShot call(BigInteger from, byte[] calldata) {
 		// Create call context.
-		Context_Compile.Raw ctx = Context_Compile.__default.create(from, DafnySequence.fromBytes(calldata));
+		Context_Compile.Raw ctx = Context_Compile.__default.Create(from, DafnySequence.fromBytes(calldata));
 		// Create the EVM
-		State r = create(ctx, storage, BigInteger.ONE, code);
+		State r = Create(ctx, storage, BigInteger.ONE, code);
 		// Execute it!
 		tracer.step(r);
-		r = execute(r);
+		r = Execute(r);
 		// Continue whilst the EVM is happy.
 		while(r instanceof State_OK) {
 			tracer.step(r);
-			r = execute(r);
+			r = Execute(r);
 		}
 		// Final step
 		tracer.step(r);

@@ -69,29 +69,29 @@ module Int {
   // Conversion to/from byte sequences
   // =========================================================
 
-  function method read_u8(bytes: seq<u8>, address:nat) : u8
+  function method ReadUint8(bytes: seq<u8>, address:nat) : u8
   requires address < |bytes| {
     bytes[address]
   }
 
-  function method read_u16(bytes: seq<u8>, address:nat) : u16
+  function method ReadUint16(bytes: seq<u8>, address:nat) : u16
   requires (address+1) < |bytes| {
     var b1 := bytes[address] as u16;
     var b2 := bytes[address+1] as u16;
     (b1 * (TWO_8 as u16)) + b2
   }
 
-  function method read_u32(bytes: seq<u8>, address:nat) : u32
+  function method ReadUint32(bytes: seq<u8>, address:nat) : u32
   requires (address+3) < |bytes| {
-    var b1 := read_u16(bytes, address) as u32;
-    var b2 := read_u16(bytes, address+2) as u32;
+    var b1 := ReadUint16(bytes, address) as u32;
+    var b2 := ReadUint16(bytes, address+2) as u32;
     (b1 * (TWO_16 as u32)) + b2
   }
 
-  function method read_u64(bytes: seq<u8>, address:nat) : u64
+  function method ReadUint64(bytes: seq<u8>, address:nat) : u64
   requires (address+7) < |bytes| {
-    var b1 := read_u32(bytes, address) as u64;
-    var b2 := read_u32(bytes, address+4) as u64;
+    var b1 := ReadUint32(bytes, address) as u64;
+    var b2 := ReadUint32(bytes, address+4) as u64;
     (b1 * (TWO_32 as u64)) + b2
   }
 
@@ -104,19 +104,19 @@ module Int {
   // because Dafny (unlike just about every other programming
   // language) supports Euclidean division.  This operator, therefore,
   // always divides *towards* zero.
-  function method div(lhs: int, rhs: int) : int
+  function method Div(lhs: int, rhs: int) : int
   requires rhs != 0 {
     if lhs >= 0 then lhs / rhs
     else
       -((-lhs) / rhs)
   }
 
-  // This provides a non-Euclidean remainder operator and is necessary
+  // This provides a non-Euclidean Remainder operator and is necessary
   // because Dafny (unlike just about every other programming
   // language) supports Euclidean division.  Observe that this is a
-  // true remainder operator, and not a modulus operator.  For
+  // true Remainder operator, and not a modulus operator.  For
   // emxaple, this means the result can be negative.
-  function method rem(lhs: int, rhs: int) : int
+  function method Rem(lhs: int, rhs: int) : int
   requires rhs != 0 {
     if lhs >= 0 then (lhs % rhs)
     else
@@ -125,51 +125,51 @@ module Int {
   }
 
   // Various sanity tests for division.
-  method div_tests() {
+  method DivTests() {
     // pos-pos
-    assert div(6,2) == 3;
-    assert div(6,3) == 2;
-    assert div(6,4) == 1;
-    assert div(9,4) == 2;
+    assert Div(6,2) == 3;
+    assert Div(6,3) == 2;
+    assert Div(6,4) == 1;
+    assert Div(9,4) == 2;
     // neg-pos
-    assert div(-6,2) == -3;
-    assert div(-6,3) == -2;
-    assert div(-6,4) == -1;
-    assert div(-9,4) == -2;
+    assert Div(-6,2) == -3;
+    assert Div(-6,3) == -2;
+    assert Div(-6,4) == -1;
+    assert Div(-9,4) == -2;
     // pos-neg
-    assert div(6,-2) == -3;
-    assert div(6,-3) == -2;
-    assert div(6,-4) == -1;
-    assert div(9,-4) == -2;
+    assert Div(6,-2) == -3;
+    assert Div(6,-3) == -2;
+    assert Div(6,-4) == -1;
+    assert Div(9,-4) == -2;
     // neg-neg
-    assert div(-6,-2) == 3;
-    assert div(-6,-3) == 2;
-    assert div(-6,-4) == 1;
-    assert div(-9,-4) == 2;
+    assert Div(-6,-2) == 3;
+    assert Div(-6,-3) == 2;
+    assert Div(-6,-4) == 1;
+    assert Div(-9,-4) == 2;
   }
 
-  // Various sanity tests for remainder.
-  method rem_tests() {
+  // Various sanity tests for Remainder.
+  method RemTests() {
     // pos-pos
-    assert rem(6,2) == 0;
-    assert rem(6,3) == 0;
-    assert rem(6,4) == 2;
-    assert rem(9,4) == 1;
+    assert Rem(6,2) == 0;
+    assert Rem(6,3) == 0;
+    assert Rem(6,4) == 2;
+    assert Rem(9,4) == 1;
     // neg-pos
-    assert rem(-6,2) == 0;
-    assert rem(-6,3) == 0;
-    assert rem(-6,4) == -2;
-    assert rem(-9,4) == -1;
+    assert Rem(-6,2) == 0;
+    assert Rem(-6,3) == 0;
+    assert Rem(-6,4) == -2;
+    assert Rem(-9,4) == -1;
     // pos-neg
-    assert rem(6,-2) == 0;
-    assert rem(6,-3) == 0;
-    assert rem(6,-4) == 2;
-    assert rem(9,-4) == 1;
+    assert Rem(6,-2) == 0;
+    assert Rem(6,-3) == 0;
+    assert Rem(6,-4) == 2;
+    assert Rem(9,-4) == 1;
     // neg-neg
-    assert rem(-6,-2) == 0;
-    assert rem(-6,-3) == 0;
-    assert rem(-6,-4) == -2;
-    assert rem(-9,-4) == -1;
+    assert Rem(-6,-2) == 0;
+    assert Rem(-6,-3) == 0;
+    assert Rem(-6,-4) == -2;
+    assert Rem(-9,-4) == -1;
   }
 }
 
@@ -181,7 +181,7 @@ module U16 {
 
   // Read nth 8bit word (i.e. byte) out of this u16, where 0
   // identifies the most significant byte.
-  function method nth_u8(v:u16, k: nat) : u8
+  function method NthUint8(v:u16, k: nat) : u8
     // Cannot read more than two words!
   requires k < 2 {
     if k == 0
@@ -190,9 +190,9 @@ module U16 {
         (v % (TWO_8 as u16)) as u8
   }
 
-  method tests_nth_u8() {
-    assert nth_u8(0xde80,0) == 0xde;
-    assert nth_u8(0xde80,1) == 0x80;
+  method tests_NthUint8() {
+    assert NthUint8(0xde80,0) == 0xde;
+    assert NthUint8(0xde80,1) == 0x80;
   }
 }
 
@@ -204,7 +204,7 @@ module U32 {
 
   // Read nth 16bit word out of this u32, where 0 identifies the most
   // significant word.
-  function method nth_u16(v:u32, k: nat) : u16
+  function method NthUint16(v:u32, k: nat) : u16
     // Cannot read more than two words!
   requires k < 2 {
     if k == 0
@@ -213,9 +213,9 @@ module U32 {
         (v % (TWO_16 as u32)) as u16
   }
 
-  method tests_nth_u16() {
-    assert nth_u16(0x1230de80,0) == 0x1230;
-    assert nth_u16(0x1230de80,1) == 0xde80;
+  method tests_Nth_u16() {
+    assert NthUint16(0x1230de80,0) == 0x1230;
+    assert NthUint16(0x1230de80,1) == 0xde80;
   }
 }
 
@@ -227,7 +227,7 @@ module U64 {
 
   // Read nth 32bit word out of this u64, where 0 identifies the most
   // significant word.
-  function method nth_u32(v:u64, k: nat) : u32
+  function method NthUint32(v:u64, k: nat) : u32
     // Cannot read more than two words!
   requires k < 2 {
     if k == 0
@@ -236,9 +236,9 @@ module U64 {
         (v % (TWO_32 as u64)) as u32
   }
 
-  method tests_nth_u32() {
-    assert nth_u32(0x00112233_44556677,0) == 0x00112233;
-    assert nth_u32(0x00112233_44556677,1) == 0x44556677;
+  method testsNthUint32() {
+    assert NthUint32(0x00112233_44556677,0) == 0x00112233;
+    assert NthUint32(0x00112233_44556677,1) == 0x44556677;
   }
 }
 
@@ -250,7 +250,7 @@ module U128 {
 
   // Read nth 64bit word out of this u128, where 0 identifies the most
   // significant word.
-  function method nth_u64(v:u128, k: nat) : u64
+  function method NthUint64(v:u128, k: nat) : u64
     // Cannot read more than two words!
   requires k < 2 {
     if k == 0
@@ -259,9 +259,9 @@ module U128 {
         (v % (TWO_64 as u128)) as u64
   }
 
-  method tests_nth_u64() {
-    assert nth_u64(0x0011223344556677_8899AABBCCDDEEFF,0) == 0x0011223344556677;
-    assert nth_u64(0x0011223344556677_8899AABBCCDDEEFF,1) == 0x8899AABBCCDDEEFF;
+  method testsNthUint64() {
+    assert NthUint64(0x0011223344556677_8899AABBCCDDEEFF,0) == 0x0011223344556677;
+    assert NthUint64(0x0011223344556677_8899AABBCCDDEEFF,1) == 0x8899AABBCCDDEEFF;
   }
 }
 
@@ -277,7 +277,7 @@ module U256 {
 
   // Read nth 128bit word out of this u256, where 0 identifies the most
   // significant word.
-  function method nth_u128(v:u256, k: nat) : u128
+  function method NthUint128(v:u256, k: nat) : u128
     // Cannot read more than two words!
     requires k < 2 {
       if k == 0
@@ -288,57 +288,57 @@ module U256 {
 
   // Read nth byte out of this u256, where 0 identifies the most
   // significant byte.
-  function method nth_u8(v:u256, k: nat) : u8
+  function method NthUint8(v:u256, k: nat) : u8
     // Cannot read more than 32bytes!
     requires k < 32 {
       // This is perhaps a tad ugly.  Happy to take suggestions on
       // a better approach :)
-      var w128 := nth_u128(v,k / 16);
-      var w64 := U128.nth_u64(w128,(k % 16) / 8);
-      var w32 :=  U64.nth_u32(w64,(k % 8) / 4);
-      var w16 :=  U32.nth_u16(w32,(k % 4) / 2);
-      U16.nth_u8(w16,k%2)
+      var w128 := NthUint128(v,k / 16);
+      var w64 := U128.NthUint64(w128,(k % 16) / 8);
+      var w32 :=  U64.NthUint32(w64,(k % 8) / 4);
+      var w16 :=  U32.NthUint16(w32,(k % 4) / 2);
+      U16.NthUint8(w16,k%2)
   }
 
-  method tests_nth_u128() {
-    assert nth_u128(0x00112233445566778899AABBCCDDEEFF_FFEEDDCCBBAA99887766554433221100,0) == 0x00112233445566778899AABBCCDDEEFF;
-    assert nth_u128(0x00112233445566778899AABBCCDDEEFF_FFEEDDCCBBAA99887766554433221100,1) == 0xFFEEDDCCBBAA99887766554433221100;
+  method testsNthUint128() {
+    assert NthUint128(0x00112233445566778899AABBCCDDEEFF_FFEEDDCCBBAA99887766554433221100,0) == 0x00112233445566778899AABBCCDDEEFF;
+    assert NthUint128(0x00112233445566778899AABBCCDDEEFF_FFEEDDCCBBAA99887766554433221100,1) == 0xFFEEDDCCBBAA99887766554433221100;
   }
 
-  method tests_nth_u8() {
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,00) == 0x00;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,01) == 0x01;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,02) == 0x02;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,03) == 0x03;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,04) == 0x04;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,05) == 0x05;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,06) == 0x06;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,07) == 0x07;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,08) == 0x08;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,09) == 0x09;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,10) == 0x0A;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,11) == 0x0B;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,12) == 0x0C;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,13) == 0x0D;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,14) == 0x0E;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,15) == 0x0F;
+  method testsNthUint8() {
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,00) == 0x00;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,01) == 0x01;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,02) == 0x02;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,03) == 0x03;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,04) == 0x04;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,05) == 0x05;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,06) == 0x06;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,07) == 0x07;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,08) == 0x08;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,09) == 0x09;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,10) == 0x0A;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,11) == 0x0B;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,12) == 0x0C;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,13) == 0x0D;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,14) == 0x0E;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,15) == 0x0F;
     //
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,16) == 0x10;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,17) == 0x11;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,18) == 0x12;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,19) == 0x13;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,20) == 0x14;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,21) == 0x15;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,22) == 0x16;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,23) == 0x17;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,24) == 0x18;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,25) == 0x19;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,26) == 0x1A;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,27) == 0x1B;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,28) == 0x1C;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,29) == 0x1D;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,30) == 0x1E;
-    assert nth_u8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,31) == 0x1F;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,16) == 0x10;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,17) == 0x11;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,18) == 0x12;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,19) == 0x13;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,20) == 0x14;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,21) == 0x15;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,22) == 0x16;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,23) == 0x17;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,24) == 0x18;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,25) == 0x19;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,26) == 0x1A;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,27) == 0x1B;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,28) == 0x1C;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,29) == 0x1D;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,30) == 0x1E;
+    assert NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,31) == 0x1F;
 
   }
 }
@@ -355,18 +355,18 @@ module I256 {
     requires rhs != 0
     // Range restriction to prevent overflow
     requires (rhs != -1 || lhs != (-TWO_255 as i256)) {
-    Int.div(lhs as int, rhs as int) as i256
+    Int.Div(lhs as int, rhs as int) as i256
   }
 
-  // This provides a non-Euclidean remainder operator and is necessary
+  // This provides a non-Euclidean Remainder operator and is necessary
   // because Dafny (unlike just about every other programming
   // language) supports Euclidean division.  Observe that this is a
-  // true remainder operator, and not a modulus operator.  For
+  // true Remainder operator, and not a modulus operator.  For
   // emxaple, this means the result can be negative.
-  function method rem(lhs: i256, rhs: i256) : i256
+  function method Rem(lhs: i256, rhs: i256) : i256
     // Cannot divide by zero!
     requires rhs != 0 {
-    Int.rem(lhs as int, rhs as int) as i256
+    Int.Rem(lhs as int, rhs as int) as i256
   }
 }
 

@@ -28,7 +28,7 @@ module Memory {
     /**
      * Create a memory from an initial sequence of words.
      */
-    function method create() : T {
+    function method Create() : T {
         Memory(contents:=map[])
     }
 
@@ -36,7 +36,7 @@ module Memory {
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
-    function method read_u8(mem:T, address:u256) : u8 {
+    function method ReadUint8(mem:T, address:u256) : u8 {
         // Read location
         if address in mem.contents
         then
@@ -49,10 +49,10 @@ module Memory {
      * Read a 16bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method read_u16(mem:T, address:u256) : u16
+    function method ReadUint16(mem:T, address:u256) : u16
       requires (address as int) + 1 <= MAX_U256 {
-        var w1 := read_u8(mem,address) as u16;
-        var w2 := read_u8(mem,address+1) as u16;
+        var w1 := ReadUint8(mem,address) as u16;
+        var w2 := ReadUint8(mem,address+1) as u16;
         (w1 * (TWO_8 as u16)) + w2
     }
 
@@ -60,10 +60,10 @@ module Memory {
      * Read a 32bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method read_u32(mem:T, address:u256) : u32
+    function method ReadUint32(mem:T, address:u256) : u32
       requires (address as int) + 3 <= MAX_U256 {
-        var w1 := read_u16(mem,address) as u32;
-        var w2 := read_u16(mem,address+2) as u32;
+        var w1 := ReadUint16(mem,address) as u32;
+        var w2 := ReadUint16(mem,address+2) as u32;
         (w1 * (TWO_16 as u32)) + w2
     }
 
@@ -71,10 +71,10 @@ module Memory {
      * Read a 64bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method read_u64(mem:T, address:u256) : u64
+    function method ReadUint64(mem:T, address:u256) : u64
       requires (address as int) + 7 <= MAX_U256 {
-        var w1 := read_u32(mem,address) as u64;
-        var w2 := read_u32(mem,address+4) as u64;
+        var w1 := ReadUint32(mem,address) as u64;
+        var w2 := ReadUint32(mem,address+4) as u64;
         (w1 * (TWO_32 as u64)) + w2
     }
 
@@ -82,10 +82,10 @@ module Memory {
      * Read a 128bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method read_u128(mem:T, address:u256) : u128
+    function method ReadUint128(mem:T, address:u256) : u128
       requires (address as int) + 15 <= MAX_U256 {
-        var w1 := read_u64(mem,address) as u128;
-        var w2 := read_u64(mem,address+8) as u128;
+        var w1 := ReadUint64(mem,address) as u128;
+        var w2 := ReadUint64(mem,address+8) as u128;
         (w1 * (TWO_64 as u128)) + w2
     }
 
@@ -93,17 +93,17 @@ module Memory {
      * Read a 256bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method read_u256(mem:T, address:u256) : u256
+    function method ReadUint256(mem:T, address:u256) : u256
       requires (address as int) + 31 <= MAX_U256 {
-        var w1 := read_u128(mem,address) as u256;
-        var w2 := read_u128(mem,address+16) as u256;
+        var w1 := ReadUint128(mem,address) as u256;
+        var w2 := ReadUint128(mem,address+16) as u256;
         (w1 * (TWO_128 as u256)) + w2
     }
 
     /**
      * Write a byte to a given address in Memory.
      */
-    function method write_u8(mem:T, address:u256, val:u8) : T {
+    function method WriteUint8(mem:T, address:u256, val:u8) : T {
         // Write location
         Memory(contents:=mem.contents[address:=val])
     }
@@ -112,67 +112,67 @@ module Memory {
      * Write a 16bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method write_u16(mem:T, address:u256, val:u16) : T
+    function method WriteUint16(mem:T, address:u256, val:u16) : T
     requires (address as int) + 1 <= MAX_U256 {
       var w1 := val / (TWO_8 as u16);
       var w2 := val % (TWO_8 as u16);
-      var mem' := write_u8(mem,address,w1 as u8);
-      write_u8(mem',address+1,w2 as u8)
+      var mem' := WriteUint8(mem,address,w1 as u8);
+      WriteUint8(mem',address+1,w2 as u8)
     }
 
     /**
      * Write a 32bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method write_u32(mem:T, address:u256, val:u32) : T
+    function method WriteUint32(mem:T, address:u256, val:u32) : T
     requires (address as int) + 3 <= MAX_U256 {
       var w1 := val / (TWO_16 as u32);
       var w2 := val % (TWO_16 as u32);
-      var mem' := write_u16(mem,address,w1 as u16);
-      write_u16(mem',address+2,w2 as u16)
+      var mem' := WriteUint16(mem,address,w1 as u16);
+      WriteUint16(mem',address+2,w2 as u16)
     }
 
     /**
      * Write a 64bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method write_u64(mem:T, address:u256, val:u64) : T
+    function method WriteUint64(mem:T, address:u256, val:u64) : T
     requires (address as int) + 7 <= MAX_U256 {
       var w1 := val / (TWO_32 as u64);
       var w2 := val % (TWO_32 as u64);
-      var mem' := write_u32(mem,address,w1 as u32);
-      write_u32(mem',address+4,w2 as u32)
+      var mem' := WriteUint32(mem,address,w1 as u32);
+      WriteUint32(mem',address+4,w2 as u32)
     }
 
     /**
      * Write a 128bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method write_u128(mem:T, address:u256, val:u128) : T
+    function method WriteUint128(mem:T, address:u256, val:u128) : T
     requires (address as int) + 15 <= MAX_U256 {
       var w1 := val / (TWO_64 as u128);
       var w2 := val % (TWO_64 as u128);
-      var mem' := write_u64(mem,address,w1 as u64);
-      write_u64(mem',address+8,w2 as u64)
+      var mem' := WriteUint64(mem,address,w1 as u64);
+      WriteUint64(mem',address+8,w2 as u64)
     }
 
     /**
      * Write a 256bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method write_u256(mem:T, address:u256, val:u256) : T
+    function method WriteUint256(mem:T, address:u256, val:u256) : T
     requires (address as int) + 31 <= MAX_U256 {
       var w1 := val / (TWO_128 as u256);
       var w2 := val % (TWO_128 as u256);
-      var mem' := write_u128(mem,address,w1 as u128);
-      write_u128(mem',address+16,w2 as u128)
+      var mem' := WriteUint128(mem,address,w1 as u128);
+      WriteUint128(mem',address+16,w2 as u128)
     }
 
     /**
      * Slice out a section of memory.  This is implemented in a subdivision
      * style as this seems to work better (in terms of theorem prover performance).
      */
-    function method slice(mem:T, address:u256, len:nat) : seq<u8>
+    function method Slice(mem:T, address:u256, len:nat) : seq<u8>
       requires (address as int + len) <= MAX_U256
       decreases len
     {
@@ -181,25 +181,25 @@ module Memory {
         []
       else if len == 1
         then
-        [read_u8(mem,address)]
+        [ReadUint8(mem,address)]
       else
         var pivot := len / 2;
         var middle := address + (pivot as u256);
-        slice(mem,address,pivot) + slice(mem,middle, len - pivot)
+        Slice(mem,address,pivot) + Slice(mem,middle, len - pivot)
     }
 
     /**
      * Copy a sequence of bytes into this memory at a given address.
      */
-    function method copy(mem:T, address:u256, data:seq<u8>) : T
+    function method Copy(mem:T, address:u256, data:seq<u8>) : T
       requires (address as int + |data|) <= MAX_U256
       decreases |data| {
         if |data| == 0 then mem
-        else if |data| == 1 then write_u8(mem,address,data[0])
+        else if |data| == 1 then WriteUint8(mem,address,data[0])
         else
           var pivot := |data| / 2;
           var middle := address + (pivot as u256);
-          var nmem := copy(mem,address,data[0..pivot]);
-          copy(nmem,middle,data[pivot..])
+          var nmem := Copy(mem,address,data[0..pivot]);
+          Copy(nmem,middle,data[pivot..])
     }
 }

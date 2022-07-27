@@ -47,12 +47,12 @@ module EVM {
    * Create a fresh EVM to execute a given sequence of bytecode instructions.
    * The EVM is initialised with an empty stack and empty local memory.
    */
-  function method create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
+  function method Create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
   requires |code| <= MAX_U256 {
-    var stck := Stack.create();
-    var mem := Memory.create();
-    var sto := Storage.create(storage);
-    var cod := Code.create(code);
+    var stck := Stack.Create();
+    var mem := Memory.Create();
+    var sto := Storage.Create(storage);
+    var cod := Code.Create(code);
     var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0);
     // Off we go!
     State.OK(evm)
@@ -261,7 +261,7 @@ module EVM {
    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
    * can continue), or some form of halt (e.g. exceptional, revert, etc).
    */
-  function method execute(st:State) : State
+  function method Execute(st:State) : State
   // To execute a bytecode requires the machine is in a non-terminal state.
   requires st.OK? {
     var OK(vm) := st;
@@ -336,10 +336,10 @@ module EVM {
     else if opcode == JUMPDEST then JumpDest(st)
     // 0x60s & 0x70s: Push operations
     else if opcode == PUSH1 && opcode_operands(vm) >= 1 then
-      var k := Code.decode_u8(vm.code, (vm.pc + 1) as nat);
+      var k := Code.DecodeUint8(vm.code, (vm.pc + 1) as nat);
       Push1(st, k)
     else if opcode == PUSH2 && opcode_operands(vm) >= 2 then
-      var k := Code.decode_u16(vm.code, (vm.pc + 1) as nat);
+      var k := Code.DecodeUint16(vm.code, (vm.pc + 1) as nat);
       Push2(st, k)
     // 0x80s: Duplicate operations
     else if DUP1 <= opcode <= DUP16 then
@@ -728,7 +728,7 @@ module EVM {
       then
       var val := peek(vm,1);
       var k := peek(vm,0);
-      var res := if k < 32 then U256.nth_u8(val,k as int) else 0;
+      var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
       next(push(pop(pop(vm)),res as u256))
     else
       State.INVALID
@@ -780,8 +780,8 @@ module EVM {
     if operands(vm) >= 1
       then
       var loc := peek(vm,0);
-      var val := if loc >= Context.data_size(vm.context) then 0
-        else Context.data_read(vm.context,loc);
+      var val := if loc >= Context.DataSize(vm.context) then 0
+        else Context.DataRead(vm.context,loc);
       next(push(pop(vm),val))
     else
       State.INVALID
@@ -821,7 +821,7 @@ module EVM {
       if (m_loc as int) + (len as int) < MAX_U256
       then
         // Slice bytes out of call data (with padding as needed)
-        var data := Context.data_slice(vm.context,d_loc,len);
+        var data := Context.DataSlice(vm.context,d_loc,len);
         // Sanity check
         assert |data| == (len as int);
         // Copy slice into memory
@@ -964,7 +964,7 @@ module EVM {
       then
       var pc := peek(vm,0);
       // Check valid branch target
-      if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc as nat) == JUMPDEST
+      if pc < Code.Size(vm.code) && Code.DecodeUint8(vm.code,pc as nat) == JUMPDEST
       then
         goto(pop(vm),pc)
       else
@@ -987,7 +987,7 @@ module EVM {
       // Check branch taken or not
       if val == 0 then next(pop(pop(vm)))
       // Check valid branch target
-      else if pc < Code.size(vm.code) && Code.decode_u8(vm.code,pc as nat) == JUMPDEST
+      else if pc < Code.Size(vm.code) && Code.DecodeUint8(vm.code,pc as nat) == JUMPDEST
       then
         goto(pop(pop(vm)),pc)
       else
@@ -1093,7 +1093,7 @@ module EVM {
       if (start+len) <= MAX_U256
       then
         // Read out that data.
-        var data := Memory.slice(vm.memory, start as u256, len);
+        var data := Memory.Slice(vm.memory, start as u256, len);
         // Done
         State.RETURNS(gas:=vm.gas,data:=data)
       else
@@ -1118,7 +1118,7 @@ module EVM {
       if (start+len) <= MAX_U256
       then
         // Read out that data.
-        var data := Memory.slice(vm.memory, start as u256, len);
+        var data := Memory.Slice(vm.memory, start as u256, len);
         // Done
         State.REVERTS(gas:=vm.gas,data:=data)
       else
@@ -1140,9 +1140,9 @@ module EVM {
     // Destructure incoming state.
     var OK(vm) := st;
     // Sanity check pc location
-    if vm.pc < Code.size(vm.code)
+    if vm.pc < Code.Size(vm.code)
     then
-      Code.decode_u8(vm.code,vm.pc as nat)
+      Code.DecodeUint8(vm.code,vm.pc as nat)
     else
       INVALID
   }
@@ -1152,7 +1152,7 @@ module EVM {
    */
   function method goto(evm:T, k:u256) : State {
     // Sanity check valid target address
-    if k <= Code.size(evm.code)
+    if k <= Code.Size(evm.code)
     then State.OK(evm.(pc := k))
     else State.INVALID
   }
@@ -1161,7 +1161,7 @@ module EVM {
    * Move program counter to next instruction.
    */
   function method next(evm:T) : State {
-    if evm.pc < Code.size(evm.code)
+    if evm.pc < Code.Size(evm.code)
     then State.OK(evm.(pc := evm.pc + 1))
     else State.INVALID
   }
@@ -1180,14 +1180,14 @@ module EVM {
    * Check at least k operands on the stack.
    */
   function method operands(evm:T) : nat {
-    Stack.size(evm.stack)
+    Stack.Size(evm.stack)
   }
 
   /**
    * Check capacity remaining on stack.
    */
   function method capacity(evm:T) : nat {
-    Stack.capacity(evm.stack)
+    Stack.Capacity(evm.stack)
   }
 
   /**
@@ -1195,17 +1195,17 @@ module EVM {
    */
   function method push(evm:T, v:u256) : T
     requires capacity(evm) > 0 {
-      evm.(stack:=Stack.push(evm.stack,v))
+      evm.(stack:=Stack.Push(evm.stack,v))
   }
 
   /**
-   * Peek word from a given position on the stack, where "1" is the
+   * peek word from a given position on the stack, where "1" is the
    * topmost position, "2" is the next position and so on.
    */
   function method peek(evm:T, k:int) : u256
     // Sanity check peek possible
-    requires k >= 0 && k < Stack.size(evm.stack) {
-        Stack.peek(evm.stack,k)
+    requires k >= 0 && k < Stack.Size(evm.stack) {
+        Stack.Peek(evm.stack,k)
   }
 
   /**
@@ -1213,8 +1213,8 @@ module EVM {
    */
   function method pop(evm:T) : T
     // Cannot pop from empty stack
-    requires Stack.size(evm.stack) >= 1 {
-        evm.(stack:=Stack.pop(evm.stack))
+    requires Stack.Size(evm.stack) >= 1 {
+        evm.(stack:=Stack.Pop(evm.stack))
   }
 
   /**
@@ -1222,7 +1222,7 @@ module EVM {
    */
   function method swap(evm:T, k:nat) : T
     requires operands(evm) > k {
-      evm.(stack:=Stack.swap(evm.stack,k))
+      evm.(stack:=Stack.Swap(evm.stack,k))
   }
 
   /**
@@ -1230,7 +1230,7 @@ module EVM {
    */
   function method read(evm:T, address:u256) : u256
   requires (address as int) + 31 <= MAX_U256 {
-    Memory.read_u256(evm.memory,address)
+    Memory.ReadUint256(evm.memory,address)
   }
 
   /**
@@ -1238,7 +1238,7 @@ module EVM {
    */
   function method write(evm:T, address:u256, val: u256) : T
     requires (address as int) + 31 <= MAX_U256 {
-      evm.(memory:=Memory.write_u256(evm.memory,address,val))
+      evm.(memory:=Memory.WriteUint256(evm.memory,address,val))
   }
 
   /**
@@ -1246,7 +1246,7 @@ module EVM {
    */
   function method write8(evm:T, address:u256, val: u8) : T
   requires (address as int) < MAX_U256 {
-    evm.(memory := Memory.write_u8(evm.memory,address,val))
+    evm.(memory := Memory.WriteUint8(evm.memory,address,val))
   }
 
   /**
@@ -1255,28 +1255,28 @@ module EVM {
    */
   function method copy(evm:T, address:u256, data: seq<u8>) : T
     requires (address as int) + |data| <= MAX_U256 {
-      evm.(memory:=Memory.copy(evm.memory,address,data))
+      evm.(memory:=Memory.Copy(evm.memory,address,data))
   }
 
   /**
    * Read word from storage
    */
   function method load(evm:T, address:u256) : u256 {
-    Storage.read(evm.storage,address)
+    Storage.Read(evm.storage,address)
   }
 
   /**
    * Write word to storage
    */
   function method store(evm:T, address:u256, val: u256) : T {
-    evm.(storage:=Storage.write(evm.storage,address,val))
+    evm.(storage:=Storage.Write(evm.storage,address,val))
   }
 
   /**
    * Check how many code operands are available.
    */
   function method opcode_operands(evm:T) : int {
-    (Code.size(evm.code) as nat) - ((evm.pc as nat) + 1)
+    (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
   }
 
   /**
@@ -1329,6 +1329,6 @@ module EVM {
     if rhs == 0 then 0 as i256
     else
       // Do not use Dafny's remainder operator here!
-      I256.rem(lhs,rhs)
+      I256.Rem(lhs,rhs)
   }
 }
