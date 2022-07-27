@@ -38,7 +38,7 @@ module Context {
     /**
      * Create an initial context from various components.
      */
-    function method create(origin:u160,calldata:seq<u8>) : T
+    function method Create(origin:u160,calldata:seq<u8>) : T
     requires |calldata| <= MAX_U256 {
         Context(address:=origin,origin:=origin,caller:=origin,calldata:=calldata)
     }
@@ -46,21 +46,21 @@ module Context {
     /**
      * Determine the size (in bytes) of the call data associated with this context.
      */
-    function method data_size(ctx: T) : u256 {
+    function method DataSize(ctx: T) : u256 {
       |ctx.calldata| as u256
     }
 
     /**
      * Read a word from the call data associated with this context.
      */
-    function method data_read(ctx: T, loc: u256) : u256 {
-      Bytes.read_u256(ctx.calldata,loc as nat)
+    function method DataRead(ctx: T, loc: u256) : u256 {
+      Bytes.ReadUint256(ctx.calldata,loc as nat)
     }
 
     /**
      * Slice a sequence of bytes from the call data associated with this context.
      */
-    function method data_slice(ctx: T, loc: u256, len: u256) : seq<u8> {
-      Bytes.slice(ctx.calldata,loc as nat, len as nat)
+    function method DataSlice(ctx: T, loc: u256, len: u256) : seq<u8> {
+      Bytes.Slice(ctx.calldata,loc as nat, len as nat)
     }
 }

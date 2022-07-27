@@ -20,7 +20,7 @@ module Bytes {
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
-    function method read_u8(mem:seq<u8>, address:nat) : u8 {
+    function method ReadUint8(mem:seq<u8>, address:nat) : u8 {
         // Read location
         if address < |mem|
         then
@@ -34,9 +34,9 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method read_u16(mem:seq<u8>, address:nat) : u16 {
-        var w1 := read_u8(mem,address) as u16;
-        var w2 := read_u8(mem,address+1) as u16;
+    function method ReadUint16(mem:seq<u8>, address:nat) : u16 {
+        var w1 := ReadUint8(mem,address) as u16;
+        var w2 := ReadUint8(mem,address+1) as u16;
         (w1 * (TWO_8 as u16)) + w2
     }
 
@@ -44,9 +44,9 @@ module Bytes {
      * Read a 32bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method read_u32(mem:seq<u8>, address:nat) : u32 {
-        var w1 := read_u16(mem,address) as u32;
-        var w2 := read_u16(mem,address+2) as u32;
+    function method ReadUint32(mem:seq<u8>, address:nat) : u32 {
+        var w1 := ReadUint16(mem,address) as u32;
+        var w2 := ReadUint16(mem,address+2) as u32;
         (w1 * (TWO_16 as u32)) + w2
     }
 
@@ -55,9 +55,9 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method read_u64(mem:seq<u8>, address:nat) : u64 {
-        var w1 := read_u32(mem,address) as u64;
-        var w2 := read_u32(mem,address+4) as u64;
+    function method ReadUint64(mem:seq<u8>, address:nat) : u64 {
+        var w1 := ReadUint32(mem,address) as u64;
+        var w2 := ReadUint32(mem,address+4) as u64;
         (w1 * (TWO_32 as u64)) + w2
     }
 
@@ -66,9 +66,9 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method read_u128(mem:seq<u8>, address:nat) : u128 {
-        var w1 := read_u64(mem,address) as u128;
-        var w2 := read_u64(mem,address+8) as u128;
+    function method ReadUint128(mem:seq<u8>, address:nat) : u128 {
+        var w1 := ReadUint64(mem,address) as u128;
+        var w2 := ReadUint64(mem,address+8) as u128;
         (w1 * (TWO_64 as u128)) + w2
     }
 
@@ -77,9 +77,9 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method read_u256(mem:seq<u8>, address:nat) : u256 {
-        var w1 := read_u128(mem,address) as u256;
-        var w2 := read_u128(mem,address+16) as u256;
+    function method ReadUint256(mem:seq<u8>, address:nat) : u256 {
+        var w1 := ReadUint128(mem,address) as u256;
+        var w2 := ReadUint128(mem,address+16) as u256;
         (w1 * (TWO_128 as u256)) + w2
     }
 
@@ -88,17 +88,17 @@ module Bytes {
      * If the requested subsequence overflows available memory,
      * it is padded out with zeros.
      */
-    function method slice(mem:seq<u8>, address:nat, len:nat) : seq<u8> {
+    function method Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8> {
       var n := address + len;
       // Sanity check for overflow
       if n <= |mem| then mem[address..n]
       // Yes overflow, so manage it.
-      else if address < |mem| then mem[address..] + padding(n-|mem|)
-      else padding(len)
+      else if address < |mem| then mem[address..] + Padding(n-|mem|)
+      else Padding(len)
     }
 
     /**
      * Construct a sequence of an arbitrary sized padded out with zeros.
      */
-    function method padding(n:nat) : seq<u8> { seq(n, i => 0) }
+    function method Padding(n:nat) : seq<u8> { seq(n, i => 0) }
 }
