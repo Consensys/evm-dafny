@@ -25,12 +25,23 @@ Some useful links:
 * An [Interactive reference to EVM opcodes](https://www.evm.codes)
 * The Yul intermediate representation [Yul documentation](https://docs.soliditylang.org/en/v0.8.10/yul.html)
 * Another proposal [Yul+](https://fuellabs.medium.com/introducing-yul-a-new-low-level-language-for-ethereum-aa64ce89512f)
+
 # Methodology
 
-Dafny provides extensive support for automated reasoning leveraging the power of state-of-start automated reasoning engines (SMT-solvers).
+[Dafny](https://github.com/dafny-lang/dafny) provides extensive support for automated reasoning leveraging the power of state-of-start automated reasoning engines (SMT-solvers).
 As a result, Dafny can assist in proving program **correctness** with respect to a specification.
-In this project, the specifications are given as pre and post conditions. The abscence of runtime errors is checked by default in Dafny so there is not need to add specific specifications for them.
+In this project, the specifications of functions are given as _pre_ and _post_ conditions. The abscence of runtime errors (under/overflows, division by zero, array/sequence out-of-bounds) is checked by default in Dafny so there is no need to add specific specifications for them.
 All the proofs can be **mechanically verified** using theorem provers.
+
+# Contributing
+
+By default contributors accept the terms of the license. 
+We also endeavour to follow the conventions of the Dafny [style guide](https://github.com/dafny-lang/dafny/blob/master/docs/StyleGuide/Style-Guide.md).
+
+
+
+
+
 
 ## Install Dafny on your computer
 
@@ -40,7 +51,7 @@ Pre-requisites:
 * clone or fork this repository.
 
 Assuming you have a running Dafny compiler, you may use the following command line to check a `*.dfy` file:
-```
+```bash
 > dafny /dafnyVerify:1 /compile:0  /timeLimit:60 src/dafny/arbitrum/packages/arb-bridge-eth/contracts/rollup/RollupCore.dfy
 Dafny 3.3.0.31104
 
