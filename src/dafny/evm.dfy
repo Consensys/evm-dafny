@@ -247,6 +247,7 @@ module EVM {
 	const STATICCALL : u8 := 0xfa;
 	const REVERT : u8 := 0xfd;
 	const INVALID : u8 := 0xfe;
+  const INVALID_OPCODE : u8 := 0xfe; // FIXME: this duplicate of INVALID should be removed.
 	const SELFDESTRUCT : u8 := 0xff;
 
   /**
@@ -255,7 +256,215 @@ module EVM {
    * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
    * with return data are indicated accordingly (along with any gas returned).
    */
-  datatype State = OK(evm:T) | INVALID | RETURNS(gas:nat,data:seq<u8>) | REVERTS(gas:nat,data:seq<u8>)
+  datatype State = OK(evm:T)
+    | INVALID
+    | RETURNS(gas:nat,data:seq<u8>)
+    | REVERTS(gas:nat,data:seq<u8>) {
+
+    /**
+     * Check whether EVM has failed (e.g. due to an exception
+     * or a revert, etc) or not.
+     */
+    predicate method IsFailure() {
+			!this.OK?
+		}
+    /**
+     * Extract underlying raw state.
+     */
+		function method Unwrap(): T
+			requires !IsFailure() {
+			this.evm
+		}
+    /**
+     * Determine number of operands on stack.
+     */
+    function method Operands() : nat
+    requires !IsFailure() {
+      Stack.Size(evm.stack)
+    }
+    /**
+     * Determine remaining gas.
+     */
+    function method Gas(): nat
+				requires !IsFailure() {
+			this.evm.gas
+		}
+    /**
+     * Determine current PC value.
+     */
+		function method PC(): u256
+			requires !IsFailure() {
+			this.evm.pc
+		}
+    /**
+     * Get the state of the internal stack.
+     */
+		function method GetStack(): Stack.T
+		requires !IsFailure() {
+			this.evm.stack
+		}
+
+    /**
+     * Read word from byte address in memory.
+     */
+    function method Read(address:u256) : u256
+    requires !IsFailure()
+    requires (address as int) + 31 <= MAX_U256 {
+      Memory.ReadUint256(evm.memory,address)
+    }
+
+    /**
+     * Write word to byte address in memory.
+     */
+    function method Write(address:u256, val: u256) : State
+    requires !IsFailure()
+    requires (address as int) + 31 <= MAX_U256 {
+      OK(evm.(memory:=Memory.WriteUint256(evm.memory,address,val)))
+    }
+
+    /**
+     * Write byte to byte address in memory.
+     */
+    function method Write8(address:u256, val: u8) : State
+    requires (address as int) < MAX_U256
+    requires !IsFailure() {
+      OK(evm.(memory := Memory.WriteUint8(evm.memory,address,val)))
+    }
+
+    /**
+     * Copy byte sequence to byte address in memory.  Any bytes
+     * that overflow are dropped.
+     */
+    function method Copy(address:u256, data: seq<u8>) : State
+    requires (address as int) + |data| <= MAX_U256
+    requires !IsFailure() {
+      OK(evm.(memory:=Memory.Copy(evm.memory,address,data)))
+    }
+
+    /**
+     * Write word to storage
+     */
+    function method Store(address:u256, val: u256) : State
+    requires !IsFailure() {
+      OK(evm.(storage:=Storage.Write(evm.storage,address,val)))
+    }
+
+    /**
+     * Read word from storage
+     */
+    function method Load(address:u256) : u256
+			requires !IsFailure() {
+      Storage.Read(evm.storage,address)
+    }
+
+    /**
+     * Decode next opcode from machine.
+     */
+    function method Decode() : u8
+		requires !IsFailure() {
+      // Sanity check pc location
+      if evm.pc < Code.Size(evm.code)
+      then
+        Code.DecodeUint8(evm.code,evm.pc as nat)
+      else
+        INVALID_OPCODE
+    }
+
+    /**
+     * Move program counter to a given location.
+     */
+    function method Goto(k:u256) : State
+    requires !IsFailure() {
+      // Sanity check valid target address
+      if k <= Code.Size(evm.code)
+      then State.OK(evm.(pc := k))
+      else State.INVALID
+    }
+
+    /**
+     * Move program counter to next instruction.
+     */
+    function method Next() : State
+    requires !IsFailure() {
+      if evm.pc < Code.Size(evm.code)
+     then State.OK(evm.(pc := evm.pc + 1))
+     else State.INVALID
+    }
+
+    /**
+     * Move program counter over k instructions / operands.
+     */
+    function method Skip(k:nat) : State
+    requires !IsFailure() {
+      var pc_k := (evm.pc as nat) + k;
+      if pc_k < |evm.code.contents|
+      then State.OK(evm.(pc := pc_k as u256))
+      else State.INVALID
+    }
+
+    /**
+     * Check capacity remaining on stack.
+     */
+    function method Capacity() : nat
+    requires !IsFailure() {
+      Stack.Capacity(evm.stack)
+    }
+
+    /**
+     * Push word onto stack.
+     */
+    function method Push(v:u256) : State
+    requires !IsFailure()
+    requires Capacity() > 0 {
+      OK(evm.(stack:=Stack.Push(evm.stack,v)))
+    }
+
+    /**
+     * peek word from a given position on the stack, where "1" is the
+     * topmost position, "2" is the next position and so on.
+     */
+    function method Peek(k:nat) : u256
+    requires !IsFailure()
+    // Sanity check peek possible
+    requires k < Stack.Size(evm.stack) {
+        Stack.Peek(evm.stack,k)
+    }
+
+    /**
+     * Pop word from stack.
+     */
+    function method Pop() : State
+    requires !IsFailure()
+    // Cannot pop from empty stack
+    requires Stack.Size(evm.stack) >= 1 {
+        OK(evm.(stack:=Stack.Pop(evm.stack)))
+    }
+
+    /**
+     * Swap top item with kth item.
+     */
+    function method Swap(k:nat) : State
+    requires !IsFailure()
+    requires Operands() > k {
+      OK(evm.(stack:=Stack.Swap(evm.stack,k)))
+    }
+
+    /**
+     * Check how many code operands are available.
+     */
+    function method CodeOperands() : int
+    requires !IsFailure() {
+      (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
+    }
+
+    /**
+     * Check whether a given Program Counter location holds the JUMPDEST bytecode.
+     */
+    predicate method IsJumpDest(pc: u256)
+    requires !IsFailure() {
+      pc < Code.Size(evm.code) && Code.DecodeUint8(evm.code,pc as nat) == JUMPDEST
+    }
+  }
 
   /**
    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
@@ -263,10 +472,10 @@ module EVM {
    */
   function method Execute(st:State) : State
   // To execute a bytecode requires the machine is in a non-terminal state.
-  requires st.OK? {
+  requires !st.IsFailure() {
     var OK(vm) := st;
     // Decode
-    var opcode := decode(st);
+    var opcode := st.Decode();
     // 0x00s: STOP & Arithmetic
     if opcode == STOP then Stop(st)
     else if opcode == ADD then Add(st)
@@ -335,10 +544,10 @@ module EVM {
     else if opcode == PC then Pc(st)
     else if opcode == JUMPDEST then JumpDest(st)
     // 0x60s & 0x70s: Push operations
-    else if opcode == PUSH1 && opcode_operands(vm) >= 1 then
+    else if opcode == PUSH1 && st.CodeOperands() >= 1 then
       var k := Code.DecodeUint8(vm.code, (vm.pc + 1) as nat);
       Push1(st, k)
-    else if opcode == PUSH2 && opcode_operands(vm) >= 2 then
+    else if opcode == PUSH2 && st.CodeOperands() >= 2 then
       var k := Code.DecodeUint16(vm.code, (vm.pc + 1) as nat);
       Push2(st, k)
     // 0x80s: Duplicate operations
@@ -370,7 +579,7 @@ module EVM {
    * return output data.
    */
   function method Stop(st: State) : State
-  requires st.OK? {
+  requires !st.IsFailure() {
     var OK(vm) := st;
     //
     State.RETURNS(gas:=vm.gas,data:=[])
@@ -380,15 +589,15 @@ module EVM {
    * Unsigned integer addition with modulo arithmetic.
    */
   function method Add(st: State) : State
-  requires st.OK? {
+  requires !st.IsFailure() {
     var OK(vm) := st;
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0) as int;
-      var rhs := peek(vm,1) as int;
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
       var res := (lhs + rhs) % TWO_256;
-      next(push(pop(pop(vm)),res as u256))
+      st.Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -397,15 +606,14 @@ module EVM {
    * Unsigned integer multiplication with modulo arithmetic.
    */
   function method Mul(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0) as int;
-      var rhs := peek(vm,1) as int;
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
       var res := (lhs * rhs) % TWO_256;
-      next(push(pop(pop(vm)),res as u256))
+      st.Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -414,15 +622,14 @@ module EVM {
    * Unsigned integer subtraction with modulo arithmetic.
    */
   function method Sub(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0) as int;
-      var rhs := peek(vm,1) as int;
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
       var res := (lhs - rhs) % TWO_256;
-      next(push(pop(pop(vm)),res as u256))
+      st.Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -431,15 +638,14 @@ module EVM {
    * Unsigned integer division.
    */
   function method Div(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1);
-      var res := div(lhs,rhs) as u256;
-      next(push(pop(pop(vm)),res))
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1);
+      var res := DivWithZero(lhs,rhs) as u256;
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -448,15 +654,14 @@ module EVM {
    * Signed integer division.
    */
   function method SDiv(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := Word.asI256(peek(vm,0));
-      var rhs := Word.asI256(peek(vm,1));
-      var res := Word.fromI256(sdiv(lhs,rhs));
-      next(push(pop(pop(vm)),res))
+      var lhs := Word.asI256(st.Peek(0));
+      var rhs := Word.asI256(st.Peek(1));
+      var res := Word.fromI256(SDivWithZero(lhs,rhs));
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -465,15 +670,14 @@ module EVM {
    * (Unsigned) Modulo remainder.
    */
   function method Mod(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1);
-      var res := mod(lhs,rhs) as u256;
-      next(push(pop(pop(vm)),res))
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1);
+      var res := ModWithZero(lhs,rhs) as u256;
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -482,15 +686,14 @@ module EVM {
    * Signed integer remainder:
    */
   function method SMod(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := Word.asI256(peek(vm,0));
-      var rhs := Word.asI256(peek(vm,1));
-      var res := Word.fromI256(smod(lhs,rhs));
-      next(push(pop(pop(vm)),res))
+      var lhs := Word.asI256(st.Peek(0));
+      var rhs := Word.asI256(st.Peek(1));
+      var res := Word.fromI256(SModWithZero(lhs,rhs));
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -499,16 +702,15 @@ module EVM {
    * Unsigned integer modulo addition.
    */
   function method AddMod(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 3
+    if st.Operands() >= 3
       then
-      var lhs := peek(vm,0) as int;
-      var rhs := peek(vm,1) as int;
-      var rem := peek(vm,2) as int;
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
+      var rem := st.Peek(2) as int;
       var res := if rem == 0 then 0 else(lhs + rhs) % rem;
-      next(push(pop(pop(pop(vm))),res as u256))
+      st.Pop().Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -517,16 +719,15 @@ module EVM {
    * Unsigned integer modulo multiplication.
    */
   function method MulMod(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 3
+    if st.Operands() >= 3
       then
-      var lhs := peek(vm,0) as int;
-      var rhs := peek(vm,1) as int;
-      var rem := peek(vm,2) as int;
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
+      var rem := st.Peek(2) as int;
       var res := if rem == 0 then 0 else(lhs * rhs) % rem;
-      next(push(pop(pop(pop(vm))),res as u256))
+      st.Pop().Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -535,18 +736,17 @@ module EVM {
    * (Unsigned) less-than comparison.
    */
   function method Lt(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1);
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1);
       if lhs < rhs
         then
-        next(push(pop(pop(vm)),1))
+        st.Pop().Pop().Push(1).Next()
       else
-        next(push(pop(pop(vm)),0))
+        st.Pop().Pop().Push(0).Next()
     else
       State.INVALID
   }
@@ -555,18 +755,17 @@ module EVM {
    * (Unsigned) greater-than comparison.
    */
   function method Gt(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1);
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1);
       if lhs > rhs
         then
-        next(push(pop(pop(vm)),1))
+        st.Pop().Pop().Push(1).Next()
       else
-        next(push(pop(pop(vm)),0))
+        st.Pop().Pop().Push(0).Next()
     else
       State.INVALID
   }
@@ -575,18 +774,17 @@ module EVM {
    * Signed less-than comparison.
    */
   function method SLt(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := Word.asI256(peek(vm,0));
-      var rhs := Word.asI256(peek(vm,1));
+      var lhs := Word.asI256(st.Peek(0));
+      var rhs := Word.asI256(st.Peek(1));
       if lhs < rhs
         then
-        next(push(pop(pop(vm)),1))
+        st.Pop().Pop().Push(1).Next()
       else
-        next(push(pop(pop(vm)),0))
+        st.Pop().Pop().Push(0).Next()
     else
       State.INVALID
   }
@@ -595,18 +793,17 @@ module EVM {
    * Signed greater-than comparison.
    */
   function method SGt(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := Word.asI256(peek(vm,0));
-      var rhs := Word.asI256(peek(vm,1));
+      var lhs := Word.asI256(st.Peek(0));
+      var rhs := Word.asI256(st.Peek(1));
       if lhs > rhs
         then
-        next(push(pop(pop(vm)),1))
+        st.Pop().Pop().Push(1).Next()
       else
-        next(push(pop(pop(vm)),0))
+        st.Pop().Pop().Push(0).Next()
     else
       State.INVALID
   }
@@ -615,18 +812,17 @@ module EVM {
    * Equality comparison.
    */
   function method Eq(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1);
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1);
       if lhs == rhs
         then
-        next(push(pop(pop(vm)),1))
+        st.Pop().Pop().Push(1).Next()
       else
-        next(push(pop(pop(vm)),0))
+        st.Pop().Pop().Push(0).Next()
     else
       State.INVALID
   }
@@ -635,17 +831,16 @@ module EVM {
    * Simple not operator.
    */
   function method IsZero(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
       then
-      var mhs := peek(vm,0);
+      var mhs := st.Peek(0);
       if mhs == 0
         then
-        next(push(pop(vm),1))
+        st.Pop().Push(1).Next()
       else
-        next(push(pop(vm),0))
+        st.Pop().Push(0).Next()
     else
       State.INVALID
   }
@@ -654,15 +849,14 @@ module EVM {
    * Bitwise AND operation.
    */
   function method And(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0) as bv256;
-      var rhs := peek(vm,1) as bv256;
+      var lhs := st.Peek(0) as bv256;
+      var rhs := st.Peek(1) as bv256;
       var res := (lhs & rhs) as u256;
-      next(push(pop(pop(vm)),res))
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -671,15 +865,14 @@ module EVM {
    * Bitwise OR operation.
    */
   function method {:verify false} Or(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0) as bv256;
-      var rhs := peek(vm,1) as bv256;
+      var lhs := st.Peek(0) as bv256;
+      var rhs := st.Peek(1) as bv256;
       var res := (lhs | rhs) as u256;
-      next(push(pop(pop(vm)),res))
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -688,15 +881,14 @@ module EVM {
    * Bitwise XOR operation.
    */
   function method {:verify false} Xor(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0) as bv256;
-      var rhs := peek(vm,1) as bv256;
+      var lhs := st.Peek(0) as bv256;
+      var rhs := st.Peek(1) as bv256;
       var res := (lhs ^ rhs) as u256;
-      next(push(pop(pop(vm)),res))
+      st.Pop().Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -705,14 +897,13 @@ module EVM {
    * Bitwise NOT operation.
    */
   function method Not(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
       then
-      var mhs := peek(vm,0) as bv256;
+      var mhs := st.Peek(0) as bv256;
       var res := (!mhs) as u256;
-      next(push(pop(vm),res))
+      st.Pop().Push(res).Next()
     else
       State.INVALID
   }
@@ -721,15 +912,14 @@ module EVM {
    * Retrieve single byte from word.
    */
   function method Byte(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var val := peek(vm,1);
-      var k := peek(vm,0);
+      var val := st.Peek(1);
+      var k := st.Peek(0);
       var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
-      next(push(pop(pop(vm)),res as u256))
+      st.Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -738,16 +928,15 @@ module EVM {
    * Left shift operation.
    */
   function method Shl(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1) as bv256;
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1) as bv256;
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs << lhs) else 0;
-      next(push(pop(pop(vm)),res as u256))
+      st.Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -756,16 +945,15 @@ module EVM {
    * Right shift operation.
    */
   function method {:verify false} Shr(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var lhs := peek(vm,0);
-      var rhs := peek(vm,1) as bv256;
+      var lhs := st.Peek(0);
+      var rhs := st.Peek(1) as bv256;
       // NOTE: unclear whether shifting is optimal choice here.
       var res := if lhs < 256 then (rhs >> lhs) else 0;
-      next(push(pop(pop(vm)),res as u256))
+      st.Pop().Pop().Push(res as u256).Next()
     else
       State.INVALID
   }
@@ -774,15 +962,14 @@ module EVM {
    * Get input data from the current environment.
    */
   function method CallDataLoad(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
       then
-      var loc := peek(vm,0);
-      var val := if loc >= Context.DataSize(vm.context) then 0
-        else Context.DataRead(vm.context,loc);
-      next(push(pop(vm),val))
+      var loc := st.Peek(0);
+      var val := if loc >= Context.DataSize(st.evm.context) then 0
+        else Context.DataRead(st.evm.context,loc);
+      st.Pop().Push(val).Next()
     else
       State.INVALID
   }
@@ -791,13 +978,12 @@ module EVM {
    * Get size of input data in current environment.
    */
   function method CallDataSize(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if capacity(vm) >= 1
+    if st.Capacity() >= 1
       then
-      var len := |vm.context.calldata|;
-      next(push(vm,len as u256))
+      var len := |st.evm.context.calldata|;
+      st.Push(len as u256).Next()
     else
       State.INVALID
   }
@@ -806,14 +992,13 @@ module EVM {
    * Get size of input data in current environment.
    */
   function method CallDataCopy(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 3
+    if st.Operands() >= 3
       then
-      var m_loc := peek(vm,0);
-      var d_loc := peek(vm,1);
-      var len := peek(vm,2);
+      var m_loc := st.Peek(0);
+      var d_loc := st.Peek(1);
+      var len := st.Peek(2);
       // NOTE: This condition is not specified in the yellow paper.
       // Its not clear whether that was intended or not.  However, its
       // impossible to trigger this in practice (due to the gas costs
@@ -821,11 +1006,11 @@ module EVM {
       if (m_loc as int) + (len as int) < MAX_U256
       then
         // Slice bytes out of call data (with padding as needed)
-        var data := Context.DataSlice(vm.context,d_loc,len);
+        var data := Context.DataSlice(st.evm.context,d_loc,len);
         // Sanity check
         assert |data| == (len as int);
         // Copy slice into memory
-        next(copy(pop(pop(pop(vm))),m_loc,data))
+        st.Pop().Pop().Pop().Copy(m_loc,data).Next()
       else
         State.INVALID
     else
@@ -836,12 +1021,11 @@ module EVM {
    * Pop word from stack.
    */
   function method Pop(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
     then
-      next(pop(vm))
+      st.Pop().Next()
     else
       State.INVALID
   }
@@ -850,21 +1034,20 @@ module EVM {
    * Get word from memory.
    */
   function method MLoad(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
       then
-      var loc := peek(vm,0);
+      var loc := st.Peek(0);
       // NOTE: This condition is not specified in the yellow paper.
       // Its not clear whether that was intended or not.  However, its
       // impossible to trigger this in practice (due to the gas costs
       // involved).
       if (loc as int) + 31 <= MAX_U256
         then
-        var val := read(vm,loc);
+        var val := st.Read(loc);
         // Write big endian order
-        next(push(pop(vm),val))
+        st.Pop().Push(val).Next()
       else
         State.INVALID
     else
@@ -876,14 +1059,12 @@ module EVM {
    * Save word to memory.
    */
   function method MStore(st: State) : State
-  requires st.OK? {
-
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var loc := peek(vm,0);
-      var val := peek(vm,1);
+      var loc := st.Peek(0);
+      var val := st.Peek(1);
       // NOTE: This condition is not specified in the yellow paper.
       // Its not clear whether that was intended or not.  However, its
       // impossible to trigger this in practice (due to the gas costs
@@ -891,7 +1072,7 @@ module EVM {
       if (loc as int) + 31 <= MAX_U256
         then
         // Write big endian order
-        next(write(pop(pop(vm)),loc,val))
+        st.Pop().Pop().Write(loc,val).Next()
       else
         State.INVALID
     else
@@ -902,17 +1083,16 @@ module EVM {
    * Save byte to memory.
    */
   function method MStore8(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var loc := peek(vm,0);
-      var val := (peek(vm,1) % 256) as u8;
+      var loc := st.Peek(0);
+      var val := (st.Peek(1) % 256) as u8;
       if (loc as int) < MAX_U256
         then
         // Write byte
-        next(write8(pop(pop(vm)),loc,val))
+        st.Pop().Pop().Write8(loc,val).Next()
       else
         State.INVALID
     else
@@ -923,15 +1103,14 @@ module EVM {
    * Get word from storage.
    */
   function method SLoad(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
       then
-      var loc := peek(vm,0);
-      var val := load(vm,loc);
-      // Store word
-      next(push(pop(vm),val))
+      var loc := st.Peek(0);
+      var val := st.Load(loc);
+      // Push word
+      st.Pop().Push(val).Next()
     else
       State.INVALID
   }
@@ -940,15 +1119,14 @@ module EVM {
    * Save word to storage.
    */
   function method SStore(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var loc := peek(vm,0);
-      var val := peek(vm,1);
+      var loc := st.Peek(0);
+      var val := st.Peek(1);
       // Store word
-      next(store(pop(pop(vm)),loc,val))
+      st.Pop().Pop().Store(loc,val).Next()
     else
       State.INVALID
   }
@@ -957,16 +1135,15 @@ module EVM {
    * Unconditional branch.
    */
   function method Jump(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 1
+    if st.Operands() >= 1
       then
-      var pc := peek(vm,0);
+      var pc := st.Peek(0);
       // Check valid branch target
-      if pc < Code.Size(vm.code) && Code.DecodeUint8(vm.code,pc as nat) == JUMPDEST
+      if st.IsJumpDest(pc)
       then
-        goto(pop(vm),pc)
+        st.Pop().Goto(pc)
       else
         State.INVALID
     else
@@ -977,19 +1154,18 @@ module EVM {
    * Unconditional branch.
    */
   function method JumpI(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
-      var pc := peek(vm,0);
-      var val := peek(vm,1);
+      var pc := st.Peek(0);
+      var val := st.Peek(1);
       // Check branch taken or not
-      if val == 0 then next(pop(pop(vm)))
+      if val == 0 then st.Pop().Pop().Next()
       // Check valid branch target
-      else if pc < Code.Size(vm.code) && Code.DecodeUint8(vm.code,pc as nat) == JUMPDEST
+      else if st.IsJumpDest(pc)
       then
-        goto(pop(pop(vm)),pc)
+        st.Pop().Pop().Goto(pc)
       else
         State.INVALID
     else
@@ -1000,12 +1176,11 @@ module EVM {
    * Gets value of program counter prior to this instruction being executed.
    */
   function method Pc(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if capacity(vm) >= 1
+    if st.Capacity() >= 1
     then
-      next(push(vm, vm.pc))
+      st.Push(st.PC()).Next()
     else
       State.INVALID
   }
@@ -1015,20 +1190,19 @@ module EVM {
    * on machine state.
    */
   function method JumpDest(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st; next(vm)
+  requires !st.IsFailure() {
+    st.Next()
   }
 
   /**
    * Push one byte onto stack.
    */
   function method Push1(st: State, k: u8) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if capacity(vm) >= 1
+    if st.Capacity() >= 1
       then
-      skip(push(vm,k as u256),2)
+      st.Push(k as u256).Skip(2)
     else
       State.INVALID
   }
@@ -1037,12 +1211,11 @@ module EVM {
    * Push two bytes onto stack.
    */
   function method Push2(st: State, k: u16) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if capacity(vm) >= 1
+    if st.Capacity() >= 1
       then
-      skip(push(vm,k as u256),3)
+      st.Push(k as u256).Skip(3)
     else
       State.INVALID
   }
@@ -1051,14 +1224,13 @@ module EVM {
    * Duplicate item on stack.
    */
   function method Dup(st: State, k: nat) : State
-  requires st.OK?
+  requires !st.IsFailure()
   requires k > 0 {
-    var OK(vm) := st;
     //
-    if operands(vm) > (k-1) && capacity(vm) >= 1
+    if st.Operands() > (k-1) && st.Capacity() >= 1
       then
-      var kth := peek(vm,k-1);
-      next(push(vm,kth))
+      var kth := st.Peek(k-1);
+      st.Push(kth).Next()
     else
       State.INVALID
   }
@@ -1067,12 +1239,11 @@ module EVM {
    * Swap two items on the stack
    */
   function method Swap(st: State, k: nat) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) > k
+    if st.Operands() > k
       then
-      next(swap(vm,k))
+      st.Swap(k).Next()
     else
       State.INVALID
   }
@@ -1081,21 +1252,20 @@ module EVM {
    * Halt execution returning output data.
    */
   function method Return(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
       // Determine amount of data to return.
-      var len := peek(vm,1) as int;
-      var start := peek(vm,0) as int;
+      var len := st.Peek(1) as int;
+      var start := st.Peek(0) as int;
       // Sanity check bounds
       if (start+len) <= MAX_U256
       then
         // Read out that data.
-        var data := Memory.Slice(vm.memory, start as u256, len);
+        var data := Memory.Slice(st.evm.memory, start as u256, len);
         // Done
-        State.RETURNS(gas:=vm.gas,data:=data)
+        State.RETURNS(gas:=st.evm.gas,data:=data)
       else
         State.INVALID
     else
@@ -1106,21 +1276,21 @@ module EVM {
    * Revert execution returning output data.
    */
   function method Revert(st: State) : State
-  requires st.OK? {
-    var OK(vm) := st;
+  requires !st.IsFailure() {
+
     //
-    if operands(vm) >= 2
+    if st.Operands() >= 2
       then
       // Determine amount of data to return.
-      var len := peek(vm,1) as int;
-      var start := peek(vm,0) as int;
+      var len := st.Peek(1) as int;
+      var start := st.Peek(0) as int;
       // Sanity check bounds
       if (start+len) <= MAX_U256
       then
         // Read out that data.
-        var data := Memory.Slice(vm.memory, start as u256, len);
+        var data := Memory.Slice(st.evm.memory, start as u256, len);
         // Done
-        State.REVERTS(gas:=vm.gas,data:=data)
+        State.REVERTS(gas:=st.evm.gas,data:=data)
       else
         State.INVALID
     else
@@ -1132,157 +1302,9 @@ module EVM {
   // =============================================================================
 
   /**
-   * Decode next opcode from machine.
-   */
-  function method decode(st:State) : u8
-   // To execute a bytecode requires the machine is in a non-terminal state.
-  requires st.OK? {
-    // Destructure incoming state.
-    var OK(vm) := st;
-    // Sanity check pc location
-    if vm.pc < Code.Size(vm.code)
-    then
-      Code.DecodeUint8(vm.code,vm.pc as nat)
-    else
-      INVALID
-  }
-
-  /**
-   * Move program counter to a given location.
-   */
-  function method goto(evm:T, k:u256) : State {
-    // Sanity check valid target address
-    if k <= Code.Size(evm.code)
-    then State.OK(evm.(pc := k))
-    else State.INVALID
-  }
-
- /**
-   * Move program counter to next instruction.
-   */
-  function method next(evm:T) : State {
-    if evm.pc < Code.Size(evm.code)
-    then State.OK(evm.(pc := evm.pc + 1))
-    else State.INVALID
-  }
-
-  /**
-   * Move program counter over k instructions / operands.
-   */
-  function method skip(evm:T, k:nat) : State {
-    var pc_k := (evm.pc as nat) + k;
-    if pc_k < |evm.code.contents|
-    then State.OK(evm.(pc := pc_k as u256))
-    else State.INVALID
-  }
-
-  /**
-   * Check at least k operands on the stack.
-   */
-  function method operands(evm:T) : nat {
-    Stack.Size(evm.stack)
-  }
-
-  /**
-   * Check capacity remaining on stack.
-   */
-  function method capacity(evm:T) : nat {
-    Stack.Capacity(evm.stack)
-  }
-
-  /**
-   * Push word onto stack.
-   */
-  function method push(evm:T, v:u256) : T
-    requires capacity(evm) > 0 {
-      evm.(stack:=Stack.Push(evm.stack,v))
-  }
-
-  /**
-   * peek word from a given position on the stack, where "1" is the
-   * topmost position, "2" is the next position and so on.
-   */
-  function method peek(evm:T, k:int) : u256
-    // Sanity check peek possible
-    requires k >= 0 && k < Stack.Size(evm.stack) {
-        Stack.Peek(evm.stack,k)
-  }
-
-  /**
-   * Pop word from stack.
-   */
-  function method pop(evm:T) : T
-    // Cannot pop from empty stack
-    requires Stack.Size(evm.stack) >= 1 {
-        evm.(stack:=Stack.Pop(evm.stack))
-  }
-
-  /**
-   * Swap top item with kth item.
-   */
-  function method swap(evm:T, k:nat) : T
-    requires operands(evm) > k {
-      evm.(stack:=Stack.Swap(evm.stack,k))
-  }
-
-  /**
-   * Read word from byte address in memory.
-   */
-  function method read(evm:T, address:u256) : u256
-  requires (address as int) + 31 <= MAX_U256 {
-    Memory.ReadUint256(evm.memory,address)
-  }
-
-  /**
-   * Write word to byte address in memory.
-   */
-  function method write(evm:T, address:u256, val: u256) : T
-    requires (address as int) + 31 <= MAX_U256 {
-      evm.(memory:=Memory.WriteUint256(evm.memory,address,val))
-  }
-
-  /**
-   * Write byte to byte address in memory.
-   */
-  function method write8(evm:T, address:u256, val: u8) : T
-  requires (address as int) < MAX_U256 {
-    evm.(memory := Memory.WriteUint8(evm.memory,address,val))
-  }
-
-  /**
-   * Copy byte sequence to byte address in memory.  Any bytes
-   * that overflow are dropped.
-   */
-  function method copy(evm:T, address:u256, data: seq<u8>) : T
-    requires (address as int) + |data| <= MAX_U256 {
-      evm.(memory:=Memory.Copy(evm.memory,address,data))
-  }
-
-  /**
-   * Read word from storage
-   */
-  function method load(evm:T, address:u256) : u256 {
-    Storage.Read(evm.storage,address)
-  }
-
-  /**
-   * Write word to storage
-   */
-  function method store(evm:T, address:u256, val: u256) : T {
-    evm.(storage:=Storage.Write(evm.storage,address,val))
-  }
-
-  /**
-   * Check how many code operands are available.
-   */
-  function method opcode_operands(evm:T) : int {
-    (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
-  }
-
-  /**
    * Unsigned integer division with handling for zero.
    */
-  function method div(lhs:u256, rhs:u256) : u256 {
+  function method DivWithZero(lhs:u256, rhs:u256) : u256 {
     if rhs == 0 then 0 as u256
     else
       (lhs / rhs) as u256
@@ -1291,7 +1313,7 @@ module EVM {
   /**
    * Unsigned integer remainder with handling for zero.
    */
-  function method mod(lhs:u256, rhs:u256) : u256 {
+  function method ModWithZero(lhs:u256, rhs:u256) : u256 {
     if rhs == 0 then 0 as u256
     else
       (lhs % rhs) as u256
@@ -1306,7 +1328,7 @@ module EVM {
    * (though for DIV it is OK).  Instead, we have to explicitly
    * manage the cases for negative operands.
    */
-  function method sdiv(lhs:i256, rhs:i256) : i256 {
+  function method SDivWithZero(lhs:i256, rhs:i256) : i256 {
     if rhs == 0 then 0 as i256
     else if rhs == -1 && lhs == (-TWO_255 as i256)
     then
@@ -1325,7 +1347,7 @@ module EVM {
    * (though for MOD it is OK).  Instead, we have to explicitly
    * manage the cases for negative operands.
    */
-  function method smod(lhs:i256, rhs:i256) : i256 {
+  function method SModWithZero(lhs:i256, rhs:i256) : i256 {
     if rhs == 0 then 0 as i256
     else
       // Do not use Dafny's remainder operator here!
