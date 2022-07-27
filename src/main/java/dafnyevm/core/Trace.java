@@ -67,20 +67,23 @@ public class Trace {
 		 * @throws JSONException
 		 */
 		public static Trace.Element fromJSON(JSONObject json) throws JSONException {
-			if (json.has("error")) {
+			if (json.has("error") && json.has("output")) {
+				// Abnormal return (e.g. REVERT or exception)
 				if (json.getString("error").equals("execution reverted")) {
 					byte[] data = Hex.toBytes(json.getString("output"));
 					return new Trace.Reverts(data);
 				} else {
+					// FIXME: confirm error code.
 					return new Trace.Exception();
 				}
-			} else if(json.has("output")) {
+			} else if (json.has("output")) {
+				// Normal return (e.g. STOP or RETURNS)
 				byte[] data = Hex.toBytes(json.getString("output"));
 				return new Trace.Returns(data);
 			} else {
 				int pc = json.getInt("pc");
 				// Memory is not usually reported until it is actually assigned something.
-				byte[] memory = Hex.toBytes(json.optString("memory","0x"));
+				byte[] memory = Hex.toBytes(json.optString("memory", "0x"));
 				BigInteger[] stack = parseStackArray(json.getJSONArray("stack"));
 				//
 				return new Trace.Step(pc, stack, memory);
