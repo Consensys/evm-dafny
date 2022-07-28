@@ -33,8 +33,30 @@ requires x > 1
 // Straightline Tests
 // ===========================================================================
 
+method {:test} test_basic_01()
+{
+  var x := 3;
+  // Initialise EVM
+  var tx := Context.Create(0xabcd,[]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
+  // PUSH1 x
+  vm := EVM.Execute(vm);
+  // PUSH1 0x2
+  vm := EVM.Execute(vm);
+  // MSTORE
+  vm := EVM.Execute(vm);
+  // PUSH
+  vm := EVM.Execute(vm);
+  // PUSH
+  vm := EVM.Execute(vm);
+  // RETURN
+  vm := EVM.Execute(vm);
+  //
+  expect vm.data == [x], ("failed. vm.data=", vm.data); //, "failed";
+}
+
 // Write parameter into return data
-method test_basic_01(x: u8)
+method test_basic_02(x: u8)
 requires x > 1
 {
   var tx := Context.Create(0xabcd,[]);
@@ -51,7 +73,7 @@ requires x > 1
 }
 
 // Add two values and return
-method test_basic_02(x: u8, y: u8) returns (z:u16)
+method test_basic_03(x: u8, y: u8) returns (z:u16)
 ensures z == (x as u16) + (y as u16)
 {
   var tx := Context.Create(0xabcd,[]);
@@ -70,7 +92,7 @@ ensures z == (x as u16) + (y as u16)
   return Bytes.ReadUint16(vm.data,0);
 }
 
-method test_basic_03(x: u8, y: u8) returns (z:u8)
+method test_basic_04(x: u8, y: u8) returns (z:u8)
 requires x >= y
 ensures z <= x
 {
@@ -86,7 +108,7 @@ ensures z <= x
   vm := EVM.Push1(vm,0x1F);
   vm := EVM.Return(vm);
   //
-  return Bytes.ReadUint8(vm.data,0); 
+  return Bytes.ReadUint8(vm.data,0);
 }
 
 // ===========================================================================
@@ -132,7 +154,7 @@ method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
   }
 }
 
-lemma Foo(x:u8, y:u8) 
+lemma Foo(x:u8, y:u8)
   ensures y <= x ==> x - y <= x
 {
 
