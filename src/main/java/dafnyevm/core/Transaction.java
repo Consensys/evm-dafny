@@ -107,7 +107,8 @@ public class Transaction {
 		 * @return
 		 */
 		public static Template fromJSON(JSONObject json) throws JSONException {
-			BigInteger to = Hex.toBigInt(json.getString("to"));
+			String _to = json.getString("to");
+			BigInteger to = _to.isEmpty() ? null : Hex.toBigInt(_to);
 			BigInteger sender = Hex.toBigInt(json.getString("sender"));
 			BigInteger gasPrice;
 			if (json.has("gasPrice")) {

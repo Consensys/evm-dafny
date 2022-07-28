@@ -138,14 +138,25 @@ public class Main {
 		// FIXME: the following is hack to workaround the fact that the DafnyEvm
 		// currently does not have a concept of the "world state".
 		Transaction tx = txt.instantiate(test.indexes);
-		byte[] code = worldstate.get(tx.to).code;
-		Map<BigInteger, BigInteger> storage = worldstate.get(tx.to).storage;
+		byte[] code;
+		Map<BigInteger, BigInteger> storage;
+		if (tx.to != null) {
+			// Normal situation. We are calling a contract account and we need to run its
+			// code.
+			storage = worldstate.get(tx.to).storage;
+			code = worldstate.get(tx.to).code;
+		} else {
+			// In this case, we have an empty "to" field. Its not clear exactly what this
+			// means, but I believe we can imagine it as something like the contract
+			// creation account. Specifically, the code to execute is stored within the
+			// transaction data.
+			code = tx.data;
+			storage = new HashMap<>();
+		}
 		// Construct EVM
 		DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer);
 		// Run the transaction!
-		System.out.println("RUNNING CODE: " + Hex.toHexString(code));
-		SnapShot r = evm.call(tx.sender, tx.data);
-		// FIXME: what to do with result?
+		evm.call(tx.sender, tx.data);
 	}
 
 	public static Map<BigInteger, Account> parsePreState(JSONObject json) throws JSONException {
