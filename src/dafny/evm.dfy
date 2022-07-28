@@ -500,7 +500,7 @@ module EVM {
     else if opcode == OR then Or(st)
     else if opcode == XOR then Xor(st)
     else if opcode == NOT then Not(st)
-    // else if opcode == BYTE then Byte(st)
+    else if opcode == BYTE then Byte(st)
     else if opcode == SHL then Shl(st)
     else if opcode == SHR then Shr(st)
     // else if opcode == SAR then evalSAR(st)
@@ -911,18 +911,18 @@ module EVM {
   /**
    * Retrieve single byte from word.
    */
-  // function method Byte(st: State) : State
-  // requires !st.IsFailure() {
-  //   //
-  //   if st.Operands() >= 2
-  //     then
-  //     var val := st.Peek(1);
-  //     var k := st.Peek(0);
-  //     var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
-  //     st.Pop().Pop().Push(res as u256).Next()
-  //   else
-  //     State.INVALID
-  // }
+  function method Byte(st: State) : State
+  requires !st.IsFailure() {
+    //
+    if st.Operands() >= 2
+      then
+      var val := st.Peek(1);
+      var k := st.Peek(0);
+      var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
+      st.Pop().Pop().Push(res as u256).Next()
+    else
+      State.INVALID
+  }
 
   /**
    * Left shift operation.
