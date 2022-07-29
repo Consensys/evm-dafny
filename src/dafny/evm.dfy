@@ -40,7 +40,7 @@ module EVM {
     memory  : Memory.T,
     code: Code.T,
     gas: nat,
-    pc : u256
+    pc : nat
   )
 
   /**
@@ -48,7 +48,7 @@ module EVM {
    * The EVM is initialised with an empty stack and empty local memory.
    */
   function method Create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
-  requires |code| <= MAX_U256 {
+  requires |code| <= Code.MAX_CODE_SIZE {
     var stck := Stack.Create();
     var mem := Memory.Create();
     var sto := Storage.Create(storage);
@@ -268,6 +268,7 @@ module EVM {
     predicate method IsFailure() {
 			!this.OK?
 		}
+    
     /**
      * Extract underlying raw state.
      */
@@ -292,7 +293,7 @@ module EVM {
     /**
      * Determine current PC value.
      */
-		function method PC(): u256
+		function method PC(): nat
 			requires !IsFailure() {
 			this.evm.pc
 		}
@@ -363,9 +364,9 @@ module EVM {
     function method Decode() : u8
 		requires !IsFailure() {
       // Sanity check pc location
-      if evm.pc < Code.Size(evm.code)
+      if evm.pc < Code.Size(evm.code) as nat
       then
-        Code.DecodeUint8(evm.code,evm.pc as nat)
+        Code.DecodeUint8(evm.code,evm.pc)  
       else
         INVALID_OPCODE
     }
@@ -374,21 +375,18 @@ module EVM {
      * Move program counter to a given location.
      */
     function method Goto(k:u256) : State
-    requires !IsFailure() {
-      // Sanity check valid target address
-      if k <= Code.Size(evm.code)
-      then State.OK(evm.(pc := k))
-      else State.INVALID
+    requires !IsFailure() 
+    {
+        State.OK(evm.(pc := k as nat))
     }
 
     /**
      * Move program counter to next instruction.
      */
     function method Next() : State
-    requires !IsFailure() {
-      if evm.pc < Code.Size(evm.code)
-     then State.OK(evm.(pc := evm.pc + 1))
-     else State.INVALID
+    requires !IsFailure() 
+    {
+      State.OK(evm.(pc := evm.pc + 1))
     }
 
     /**
@@ -396,10 +394,8 @@ module EVM {
      */
     function method Skip(k:nat) : State
     requires !IsFailure() {
-      var pc_k := (evm.pc as nat) + k;
-      if pc_k < |evm.code.contents|
-      then State.OK(evm.(pc := pc_k as u256))
-      else State.INVALID
+      var pc_k : nat := (evm.pc as nat) + k;
+      State.OK(evm.(pc := pc_k))
     }
 
     /**
@@ -450,10 +446,20 @@ module EVM {
     }
 
     /**
+     * Get u elements and rermnove first l.
+     */
+    function Slice(l:nat, u:nat) : Stack.T
+      requires !IsFailure()
+      requires 0 <= l <= u <= Stack.Size(GetStack()) {
+        Stack.Slice(GetStack(), l, u) 
+    }
+
+    /**
      * Check how many code operands are available.
      */
     function method CodeOperands() : int
-    requires !IsFailure() {
+    requires !IsFailure() 
+    {
       (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
     }
 
@@ -472,7 +478,9 @@ module EVM {
    */
   function method Execute(st:State) : State
   // To execute a bytecode requires the machine is in a non-terminal state.
-  requires !st.IsFailure() {
+  requires !st.IsFailure() 
+  requires st.PC() < Code.Size(st.evm.code) as nat 
+  {
     var OK(vm) := st;
     // Decode
     var opcode := st.Decode();
@@ -500,7 +508,7 @@ module EVM {
     else if opcode == OR then Or(st)
     else if opcode == XOR then Xor(st)
     else if opcode == NOT then Not(st)
-    // else if opcode == BYTE then Byte(st)
+    else if opcode == BYTE then Byte(st)
     else if opcode == SHL then Shl(st)
     else if opcode == SHR then Shr(st)
     // else if opcode == SAR then evalSAR(st)
@@ -622,7 +630,9 @@ module EVM {
    * Unsigned integer subtraction with modulo arithmetic.
    */
   function method Sub(st: State) : State
-  requires !st.IsFailure() {
+  requires !st.IsFailure() 
+  // ensures Sub(st).OK? ==> Sub(st).Peek(0) == st.Peek(0) - st.Peek(1) 
+  {
     //
     if st.Operands() >= 2
       then
@@ -911,18 +921,18 @@ module EVM {
   /**
    * Retrieve single byte from word.
    */
-  // function method Byte(st: State) : State
-  // requires !st.IsFailure() {
-  //   //
-  //   if st.Operands() >= 2
-  //     then
-  //     var val := st.Peek(1);
-  //     var k := st.Peek(0);
-  //     var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
-  //     st.Pop().Pop().Push(res as u256).Next()
-  //   else
-  //     State.INVALID
-  // }
+  function method Byte(st: State) : State
+  requires !st.IsFailure() {
+    //
+    if st.Operands() >= 2
+      then
+      var val := st.Peek(1);
+      var k := st.Peek(0);
+      var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
+      st.Pop().Pop().Push(res as u256).Next()
+    else
+      State.INVALID
+  }
 
   /**
    * Left shift operation.
@@ -1176,11 +1186,13 @@ module EVM {
    * Gets value of program counter prior to this instruction being executed.
    */
   function method Pc(st: State) : State
-  requires !st.IsFailure() {
+  requires !st.IsFailure() 
+  requires st.PC() <= MAX_U256
+  {
     //
     if st.Capacity() >= 1
     then
-      st.Push(st.PC()).Next()
+      st.Push(st.PC() as u256).Next()
     else
       State.INVALID
   }
