@@ -55,7 +55,7 @@ method test_basic_02(x: u8, y: u8) returns (z:u16)
 ensures z == (x as u16) + (y as u16)
 {
   var tx := Context.Create(0xabcd,[]);
-  var vm := EVM.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, ADD, PUSH1, 0x0, MSTORE, PUSH1, 0x2, PUSH1, 0x1E, RETURN]);
+  var vm := EVM.Create(tx,map[],GASLIMIT,[]);
   //
   vm := EVM.Push1(vm,x);
   vm := EVM.Push1(vm,y);
