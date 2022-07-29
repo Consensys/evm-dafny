@@ -20,7 +20,14 @@ abstract module EVM {
     import opened EvmState
     import opened Int
 
-    const SEMANTICS: map<u8, State -> State>
+    /** The type for non failure states. */
+    type OKState = s:State | !s.IsFailure() 
+      witness Create(Context.Create(0xabcd,[]), map[], 0, [])
+
+    /** The semantics of opcodes.
+     *  It is defined as a total function from non failure states. 
+     */
+    const SEMANTICS: map<u8, OKState -> State>
 
     function method Execute(st:State) : State
     // To execute a bytecode requires the machine is in a non-terminal state.
