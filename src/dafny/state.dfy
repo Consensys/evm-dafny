@@ -38,6 +38,20 @@ module EvmState {
         pc : nat
     )
 
+    /** The type for non failure states. */
+    type OKState = s:State | !s.IsFailure() 
+      witness OK(
+        EVM(
+            Context.Create(0xabcd,[]), 
+            Storage.Create(map[]), 
+            Stack.Create(),
+            Memory.Create(),
+            Code.Create([]),
+            0, 
+            0
+        )
+    )
+
     /**
     * Captures the possible state of the machine.  Normal execution is indicated
     * by OK (with the current machine data).  An exceptional halt is indicated by INVALID

@@ -12,131 +12,139 @@
  * under the License.
  */
 include "../evm.dfy" 
-include "../bytecode.dfy"
+include "../bytecode.dfy" 
 
 module EvmBerlin refines EVM {
-    import opened Int 
-    import Opcode
+    // import opened Int 
+    import  Opcode
     import Bytecode
 
-    /**
-     * Create a fresh EVM to execute a given sequence of bytecode instructions.
-     * The EVM is initialised with an empty stack and empty local memory.
-     */
-    function method Create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
-    requires |code| <= Code.MAX_CODE_SIZE {
-        var stck := Stack.Create();
-        var mem := Memory.Create();
-        var sto := Storage.Create(storage);
-        var cod := Code.Create(code);
-        var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0);
-        // Off we go!
-        State.OK(evm)
-    }
-
-    /**
-    * Execute a single step of the EVM.  This either States in a valid EVM (i.e. so execution
-    * can continue), or some form of halt (e.g. exceptional, revert, etc).
-    */
-    function method Execute(st:State) : State {
-        var OK(vm) := st;
-        // Decode
-        var opcode := st.Decode();
-        // 0x00s: STOP & Arithmetic
-        if opcode == Opcode.STOP then Bytecode.Stop(st)
-        else if opcode == Opcode.ADD then Bytecode.Add(st)
-        else if opcode == Opcode.MUL then Bytecode.Mul(st)
-        else if opcode == Opcode.SUB then Bytecode.Sub(st)
-        else if opcode == Opcode.DIV then Bytecode.Div(st)
-        else if opcode == Opcode.SDIV then Bytecode.SDiv(st)
-        else if opcode == Opcode.MOD then Bytecode.Mod(st)
-        else if opcode == Opcode.SMOD then Bytecode.SMod(st)
-        else if opcode == Opcode.ADDMOD then Bytecode.AddMod(st)
-        else if opcode == Opcode.MULMOD then Bytecode.MulMod(st)
-        // else if opcode == EXP then Bytecode.evalEXP(st)
-        // else if opcode == SIGNEXTEND then Bytecode.evalSIGNEXTEND(st)
+    /** The semantics of eachopcode. */ 
+    const SEMANTICS := map[  
+        Opcode.STOP := (s:OKState) => Bytecode.Stop(s),
+        Opcode.ADD := (s:OKState) => Bytecode.Add(s),
+        Opcode.MUL := (s:OKState) => Bytecode.Mul(s),
+        Opcode.SUB := (s:OKState) => Bytecode.Sub(s),
+        Opcode.DIV := (s:OKState) => Bytecode.Div(s),
+        Opcode.SDIV := (s:OKState) => Bytecode.SDiv(s),
+        Opcode.MOD := (s:OKState) => Bytecode.Mod(s),
+        Opcode.SMOD := (s:OKState) => Bytecode.SMod(s),
+        Opcode.ADDMOD := (s:OKState) => Bytecode.AddMod(s),
+        Opcode.MULMOD := (s:OKState) => Bytecode.MulMod(s),
+        //  EXP := (s:OKState) => Bytecode.evalEXP(s),
+        //  SIGNEXTEND := (s:OKState) => Bytecode.evalSIGNEXTEND(s),
         // 0x10s: Comparison & Bitwise Logic
-        else if opcode == Opcode.LT then Bytecode.Lt(st)
-        else if opcode == Opcode.GT then Bytecode.Gt(st)
-        else if opcode == Opcode.SLT then Bytecode.SLt(st)
-        else if opcode == Opcode.SGT then Bytecode.SGt(st)
-        else if opcode == Opcode.EQ then Bytecode.Eq(st)
-        else if opcode == Opcode.ISZERO then Bytecode.IsZero(st)
-        else if opcode == Opcode.AND then Bytecode.And(st)
-        else if opcode == Opcode.OR then Bytecode.Or(st)
-        else if opcode == Opcode.XOR then Bytecode.Xor(st)
-        else if opcode == Opcode.NOT then Bytecode.Not(st)
-        else if opcode == Opcode.BYTE then Bytecode.Byte(st)
-        else if opcode == Opcode.SHL then Bytecode.Shl(st)
-        else if opcode == Opcode.SHR then Bytecode.Shr(st)
-        // else if opcode == SAR then Bytecode.evalSAR(st)
+        Opcode.LT := (s:OKState) => Bytecode.Lt(s),
+        Opcode.GT := (s:OKState) => Bytecode.Gt(s),
+        Opcode.SLT := (s:OKState) => Bytecode.SLt(s),
+        Opcode.SGT := (s:OKState) => Bytecode.SGt(s),
+        Opcode.EQ := (s:OKState) => Bytecode.Eq(s),
+        Opcode.ISZERO := (s:OKState) => Bytecode.IsZero(s),
+        Opcode.AND := (s:OKState) => Bytecode.And(s),
+        Opcode.OR := (s:OKState) => Bytecode.Or(s),
+        Opcode.XOR := (s:OKState) => Bytecode.Xor(s),
+        Opcode.NOT := (s:OKState) => Bytecode.Not(s),
+        Opcode.BYTE := (s:OKState) => Bytecode.Byte(s),
+        Opcode.SHL := (s:OKState) => Bytecode.Shl(s),
+        Opcode.SHR := (s:OKState) => Bytecode.Shr(s),
+        //  SAR := (s:OKState) => Bytecode.evalSAR(s),
         // 0x20s
-        // else if opcode == KECCAK256 then Bytecode.evalKECCAK256(st)
+        //  KECCAK256 := (s:OKState) => Bytecode.evalKECCAK256(s),
         // 0x30s: Environment Information
-        // else if opcode == ADDRESS then Bytecode.evalADDRESS(st)
-        // else if opcode == BALANCE then Bytecode.evalBALANCE(st)
-        // else if opcode == ORIGIN then Bytecode.evalORIGIN(st)
-        // else if opcode == CALLER then Bytecode.evalCALLER(st)
-        // else if opcode == CALLVALUE then Bytecode.evalCALLVALUE(st)
-        else if opcode == Opcode.CALLDATALOAD then Bytecode.CallDataLoad(st)
-        else if opcode == Opcode.CALLDATASIZE then Bytecode.CallDataSize(st)
-        else if opcode == Opcode.CALLDATACOPY then Bytecode.CallDataCopy(st)
-        // else if opcode == CODESIZE then Bytecode.evalCODESIZE(st)
-        // else if opcode == CODECOPY then Bytecode.evalCODECOPY(st)
-        // else if opcode == GASPRICE then Bytecode.evalGASPRICE(st)
-        // else if opcode == EXTCODESIZE then Bytecode.evalEXTCODESIZE(st)
-        // else if opcode == EXTCODECOPY then Bytecode.evalEXTCODECOPY(st)
-        // else if opcode == RETURNDATASIZE then Bytecode.evalRETURNDATASIZE(st)
-        // else if opcode == RETURNDATACOPY then Bytecode.evalRETURNDATACOPY(st)
-        // else if opcode == EXTCODEHASH then Bytecode.evalEXTCODEHASH(st)
+        //  ADDRESS := (s:OKState) => Bytecode.evalADDRESS(s),
+        //  BALANCE := (s:OKState) => Bytecode.evalBALANCE(s),
+        //  ORIGIN := (s:OKState) => Bytecode.evalORIGIN(s),
+        //  CALLER := (s:OKState) => Bytecode.evalCALLER(s),
+        //  CALLVALUE := (s:OKState) => Bytecode.evalCALLVALUE(s),
+        Opcode.CALLDATALOAD := (s:OKState) => Bytecode.CallDataLoad(s),
+        Opcode.CALLDATASIZE := (s:OKState) => Bytecode.CallDataSize(s),
+        Opcode.CALLDATACOPY := (s:OKState) => Bytecode.CallDataCopy(s),
+        //  CODESIZE := (s:OKState) => Bytecode.evalCODESIZE(s),
+        //  CODECOPY := (s:OKState) => Bytecode.evalCODECOPY(s),
+        //  GASPRICE := (s:OKState) => Bytecode.evalGASPRICE(s),
+        //  EXTCODESIZE := (s:OKState) => Bytecode.evalEXTCODESIZE(s),
+        //  EXTCODECOPY := (s:OKState) => Bytecode.evalEXTCODECOPY(s),
+        //  RETURNDATASIZE := (s:OKState) => Bytecode.evalRETURNDATASIZE(s),
+        //  RETURNDATACOPY := (s:OKState) => Bytecode.evalRETURNDATACOPY(s),
+        //  EXTCODEHASH := (s:OKState) => Bytecode.evalEXTCODEHASH(s),
         // 0x40s: Block Information
-        // else if opcode == BLOCKHASH then Bytecode.evalBLOCKHASH(st)
-        // else if opcode == COINBASE then Bytecode.evalCOINBASE(st)
-        // else if opcode == TIMESTAMP then Bytecode.evalTIMESTAMP(st)
-        // else if opcode == NUMBER then Bytecode.evalNUMBER(st)
-        // else if opcode == DIFFICULTY then Bytecode.evalDIFFICULTY(st)
-        // else if opcode == GASLIMIT then Bytecode.evalGASLIMIT(st)
-        // else if opcode == CHAINID then Bytecode.evalCHAINID(st)
-        // else if opcode == SELFBALANCE then Bytecode.evalSELFBALANCE(st)
+        //  BLOCKHASH := (s:OKState) => Bytecode.evalBLOCKHASH(s),
+        //  COINBASE := (s:OKState) => Bytecode.evalCOINBASE(s),
+        //  TIMESTAMP := (s:OKState) => Bytecode.evalTIMESTAMP(s),
+        //  NUMBER := (s:OKState) => Bytecode.evalNUMBER(s),
+        //  DIFFICULTY := (s:OKState) => Bytecode.evalDIFFICULTY(s),
+        //  GASLIMIT := (s:OKState) => Bytecode.evalGASLIMIT(s),
+        //  CHAINID := (s:OKState) => Bytecode.evalCHAINID(s),
+        //  SELFBALANCE := (s:OKState) => Bytecode.evalSELFBALANCE(s),
         // 0x50s: Stack, Memory, Storage and Flow
-        else if opcode == Opcode.POP then Bytecode.Pop(st)
-        else if opcode == Opcode.MLOAD then Bytecode.MLoad(st)
-        else if opcode == Opcode.MSTORE then Bytecode.MStore(st)
-        else if opcode == Opcode.MSTORE8 then Bytecode.MStore8(st)
-        else if opcode == Opcode.SLOAD then Bytecode.SLoad(st)
-        else if opcode == Opcode.SSTORE then Bytecode.SStore(st)
-        else if opcode == Opcode.JUMP then Bytecode.Jump(st)
-        else if opcode == Opcode.JUMPI then Bytecode.JumpI(st)
-        else if opcode == Opcode.PC then Bytecode.Pc(st)
-        else if opcode == Opcode.JUMPDEST then Bytecode.JumpDest(st)
+        Opcode.POP := (s:OKState) => Bytecode.Pop(s),
+        Opcode.MLOAD := (s:OKState) => Bytecode.MLoad(s),
+        Opcode.MSTORE := (s:OKState) => Bytecode.MStore(s),
+        Opcode.MSTORE8 := (s:OKState) => Bytecode.MStore8(s),
+        Opcode.SLOAD := (s:OKState) => Bytecode.SLoad(s),
+        Opcode.SSTORE := (s:OKState) => Bytecode.SStore(s),
+        Opcode.JUMP := (s:OKState) => Bytecode.Jump(s),
+        Opcode.JUMPI := (s:OKState) => Bytecode.JumpI(s),
+        Opcode.PC := (s:OKState) => if s.PC() <= MAX_U256 then Bytecode.Pc(s) else State.INVALID,
+        Opcode.JUMPDEST := (s:OKState) => Bytecode.JumpDest(s),
         // 0x60s & 0x70s: Push operations
-        else if opcode == Opcode.PUSH1 && st.CodeOperands() >= 1 then
-            var k := Code.DecodeUint8(vm.code, (vm.pc + 1) as nat);
-            Bytecode.Push1(st, k)
-        else if opcode == Opcode.PUSH2 && st.CodeOperands() >= 2 then
-            var k := Code.DecodeUint16(vm.code, (vm.pc + 1) as nat);
-            Bytecode.Push2(st, k)
+        Opcode.PUSH1 := (s: OKState) =>
+                if s.CodeOperands() >= 1 then 
+                    var k := Code.DecodeUint8(s.evm.code, (s.evm.pc + 1) as nat);
+                    Bytecode.Push1(s, k)
+                else State.INVALID,
+        Opcode.PUSH2 := (s:OKState) =>
+                if s.CodeOperands() >= 2 then 
+                    var k := Code.DecodeUint16(s.evm.code, (s.evm.pc + 1) as nat);
+                    Bytecode.Push2(s, k)
+                else State.INVALID,
         // 0x80s: Duplicate operations
-        else if Opcode.DUP1 <= opcode <= Opcode.DUP16 then
-            var k := (opcode - Opcode.DUP1) as int; Bytecode.Dup(st,k+1)
+        Opcode.DUP1 := (s:OKState) => Bytecode.Dup(s, 1),
+        Opcode.DUP2 := (s:OKState) => Bytecode.Dup(s, 2),
+        Opcode.DUP3 := (s:OKState) => Bytecode.Dup(s, 3),
+        Opcode.DUP4 := (s:OKState) => Bytecode.Dup(s, 4),
+        Opcode.DUP5 := (s:OKState) => Bytecode.Dup(s, 5),
+        Opcode.DUP6 := (s:OKState) => Bytecode.Dup(s, 6),
+        Opcode.DUP7 := (s:OKState) => Bytecode.Dup(s, 7),
+        Opcode.DUP8 := (s:OKState) => Bytecode.Dup(s, 8),
+        Opcode.DUP9 := (s:OKState) => Bytecode.Dup(s, 9),
+        Opcode.DUP10 := (s:OKState) => Bytecode.Dup(s, 10),
+        Opcode.DUP11 := (s:OKState) => Bytecode.Dup(s, 11),
+        Opcode.DUP12 := (s:OKState) => Bytecode.Dup(s, 12),
+        Opcode.DUP13 := (s:OKState) => Bytecode.Dup(s, 13),
+        Opcode.DUP14 := (s:OKState) => Bytecode.Dup(s, 14),
+        Opcode.DUP15 := (s:OKState) => Bytecode.Dup(s, 15),
+        Opcode.DUP16 := (s:OKState) => Bytecode.Dup(s, 16),
         // 0x90s: Exchange operations
-        else if Opcode.SWAP1 <= opcode <= Opcode.SWAP16 then
-            var k := (opcode - Opcode.SWAP1) as int; Bytecode.Swap(st,k+1)
+        Opcode.SWAP1 := (s:OKState) => Bytecode.Swap(s, 1),
+        Opcode.SWAP2 := (s:OKState) => Bytecode.Swap(s, 2),
+        Opcode.SWAP3 := (s:OKState) => Bytecode.Swap(s, 3),
+        Opcode.SWAP4 := (s:OKState) => Bytecode.Swap(s, 4),
+        Opcode.SWAP5 := (s:OKState) => Bytecode.Swap(s, 5),
+        Opcode.SWAP6 := (s:OKState) => Bytecode.Swap(s, 6),
+        Opcode.SWAP7 := (s:OKState) => Bytecode.Swap(s, 7),
+        Opcode.SWAP8 := (s:OKState) => Bytecode.Swap(s, 8),
+        Opcode.SWAP9 := (s:OKState) => Bytecode.Swap(s, 9),
+        Opcode.SWAP10 := (s:OKState) => Bytecode.Swap(s, 10),
+        Opcode.SWAP11 := (s:OKState) => Bytecode.Swap(s, 11),
+        Opcode.SWAP12 := (s:OKState) => Bytecode.Swap(s, 12),
+        Opcode.SWAP13 := (s:OKState) => Bytecode.Swap(s, 13),
+        Opcode.SWAP14 := (s:OKState) => Bytecode.Swap(s, 14),
+        Opcode.SWAP15 := (s:OKState) => Bytecode.Swap(s, 15),
+        Opcode.SWAP16 := (s:OKState) => Bytecode.Swap(s, 16),
         // 0xA0s: Log operations
-        // else if LOG0 <= opcode <= LOG4 then
-        //   var k := (opcode - LOG0) as int; evalLOG(st,k)
+        // else if LOG0 <=opcode <= LOG4 := (s:OKState)
+         //   var k := opcode - LOG0) as int; evalLOG(st,k),
         // 0xf0
-        // else if opcode == CREATE then Bytecode.evalCREATE(st)
-        // else if opcode == CALL then Bytecode.evalCALL(st)
-        // else if opcode == CALLCODE then Bytecode.evalCALLCODE(st)
-        else if opcode == Opcode.RETURN then Bytecode.Return(st)
-        //else if opcode == DELEGATECALL then Bytecode.evalDELEGATECALL(st)
-        //else if opcode == CREATE2 then Bytecode.evalCREATE2(st)
-        //else if opcode == STATICCALL then Bytecode.evalSTATICCALL(st)
-        else if opcode == Opcode.REVERT then Bytecode.Revert(st)
-        //else if opcode == SELFDESTRUCT then Bytecode.evalSELFDESTRUCT(st)
-        else
-        // Invalid opcode
-        State.INVALID
-    }
+        //  CREATE := (s:OKState) => Bytecode.evalCREATE(s),
+        //  CALL := (s:OKState) => Bytecode.evalCALL(s),
+        //  CALLCODE := (s:OKState) => Bytecode.evalCALLCODE(s),
+        Opcode.RETURN := (s:OKState) => Bytecode.Return(s),
+        // DELEGATECALL := (s:OKState) => Bytecode.evalDELEGATECALL(s),
+        // CREATE2 := (s:OKState) => Bytecode.evalCREATE2(s),
+        // STATICCALL := (s:OKState) => Bytecode.evalSTATICCALL(s),
+        Opcode.REVERT := (s:OKState) => Bytecode.Revert(s)
+        // SELFDESTRUCT := (s:OKState) => Bytecode.evalSELFDESTRUCT(s),   
+    ]  
+
 }
