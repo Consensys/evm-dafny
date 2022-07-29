@@ -20,19 +20,21 @@ module Code {
   // Code Segment
   // =============================================================================
 
+  const MAX_CODE_SIZE := 42_000_000
+
   /**
    * A code segment is just a sequence of words which form the
    * opcodes and operands of the machine instructions.
    */
   datatype Raw = Code(contents:seq<u8>)
 
-  type T = c:Raw | |c.contents| <= MAX_U256 witness Code([])
+  type T = c:Raw | |c.contents| <= MAX_CODE_SIZE witness Code([])
 
   /**
    * Create a code segment from an initial sequence of words.
    */
   function method Create(contents:seq<u8>) : T
-    requires |contents| <= MAX_U256 {
+    requires |contents| <= MAX_CODE_SIZE {
         Code(contents:=contents)
   }
 
