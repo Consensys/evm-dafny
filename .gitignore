@@ -79,3 +79,6 @@ dafny-evm.code-workspace
 /.gradle/
 /build/
 src/test/dafny/**/*.runtimeconfig.json
+evm-java/**
+tmp-java/**
+
