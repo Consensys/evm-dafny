@@ -80,6 +80,7 @@ ensures z <= x
   vm := EVM.Push1(vm,y);
   vm := EVM.Push1(vm,x);
   vm := EVM.Sub(vm); // x - y
+  assert vm.Peek(0) == (x as u256) - (y as u256);
   vm := EVM.Push1(vm,0);
   vm := EVM.MStore(vm);
   vm := EVM.Push1(vm,0x1);
@@ -121,6 +122,7 @@ method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
     vm := EVM.Push1(vm,y);
     vm := EVM.Push1(vm,x);
     vm := EVM.Sub(vm); // x - y
+    assert vm.Peek(0) == (x as u256) - (y as u256);
     vm := EVM.Push1(vm,0);
     vm := EVM.MStore(vm);
     vm := EVM.Push1(vm,0x1);
