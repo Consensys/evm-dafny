@@ -19,7 +19,7 @@ module EvmBerlin refines EVM {
     import  Opcode
     import Bytecode
 
-    /** The semantics of eachopcode. */ 
+    /** The semantics of each opcode. */ 
     const SEMANTICS := map[  
         Opcode.STOP := (s:OKState) => Bytecode.Stop(s),
         Opcode.ADD := (s:OKState) => Bytecode.Add(s),
