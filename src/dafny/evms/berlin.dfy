@@ -11,11 +11,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "../evm.dfy"
+include "../evm.dfy" 
 include "../bytecode.dfy"
 
 module EvmBerlin refines EVM {
-    import opened Int
+    import opened Int 
     import Opcode
     import Bytecode
 
@@ -24,7 +24,7 @@ module EvmBerlin refines EVM {
      * The EVM is initialised with an empty stack and empty local memory.
      */
     function method Create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
-    requires |code| <= MAX_U256 {
+    requires |code| <= Code.MAX_CODE_SIZE {
         var stck := Stack.Create();
         var mem := Memory.Create();
         var sto := Storage.Create(storage);

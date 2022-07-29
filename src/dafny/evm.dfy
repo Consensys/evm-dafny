@@ -22,4 +22,5 @@ abstract module EVM {
     function method Execute(st:State) : State
     // To execute a bytecode requires the machine is in a non-terminal state.
     requires !st.IsFailure()
+    requires st.PC() < Code.Size(st.evm.code) as nat 
 }

@@ -35,7 +35,7 @@ module EvmState {
         memory  : Memory.T,
         code: Code.T,
         gas: nat,
-        pc : u256
+        pc : nat
     )
 
     /**
@@ -79,7 +79,7 @@ module EvmState {
         /**
         * Determine current PC value.
         */
-        function method PC(): u256
+        function method PC(): nat
         requires !IsFailure() {
             this.evm.pc
         }
@@ -150,7 +150,7 @@ module EvmState {
         function method Decode() : u8
         requires !IsFailure() {
             // Sanity check pc location
-            if evm.pc < Code.Size(evm.code)
+            if evm.pc < Code.Size(evm.code) as nat
             then
                 Code.DecodeUint8(evm.code,evm.pc as nat)
             else
@@ -163,9 +163,10 @@ module EvmState {
         function method Goto(k:u256) : State
         requires !IsFailure() {
         // Sanity check valid target address
-        if k <= Code.Size(evm.code)
-        then State.OK(evm.(pc := k))
-        else State.INVALID
+        // if k <= Code.Size(evm.code)
+        // then 
+        State.OK(evm.(pc := k as nat))
+        // else State.INVALID
         }
 
         /**
@@ -173,9 +174,10 @@ module EvmState {
          */
         function method Next() : State
         requires !IsFailure() {
-            if evm.pc < Code.Size(evm.code)
-            then State.OK(evm.(pc := evm.pc + 1))
-            else State.INVALID
+            // if evm.pc < Code.Size(evm.code)
+            // then 
+            State.OK(evm.(pc := evm.pc + 1))
+            // else State.INVALID
         }
 
         /**
@@ -184,9 +186,10 @@ module EvmState {
         function method Skip(k:nat) : State
         requires !IsFailure() {
             var pc_k := (evm.pc as nat) + k;
-            if pc_k < |evm.code.contents|
-            then State.OK(evm.(pc := pc_k as u256))
-            else State.INVALID
+            // if pc_k < |evm.code.contents|
+            // then 
+            State.OK(evm.(pc := pc_k))
+            // else State.INVALID
         }
 
         /**

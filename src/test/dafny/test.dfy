@@ -78,7 +78,7 @@ method test_basic_03(x: u8, y: u8) returns (z:u16)
 ensures z == (x as u16) + (y as u16)
 {
   var tx := Context.Create(0xabcd,[]);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, ADD, PUSH1, 0x0, MSTORE, PUSH1, 0x2, PUSH1, 0x1E, RETURN]);
+  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
   //
   vm := Bytecode.Push1(vm,x);
   vm := Bytecode.Push1(vm,y);
@@ -103,11 +103,12 @@ ensures z <= x
   vm := Bytecode.Push1(vm,y);
   vm := Bytecode.Push1(vm,x);
   vm := Bytecode.Sub(vm); // x - y
+  assert vm.Peek(0) == (x as u256) - (y as u256);
   vm := Bytecode.Push1(vm,0);
   vm := Bytecode.MStore(vm);
   vm := Bytecode.Push1(vm,0x1);
   vm := Bytecode.Push1(vm,0x1F);
-  vm := Bytecode.Return(vm);
+  vm := Bytecode.Return(vm); 
   //
   return Bytes.ReadUint8(vm.data,0);
 }
@@ -144,6 +145,7 @@ method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
     vm := Bytecode.Push1(vm,y);
     vm := Bytecode.Push1(vm,x);
     vm := Bytecode.Sub(vm); // x - y
+    assert vm.Peek(0) == (x as u256) - (y as u256);
     vm := Bytecode.Push1(vm,0);
     vm := Bytecode.MStore(vm);
     vm := Bytecode.Push1(vm,0x1);

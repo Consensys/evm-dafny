@@ -622,11 +622,13 @@ module Bytecode {
     * Gets value of program counter prior to this instruction being executed.
     */
     function method Pc(st: State) : State
-    requires !st.IsFailure() {
+    requires !st.IsFailure() 
+    requires st.PC() <= MAX_U256
+    {
         //
         if st.Capacity() >= 1
         then
-            st.Push(st.PC()).Next()
+            st.Push(st.PC() as u256).Next()
         else
             State.INVALID
     }
