@@ -13,17 +13,17 @@
  */
 package dafnyevm;
 
-import static EVM_Compile.__default.Create;
-import static EVM_Compile.__default.Execute;
+import static EvmBerlin_Compile.__default.Create;
+import static EvmBerlin_Compile.__default.Execute;
 
 import java.math.BigInteger;
 import java.util.Map;
 
-import EVM_Compile.State;
-import EVM_Compile.State_INVALID;
-import EVM_Compile.State_OK;
-import EVM_Compile.State_RETURNS;
-import EVM_Compile.State_REVERTS;
+import EvmState_Compile.State;
+import EvmState_Compile.State_INVALID;
+import EvmState_Compile.State_OK;
+import EvmState_Compile.State_RETURNS;
+import EvmState_Compile.State_REVERTS;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.DafnySet;

@@ -35,7 +35,7 @@ task compileDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args '/verifyAllModules','/out:evm','/compileTarget:java', 'src/dafny/evm.dfy'
+            args '/verifyAllModules','/out:evm','/compileTarget:java','/compileVerbose:0','src/dafny/evm.dfy','src/dafny/evms/berlin.dfy'
         }
     }
 }
@@ -47,16 +47,21 @@ task compileDafny {
 task testDafny {
     // Specify inputs
     inputs.files(fileTree('src') { include '**/*.dfy' } )
-    // No outputs
-    outputs.files([])
+    // Specify outputs
+    outputs.files(fileTree('tmp-java') { include '**/*.java' } )
     // Require code gen
     dependsOn compileDafny
     // Specify actions
     doLast {
-        // Verify Dafny Tests (disable code gen)
-        exec {
-            executable 'dafny'
-            args '/compile:0','src/test/dafny/test.dfy'
+        // Verify and execute all Dafny tests found in the test
+        // directory.
+        fileTree("src/test/dafny").include('**/*.dfy').each {
+            File file -> {
+                exec {
+                    executable 'dafny'
+                    args '/runAllTests:1','/out:tmp','/compileTarget:java','/compile:4','/compileVerbose:0',file
+                }
+            }
         }
     }
 }

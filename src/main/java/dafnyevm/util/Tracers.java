@@ -23,10 +23,10 @@ import org.json.JSONException;
 import org.json.JSONStringer;
 import org.json.JSONWriter;
 
-import EVM_Compile.State;
-import EVM_Compile.State_OK;
-import EVM_Compile.State_RETURNS;
-import EVM_Compile.State_REVERTS;
+import EvmState_Compile.State;
+import EvmState_Compile.State_OK;
+import EvmState_Compile.State_RETURNS;
+import EvmState_Compile.State_REVERTS;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
 import dafnyevm.DafnyEvm.Tracer;
