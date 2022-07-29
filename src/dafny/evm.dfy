@@ -18,9 +18,35 @@ include "state.dfy"
  */
 abstract module EVM {
     import opened EvmState
+    import opened Int
+
+    const SEMANTICS: map<u8, State -> State>
 
     function method Execute(st:State) : State
     // To execute a bytecode requires the machine is in a non-terminal state.
     requires !st.IsFailure()
     requires st.PC() < Code.Size(st.evm.code) as nat 
+    {
+      var opcode := st.Decode();
+      if opcode in SEMANTICS then 
+        SEMANTICS[opcode](st) 
+      else  
+        // Invalid/unsupported opcode
+        State.INVALID
+  }
+
+  /**
+    * Create a fresh EVM to execute a given sequence of bytecode instructions.
+    * The EVM is initialised with an empty stack and empty local memory.
+    */
+  function method Create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
+  requires |code| <= Code.MAX_CODE_SIZE {
+      var stck := Stack.Create();
+      var mem := Memory.Create();
+      var sto := Storage.Create(storage);
+      var cod := Code.Create(code);
+      var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0);
+      // Off we go!
+      State.OK(evm)
+  }
 }
