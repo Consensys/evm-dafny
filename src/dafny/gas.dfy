@@ -13,11 +13,13 @@
  */
  include "util/int.dfy"
  include "opcodes.dfy"
+ include "state.dfy"
 
 module Gas {
 
 	import opened Int
 	import opened Opcode
+	import opened EvmState
 
     const G_zero: nat := 0;
 	const G_base: nat := 2;
@@ -73,4 +75,33 @@ module Gas {
     const W_call: seq<u8> := [CALL, CALLCODE, DELEGATECALL, STATICCALL]
     const W_extaccount: seq<u8> := [BALANCE, EXTCODESIZE]
 
+	function method gasCost(opcode: u8, vm: State): nat
+		{
+			match vm 
+				case OK(evm) => 
+					if opcode in W_zero
+						then G_zero
+					else if opcode in W_base 
+						then G_base
+					else if opcode in W_verylow
+						then G_verylow
+					else if opcode in W_low
+						then G_low
+					else if opcode in W_mid
+						then G_mid
+					else if opcode in W_high
+						then G_high
+					else if opcode in W_copy
+						then G_copy
+					else if opcode == JUMPDEST
+						then G_jumpdest
+					else
+						0
+				case RETURNS(_,_) =>
+					0
+				case REVERTS(_,_) =>
+					0
+				case _ => 
+					0
+		}
 }
