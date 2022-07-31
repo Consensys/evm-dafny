@@ -87,9 +87,23 @@ module EvmState {
         * Determine remaining gas.
         */
         function method Gas(): nat
-        requires !IsFailure() {
-            this.evm.gas
+        requires !this.INVALID? {
+            match this 
+                case OK(evm) => evm.gas
+                case RETURNS(g, _) => g 
+                case REVERTS(g, _) => g
         }
+
+        /** Use some gas if possible. */
+        function method UseGas(k: nat): State 
+            requires !IsFailure()
+        {
+            if this.Gas() < k as nat then 
+                State.INVALID
+            else
+                OK(evm.(gas := this.Gas() - k as nat))
+        }
+
         /**
         * Determine current PC value.
         */
