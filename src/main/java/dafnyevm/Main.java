@@ -36,6 +36,7 @@ public class Main {
 			new Option("sender", true, "The transaction origin."),
 			new Option("debug", false, "Generate trace output"),
 			new Option("json", false, "Generate JSON output conforming to EIP-3155"),
+			new Option("gas", true, "gas limit for the evm (default 0x10000000000)"),
 			new Option("statetest", false, "Executes the given state tests")
 	};
 
@@ -68,6 +69,8 @@ public class Main {
 		BigInteger sender = Hex.toBigInt(cmd.getOptionValue("sender", "0xdeff"));
 		// Extract call data (if applicable)
 		byte[] calldata = Hex.toBytes(cmd.getOptionValue("input", "0x"));
+		//
+		BigInteger gas = Hex.toBigInt(cmd.getOptionValue("gas", "0x10000000000"));
 		// Continue processing remaining arguments.
 		String[] args = cmd.getArgs();
 		//
@@ -78,7 +81,7 @@ public class Main {
 		//
 		evm.setTracer(determineTracer(cmd));
 		// Execute the EVM
-		evm.call(sender, calldata);
+		evm.call(sender, gas, calldata);
 	}
 
 	public static Tracer determineTracer(CommandLine cmd) {
