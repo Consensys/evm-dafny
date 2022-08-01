@@ -34,6 +34,8 @@ public class Tests {
 	 */
 	private final boolean DEBUG = true;
 
+	private final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
+
 	// ========================================================================
 	// STOP / INVALID
 	// ========================================================================
@@ -1016,10 +1018,10 @@ public class Tests {
 	 * @param calldata Input data for the call.
 	 * @param code     The EVM bytecode sequence to execute.
 	 */
-	private byte[] call(BigInteger from, byte[] calldata, byte[] code) {
+	private byte[] call(BigInteger from, BigInteger gas, byte[] calldata, byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(from, calldata);
+		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(from, gas, calldata);
 		// Check we haven't reverted
 		assertFalse(r.isRevert());
 		// Check something was returned
@@ -1030,7 +1032,7 @@ public class Tests {
 
 	private byte[] call(long from, byte[] calldata, int[] code) {
 		BigInteger origin = BigInteger.valueOf(from);
-		return call(origin, calldata, toBytes(code));
+		return call(origin, DEFAULT_GAS, calldata, toBytes(code));
 	}
 
 	/**
@@ -1042,7 +1044,7 @@ public class Tests {
 	 * @param bytes Expected output data.
 	 */
 	private byte[] call(byte[] code) {
-		return call(BigInteger.TEN, new byte[0], code);
+		return call(BigInteger.TEN, DEFAULT_GAS, new byte[0], code);
 	}
 
 	/**
@@ -1067,7 +1069,7 @@ public class Tests {
 	private byte[] revertingCall(byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(BigInteger.TEN, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(BigInteger.TEN, DEFAULT_GAS, new byte[0]);
 		// Check we have reverted
 		assertTrue(r.isRevert());
 		// Check something was returned
@@ -1094,7 +1096,7 @@ public class Tests {
 	 */
 	private void invalidCall(int[] words) {
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, DEFAULT_GAS, new byte[0]);
 		// Check expected outcome
 		assert r.isInvalid();
 	}
@@ -1107,7 +1109,7 @@ public class Tests {
 	private void insufficientGasCall(int[] words) {
 		System.out.println("Excuting: " + Hex.toHexString(toBytes(words)));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, DEFAULT_GAS, new byte[0]);
 		// FIXME: better reporting for out-of-gas.
 		assert(r.getReturnData() == null);
 	}

@@ -78,14 +78,15 @@ public class DafnyEvm {
 	 * account.
 	 *
 	 * @param from     The externally owned account.
+	 * @param gasLimit Amount of gas to provide.
 	 * @param calldata Input supplied with the call.
 	 * @return
 	 */
-	public SnapShot call(BigInteger from, byte[] calldata) {
+	public SnapShot call(BigInteger from, BigInteger gasLimit, byte[] calldata) {
 		// Create call context.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(from, DafnySequence.fromBytes(calldata));
 		// Create the EVM
-		State r = Create(ctx, storage, BigInteger.ONE, code);
+		State r = Create(ctx, storage, gasLimit, code);
 		// Execute it!
 		tracer.step(r);
 		r = Execute(r);

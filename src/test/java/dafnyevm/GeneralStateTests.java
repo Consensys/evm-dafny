@@ -100,7 +100,7 @@ public class GeneralStateTests {
 		StructuredTracer tracer = new StructuredTracer(elements);
 		DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer);
 		// Run the transaction!
-		evm.call(tx.sender, tx.data);
+		evm.call(tx.sender, tx.gasLimit, tx.data);
 		//
 		Trace tr = new Trace(elements);
 		// Finally check for equality.
