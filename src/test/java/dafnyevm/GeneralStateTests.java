@@ -164,14 +164,17 @@ public class GeneralStateTests {
 					// Parse into one or more tests
 					for(String test : JSONObject.getNames(json)) {
 						TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
-						// Add all instances
-						testcases.addAll(tt.getInstances(FORK));
+						if(tt.hasInstances(FORK)) {
+							// Add all instances
+							testcases.addAll(tt.getInstances(FORK));
+						}
 					}
 				} catch(JSONException e) {
 					System.out.println("Problem parsing file into JSON (" + f + ")");
 				} catch(IOException e) {
 					System.out.println("Problem reading file (" + f + ")");
 				} catch(Exception e) {
+					System.out.println("Problem reading file (" + f + ")");
 					e.printStackTrace();
 				}
 			}
