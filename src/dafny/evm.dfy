@@ -25,14 +25,17 @@ abstract module EVM {
      */
     const SEMANTICS: map<u8, OKState -> State>
 
-    function method Execute(st:State) : State
+    const GAS: map<u8, OKState -> nat> 
+
+    function method Execute(st:State) : State 
     // To execute a bytecode requires the machine is in a non-terminal state.
     requires !st.IsFailure()
-    requires st.PC() < Code.Size(st.evm.code) as nat 
+    requires st.PC() < Code.Size(st.evm.code) as nat  
     {
       var opcode := st.Decode();
-      if opcode in SEMANTICS then 
-        SEMANTICS[opcode](st) 
+      if opcode in SEMANTICS && opcode in GAS && st.Gas() >= GAS[opcode](st) as nat then 
+        //  Note: SEMANTICS and GAS not commutative. 
+        SEMANTICS[opcode](st.UseGas(GAS[opcode](st))) 
       else  
         // Invalid/unsupported opcode
         State.INVALID

@@ -12,14 +12,19 @@
  * under the License.
  */
 include "../evm.dfy" 
-include "../bytecode.dfy" 
+include "../bytecode.dfy"  
+include "../gas.dfy" 
 
 module EvmBerlin refines EVM {
-    // import opened Int 
+
     import  Opcode
     import Bytecode
+    import Gas 
 
-    /** The semantics of eachopcode. */ 
+    /** The gas cost of each opcode. */ 
+    const GAS := Gas.GAS_ONE 
+
+    /** The semantics of each opcode. */ 
     const SEMANTICS := map[  
         Opcode.STOP := (s:OKState) => Bytecode.Stop(s),
         Opcode.ADD := (s:OKState) => Bytecode.Add(s),

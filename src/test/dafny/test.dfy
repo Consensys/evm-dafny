@@ -15,26 +15,28 @@ requires x > 1
   var tx := Context.Create(0xabcd,[]);
   var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
   // PUSH1 x
-  vm := EvmBerlin.Execute(vm);
+  vm := EvmBerlin.Execute(vm);  
   // PUSH1 0x2
   vm := EvmBerlin.Execute(vm);
   // MSTORE
   vm := EvmBerlin.Execute(vm);
   // PUSH
   vm := EvmBerlin.Execute(vm);
-  // PUSH
+  // PUSH 
   vm := EvmBerlin.Execute(vm);
   // RETURN
   vm := EvmBerlin.Execute(vm);
   //
   assert vm.data == [x];
+  // print vm.gas, "\n";
+  assert vm.Gas() == GASLIMIT - 6;
 }
 
 // ===========================================================================
 // Straightline Tests
 // ===========================================================================
 
-method {:test} test_basic_01()
+method {:test} test_basic_01() 
 {
   var x := 3;
   // Initialise EVM
@@ -53,6 +55,7 @@ method {:test} test_basic_01()
   // RETURN
   vm := EvmBerlin.Execute(vm);
   //
+  expect vm.Gas() == GASLIMIT - 6;
   expect vm.data == [x], ("failed. vm.data=", vm.data); //, "failed";
 }
 
