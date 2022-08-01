@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "state.dfy"
+include "state.dfy" 
 
 /**
  * Top-level definition of an Ethereum Virtual Machine.
@@ -25,7 +25,7 @@ abstract module EVM {
      */
     const SEMANTICS: map<u8, OKState -> State>
 
-    const GAS: map<u8, OKState -> nat> 
+    const GAS: map<u8, OKState -> nat>  
 
     function method Execute(st:State) : State 
     // To execute a bytecode requires the machine is in a non-terminal state.

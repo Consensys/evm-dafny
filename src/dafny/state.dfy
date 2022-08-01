@@ -17,7 +17,7 @@ include "util/storage.dfy"
 include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
-include "opcodes.dfy"
+include "opcodes.dfy" 
 
 module EvmState {
     import opened Int

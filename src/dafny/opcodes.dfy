@@ -164,5 +164,5 @@ module Opcode {
 	const STATICCALL : u8 := 0xfa;
 	const REVERT : u8 := 0xfd;
 	const INVALID : u8 := 0xfe;
-    	const SELFDESTRUCT : u8 := 0xff;
+    const SELFDESTRUCT : u8 := 0xff;
 }
