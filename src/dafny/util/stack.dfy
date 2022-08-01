@@ -38,6 +38,13 @@ module Stack {
     // Create an empty stack.
     function method Create() : T { Stack(contents:=[]) }
 
+    /** Make a stack with some initial contents.  */
+    function method Make(s: seq<u256>) : T 
+        requires |s| <= CAPACITY
+    { 
+        Stack(contents:=s) 
+    }
+
     // Push word onto Stack.  This requires that there is sufficient
     // space for that item.
     function method Push(st:T, val:u256) : T
