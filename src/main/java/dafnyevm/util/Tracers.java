@@ -30,8 +30,6 @@ import EvmState_Compile.State_REVERTS;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
 import dafnyevm.DafnyEvm.Tracer;
-import dafnyevm.core.Trace;
-import dafnyevm.core.Trace.Step;
 
 public class Tracers {
 
@@ -90,37 +88,6 @@ public class Tracers {
 		public void revert(byte[] output, BigInteger gasUsed) {
 			System.out.println(Hex.toHexString(output));
 			System.out.println("error: execution reverted");
-		}
-	}
-
-	public static class Structured extends DafnyEvm.TraceAdaptor {
-		private final List<Trace.Element> out;
-
-		public Structured(List<Trace.Element> out) {
-			this.out = out;
-		}
-
-		@Override
-		public void step(DafnyEvm.SnapShot state) {
-			int pc = state.getPC().intValueExact();
-			byte[] memory = state.getMemory();
-			BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
-			out.add(new Trace.Step(pc,stack,memory));
-		}
-
-		@Override
-		public void end(byte[] output, BigInteger gasUsed) {
-			out.add(new Trace.Returns(output));
-		}
-
-		@Override
-		public void revert(byte[] output, BigInteger gasUsed) {
-			out.add(new Trace.Reverts(output));
-		}
-
-		@Override
-		public void exception(BigInteger gasUsed) {
-			out.add(new Trace.Exception());
 		}
 	}
 
