@@ -187,7 +187,6 @@ method main5(c: u8)
         assert vm.GetStack() == Stack.Make([if count - 1 > 0 then 1 else 0, count - 1]);
         count := count - 1;
     }
-    // assert count == e.stack[1];
     assert count == vm.Peek(1);
     vm := Pop(vm);
     assert count == vm.Peek(0);
