@@ -14,7 +14,7 @@
 
 include "./evm-abstract.dfy"
 
-module EVM_BERLIN refines EVM { 
+module EVM_BERLIN refines EVM {
 
     /** Gas cost map. */
     const gas: map<u8, State -> nat> := map[
@@ -26,32 +26,32 @@ module EVM_BERLIN refines EVM {
     const semantics: map<u8, State -> State> := map[
         STOP := (s:State) => Stop(s)
         // PUSH1 := (s:State) =>   if !s.isFailure() && then Push1(s, k)
-                                // else 
-    ]   
+                                // else
+    ]
 
-    /** 
+    /**
      * Evaluate the STOP bytecode.  This halts the machine without
      * return output data.
      */
-    function method Stop(s:State): State  
+    function method Stop(s:State): State
         // requires !s.IsFailure()
     {
-        if s.IsFailure() then 
+        if s.IsFailure() then
              s.PropagateFailure()
-        else 
-            State.RETURNS(gas := s.ExtractGas(), data := [])  
+        else
+            State.RETURNS(gas := s.ExtractGas(), data := [])
     }
 
     /**
    * Unsigned integer addition with modulo arithmetic.
    */
   function method Add(s: State) : State
-//   requires st.OK? 
+//   requires st.OK?
   {
-    if s.IsFailure() then 
+    if s.IsFailure() then
         s.PropagateFailure()
-    else if s.operands() >= 2 
-      then 
+    else if s.operands() >= 2
+      then
         // var lhs := peek(vm,0) as int;
         // var rhs := peek(vm,1) as int;
         // var res := (lhs + rhs) % TWO_256;
@@ -505,7 +505,7 @@ module EVM_BERLIN refines EVM {
    */
   function method Pop(s: State) : State
   {
-    if s.IsFailure() then 
+    if s.IsFailure() then
         s.PropagateFailure()
     else if s.operands() >= 1 then
         next(pop(s.Extract()))
@@ -689,9 +689,9 @@ module EVM_BERLIN refines EVM {
   /**
    * Push one byte onto stack.
    */
-  function method Push1(s: State, k: u8) : State 
+  function method Push1(s: State, k: u8) : State
   {
-    if s.IsFailure() then 
+    if s.IsFailure() then
         s.PropagateFailure()
     else if Stack.capacity(s.Extract().stack) >= 1 then
         skip(push(s.Extract(), k as u256),2)
@@ -795,8 +795,8 @@ module EVM_BERLIN refines EVM {
 
 }
 
-import opened EVM_OPCODES  
-import opened E = EVM_BERLIN  
+import opened EVM_OPCODES
+import opened E = EVM_BERLIN
 import opened Int
 
 // Check most simple program possible
@@ -825,4 +825,3 @@ requires x > 1
   //
 //   assert data(r) == [x];
 }
-
