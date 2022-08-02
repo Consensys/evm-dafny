@@ -29,6 +29,8 @@ module Test10Gas {
 
     /**
      *  A very simple linear program manipulating the stack.
+     *
+     *  @param  g   The initial amount of gas.
      */
     method main1(g: nat) 
         requires g >= 2*G_VERYLOW + 2*G_LOW
@@ -56,6 +58,9 @@ module Test10Gas {
     /**
      *  A loop.
      *  The amount of gas needed is proportional to the input.
+     *
+     *  @param  c   The number of times to iterate the loop.
+     *  @param  g   The initial amount of gas.
      */
     method main2(c: u8, g: nat) 
         requires g >= c as nat * (3 * G_VERYLOW + G_BASE)
@@ -85,6 +90,9 @@ module Test10Gas {
     /**
      *  Refines `main2` by ghosting `count` and storing the corresponding value
      *  on the stack.
+     *
+     *  @param  c   The number of times to iterate the loop.
+     *  @param  g   The initial amount of gas.
      */
     method main3(c: u8, g: nat) 
         requires g >= G_VERYLOW + c as nat * (6*G_VERYLOW + G_BASE)
@@ -125,6 +133,9 @@ module Test10Gas {
     /**
      *  Refines `main3` and compute the condition of the loop using the stack
      *  and the comparisons operators.
+     *  
+     *  @param  c   The number of times to iterate the loop.
+     *  @param  g   The initial amount of gas.
      */
     method main5(c: u8, g: nat)  
         requires g >= G_BASE + 4 * G_VERYLOW + c as nat * (2 * G_BASE + 9 * G_VERYLOW)
