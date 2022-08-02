@@ -24,7 +24,7 @@ module EvmBerlin refines EVM {
 
     /** An empty VM, with some gas. */
     function method InitEmpty(g: nat): State {
-        var tx := Context.Create(0xabcd,[]);
+        var tx := Context.Create(0x0,0,0,[],0);  
         Create(tx, map[], g, [])
     } 
 
