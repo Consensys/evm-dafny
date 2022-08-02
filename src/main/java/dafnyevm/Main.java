@@ -32,11 +32,14 @@ public class Main {
 	public final static String FORK = "Berlin";
 
 	private static final Option[] OPTIONS = new Option[] {
-			new Option("input", true, "Input data for the transaction."),
-			new Option("sender", true, "The transaction origin."),
+			new Option("Receiver", true, "The transaction receiver (default 0xabc)."),
+			new Option("sender", true, "The transaction origin  (default 0xdef)."),
 			new Option("debug", false, "Generate trace output"),
 			new Option("json", false, "Generate JSON output conforming to EIP-3155"),
+			new Option("input", true, "Call data for the transaction (default none)."),
+			new Option("value", true, "call value to use (default 0x0)"),
 			new Option("gas", true, "gas limit for the evm (default 0x10000000000)"),
+			new Option("gasPrice", true, "gas price to use (default 0x1)"),
 			new Option("statetest", false, "Executes the given state tests")
 	};
 
@@ -66,22 +69,28 @@ public class Main {
 
 	public static void runArbitraryBytecode(CommandLine cmd) {
 		// Extract transaction sender.
-		BigInteger sender = Hex.toBigInt(cmd.getOptionValue("sender", "0xdeff"));
+		BigInteger sender = Hex.toBigInt(cmd.getOptionValue("sender", "0xabc"));
+		// Extract transaction receiver.
+		BigInteger receiver = Hex.toBigInt(cmd.getOptionValue("receiver", "0xdef"));
+		// Extract call value (if applicable)
+		BigInteger callValue = Hex.toBigInt(cmd.getOptionValue("value", "0x0"));
 		// Extract call data (if applicable)
 		byte[] calldata = Hex.toBytes(cmd.getOptionValue("input", "0x"));
 		//
 		BigInteger gas = Hex.toBigInt(cmd.getOptionValue("gas", "0x10000000000"));
+		//
+		BigInteger gasPrice = Hex.toBigInt(cmd.getOptionValue("gasPrice", "0x1"));
 		// Continue processing remaining arguments.
 		String[] args = cmd.getArgs();
 		//
 		// Parse input string
 		byte[] bytes = Hex.toBytes(args[0]);
 		// Construct EVM
-		DafnyEvm evm = new DafnyEvm(new HashMap<>(), bytes);
+		DafnyEvm evm = new DafnyEvm(new HashMap<>(), bytes).setGasPrice(gasPrice);
 		//
 		evm.setTracer(determineTracer(cmd));
 		// Execute the EVM
-		evm.call(sender, gas, calldata);
+		evm.call(receiver, sender, gas, callValue, calldata);
 	}
 
 	public static Tracer determineTracer(CommandLine cmd) {

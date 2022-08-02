@@ -11,9 +11,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+include "bytes.dfy"
 include "int.dfy"
 
 module Code {
+  import Bytes
   import opened Int
 
   // =============================================================================
@@ -56,5 +58,14 @@ module Code {
       var k1 := DecodeUint8(c,address) as u16;
       var k2 := DecodeUint8(c,address+1) as u16;
       (k1 * 256) + k2
+  }
+
+  /**
+   * Slice out a subsequence of bytes from a given sequence.
+   * If the requested subsequence overflows available memory,
+   * it is padded out with zeros.
+   */
+  function method Slice(c:T, address:nat, len:nat) : seq<u8> {
+    Bytes.Slice(c.contents,address,len)
   }
 }

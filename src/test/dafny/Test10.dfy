@@ -12,12 +12,12 @@
  * under the License.
  */
 
-include "../../dafny/evm.dfy" 
+include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy"
 
 import opened Int
 import opened Opcode
-import opened Bytecode 
+import opened Bytecode
 
 // Arbitrary limit for now
 const GASLIMIT : nat := 100;
@@ -26,10 +26,10 @@ const GASLIMIT : nat := 100;
  *   A very simple program manipulating the stack.
  *
  */
-method {:test} main1() 
+method {:test} main1()
 {
     // Initialise Bytecode
-    var tx := Context.Create(0xabcd,[]);
+    var tx := Context.Create(0xabc,0xdef,0,[],0);
     var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
 
     var a: u8 := 0x01;
@@ -37,23 +37,23 @@ method {:test} main1()
 
     ghost var g := vm.GetStack();
 
-    vm := Push1(vm, a); 
+    vm := Push1(vm, a);
     vm := Push1(vm, b);
     vm := Add(vm);
 
-    assert vm.Peek(0) as nat == (a + b) as nat; 
+    assert vm.Peek(0) as nat == (a + b) as nat;
 
-    vm := Pop(vm); 
-    assert vm.GetStack() == g; 
+    vm := Pop(vm);
+    assert vm.GetStack() == g;
 }
 
 /**
  *  A loop.
  */
-method main2(c: u8) 
+method main2(c: u8)
 {
     // Initialise Bytecode
-    var tx := Context.Create(0xabcd,[]);
+    var tx := Context.Create(0xabc,0xdef,0,[],0);
     var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
     var a: u8 := 0x01;
     var b : u8 := 0x02;
@@ -61,9 +61,9 @@ method main2(c: u8)
 
     ghost var g := vm.GetStack();
 
-    while count > 0 
+    while count > 0
         invariant !vm.IsFailure()
-        invariant  vm.GetStack() == g 
+        invariant  vm.GetStack() == g
     {
         vm := Push1(vm, a);
         vm := Push1(vm, b);
@@ -79,13 +79,13 @@ method main2(c: u8)
  *  In this first implementation we use a variant of SUB, subR
  *  that computes stack1 - stack0 instead of stack0 - stack1.
  */
-method main3(c: u8) 
+method main3(c: u8)
 {
     var a: u8 := 0x01;
     var b : u8 := 0x02;
 
     // Initialise Bytecode
-    var tx := Context.Create(0xabcd,[]);
+    var tx := Context.Create(0xabc,0xdef,0,[],0);
     var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
 
     vm := Push1(vm, c);
@@ -94,9 +94,9 @@ method main3(c: u8)
 
     assert count == vm.Peek(0);
 
-    while vm.Peek(0) > 0 
+    while vm.Peek(0) > 0
         invariant !vm.IsFailure()
-        invariant Stack.Size(vm.GetStack()) > 0  
+        invariant Stack.Size(vm.GetStack()) > 0
         invariant count == vm.Peek(0)
         invariant vm.GetStack() == Stack.Make([count])
     {
@@ -119,12 +119,12 @@ method main3(c: u8)
  *  Test top of stack with LT/GT
  *  instead of count > 0.
  */
-method main5(c: u8)  
+method main5(c: u8)
 {
     // Initialise Bytecode
-    var tx := Context.Create(0xabcd,[]);
-    var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);    
-    
+    var tx := Context.Create(0xabc,0xdef,0,[],0);
+    var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
+
     var a: u8 := 0x01;
     var b : u8 := 0x02;
 
@@ -134,7 +134,7 @@ method main5(c: u8)
 
     assert vm.GetStack() == Stack.Make([count]);
 
-    //  compute count > 0 
+    //  compute count > 0
 
     //  top of the stack has the result of count > 0
     //  push 0, then duplicate second element on top
@@ -146,11 +146,11 @@ method main5(c: u8)
     vm := Gt(vm);
     assert vm.GetStack() == Stack.Make([if count > 0 then 1 else 0, count]);
 
-    assert count == vm.Peek(1); 
+    assert count == vm.Peek(1);
 
-    while vm.Peek(0) > 0 
+    while vm.Peek(0) > 0
         invariant !vm.IsFailure()
-        invariant Stack.Size(vm.GetStack()) == 2 
+        invariant Stack.Size(vm.GetStack()) == 2
         invariant count == vm.Peek(1)
         invariant count == vm.Peek(1) >= 0
         invariant vm.Peek(0) > 0 <==> count > 0
@@ -183,7 +183,7 @@ method main5(c: u8)
         assert vm.GetStack() == Stack.Make([count - 1, 0, count - 1]);
 
         //  compute stack[0] > stack[1]
-        vm := Gt(vm);        
+        vm := Gt(vm);
         assert vm.GetStack() == Stack.Make([if count - 1 > 0 then 1 else 0, count - 1]);
         count := count - 1;
     }

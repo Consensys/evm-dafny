@@ -17,7 +17,7 @@ include "util/storage.dfy"
 include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
-include "opcodes.dfy" 
+include "opcodes.dfy"
 
 module EvmState {
     import opened Int
@@ -39,15 +39,15 @@ module EvmState {
     )
 
     /** The type for non failure states. */
-    type OKState = s:State | !s.IsFailure() 
+    type OKState = s:State | !s.IsFailure()
       witness OK(
         EVM(
-            Context.Create(0xabcd,[]), 
-            Storage.Create(map[]), 
+            Context.Create(0,0xabcd,0,[],0),
+            Storage.Create(map[]),
             Stack.Create(),
             Memory.Create(),
             Code.Create([]),
-            0, 
+            0,
             0
         )
     )
@@ -77,28 +77,28 @@ module EvmState {
             this.evm
         }
         /**
-        * Determine number of operands on stack.
-        */
+         * Determine number of operands on stack.
+         */
         function method Operands() : nat
         requires !IsFailure() {
             Stack.Size(evm.stack)
         }
         /**
-        * Determine remaining gas.
-        */
+         * Determine remaining gas.
+         */
         function method Gas(): nat
         requires !this.INVALID? {
-            match this 
+            match this
                 case OK(evm) => evm.gas
-                case RETURNS(g, _) => g 
+                case RETURNS(g, _) => g
                 case REVERTS(g, _) => g
         }
 
         /** Use some gas if possible. */
-        function method UseGas(k: nat): State 
+        function method UseGas(k: nat): State
             requires !IsFailure()
         {
-            if this.Gas() < k as nat then 
+            if this.Gas() < k as nat then
                 State.INVALID
             else
                 OK(evm.(gas := this.Gas() - k as nat))
@@ -192,7 +192,7 @@ module EvmState {
         requires !IsFailure() {
         // Sanity check valid target address
         // if k <= Code.Size(evm.code)
-        // then 
+        // then
         State.OK(evm.(pc := k as nat))
         // else State.INVALID
         }
@@ -203,7 +203,7 @@ module EvmState {
         function method Next() : State
         requires !IsFailure() {
             // if evm.pc < Code.Size(evm.code)
-            // then 
+            // then
             State.OK(evm.(pc := evm.pc + 1))
             // else State.INVALID
         }
@@ -215,7 +215,7 @@ module EvmState {
         requires !IsFailure() {
             var pc_k := (evm.pc as nat) + k;
             // if pc_k < |evm.code.contents|
-            // then 
+            // then
             State.OK(evm.(pc := pc_k))
             // else State.INVALID
         }
