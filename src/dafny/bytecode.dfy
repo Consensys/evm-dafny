@@ -20,6 +20,10 @@ module Bytecode {
     import Word
     import opened EvmState
 
+    // =====================================================================
+    // 0s: Stop and Arithmetic Operations
+    // =====================================================================
+
     /**
     * Evaluate the STOP bytecode.  This halts the machine without
     * return output data.
@@ -177,6 +181,10 @@ module Bytecode {
         else
             State.INVALID
     }
+
+    // =====================================================================
+    // 10s: Comparison & Bitwise Logic Operations
+    // =====================================================================
 
     /**
     * (Unsigned) less-than comparison.
@@ -404,6 +412,64 @@ module Bytecode {
             State.INVALID
     }
 
+    // =====================================================================
+    // 20s: SHA3
+    // =====================================================================
+
+    // =====================================================================
+    // 30s: Environment Information
+    // =====================================================================
+
+    /**
+     * Get address of currently executing account.
+     */
+    function method Address(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.address as u256).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get execution origination address.  This is the sender of the original
+     * transaction; it is never an account with non-empty associated code.
+     */
+    function method Origin(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.origin as u256).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get caller address.
+     */
+    function method Caller(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.caller as u256).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get deposited value by the instruction/transaction responsible for
+     * this execution.
+     */
+    function method CallValue(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.callValue).Next()
+        else
+            State.INVALID
+    }
+
     /**
     * Get input data from the current environment.
     */
@@ -421,14 +487,14 @@ module Bytecode {
     }
 
     /**
-    * Get size of input data in current environment.
-    */
+     * Get size of input data in current environment.
+     */
     function method CallDataSize(st: State) : State
     requires !st.IsFailure() {
         //
         if st.Capacity() >= 1
         then
-            var len := |st.evm.context.calldata|;
+            var len := |st.evm.context.callData|;
             st.Push(len as u256).Next()
         else
             State.INVALID
@@ -462,6 +528,69 @@ module Bytecode {
         else
             State.INVALID
     }
+
+    /**
+     * Get size of input data in current environment.
+     */
+    function method CodeSize(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Capacity() >= 1
+        then
+            st.Push(Code.Size(st.evm.code)).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get size of input data in current environment.
+     */
+    function method CodeCopy(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 3
+        then
+            var m_loc := st.Peek(0);
+            var d_loc := st.Peek(1) as nat;
+            var len := st.Peek(2) as nat;
+            // NOTE: This condition is not specified in the yellow paper.
+            // Its not clear whether that was intended or not.  However, its
+            // impossible to trigger this in practice (due to the gas costs
+            // involved).
+            if (m_loc as int) + len < MAX_U256
+            then
+                // Slice bytes out of code (with padding as needed)
+                var data := Code.Slice(st.evm.code,d_loc,len);
+                // Sanity check
+                assert |data| == len;
+                // Copy slice into memory
+                st.Pop().Pop().Pop().Copy(m_loc,data).Next()
+            else
+                State.INVALID
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get price of gas in current environment.
+     */
+    function method GasPrice(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.gasPrice).Next()
+        else
+            State.INVALID
+    }
+
+    // =====================================================================
+    // 40s: Block Information
+    // =====================================================================
+
+
+    // =====================================================================
+    // 50s: Stack, Memory Storage and Flow Operations
+    // =====================================================================
 
     /**
     * Pop word from stack.
@@ -622,7 +751,7 @@ module Bytecode {
     * Gets value of program counter prior to this instruction being executed.
     */
     function method Pc(st: State) : State
-    requires !st.IsFailure() 
+    requires !st.IsFailure()
     requires st.PC() <= MAX_U256
     {
         //
@@ -641,6 +770,10 @@ module Bytecode {
     requires !st.IsFailure() {
         st.Next()
     }
+
+    // =====================================================================
+    // 60s & 70s: Push Operations
+    // =====================================================================
 
     /**
     * Push one byte onto stack.
@@ -668,6 +801,10 @@ module Bytecode {
             State.INVALID
     }
 
+    // =====================================================================
+    // 80s: Duplication Operations
+    // =====================================================================
+
     /**
     * Duplicate item on stack.
     */
@@ -683,6 +820,10 @@ module Bytecode {
             State.INVALID
     }
 
+    // =====================================================================
+    // 90s: Exchange Operations
+    // =====================================================================
+
     /**
     * Swap two items on the stack
     */
@@ -695,6 +836,15 @@ module Bytecode {
         else
             State.INVALID
     }
+
+    // =====================================================================
+    // a0s: Logging Operations
+    // =====================================================================
+
+
+    // =====================================================================
+    // f0s: System operations
+    // =====================================================================
 
     /**
     * Halt execution returning output data.

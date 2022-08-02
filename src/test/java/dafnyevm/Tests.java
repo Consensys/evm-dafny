@@ -34,7 +34,25 @@ public class Tests {
 	 */
 	private final boolean DEBUG = true;
 
+	/**
+	 * Default gas limit to use (unless otherwise specified).
+	 */
 	private final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
+
+	/**
+	 * Default value to deposit on a call (unless otherwise specified).
+	 */
+	private final BigInteger DEFAULT_VALUE = BigInteger.ZERO;
+
+	/**
+	 * Default receiver to use for a call (unless otherwise specified).
+	 */
+	private final BigInteger DEFAULT_RECEIVER = Hex.toBigInt("0xabc");
+
+	/**
+	 * Default origin to use for a call (unless otherwise specified).
+	 */
+	private final BigInteger DEFAULT_ORIGIN = Hex.toBigInt("0xdef");
 
 	// ========================================================================
 	// STOP / INVALID
@@ -981,6 +999,101 @@ public class Tests {
 	}
 
 	// ========================================================================
+	// Address / Origin / Caller / CallValue
+	// ========================================================================
+
+	@Test
+	public void test_address_01() {
+		// Check address == DEFAULT_RECEIVER
+		byte[] output = call(new int[] { ADDRESS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DEFAULT_RECEIVER.intValueExact()), output);
+	}
+
+	@Test
+	public void test_origin_01() {
+		// Check origin == DEFAULT_ORIGIN
+		byte[] output = call(new int[] { ORIGIN, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DEFAULT_ORIGIN.intValueExact()), output);
+	}
+
+	@Test
+	public void test_caller_01() {
+		// Check caller == DEFAULT_ORIGIN
+		byte[] output = call(new int[] { CALLER, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DEFAULT_ORIGIN.intValueExact()), output);
+	}
+
+	@Test
+	public void test_callvalue_01() {
+		// Check callvalue == DEFAULT_VALUE
+		byte[] output = call(new int[] { CALLVALUE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DEFAULT_VALUE.intValueExact()), output);
+	}
+
+	@Test
+	public void test_callvalue_02() {
+		// Check callvalue == suplied value
+		byte[] code = toBytes(new int[] { CALLVALUE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_GAS, BigInteger.TEN, new byte[0], code);
+		assertArrayEquals(UINT256(10), output);
+	}
+
+	// ========================================================================
+	// CodeSize / CodeData
+	// ========================================================================
+
+	@Test
+	public void test_codesize_01() {
+		byte[] output = call(new int[] { CODESIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(9), output);
+	}
+
+	@Test
+	public void test_codesize_02() {
+		byte[] output = call(new int[] { CODESIZE, PUSH2, 0x00, 0x00, POP, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(13), output);
+	}
+
+	@Test
+	public void test_codecopy_01() {
+		// Check can copy code (with padding)
+		byte[] output = call(new int[] { PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x00, CODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x6020600060003960206000F30000000000000000000000000000000000000000"), output);
+	}
+
+	@Test
+	public void test_codecopy_02() {
+		// Check can copy code (with padding)
+		byte[] output = call(new int[] { PUSH1, 0x20, PUSH1, 0x01, PUSH1, 0x00, CODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x20600160003960206000F3000000000000000000000000000000000000000000"), output);
+	}
+
+	@Test
+	public void test_codecopy_03() {
+		// Check can copy code (with padding)
+		byte[] output = call(new int[] { PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x01, CODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x006020600060013960206000F300000000000000000000000000000000000000"), output);
+	}
+
+	@Test
+	public void test_codecopy_04() {
+		// Check can copy code (with padding)
+		byte[] output = call(new int[] { PUSH1, 0x08, PUSH1, 0x00, PUSH1, 0x00, CODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x6008600060003960000000000000000000000000000000000000000000000000"), output);
+	}
+
+	// ========================================================================
+	// GasPrice
+	// ========================================================================
+
+	@Test
+	public void test_gasprice_01() {
+		// Check gas price == 1
+		byte[] output = call(new int[] { GASPRICE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(1), output);
+	}
+
+	// ========================================================================
 	// Misc
 	// ========================================================================
 
@@ -1014,14 +1127,17 @@ public class Tests {
 	 * Run a given sequence of bytecodes, expecting things to go OK and to produce
 	 * the given output (i.e. return data).
 	 *
+	 * @param to       Receiver for this call.
 	 * @param from     Address this call is coming from.
+	 * @param gas      Gas limit for this call.
+	 * @param value    Value to deposit for this call.
 	 * @param calldata Input data for the call.
 	 * @param code     The EVM bytecode sequence to execute.
 	 */
-	private byte[] call(BigInteger from, BigInteger gas, byte[] calldata, byte[] code) {
+	private byte[] call(BigInteger to, BigInteger from, BigInteger gas, BigInteger value, byte[] calldata, byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(from, gas, calldata);
+		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(to, from, gas, value, calldata);
 		// Check we haven't reverted
 		assertFalse(r.isRevert());
 		// Check something was returned
@@ -1032,7 +1148,7 @@ public class Tests {
 
 	private byte[] call(long from, byte[] calldata, int[] code) {
 		BigInteger origin = BigInteger.valueOf(from);
-		return call(origin, DEFAULT_GAS, calldata, toBytes(code));
+		return call(DEFAULT_RECEIVER, origin, DEFAULT_GAS, DEFAULT_VALUE, calldata, toBytes(code));
 	}
 
 	/**
@@ -1044,7 +1160,7 @@ public class Tests {
 	 * @param bytes Expected output data.
 	 */
 	private byte[] call(byte[] code) {
-		return call(BigInteger.TEN, DEFAULT_GAS, new byte[0], code);
+		return call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_GAS, DEFAULT_VALUE, new byte[0], code);
 	}
 
 	/**
@@ -1069,7 +1185,7 @@ public class Tests {
 	private byte[] revertingCall(byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(BigInteger.TEN, DEFAULT_GAS, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_GAS, DEFAULT_VALUE, new byte[0]);
 		// Check we have reverted
 		assertTrue(r.isRevert());
 		// Check something was returned
@@ -1096,7 +1212,7 @@ public class Tests {
 	 */
 	private void invalidCall(int[] words) {
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, DEFAULT_GAS, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_VALUE, DEFAULT_GAS, new byte[0]);
 		// Check expected outcome
 		assert r.isInvalid();
 	}
@@ -1109,7 +1225,7 @@ public class Tests {
 	private void insufficientGasCall(int[] words) {
 		System.out.println("Excuting: " + Hex.toHexString(toBytes(words)));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(BigInteger.TEN, DEFAULT_GAS, new byte[0]);
+		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_VALUE, DEFAULT_GAS, new byte[0]);
 		// FIXME: better reporting for out-of-gas.
 		assert(r.getReturnData() == null);
 	}
