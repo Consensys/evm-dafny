@@ -37,7 +37,6 @@ module Test10Gas {
     {
         // Initialise VM with g  gas unit.
         var vm := InitEmpty(g);
-
         var a: u8 := 0x01;
         var b: u8 := 0x02;
 
@@ -48,7 +47,6 @@ module Test10Gas {
         vm := Push1(vm, b).UseGas(G_VERYLOW);
         vm := Add(vm).UseGas(G_LOW);
         assert vm.Gas() == g - (2 * G_VERYLOW + G_LOW);
-
         assert vm.Peek(0) as nat == (a + b) as nat; 
 
         vm := Pop(vm).UseGas(G_LOW); 
