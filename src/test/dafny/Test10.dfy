@@ -19,23 +19,19 @@ import opened Int
 import opened Opcode
 import opened Bytecode
 
-// Arbitrary limit for now
-const GASLIMIT : nat := 100;
-
 /**
- *   A very simple program manipulating the stack.
+ *   A very simple linear program manipulating the stack.
  *
  */
 method {:test} main1()
 {
-    // Initialise Bytecode
-    var tx := Context.Create(0xabc,0xdef,0,[],0);
-    var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
+    // Initialise VM
+    var vm := EvmBerlin.InitEmpty(0);
 
     var a: u8 := 0x01;
     var b: u8 := 0x02;
 
-    ghost var g := vm.GetStack();
+    ghost var st := vm.GetStack();
 
     vm := Push1(vm, a);
     vm := Push1(vm, b);
@@ -44,7 +40,7 @@ method {:test} main1()
     assert vm.Peek(0) as nat == (a + b) as nat;
 
     vm := Pop(vm);
-    assert vm.GetStack() == g;
+    assert vm.GetStack() == st;
 }
 
 /**
@@ -52,9 +48,9 @@ method {:test} main1()
  */
 method main2(c: u8)
 {
-    // Initialise Bytecode
-    var tx := Context.Create(0xabc,0xdef,0,[],0);
-    var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
+    // Initialise VM
+    var vm := EvmBerlin.InitEmpty(0);
+
     var a: u8 := 0x01;
     var b : u8 := 0x02;
     var count: u8 := c;
@@ -75,18 +71,16 @@ method main2(c: u8)
 }
 
 /**
- *  Compute cout := count - 1 with the stack.
- *  In this first implementation we use a variant of SUB, subR
- *  that computes stack1 - stack0 instead of stack0 - stack1.
+ *  Refines `main2` by ghosting `count` and storing the corresponding value
+ *  on the stack.
  */
 method main3(c: u8)
 {
     var a: u8 := 0x01;
     var b : u8 := 0x02;
 
-    // Initialise Bytecode
-    var tx := Context.Create(0xabc,0xdef,0,[],0);
-    var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
+    // Initialise VM
+    var vm := EvmBerlin.InitEmpty(0);
 
     vm := Push1(vm, c);
     ghost var g := vm.GetStack();
@@ -116,14 +110,13 @@ method main3(c: u8)
 }
 
 /**
- *  Test top of stack with LT/GT
- *  instead of count > 0.
+ *  Refines `main3` and compute the condition of the loop using the stack
+ *  and the comparisons operators.
  */
 method main5(c: u8)
 {
-    // Initialise Bytecode
-    var tx := Context.Create(0xabc,0xdef,0,[],0);
-    var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
+    // Initialise VM
+    var vm := EvmBerlin.InitEmpty(0);
 
     var a: u8 := 0x01;
     var b : u8 := 0x02;
