@@ -11,21 +11,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "../evm.dfy" 
-include "../bytecode.dfy"  
-include "../gas.dfy" 
+include "../evm.dfy"
+include "../bytecode.dfy"
+include "../gas.dfy"
 
 module EvmBerlin refines EVM {
 
     import  Opcode
     import Bytecode
-    import Gas 
+    import Gas
 
-    /** The gas cost of each opcode. */ 
-    const GAS := Gas.GAS_ONE 
+    /** The gas cost of each opcode. */
+    const GAS := Gas.GAS_ONE
 
-    /** The semantics of each opcode. */ 
-    const SEMANTICS := map[  
+    /** The semantics of each opcode. */
+    const SEMANTICS := map[
         Opcode.STOP := (s:OKState) => Bytecode.Stop(s),
         Opcode.ADD := (s:OKState) => Bytecode.Add(s),
         Opcode.MUL := (s:OKState) => Bytecode.Mul(s),
@@ -56,17 +56,17 @@ module EvmBerlin refines EVM {
         // 0x20s
         //  KECCAK256 := (s:OKState) => Bytecode.evalKECCAK256(s),
         // 0x30s: Environment Information
-        //  ADDRESS := (s:OKState) => Bytecode.evalADDRESS(s),
+        Opcode.ADDRESS := (s:OKState) => Bytecode.Address(s),
         //  BALANCE := (s:OKState) => Bytecode.evalBALANCE(s),
-        //  ORIGIN := (s:OKState) => Bytecode.evalORIGIN(s),
-        //  CALLER := (s:OKState) => Bytecode.evalCALLER(s),
-        //  CALLVALUE := (s:OKState) => Bytecode.evalCALLVALUE(s),
+        Opcode.ORIGIN := (s:OKState) => Bytecode.Origin(s),
+        Opcode.CALLER := (s:OKState) => Bytecode.Caller(s),
+        Opcode.CALLVALUE := (s:OKState) => Bytecode.CallValue(s),
         Opcode.CALLDATALOAD := (s:OKState) => Bytecode.CallDataLoad(s),
         Opcode.CALLDATASIZE := (s:OKState) => Bytecode.CallDataSize(s),
         Opcode.CALLDATACOPY := (s:OKState) => Bytecode.CallDataCopy(s),
-        //  CODESIZE := (s:OKState) => Bytecode.evalCODESIZE(s),
-        //  CODECOPY := (s:OKState) => Bytecode.evalCODECOPY(s),
-        //  GASPRICE := (s:OKState) => Bytecode.evalGASPRICE(s),
+        Opcode.CODESIZE := (s:OKState) => Bytecode.CodeSize(s),
+        Opcode.CODECOPY := (s:OKState) => Bytecode.CodeCopy(s),
+        Opcode.GASPRICE := (s:OKState) => Bytecode.GasPrice(s),
         //  EXTCODESIZE := (s:OKState) => Bytecode.evalEXTCODESIZE(s),
         //  EXTCODECOPY := (s:OKState) => Bytecode.evalEXTCODECOPY(s),
         //  RETURNDATASIZE := (s:OKState) => Bytecode.evalRETURNDATASIZE(s),
@@ -94,12 +94,12 @@ module EvmBerlin refines EVM {
         Opcode.JUMPDEST := (s:OKState) => Bytecode.JumpDest(s),
         // 0x60s & 0x70s: Push operations
         Opcode.PUSH1 := (s: OKState) =>
-                if s.CodeOperands() >= 1 then 
+                if s.CodeOperands() >= 1 then
                     var k := Code.DecodeUint8(s.evm.code, (s.evm.pc + 1) as nat);
                     Bytecode.Push1(s, k)
                 else State.INVALID,
         Opcode.PUSH2 := (s:OKState) =>
-                if s.CodeOperands() >= 2 then 
+                if s.CodeOperands() >= 2 then
                     var k := Code.DecodeUint16(s.evm.code, (s.evm.pc + 1) as nat);
                     Bytecode.Push2(s, k)
                 else State.INVALID,
@@ -149,7 +149,7 @@ module EvmBerlin refines EVM {
         // CREATE2 := (s:OKState) => Bytecode.evalCREATE2(s),
         // STATICCALL := (s:OKState) => Bytecode.evalSTATICCALL(s),
         Opcode.REVERT := (s:OKState) => Bytecode.Revert(s)
-        // SELFDESTRUCT := (s:OKState) => Bytecode.evalSELFDESTRUCT(s),   
-    ]  
+        // SELFDESTRUCT := (s:OKState) => Bytecode.evalSELFDESTRUCT(s),
+    ]
 
 }

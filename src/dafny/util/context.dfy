@@ -29,38 +29,42 @@ module Context {
     origin: u160,
     // Address of account responsible for this execution.
     caller: u160,
+    // Value deposited by instruction / transaction responsible for this execution.
+    callValue: u256,
     // Input data associated with this call.
-    calldata:seq<u8>
+    callData:seq<u8>,
+    // Price of gas in current environment.
+    gasPrice: u256
     )
 
-    type T = c:Raw | |c.calldata| <= MAX_U256 witness Context(0,0,0,[])
+    type T = c:Raw | |c.callData| <= MAX_U256 witness Context(0,0,0,0,[],0)
 
     /**
      * Create an initial context from various components.
      */
-    function method Create(origin:u160,calldata:seq<u8>) : T
-    requires |calldata| <= MAX_U256 {
-        Context(address:=origin,origin:=origin,caller:=origin,calldata:=calldata)
+    function method Create(address:u160,origin:u160,callValue:u256,callData:seq<u8>,gasPrice:u256) : T
+    requires |callData| <= MAX_U256 {
+        Context(address,origin,caller:=origin,callValue:=callValue,callData:=callData,gasPrice:=gasPrice)
     }
 
     /**
      * Determine the size (in bytes) of the call data associated with this context.
      */
     function method DataSize(ctx: T) : u256 {
-      |ctx.calldata| as u256
+      |ctx.callData| as u256
     }
 
     /**
      * Read a word from the call data associated with this context.
      */
     function method DataRead(ctx: T, loc: u256) : u256 {
-      Bytes.ReadUint256(ctx.calldata,loc as nat)
+      Bytes.ReadUint256(ctx.callData,loc as nat)
     }
 
     /**
      * Slice a sequence of bytes from the call data associated with this context.
      */
     function method DataSlice(ctx: T, loc: u256, len: u256) : seq<u8> {
-      Bytes.Slice(ctx.calldata,loc as nat, len as nat)
+      Bytes.Slice(ctx.callData,loc as nat, len as nat)
     }
 }

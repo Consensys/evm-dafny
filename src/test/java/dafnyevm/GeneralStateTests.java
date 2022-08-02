@@ -34,6 +34,7 @@ import org.json.JSONObject;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import dafny.DafnyMap;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
@@ -78,33 +79,38 @@ public class GeneralStateTests {
 	@ParameterizedTest
 	@MethodSource("allTestFiles")
 	public void tests(TraceTest.Instance instance) throws IOException, JSONException {
-		Transaction tx = instance.getTransaction();
-		WorldState ws = instance.getWorldState();
-		byte[] code;
-		Map<BigInteger, BigInteger> storage;
-		if (tx.to != null) {
-			// Normal situation. We are calling a contract account and we need to run its
-			// code.
-			storage = ws.get(tx.to).storage;
-			code = ws.get(tx.to).code;
+		if(isIgnored(instance.getExpectation())) {
+			// Force test to be ignored.
+			assumeTrue(false);
 		} else {
-			// In this case, we have an empty "to" field. Its not clear exactly what this
-			// means, but I believe we can imagine it as something like the contract
-			// creation account. Specifically, the code to execute is stored within the
-			// transaction data.
-			code = tx.data;
-			storage = new HashMap<>();
+			Transaction tx = instance.getTransaction();
+			WorldState ws = instance.getWorldState();
+			byte[] code;
+			Map<BigInteger, BigInteger> storage;
+			if (tx.to != null) {
+				// Normal situation. We are calling a contract account and we need to run its
+				// code.
+				storage = ws.get(tx.to).storage;
+				code = ws.get(tx.to).code;
+			} else {
+				// In this case, we have an empty "to" field. Its not clear exactly what this
+				// means, but I believe we can imagine it as something like the contract
+				// creation account. Specifically, the code to execute is stored within the
+				// transaction data.
+				code = tx.data;
+				storage = new HashMap<>();
+			}
+			// Construct EVM
+			ArrayList<Trace.Element> elements = new ArrayList<>();
+			StructuredTracer tracer = new StructuredTracer(elements);
+			DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer).setGasPrice(tx.gasPrice);
+			// Run the transaction!
+			evm.call(tx.to, tx.sender, tx.gasLimit, tx.value, tx.data);
+			//
+			Trace tr = new Trace(elements);
+			// Finally check for equality.
+			assertEquals(instance.getTrace(),tr);
 		}
-		// Construct EVM
-		ArrayList<Trace.Element> elements = new ArrayList<>();
-		StructuredTracer tracer = new StructuredTracer(elements);
-		DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer);
-		// Run the transaction!
-		evm.call(tx.sender, tx.gasLimit, tx.data);
-		//
-		Trace tr = new Trace(elements);
-		// Finally check for equality.
-		assertEquals(instance.getTrace(),tr);
 	}
 
 	// Here we enumerate all available test cases.
@@ -128,7 +134,6 @@ public class GeneralStateTests {
 		// them.
 		switch (expect) {
 		case IntrinsicGas:
-		case OutOfGas:
 			return true;
 		default:
 			return false;
@@ -195,11 +200,16 @@ public class GeneralStateTests {
 			int pc = state.getPC().intValueExact();
 			byte[] memory = state.getMemory();
 			BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
+			DafnyMap<? extends BigInteger,? extends BigInteger> rawStorage = state.getStorage();
+			HashMap<BigInteger,BigInteger> storage = new HashMap<>();
+			for (BigInteger addr : storage.keySet()) {
+				storage.put(addr, rawStorage.get(addr));
+			}
 			// NOTE: we need to reverse the stack elements here as the Dafny stores them
 			// internally with index at zero.
 			Collections.reverse(Arrays.asList(stack));
 			//
-			out.add(new Trace.Step(pc,stack,memory));
+			out.add(new Trace.Step(pc, stack, memory, storage));
 		}
 
 		@Override

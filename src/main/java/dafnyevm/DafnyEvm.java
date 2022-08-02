@@ -52,6 +52,11 @@ public class DafnyEvm {
 	private final DafnySequence<Byte> code;
 
 	/**
+	 * Gas price to use.
+	 */
+	private BigInteger gasPrice;
+
+	/**
 	 * Construct a Dafny Evm with a given initial storage and bytecode sequence.
 	 *
 	 * @param storage
@@ -60,6 +65,18 @@ public class DafnyEvm {
 	public DafnyEvm(Map<BigInteger,BigInteger> storage, byte[] code) {
 		this.storage = new DafnyMap<>(storage);
 		this.code = DafnySequence.fromBytes(code);
+		this.gasPrice = BigInteger.ONE;
+	}
+
+	/**
+	 * Set the gas price to use when executing transactions.
+	 *
+	 * @param gasPrice
+	 * @return
+	 */
+	public DafnyEvm setGasPrice(BigInteger gasPrice) {
+		this.gasPrice = gasPrice;
+		return this;
 	}
 
 	/**
@@ -77,14 +94,17 @@ public class DafnyEvm {
 	 * Execute an external call using this EVM from a given externally owned
 	 * account.
 	 *
+	 * @param to       The receiving account.
 	 * @param from     The externally owned account.
 	 * @param gasLimit Amount of gas to provide.
+	 * @param callValue Amout of Wei to deposit.
 	 * @param calldata Input supplied with the call.
 	 * @return
 	 */
-	public SnapShot call(BigInteger from, BigInteger gasLimit, byte[] calldata) {
+	public SnapShot call(BigInteger to, BigInteger from, BigInteger gasLimit, BigInteger callValue, byte[] calldata) {
 		// Create call context.
-		Context_Compile.Raw ctx = Context_Compile.__default.Create(from, DafnySequence.fromBytes(calldata));
+		Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, callValue, DafnySequence.fromBytes(calldata),
+				gasPrice);
 		// Create the EVM
 		State r = Create(ctx, storage, gasLimit, code);
 		// Execute it!
