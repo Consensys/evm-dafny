@@ -12,9 +12,7 @@
  * under the License.
  */
 
-include "../../dafny/evm.dfy" 
 include "../../dafny/evms/berlin.dfy"
-include "../../dafny/util/context.dfy"
 
 /** Provide some tests to check some quantitative properties of bytecode.
  *
@@ -24,10 +22,8 @@ include "../../dafny/util/context.dfy"
 module Test10Gas {
 
     import opened Int
-    import opened Opcode
     import opened Bytecode 
     import opened EvmBerlin
-    import Context
     import opened Gas
     import Stack
 
