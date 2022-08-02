@@ -17,12 +17,19 @@ include "../gas.dfy"
 
 module EvmBerlin refines EVM {
 
-    import  Opcode
+    import Opcode
     import Bytecode
     import Gas
 
-    /** The gas cost of each opcode. */
-    const GAS := Gas.GAS_ONE
+
+    /** An empty VM, with some gas. */
+    function method InitEmpty(g: nat): State {
+        var tx := Context.Create(0xabcd,[]);
+        Create(tx, map[], g, [])
+    } 
+
+    /** The gas cost of each opcode. */ 
+    const GAS := Gas.GAS_ONE 
 
     /** The semantics of each opcode. */
     const SEMANTICS := map[
