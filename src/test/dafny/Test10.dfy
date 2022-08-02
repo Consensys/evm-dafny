@@ -12,10 +12,9 @@
  * under the License.
  */
 
-include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy" 
 
-import opened Int
+    import opened Int
 import opened Opcode
 import opened Bytecode
 
