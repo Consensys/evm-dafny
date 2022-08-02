@@ -22,8 +22,14 @@ module EvmBerlin refines EVM {
     import Gas
 
 
-    /** An empty VM, with some gas. */
-    function method InitEmpty(g: nat): State {
+    /** An empty VM, with some gas. 
+     *  
+     *  @param  g   The gas loaded in this EVM.
+     *  @returns    An ready-to-use EVM. 
+     */
+    function method InitEmpty(g: nat): State 
+        ensures !InitEmpty(g).IsFailure()
+    {
         var tx := Context.Create(0x0,0,0,[],0);  
         Create(tx, map[], g, [])
     } 

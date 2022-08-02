@@ -16,6 +16,11 @@ include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy"
 include "../../dafny/util/context.dfy"
 
+/** Provide some tests to check some quantitative properties of bytecode.
+ *
+ *  Start an EVM with some gas, a parametric constraint on the amount of gas 
+ *  should ensure that the EVM does not stop because an out-of-gas exception.
+ */
 module Test10Gas {
 
     import opened Int
@@ -26,22 +31,19 @@ module Test10Gas {
     import opened Gas
     import Stack
 
-    // Arbitrary limit for now
-    const GASLIMIT : nat := 100;
-
     /**
-     *   A very simple program manipulating the stack.
-     *
+     *  A very simple linear program manipulating the stack.
      */
     method main1(g: nat) 
         requires g >= 2*G_VERYLOW + 2*G_LOW
     {
-        // Initialise VM
+        // Initialise VM with g  gas unit.
         var vm := InitEmpty(g);
 
         var a: u8 := 0x01;
         var b: u8 := 0x02;
 
+        //  Snapshot of the stack.
         ghost var st1 := vm.GetStack();
 
         vm := Push1(vm, a).UseGas(G_VERYLOW); 
@@ -57,6 +59,7 @@ module Test10Gas {
 
     /**
      *  A loop.
+     *  The amount of gas needed is proportional to the input.
      */
     method main2(c: u8, g: nat) 
         requires g >= c as nat * (3 * G_VERYLOW + G_BASE)
@@ -84,9 +87,8 @@ module Test10Gas {
     }
 
     /**
-     *  Compute cout := count - 1 with the stack.
-     *  In this first implementation we use a variant of SUB, subR
-     *  that computes stack1 - stack0 instead of stack0 - stack1.
+     *  Refines `main2` by ghosting `count` and storing the corresponding value
+     *  on the stack.
      */
     method main3(c: u8, g: nat) 
         requires g >= G_VERYLOW + c as nat * (6*G_VERYLOW + G_BASE)
@@ -125,8 +127,8 @@ module Test10Gas {
     }
 
     /**
-     *  Test top of stack with LT/GT
-     *  instead of count > 0.
+     *  Refines `main3` and compute the condition of the loop using the stack
+     *  and the comparisons operators.
      */
     method main5(c: u8, g: nat)  
         requires g >= G_BASE + 4 * G_VERYLOW + c as nat * (2 * G_BASE + 9 * G_VERYLOW)
