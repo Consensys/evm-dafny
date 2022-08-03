@@ -127,6 +127,7 @@ module Gas {
         JUMP := (s:OKState) => 1,
         JUMPI := (s:OKState) => 1,
         PC := (s:OKState) => 1,
+        MSIZE := (s:OKState) => 1,
         JUMPDEST := (s:OKState) => 1,
         // 0x60s & 0x70s: Push operations
         PUSH1 := (s: OKState) => 1,
@@ -280,6 +281,7 @@ module Gas {
         JUMP := (s:OKState) => G_MID,
         // JUMPI := (s:OKState) => 1,
         PC := (s:OKState) => G_BASE,
+        MSIZE := (s:OKState) => G_BASE,
         JUMPDEST := (s:OKState) => G_HIGH,
         // 0x60s & 0x70s: Push operations
         PUSH1 := (s: OKState) => G_VERYLOW,

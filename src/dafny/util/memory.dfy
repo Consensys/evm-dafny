@@ -18,33 +18,34 @@ include "int.dfy"
  */
 module Memory {
     import opened Int
+    import U256
 
     // =============================================================================
     // Random Access Memory
     // =============================================================================
 
-    datatype T = Memory(contents:map<u256,u8>)
+    datatype T = Memory(contents:map<u256,u8>,size:nat)
 
     /**
      * Create a memory from an initial sequence of words.
      */
     function method Create() : T {
-        Memory(contents:=map[])
+        Memory(contents:=map[],size:=0)
     }
+
+    /**
+     * Return size of memory (in bytes).
+     */
+    function method Size(mem:T) : nat { mem.size }
 
     /**
      * Expand memory to include the given address.  Note that the EVM dictates that
      * expansion happens in multiples of 32bytes.
      */
     function method Expand(mem:T, address: u256) : T {
-      if address in mem.contents then mem
-      // Check if aligns
-      else if address % 32 == 0 then WriteUint8(mem,address,0)
-      // Doesn't align, so round up.
-      else
-         var naddress := (((address as nat) / 32) * 32) + 32;
-         if naddress < MAX_U256 then WriteUint8(mem,naddress as u256,0)
-         else mem
+      // FIXME: this is WRONG!
+      var nsize := (address as nat)+1;
+      mem.(size:=nsize)
     }
 
     /**
@@ -119,8 +120,9 @@ module Memory {
      * Write a byte to a given address in Memory.
      */
     function method WriteUint8(mem:T, address:u256, val:u8) : T {
+        var nsize := Max(mem.size, (address as nat) + 1);
         // Write location
-        Memory(contents:=mem.contents[address:=val])
+        Memory(contents:=mem.contents[address:=val],size:=nsize)
     }
 
     /**
