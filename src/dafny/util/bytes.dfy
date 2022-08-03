@@ -113,4 +113,11 @@ module Bytes {
     // Append it!
     Padding(k) + bytes
   }
+
+  method {:test} LeftPadTests() {
+    assert LeftPad([0],2) == [0,0];
+    assert LeftPad([1],2) == [0,1];
+    assert LeftPad([1],4) == [0,0,0,1];
+    assert LeftPad([1,2],4) == [0,0,1,2];
+  }
 }
