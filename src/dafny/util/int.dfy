@@ -17,8 +17,12 @@ module Int {
   const TWO_8   : int := 0x1_00;
   const TWO_15  : int := 0x0_8000;
   const TWO_16  : int := 0x1_0000;
+  const TWO_24  : int := 0x1_0000_00;
   const TWO_31  : int := 0x0_8000_0000;
   const TWO_32  : int := 0x1_0000_0000;
+  const TWO_40  : int := 0x1_0000_0000_00;
+  const TWO_48  : int := 0x1_0000_0000_0000;
+  const TWO_56  : int := 0x1_0000_0000_0000_00;
   const TWO_63  : int := 0x0_8000_0000_0000_0000;
   const TWO_64  : int := 0x1_0000_0000_0000_0000;
   const TWO_127 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000;
@@ -51,7 +55,11 @@ module Int {
   // Unsigned Integers
   const MAX_U8 : int :=  TWO_8 - 1;
   const MAX_U16 : int := TWO_16 - 1;
+  const MAX_U24 : int := TWO_24 - 1;
   const MAX_U32 : int := TWO_32 - 1;
+  const MAX_U40 : int := TWO_40 - 1;
+  const MAX_U48 : int := TWO_48 - 1;
+  const MAX_U56 : int := TWO_56 - 1;
   const MAX_U64 : int := TWO_64 - 1;
   const MAX_U128 : int := TWO_128 - 1;
   const MAX_U160: int := TWO_160 - 1;
@@ -59,7 +67,11 @@ module Int {
 
   newtype{:nativeType "byte"} u8 = i:int    | 0 <= i <= MAX_U8
   newtype{:nativeType "ushort"} u16 = i:int | 0 <= i <= MAX_U16
+  newtype{:nativeType "uint"} u24 = i:int | 0 <= i <= MAX_U24
   newtype{:nativeType "uint"} u32 = i:int   | 0 <= i <= MAX_U32
+  newtype{:nativeType "ulong"} u40 = i:int   | 0 <= i <= MAX_U40
+  newtype{:nativeType "ulong"} u48 = i:int   | 0 <= i <= MAX_U48
+  newtype{:nativeType "ulong"} u56 = i:int   | 0 <= i <= MAX_U56
   newtype{:nativeType "ulong"} u64 = i:int  | 0 <= i <= MAX_U64
   newtype u128 = i:int | 0 <= i <= MAX_U128
   newtype u160 = i:int | 0 <= i <= MAX_U160
@@ -95,6 +107,41 @@ module Int {
     (b1 * (TWO_32 as u64)) + b2
   }
 
+  // =========================================================
+  // Exponent
+  // =========================================================
+
+  /**
+   * Compute n^k.
+   */
+  function method Pow(n:int, k:nat) : int
+  requires k > 0 {
+    if k == 1 then n
+    else
+      n * Pow(n,k-1)
+  }
+
+  // Various sanity tests for exponentiation.
+  method PowTests() {
+    assert Pow(2,8) == TWO_8;
+    assert Pow(2,15) == TWO_15;
+    assert Pow(2,16) == TWO_16;
+    assert Pow(2,24) == TWO_24;
+    assert Pow(2,31) == TWO_31;
+    assert Pow(2,32) == TWO_32;
+    assert Pow(2,40) == TWO_40;
+    assert Pow(2,48) == TWO_48;
+    assert Pow(2,56) == TWO_56;
+    assert Pow(2,63) == TWO_63;
+    assert Pow(2,64) == TWO_64;
+    // NOTE:  I have to break the following ones up because Z3
+    // cannot handle it.
+    assert Pow(2,63) * Pow(2,64) == TWO_127;
+    assert Pow(2,64) * Pow(2,64) == TWO_128;
+    assert Pow(2,64) * Pow(2,64) * Pow(2,64) * Pow(2,64) == TWO_256;
+    assert (TWO_128 / TWO_64) == TWO_64;
+    assert (TWO_256 / TWO_128) == TWO_128;
+  }
 
   // =========================================================
   // Non-Euclidean Division / Remainder

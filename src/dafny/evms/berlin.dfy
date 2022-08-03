@@ -16,26 +16,24 @@ include "../bytecode.dfy"
 include "../gas.dfy"
 
 module EvmBerlin refines EVM {
-
     import Opcode
     import Bytecode
     import Gas
 
-
-    /** An empty VM, with some gas. 
-     *  
+    /** An empty VM, with some gas.
+     *
      *  @param  g   The gas loaded in this EVM.
-     *  @returns    An ready-to-use EVM. 
+     *  @returns    An ready-to-use EVM.
      */
-    function method InitEmpty(g: nat): State 
+    function method InitEmpty(g: nat): State
         ensures !InitEmpty(g).IsFailure()
     {
-        var tx := Context.Create(0x0,0,0,[],0);  
+        var tx := Context.Create(0x0,0,0,[],0);
         Create(tx, map[], g, [])
-    } 
+    }
 
-    /** The gas cost of each opcode. */ 
-    const GAS := Gas.GAS_ONE 
+    /** The gas cost of each opcode. */
+    const GAS := Gas.GAS_ONE
 
     /** The semantics of each opcode. */
     const SEMANTICS := map[
@@ -106,16 +104,38 @@ module EvmBerlin refines EVM {
         Opcode.PC := (s:OKState) => if s.PC() <= MAX_U256 then Bytecode.Pc(s) else State.INVALID,
         Opcode.JUMPDEST := (s:OKState) => Bytecode.JumpDest(s),
         // 0x60s & 0x70s: Push operations
-        Opcode.PUSH1 := (s: OKState) =>
-                if s.CodeOperands() >= 1 then
-                    var k := Code.DecodeUint8(s.evm.code, (s.evm.pc + 1) as nat);
-                    Bytecode.Push1(s, k)
-                else State.INVALID,
-        Opcode.PUSH2 := (s:OKState) =>
-                if s.CodeOperands() >= 2 then
-                    var k := Code.DecodeUint16(s.evm.code, (s.evm.pc + 1) as nat);
-                    Bytecode.Push2(s, k)
-                else State.INVALID,
+        Opcode.PUSH1 := (s: OKState) => Push(s,1),
+        Opcode.PUSH2 := (s: OKState) => Push(s,2),
+        Opcode.PUSH3 := (s: OKState) => Push(s,3),
+        Opcode.PUSH4 := (s: OKState) => Push(s,4),
+        // Opcode.PUSH5 := (s: OKState) => Push(s,5),
+        // Opcode.PUSH6 := (s: OKState) => Push(s,6),
+        // Opcode.PUSH7 := (s: OKState) => Push(s,7),
+        // Opcode.PUSH8 := (s: OKState) => Push(s,8),
+        // Opcode.PUSH9 := (s: OKState) => Push(s,9),
+        // Opcode.PUSH10 := (s: OKState) => Push(s,10),
+        // Opcode.PUSH11 := (s: OKState) => Push(s,11),
+        // Opcode.PUSH12 := (s: OKState) => Push(s,12),
+        // Opcode.PUSH13 := (s: OKState) => Push(s,13),
+        // Opcode.PUSH14 := (s: OKState) => Push(s,14),
+        // Opcode.PUSH15 := (s: OKState) => Push(s,15),
+        // Opcode.PUSH16 := (s: OKState) => Push(s,16),
+        // Opcode.PUSH17 := (s: OKState) => Push(s,17),
+        // Opcode.PUSH18 := (s: OKState) => Push(s,18),
+        // Opcode.PUSH19 := (s: OKState) => Push(s,19),
+        // Opcode.PUSH20 := (s: OKState) => Push(s,20),
+        // Opcode.PUSH21 := (s: OKState) => Push(s,21),
+        // Opcode.PUSH22 := (s: OKState) => Push(s,22),
+        // Opcode.PUSH23 := (s: OKState) => Push(s,23),
+        // Opcode.PUSH24 := (s: OKState) => Push(s,24),
+        // Opcode.PUSH25 := (s: OKState) => Push(s,25),
+        // Opcode.PUSH26 := (s: OKState) => Push(s,26),
+        // Opcode.PUSH27 := (s: OKState) => Push(s,27),
+        // Opcode.PUSH28 := (s: OKState) => Push(s,28),
+        // Opcode.PUSH29 := (s: OKState) => Push(s,29),
+        // Opcode.PUSH30 := (s: OKState) => Push(s,30),
+        // Opcode.PUSH31 := (s: OKState) => Push(s,31),
+        // Opcode.PUSH32 := (s: OKState) => Push(s,32),
         // 0x80s: Duplicate operations
         Opcode.DUP1 := (s:OKState) => Bytecode.Dup(s, 1),
         Opcode.DUP2 := (s:OKState) => Bytecode.Dup(s, 2),
@@ -165,4 +185,15 @@ module EvmBerlin refines EVM {
         // SELFDESTRUCT := (s:OKState) => Bytecode.evalSELFDESTRUCT(s),
     ]
 
+    // A little helper method
+    function method Push(s: OKState, k: nat) : State
+    requires k > 0 && k <= 32 {
+        if s.CodeOperands() >= k
+        then
+            var bytes := Code.Slice(s.evm.code, (s.evm.pc+1), k);
+            assert 0 < |bytes| && |bytes| <= 32;
+            Bytecode.Push(s,bytes)
+        else
+            State.INVALID
+    }
 }
