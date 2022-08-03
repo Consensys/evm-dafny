@@ -159,7 +159,7 @@ public class GeneralStateTests {
 	public static Stream<TraceTest.Instance> readTestFiles(Path dir) throws IOException {
 		ArrayList<TraceTest.Instance> testcases = new ArrayList<>();
 		//
-		Files.walk(dir,3).forEach(f -> {
+		Files.walk(dir).forEach(f -> {
 			if (f.toString().endsWith(".json")) {
 				try {
 					// Read contents of fixture file
@@ -198,10 +198,11 @@ public class GeneralStateTests {
 		@Override
 		public void step(DafnyEvm.SnapShot state) {
 			int pc = state.getPC().intValueExact();
+			int op = state.getOpcode();
 			byte[] memory = state.getMemory();
 			BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
-			DafnyMap<? extends BigInteger,? extends BigInteger> rawStorage = state.getStorage();
-			HashMap<BigInteger,BigInteger> storage = new HashMap<>();
+			DafnyMap<? extends BigInteger, ? extends BigInteger> rawStorage = state.getStorage();
+			HashMap<BigInteger, BigInteger> storage = new HashMap<>();
 			for (BigInteger addr : storage.keySet()) {
 				storage.put(addr, rawStorage.get(addr));
 			}
@@ -209,7 +210,7 @@ public class GeneralStateTests {
 			// internally with index at zero.
 			Collections.reverse(Arrays.asList(stack));
 			//
-			out.add(new Trace.Step(pc, stack, memory, storage));
+			out.add(new Trace.Step(pc, op, stack, memory, storage));
 		}
 
 		@Override

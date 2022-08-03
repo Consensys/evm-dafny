@@ -52,14 +52,6 @@ module Code {
       c.contents[address]
   }
 
-  function method DecodeUint16(c:T, address:nat) : u16
-    // Decode position must be valid.
-    requires address+1 < |c.contents| {
-      var k1 := DecodeUint8(c,address) as u16;
-      var k2 := DecodeUint8(c,address+1) as u16;
-      (k1 * 256) + k2
-  }
-
   /**
    * Slice out a subsequence of bytes from a given sequence.
    * If the requested subsequence overflows available memory,

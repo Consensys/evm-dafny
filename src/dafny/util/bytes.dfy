@@ -97,8 +97,27 @@ module Bytes {
       else Padding(len)
     }
 
-    /**
-     * Construct a sequence of an arbitrary sized padded out with zeros.
-     */
-    function method Padding(n:nat) : seq<u8> { seq(n, i => 0) }
+  /**
+   * Construct a sequence of an arbitrary sized padded out with zeros.
+   */
+  function method Padding(n:nat) : seq<u8> { seq(n, i => 0) }
+
+  /**
+   * Pad an array of bytes with zeros in the low addresses upto a given
+   * size n.
+   */
+  function method LeftPad(bytes:seq<u8>, n:nat) : seq<u8>
+  requires |bytes| <= n {
+    // Calculate padding required
+    var k := n - |bytes|;
+    // Append it!
+    Padding(k) + bytes
+  }
+
+  method {:test} LeftPadTests() {
+    assert LeftPad([0],2) == [0,0];
+    assert LeftPad([1],2) == [0,1];
+    assert LeftPad([1],4) == [0,0,0,1];
+    assert LeftPad([1,2],4) == [0,0,1,2];
+  }
 }

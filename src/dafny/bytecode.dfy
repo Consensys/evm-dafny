@@ -18,6 +18,7 @@ module Bytecode {
     import U256
     import I256
     import Word
+    import Bytes
     import opened EvmState
 
     // =====================================================================
@@ -789,14 +790,36 @@ module Bytecode {
     }
 
     /**
-    * Push two bytes onto stack.
-    */
+     * Push two bytes onto stack.
+     */
     function method Push2(st: State, k: u16) : State
     requires !st.IsFailure() {
         //
         if st.Capacity() >= 1
         then
             st.Push(k as u256).Skip(3)
+        else
+            State.INVALID
+    }
+
+    /**
+     * Push n bytes onto stack.
+     */
+    function method Push(st: State, bytes: seq<u8>) : State
+    requires !st.IsFailure()
+    requires |bytes| > 0 && |bytes| <= 32 {
+        //
+        if st.Capacity() >= 1
+        then
+            var k := if |bytes| == 1 then (bytes[0] as u256)
+            else if |bytes| == 2 then (Bytes.ReadUint16(bytes,0) as u256)
+            else if |bytes| <= 4 then (Bytes.ReadUint32(Bytes.LeftPad(bytes,4),0) as u256)
+            else if |bytes| <= 8 then (Bytes.ReadUint64(Bytes.LeftPad(bytes,8),0) as u256)
+            else if |bytes| <= 16 then (Bytes.ReadUint128(Bytes.LeftPad(bytes,16),0) as u256)
+            else
+                Bytes.ReadUint256(Bytes.LeftPad(bytes,32),0);
+            // Done
+            st.Push(k).Skip(|bytes|+1)
         else
             State.INVALID
     }
