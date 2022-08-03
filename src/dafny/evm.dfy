@@ -12,6 +12,7 @@
  * under the License.
  */
 include "state.dfy"
+include "util/ExtraTypes.dfy" 
 
 /**
  * Top-level definition of an Ethereum Virtual Machine.
@@ -19,11 +20,19 @@ include "state.dfy"
 abstract module EVM {
     import opened EvmState
     import opened Int
+    import opened ExtraTypes
 
     /** The semantics of opcodes.
      *  It is defined as a total function from non failure states.
      */
     const SEMANTICS: map<u8, OKState -> State>
+
+    /** Whether an opcode is supported. */
+    // function method SupportedOpcode(op: u8): bool
+
+    function method SEMANTICS2(op: u8): Option<OKState -> State> 
+
+    function method GAS2(op: u8): Option<OKState -> nat> 
 
     const GAS: map<u8, OKState -> nat>
 
@@ -36,6 +45,20 @@ abstract module EVM {
       if opcode in SEMANTICS && opcode in GAS && st.Gas() >= GAS[opcode](st) as nat then
         //  Note: SEMANTICS and GAS not commutative.
         SEMANTICS[opcode](st.UseGas(GAS[opcode](st)))
+      else
+        // Invalid/unsupported opcode
+        State.INVALID
+  }
+
+  function method Execute2(st:State) : State
+    // To execute a bytecode requires the machine is in a non-terminal state.
+    requires !st.IsFailure()
+    requires st.PC() < Code.Size(st.evm.code) as nat
+    {
+      var opcode := st.Decode();
+      if SEMANTICS2(opcode).Some? && GAS2(opcode).Some? && st.Gas() >= (GAS2(opcode).v)(st) as nat then
+        //  Note: SEMANTICS and GAS not commutative.
+        (SEMANTICS2(opcode).v)(st.UseGas((GAS2(opcode).v)(st)))
       else
         // Invalid/unsupported opcode
         State.INVALID
