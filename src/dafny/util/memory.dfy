@@ -33,6 +33,21 @@ module Memory {
     }
 
     /**
+     * Expand memory to include the given address.  Note that the EVM dictates that
+     * expansion happens in multiples of 32bytes.
+     */
+    function method Expand(mem:T, address: u256) : T {
+      if address in mem.contents then mem
+      // Check if aligns
+      else if address % 32 == 0 then WriteUint8(mem,address,0)
+      // Doesn't align, so round up.
+      else
+         var naddress := (((address as nat) / 32) * 32) + 32;
+         if naddress < MAX_U256 then WriteUint8(mem,naddress as u256,0)
+         else mem
+    }
+
+    /**
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
