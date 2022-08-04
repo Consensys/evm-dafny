@@ -38,7 +38,7 @@ module EvmBerlin refines EVM {
      *  @returns    The gas cost function that corresponds to the opcode 
      *              or `None` if no defined/implemented.
      */
-    function method GAS(op: u8): Option<OKState -> nat> {
+    function method OpGas(op: u8): Option<OKState -> nat> {
         Gas.GasOne(op)
     }
 
@@ -48,7 +48,7 @@ module EvmBerlin refines EVM {
      *  @returns    The state transformer that corresponds to the opcode 
      *              or `None` if no defined/implemented.
      */
-    function method SEMANTICS(op: u8): Option<OKState -> State> 
+    function method OpSem(op: u8): Option<OKState -> State> 
     {
         match op
             case STOP =>  Some((s:OKState) => Bytecode.Stop(s))
