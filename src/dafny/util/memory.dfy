@@ -18,6 +18,7 @@ include "int.dfy"
  */
 module Memory {
     import opened Int
+    import U256
 
     // =============================================================================
     // Random Access Memory
@@ -29,13 +30,31 @@ module Memory {
      * Create a memory from an initial sequence of words.
      */
     function method Create() : T {
-        Memory(contents:=[])
+        Memory(contents:=[])    
     }
 
+    /**
+     * Return size of memory (in bytes).
+     */
+    function method Size(mem:T) : nat { |mem.contents| }
+
+    /**
+     * Expand memory to include the given address.  Note that the EVM dictates that
+     * expansion happens in multiples of 32bytes.
+     */
+     /* the following no longer works with the new memory model. Not removing it for now, but it is best to be removed. */
+     /*
+    function method Expand(mem:T, address: nat) : T {
+      // Round up size to multiple of 32.
+      var rounded := RoundUp((address)+1,32);
+      mem.(size:=Max(|mem.contents|,rounded))
+    }
+    */
     /**
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
+     /* technically the branch undr else should throw an invalid-memory-access error */
     function method ReadUint8(mem:T, address:nat) : u8 {
         // Read location
         if address < |mem.contents|

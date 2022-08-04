@@ -11,15 +11,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
- include "util/int.dfy"
- include "opcodes.dfy"
- include "state.dfy"
-
+include "util/int.dfy"
+include "opcodes.dfy"
+include "state.dfy"
+include "util/ExtraTypes.dfy"
 module Gas {
 
 	import opened Opcode
 	import opened EvmState
     import opened Int
+    import opened ExtraTypes 
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -58,289 +59,294 @@ module Gas {
 	const G_BLOCKHASH: nat := 20;
 	const G_QUADDIVISOR: nat := 100;
 
+    /** The constant Gas cost for each  */
+    function method GasOne(op: u8): Option<OKState -> nat> 
+    {
+        match op 
+            case STOP => Some((s:OKState) => 1 as nat)
+            case ADD => Some((s:OKState) => 1)
+            case MUL => Some((s:OKState) => 1)
+            case SUB => Some((s:OKState) => 1)
+            case DIV => Some((s:OKState) => 1)
+            case SDIV => Some((s:OKState) => 1)
+            case MOD => Some((s:OKState) => 1)
+            case SMOD => Some((s:OKState) => 1)
+            case ADDMOD => Some((s:OKState) => 1)
+            case MULMOD => Some((s:OKState) => 1)
+            case EXP => Some((s:OKState) => 1)
+            case SIGNEXTEND => Some((s:OKState) => 1)
+            // 0x10s: Comparison & Bitwise Logic
+            case LT => Some((s:OKState) => 1)
+            case GT => Some((s:OKState) => 1)
+            case SLT => Some((s:OKState) => 1)
+            case SGT => Some((s:OKState) => 1)
+            case EQ => Some((s:OKState) => 1)
+            case ISZERO => Some((s:OKState) => 1)
+            case AND => Some((s:OKState) => 1)
+            case OR => Some((s:OKState) => 1)
+            case XOR => Some((s:OKState) => 1)
+            case NOT => Some((s:OKState) => 1)
+            case BYTE => Some((s:OKState) => 1)
+            case SHL => Some((s:OKState) => 1)
+            case SHR => Some((s:OKState) => 1)
+            case SAR => Some((s:OKState) => 1)
+            // 0x20s
+            //  KECCAK256 => Some((s:OKState) => 1)
+            // 0x30s: Environment Information
+            case ADDRESS => Some((s:OKState) => 1)
+            case BALANCE => Some((s:OKState) => 1)
+            case ORIGIN => Some((s:OKState) => 1)
+            case CALLER => Some((s:OKState) => 1)
+            case CALLVALUE => Some((s:OKState) => 1)
+            case CALLDATALOAD => Some((s:OKState) => 1)
+            case CALLDATASIZE => Some((s:OKState) => 1)
+            case CALLDATACOPY => Some((s:OKState) => 1)
+            case CODESIZE => Some((s:OKState) => 1)
+            case CODECOPY => Some((s:OKState) => 1)
+            case GASPRICE => Some((s:OKState) => 1)
+            case EXTCODESIZE => Some((s:OKState) => 1)
+            case EXTCODECOPY => Some((s:OKState) => 1)
+            case RETURNDATASIZE => Some((s:OKState) => 1)
+            case RETURNDATACOPY => Some((s:OKState) => 1)
+            //  EXTCODEHASH => Some((s:OKState) => 1)
+            // 0x40s: Block Information
+            case BLOCKHASH => Some((s:OKState) => 1)
+            case COINBASE => Some((s:OKState) => 1)
+            case TIMESTAMP => Some((s:OKState) => 1)
+            case NUMBER => Some((s:OKState) => 1)
+            case DIFFICULTY => Some((s:OKState) => 1)
+            case GASLIMIT => Some((s:OKState) => 1)
+            //  CHAINID => Some((s:OKState) => 1)
+            //  SELFBALANCE => Some((s:OKState) => 1)
+            // 0x50s: Stack, Memory, Storage and Flow
+            case POP => Some((s:OKState) => 1)
+            case MLOAD => Some((s:OKState) => 1)
+            case MSTORE => Some((s:OKState) => 1)
+            case MSTORE8 => Some((s:OKState) => 1)
+            case SLOAD => Some((s:OKState) => 1)
+            case SSTORE => Some((s:OKState) => 1)
+            case JUMP => Some((s:OKState) => 1)
+            case JUMPI => Some((s:OKState) => 1)
+            case PC => Some((s:OKState) => 1)
+            case MSIZE => Some((s:OKState) => 1)
+            case JUMPDEST => Some((s:OKState) => 1)
+            // 0x60s & 0x70s: Push operations
+            case PUSH1 => Some((s: OKState) => 1)
+            case PUSH2 => Some((s: OKState) => 1)
+            case PUSH3 => Some((s: OKState) => 1)
+            case PUSH4 => Some((s: OKState) => 1)
+            // PUSH5 => Some((s: OKState) => 1)
+            case  PUSH6 => Some((s: OKState) => 1)
+            case  PUSH7 => Some((s: OKState) => 1)
+            case  PUSH8 => Some((s: OKState) => 1)
+            case  PUSH9 => Some((s: OKState) => 1)
+            case  PUSH10 => Some((s: OKState) => 1)
+            case  PUSH11 => Some((s: OKState) => 1)
+            case  PUSH12 => Some((s: OKState) => 1)
+            case  PUSH13 => Some((s: OKState) => 1)
+            case  PUSH14 => Some((s: OKState) => 1)
+            case  PUSH15 => Some((s: OKState) => 1)
+            case  PUSH16 => Some((s: OKState) => 1)
+            case  PUSH17 => Some((s: OKState) => 1)
+            case  PUSH18 => Some((s: OKState) => 1)
+            case  PUSH19 => Some((s: OKState) => 1)
+            case  PUSH20 => Some((s: OKState) => 1)
+            case  PUSH21 => Some((s: OKState) => 1)
+            case  PUSH22 => Some((s: OKState) => 1)
+            case  PUSH23 => Some((s: OKState) => 1)
+            case  PUSH24 => Some((s: OKState) => 1)
+            case  PUSH25 => Some((s: OKState) => 1)
+            case  PUSH26 => Some((s: OKState) => 1)
+            case  PUSH27 => Some((s: OKState) => 1)
+            case  PUSH28 => Some((s: OKState) => 1)
+            case  PUSH29 => Some((s: OKState) => 1)
+            case  PUSH30 => Some((s: OKState) => 1)
+            case  PUSH31 => Some((s: OKState) => 1)
+            case  PUSH32 => Some((s: OKState) => 1)
+            // 0x80s: Duplicate operations
+            case DUP1 => Some((s:OKState) => 1)
+            case DUP2 => Some((s:OKState) => 1)
+            case DUP3 => Some((s:OKState) => 1)
+            case DUP4 => Some((s:OKState) => 1)
+            case DUP5 => Some((s:OKState) => 1)
+            case DUP6 => Some((s:OKState) => 1)
+            case DUP7 => Some((s:OKState) => 1)
+            case DUP8 => Some((s:OKState) => 1)
+            case DUP9 => Some((s:OKState) => 1)
+            case DUP10 => Some((s:OKState) => 1)
+            case DUP11 => Some((s:OKState) => 1)
+            case DUP12 => Some((s:OKState) => 1)
+            case DUP13 => Some((s:OKState) => 1)
+            case DUP14 => Some((s:OKState) => 1)
+            case DUP15 => Some((s:OKState) => 1)
+            case DUP16 => Some((s:OKState) => 1)
+            // 0x90s: Exchange operations
+            case SWAP1 => Some((s:OKState) => 1)
+            case SWAP2 => Some((s:OKState) => 1)
+            case SWAP3 => Some((s:OKState) => 1)
+            case SWAP4 => Some((s:OKState) => 1)
+            case SWAP5 => Some((s:OKState) => 1)
+            case SWAP6 => Some((s:OKState) => 1)
+            case SWAP7 => Some((s:OKState) => 1)
+            case SWAP8 => Some((s:OKState) => 1)
+            case SWAP9 => Some((s:OKState) => 1)
+            case SWAP10 => Some((s:OKState) => 1)
+            case SWAP11 => Some((s:OKState) => 1)
+            case SWAP12 => Some((s:OKState) => 1)
+            case SWAP13 => Some((s:OKState) => 1)
+            case SWAP14 => Some((s:OKState) => 1)
+            case SWAP15 => Some((s:OKState) => 1)
+            case SWAP16 => Some((s:OKState) => 1)
+            // 0xA0s: Log operations
+            // else if LOG0 <=opcode <= LOG4 => (s:OKState
+            //   var k => opcode - LOG0) as int; evalLOG(st,k)
+            // 0xf0
+            case CREATE => Some((s:OKState) => 1)
+            case CALL => Some((s:OKState) => 1)
+            case CALLCODE => Some((s:OKState) => 1)
+            case RETURN => Some((s:OKState) => 1)
+            case DELEGATECALL => Some((s:OKState) => 1)
+            // case CREATE2 => Some((s:OKState) => 1)
+            case STATICCALL => Some((s:OKState) => 1)
+            case REVERT => Some((s:OKState) => 1)
+            case SELFDESTRUCT => Some((s:OKState) => 1)
+            case _ =>  None
+    } 
 
-
-	/** The constant Gas cost for each  */
-    const GAS_ONE: map<u8, OKState -> nat> := map[
-        STOP := (s:OKState) => 1 as nat,
-        ADD := (s:OKState) => 1,
-        MUL := (s:OKState) => 1,
-        SUB := (s:OKState) => 1,
-        DIV := (s:OKState) => 1,
-        SDIV := (s:OKState) => 1,
-        MOD := (s:OKState) => 1,
-        SMOD := (s:OKState) => 1,
-        ADDMOD := (s:OKState) => 1,
-        MULMOD := (s:OKState) => 1,
-        EXP := (s:OKState) => 1,
-        SIGNEXTEND := (s:OKState) => 1,
+    /** The Berlin gas cost function.
+     *
+     *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
+     */
+    function method GasBerlin(op: u8): Option<OKState -> nat> {
+        match op 
+        case STOP => Some((s:OKState) => G_ZERO as nat)
+        case ADD => Some((s:OKState) => G_VERYLOW)
+        case MUL => Some((s:OKState) => G_LOW)
+        case SUB => Some((s:OKState) => G_VERYLOW)
+        case DIV => Some((s:OKState) => G_LOW)
+        case SDIV => Some((s:OKState) => G_LOW)
+        case MOD => Some((s:OKState) => G_LOW)
+        case SMOD => Some((s:OKState) => G_LOW)
+        case ADDMOD => Some((s:OKState) => G_MID)
+        case MULMOD => Some((s:OKState) => G_MID)
+        // EXP => Some((s:OKState) => 1)
+        case SIGNEXTEND => Some((s:OKState) => G_LOW)
         // 0x10s: Comparison & Bitwise Logic
-        LT := (s:OKState) => 1,
-        GT := (s:OKState) => 1,
-        SLT := (s:OKState) => 1,
-        SGT := (s:OKState) => 1,
-        EQ := (s:OKState) => 1,
-        ISZERO := (s:OKState) => 1,
-        AND := (s:OKState) => 1,
-        OR := (s:OKState) => 1,
-        XOR := (s:OKState) => 1,
-        NOT := (s:OKState) => 1,
-        BYTE := (s:OKState) => 1,
-        SHL := (s:OKState) => 1,
-        SHR := (s:OKState) => 1,
-        SAR := (s:OKState) => 1,
+        case LT => Some((s:OKState) => G_VERYLOW)
+        case GT => Some((s:OKState) => G_VERYLOW)
+        case SLT => Some((s:OKState) => G_VERYLOW)
+        case SGT => Some((s:OKState) => G_VERYLOW)
+        case EQ => Some((s:OKState) => G_VERYLOW)
+        case ISZERO => Some((s:OKState) => G_VERYLOW)
+        case AND => Some((s:OKState) => G_VERYLOW)
+        case OR => Some((s:OKState) => G_VERYLOW)
+        case XOR => Some((s:OKState) => G_VERYLOW)
+        case NOT => Some((s:OKState) => G_VERYLOW)
+        case BYTE => Some((s:OKState) => G_VERYLOW)
+        case SHL => Some((s:OKState) => G_VERYLOW)
+        case SHR => Some((s:OKState) => G_VERYLOW)
+        // SAR => Some((s:OKState) => 1)
         // 0x20s
-        //  KECCAK256 := (s:OKState) => 1,
+        //  KECCAK256 => Some((s:OKState) => 1)
         // 0x30s: Environment Information
-        ADDRESS := (s:OKState) => 1,
-        BALANCE := (s:OKState) => 1,
-        ORIGIN := (s:OKState) => 1,
-        CALLER := (s:OKState) => 1,
-        CALLVALUE := (s:OKState) => 1,
-        CALLDATALOAD := (s:OKState) => 1,
-        CALLDATASIZE := (s:OKState) => 1,
-        CALLDATACOPY := (s:OKState) => 1,
-        CODESIZE := (s:OKState) => 1,
-        CODECOPY := (s:OKState) => 1,
-        GASPRICE := (s:OKState) => 1,
-        EXTCODESIZE := (s:OKState) => 1,
-        EXTCODECOPY := (s:OKState) => 1,
-        RETURNDATASIZE := (s:OKState) => 1,
-        RETURNDATACOPY := (s:OKState) => 1,
-        //  EXTCODEHASH := (s:OKState) => 1,
+        case ADDRESS => Some((s:OKState) => G_BASE)
+        case BALANCE => Some((s:OKState) => G_BALANCE)
+        case ORIGIN => Some((s:OKState) => G_BASE)
+        case CALLER => Some((s:OKState) => G_BASE)
+        case CALLVALUE => Some((s:OKState) => G_BASE)
+        case CALLDATALOAD => Some((s:OKState) => G_VERYLOW)
+        // CALLDATASIZE => Some((s:OKState) => 1)
+        case CALLDATACOPY => Some((s:OKState) => G_COPY)
+        // CODESIZE => Some((s:OKState) => 1)
+        case CODECOPY => Some((s:OKState) => G_COPY)
+        case GASPRICE => Some((s:OKState) => G_BASE)
+        // EXTCODESIZE => Some((s:OKState) => 1)
+        // EXTCODECOPY => Some((s:OKState) => 1)
+        case RETURNDATASIZE => Some((s:OKState) => G_BASE)
+        case RETURNDATACOPY => Some((s:OKState) => G_COPY)
+        //  EXTCODEHASH => Some((s:OKState) => 1)
         // 0x40s: Block Information
-        BLOCKHASH := (s:OKState) => 1,
-        COINBASE := (s:OKState) => 1,
-        TIMESTAMP := (s:OKState) => 1,
-        NUMBER := (s:OKState) => 1,
-        DIFFICULTY := (s:OKState) => 1,
-        GASLIMIT := (s:OKState) => 1,
-        //  CHAINID := (s:OKState) => 1,
-        //  SELFBALANCE := (s:OKState) => 1,
+        // BLOCKHASH => Some((s:OKState) => 1)
+        case COINBASE => Some((s:OKState) => G_BASE)
+        case TIMESTAMP => Some((s:OKState) => G_BASE)
+        case NUMBER => Some((s:OKState) => G_BASE)
+        case DIFFICULTY => Some((s:OKState) => G_BASE)
+        case GASLIMIT => Some((s:OKState) => G_BASE)
+        //  CHAINID => Some((s:OKState) => 1)
+        //  SELFBALANCE => Some((s:OKState) => 1)
         // 0x50s: Stack, Memory, Storage and Flow
-        POP := (s:OKState) => 1,
-        MLOAD := (s:OKState) => 1,
-        MSTORE := (s:OKState) => 1,
-        MSTORE8 := (s:OKState) => 1,
-        SLOAD := (s:OKState) => 1,
-        SSTORE := (s:OKState) => 1,
-        JUMP := (s:OKState) => 1,
-        JUMPI := (s:OKState) => 1,
-        PC := (s:OKState) => 1,
-        JUMPDEST := (s:OKState) => 1,
+        case POP => Some((s:OKState) => G_BASE)
+        case MLOAD => Some((s:OKState) => G_VERYLOW)
+        case MSTORE => Some((s:OKState) => G_VERYLOW)
+        case MSTORE8 => Some((s:OKState) => G_VERYLOW)
+        // case SLOAD => Some((s:OKState) => G_HIGH)
+        // case SSTORE => Some((s:OKState) => G_HIGH)
+        case JUMP => Some((s:OKState) => G_MID)
+        // JUMPI => Some((s:OKState) => 1)
+        case PC => Some((s:OKState) => G_BASE)
+        case MSIZE => Some((s:OKState) => G_BASE)
+        case JUMPDEST => Some((s:OKState) => G_HIGH)
         // 0x60s & 0x70s: Push operations
-        PUSH1 := (s: OKState) => 1,
-        PUSH2 := (s: OKState) => 1,
-        PUSH3 := (s: OKState) => 1,
-        PUSH4 := (s: OKState) => 1,
-        // PUSH5 := (s: OKState) => 1,
-        // PUSH6 := (s: OKState) => 1,
-        // PUSH7 := (s: OKState) => 1,
-        // PUSH8 := (s: OKState) => 1,
-        // PUSH9 := (s: OKState) => 1,
-        // PUSH10 := (s: OKState) => 1,
-        // PUSH11 := (s: OKState) => 1,
-        // PUSH12 := (s: OKState) => 1,
-        // PUSH13 := (s: OKState) => 1,
-        // PUSH14 := (s: OKState) => 1,
-        // PUSH15 := (s: OKState) => 1,
-        // PUSH16 := (s: OKState) => 1,
-        // PUSH17 := (s: OKState) => 1,
-        // PUSH18 := (s: OKState) => 1,
-        // PUSH19 := (s: OKState) => 1,
-        // PUSH20 := (s: OKState) => 1,
-        // PUSH21 := (s: OKState) => 1,
-        // PUSH22 := (s: OKState) => 1,
-        // PUSH23 := (s: OKState) => 1,
-        // PUSH24 := (s: OKState) => 1,
-        // PUSH25 := (s: OKState) => 1,
-        // PUSH26 := (s: OKState) => 1,
-        // PUSH27 := (s: OKState) => 1,
-        // PUSH28 := (s: OKState) => 1,
-        // PUSH29 := (s: OKState) => 1,
-        // PUSH30 := (s: OKState) => 1,
-        // PUSH31 := (s: OKState) => 1,
-        // PUSH32 := (s: OKState) => 1,
+        case PUSH1 => Some((s: OKState) => G_VERYLOW)
+        case PUSH2 => Some((s:OKState) => G_VERYLOW)
+        // PUSH3 => Some((s:OKState) => 1)
+        // PUSH4 => Some((s:OKState) => 1)
+        // PUSH5 => Some((s:OKState) => 1)
+        // PUSH6 => Some((s:OKState) => 1)
+        // PUSH7 => Some((s:OKState) => 1)
+        // PUSH8 => Some((s:OKState) => 1)
+        // PUSH9 => Some((s:OKState) => 1)
+        // PUSH10 => Some((s:OKState) => 1)
+        // PUSH11 => Some((s:OKState) => 1)
         // 0x80s: Duplicate operations
-        DUP1 := (s:OKState) => 1,
-        DUP2 := (s:OKState) => 1,
-        DUP3 := (s:OKState) => 1,
-        DUP4 := (s:OKState) => 1,
-        DUP5 := (s:OKState) => 1,
-        DUP6 := (s:OKState) => 1,
-        DUP7 := (s:OKState) => 1,
-        DUP8 := (s:OKState) => 1,
-        DUP9 := (s:OKState) => 1,
-        DUP10 := (s:OKState) => 1,
-        DUP11 := (s:OKState) => 1,
-        DUP12 := (s:OKState) => 1,
-        DUP13 := (s:OKState) => 1,
-        DUP14 := (s:OKState) => 1,
-        DUP15 := (s:OKState) => 1,
-        DUP16 := (s:OKState) => 1,
+        case DUP1 => Some((s:OKState) => G_VERYLOW)
+        case DUP2 => Some((s:OKState) => G_VERYLOW)
+        case DUP3 => Some((s:OKState) => G_VERYLOW)
+        case DUP4 => Some((s:OKState) => G_VERYLOW)
+        case DUP5 => Some((s:OKState) => G_VERYLOW)
+        case DUP6 => Some((s:OKState) => G_VERYLOW)
+        case DUP7 => Some((s:OKState) => G_VERYLOW)
+        case DUP8 => Some((s:OKState) => G_VERYLOW)
+        case DUP9 => Some((s:OKState) => G_VERYLOW)
+        case DUP10 => Some((s:OKState) => G_VERYLOW)
+        case DUP11 => Some((s:OKState) => G_VERYLOW)
+        case DUP12 => Some((s:OKState) => G_VERYLOW)
+        case DUP13 => Some((s:OKState) => G_VERYLOW)
+        case DUP14 => Some((s:OKState) => G_VERYLOW)
+        case DUP15 => Some((s:OKState) => G_VERYLOW)
+        case DUP16 => Some((s:OKState) => G_VERYLOW)
         // 0x90s: Exchange operations
-        SWAP1 := (s:OKState) => 1,
-        SWAP2 := (s:OKState) => 1,
-        SWAP3 := (s:OKState) => 1,
-        SWAP4 := (s:OKState) => 1,
-        SWAP5 := (s:OKState) => 1,
-        SWAP6 := (s:OKState) => 1,
-        SWAP7 := (s:OKState) => 1,
-        SWAP8 := (s:OKState) => 1,
-        SWAP9 := (s:OKState) => 1,
-        // SWAP10 := (s:OKState) => 1,
-        // SWAP11 := (s:OKState) => 1,
-        // SWAP12 := (s:OKState) => 1,
-        // SWAP13 := (s:OKState) => 1,
-        // SWAP14 := (s:OKState) => 1,
-        // SWAP15 := (s:OKState) => 1,
-        // SWAP16 := (s:OKState) => 1,
+        case SWAP1 => Some((s:OKState) => G_VERYLOW)
+        case SWAP2 => Some((s:OKState) => G_VERYLOW)
+        case SWAP3 => Some((s:OKState) => G_VERYLOW)
+        case SWAP4 => Some((s:OKState) => G_VERYLOW)
+        case SWAP5 => Some((s:OKState) => G_VERYLOW)
+        case SWAP6 => Some((s:OKState) => G_VERYLOW)
+        case SWAP7 => Some((s:OKState) => G_VERYLOW)
+        case SWAP8 => Some((s:OKState) => G_VERYLOW)
+        case SWAP9 => Some((s:OKState) => G_VERYLOW)
+        case SWAP10 => Some((s:OKState) => G_VERYLOW)
+        case SWAP11 => Some((s:OKState) => G_VERYLOW)
+        case SWAP12 => Some((s:OKState) => G_VERYLOW)
+        case SWAP13 => Some((s:OKState) => G_VERYLOW)
+        case SWAP14 => Some((s:OKState) => G_VERYLOW)
+        case SWAP15 => Some((s:OKState) => G_VERYLOW)
+        case SWAP16 => Some((s:OKState) => G_VERYLOW)
         // 0xA0s: Log operations
-        // else if LOG0 <=opcode <= LOG4 := (s:OKState)
-        //   var k := opcode - LOG0) as int; evalLOG(st,k),
+        // else if LOG0 <=opcode <= LOG4 => Some((s:OKState))
+        //   var k => Some(opcode - LOG0) as int; evalLOG(st,k))
         // 0xf0
-        CREATE := (s:OKState) => 1,
-        CALL := (s:OKState) => 1,
-        CALLCODE := (s:OKState) => 1,
-        RETURN := (s:OKState) => 1,
-        DELEGATECALL := (s:OKState) => 1,
-        // CREATE2 := (s:OKState) => 1,
-        STATICCALL := (s:OKState) => 1,
-        REVERT := (s:OKState) => 1,
-        SELFDESTRUCT := (s:OKState) => 1
-    ]
-
-	/**	The Berlin gas cost function.
-	 *
-	 * see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
-	 */
-    const GAS_BERLIN: map<u8, OKState -> nat> := map[
-        STOP := (s:OKState) => G_ZERO as nat,
-        ADD := (s:OKState) => G_VERYLOW,
-        MUL := (s:OKState) => G_LOW,
-        SUB := (s:OKState) => G_VERYLOW,
-        DIV := (s:OKState) => G_LOW,
-        SDIV := (s:OKState) => G_LOW,
-        MOD := (s:OKState) => G_LOW,
-        SMOD := (s:OKState) => G_LOW,
-        ADDMOD := (s:OKState) => G_MID,
-        MULMOD := (s:OKState) => G_MID,
-        // EXP := (s:OKState) => 1,
-        SIGNEXTEND := (s:OKState) => G_LOW,
-        // 0x10s: Comparison & Bitwise Logic
-        LT := (s:OKState) => G_VERYLOW,
-        GT := (s:OKState) => G_VERYLOW,
-        SLT := (s:OKState) => G_VERYLOW,
-        SGT := (s:OKState) => G_VERYLOW,
-        EQ := (s:OKState) => G_VERYLOW,
-        ISZERO := (s:OKState) => G_VERYLOW,
-        AND := (s:OKState) => G_VERYLOW,
-        OR := (s:OKState) => G_VERYLOW,
-        XOR := (s:OKState) => G_VERYLOW,
-        NOT := (s:OKState) => G_VERYLOW,
-        BYTE := (s:OKState) => G_VERYLOW,
-        SHL := (s:OKState) => G_VERYLOW,
-        SHR := (s:OKState) => G_VERYLOW,
-        // SAR := (s:OKState) => 1,
-        // 0x20s
-        //  KECCAK256 := (s:OKState) => 1,
-        // 0x30s: Environment Information
-        ADDRESS := (s:OKState) => G_BASE,
-        BALANCE := (s:OKState) => G_BALANCE,
-        ORIGIN := (s:OKState) => G_BASE,
-        CALLER := (s:OKState) => G_BASE,
-        CALLVALUE := (s:OKState) => G_BASE,
-        CALLDATALOAD := (s:OKState) => G_VERYLOW,
-        // CALLDATASIZE := (s:OKState) => 1,
-        CALLDATACOPY := (s:OKState) => G_COPY,
-        // CODESIZE := (s:OKState) => 1,
-        CODECOPY := (s:OKState) => G_COPY,
-        GASPRICE := (s:OKState) => G_BASE,
-        // EXTCODESIZE := (s:OKState) => 1,
-        // EXTCODECOPY := (s:OKState) => 1,
-        RETURNDATASIZE := (s:OKState) => G_BASE,
-        RETURNDATACOPY := (s:OKState) => G_COPY,
-        //  EXTCODEHASH := (s:OKState) => 1,
-        // 0x40s: Block Information
-        // BLOCKHASH := (s:OKState) => 1,
-        COINBASE := (s:OKState) => G_BASE,
-        TIMESTAMP := (s:OKState) => G_BASE,
-        NUMBER := (s:OKState) => G_BASE,
-        DIFFICULTY := (s:OKState) => G_BASE,
-        GASLIMIT := (s:OKState) => G_BASE,
-        //  CHAINID := (s:OKState) => 1,
-        //  SELFBALANCE := (s:OKState) => 1,
-        // 0x50s: Stack, Memory, Storage and Flow
-        POP := (s:OKState) => G_BASE,
-        MLOAD := (s:OKState) => G_VERYLOW,
-        MSTORE := (s:OKState) => G_VERYLOW,
-        MSTORE8 := (s:OKState) => G_VERYLOW,
-        // SLOAD := (s:OKState) => 1,
-        // SSTORE := (s:OKState) => 1,
-        JUMP := (s:OKState) => G_MID,
-        // JUMPI := (s:OKState) => 1,
-        PC := (s:OKState) => G_BASE,
-        JUMPDEST := (s:OKState) => G_HIGH,
-        // 0x60s & 0x70s: Push operations
-        PUSH1 := (s: OKState) => G_VERYLOW,
-        PUSH2 := (s:OKState) => G_VERYLOW,
-        // PUSH3 := (s:OKState) => 1,
-        // PUSH4 := (s:OKState) => 1,
-        // PUSH5 := (s:OKState) => 1,
-        // PUSH6 := (s:OKState) => 1,
-        // PUSH7 := (s:OKState) => 1,
-        // PUSH8 := (s:OKState) => 1,
-        // PUSH9 := (s:OKState) => 1,
-        // PUSH10 := (s:OKState) => 1,
-        // PUSH11 := (s:OKState) => 1,
-        // 0x80s: Duplicate operations
-        DUP1 := (s:OKState) => G_VERYLOW,
-        DUP2 := (s:OKState) => G_VERYLOW,
-        DUP3 := (s:OKState) => G_VERYLOW,
-        DUP4 := (s:OKState) => G_VERYLOW,
-        DUP5 := (s:OKState) => G_VERYLOW,
-        DUP6 := (s:OKState) => G_VERYLOW,
-        DUP7 := (s:OKState) => G_VERYLOW,
-        DUP8 := (s:OKState) => G_VERYLOW,
-        DUP9 := (s:OKState) => G_VERYLOW,
-        DUP10 := (s:OKState) => G_VERYLOW,
-        DUP11 := (s:OKState) => G_VERYLOW,
-        DUP12 := (s:OKState) => G_VERYLOW,
-        DUP13 := (s:OKState) => G_VERYLOW,
-        DUP14 := (s:OKState) => G_VERYLOW,
-        DUP15 := (s:OKState) => G_VERYLOW,
-        DUP16 := (s:OKState) => G_VERYLOW,
-        // 0x90s: Exchange operations
-        SWAP1 := (s:OKState) => G_VERYLOW,
-        SWAP2 := (s:OKState) => G_VERYLOW,
-        SWAP3 := (s:OKState) => G_VERYLOW,
-        SWAP4 := (s:OKState) => G_VERYLOW,
-        SWAP5 := (s:OKState) => G_VERYLOW,
-        SWAP6 := (s:OKState) => G_VERYLOW,
-        SWAP7 := (s:OKState) => G_VERYLOW,
-        SWAP8 := (s:OKState) => G_VERYLOW,
-        SWAP9 := (s:OKState) => G_VERYLOW,
-        SWAP10 := (s:OKState) => G_VERYLOW,
-        SWAP11 := (s:OKState) => G_VERYLOW,
-        SWAP12 := (s:OKState) => G_VERYLOW,
-        SWAP13 := (s:OKState) => G_VERYLOW,
-        SWAP14 := (s:OKState) => G_VERYLOW,
-        SWAP15 := (s:OKState) => G_VERYLOW,
-        SWAP16 := (s:OKState) => G_VERYLOW,
-        // 0xA0s: Log operations
-        // else if LOG0 <=opcode <= LOG4 := (s:OKState)
-        //   var k := opcode - LOG0) as int; evalLOG(st,k),
-        // 0xf0
-        // CREATE := (s:OKState) => 1,
-        // CALL := (s:OKState) => 1,
-        // CALLCODE := (s:OKState) => 1,
-        RETURN := (s:OKState) => G_ZERO,
-        // DELEGATECALL := (s:OKState) => 1,
-        // CREATE2 := (s:OKState) => 1,
-        // STATICCALL := (s:OKState) => 1,
-        REVERT := (s:OKState) => G_ZERO,
-        SELFDESTRUCT := (s:OKState) => 1
-    ]
+        // CREATE => Some((s:OKState) => 1)
+        // CALL => Some((s:OKState) => 1)
+        // CALLCODE => Some((s:OKState) => 1)
+        case RETURN => Some((s:OKState) => G_ZERO)
+        // DELEGATECALL => Some((s:OKState) => 1)
+        // CREATE2 => Some((s:OKState) => 1)
+        // STATICCALL => Some((s:OKState) => 1)
+        case REVERT => Some((s:OKState) => G_ZERO)
+        case SELFDESTRUCT => Some((s:OKState) => 1)
+        case _ => None 
+    }
 
     function method
         max(n: nat, m: nat): nat

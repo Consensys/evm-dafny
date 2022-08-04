@@ -607,8 +607,25 @@ module Bytecode {
     }
 
     /**
-    * Get word from memory.
-    */
+     * Get the size of active memory in bytes.
+     */
+    function method MSize(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            var s := Memory.Size(st.evm.memory);
+            if s <= MAX_U256
+            then
+                st.Push(s as u256).Next()
+            else
+                State.INVALID
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get word from memory.
+     */
     function method MLoad(st: State) : State
     requires !st.IsFailure() {
         //
