@@ -12,6 +12,7 @@
  * under the License.
  */
 include "state.dfy"
+include "util/ExtraTypes.dfy" 
 
 /**
  * Top-level definition of an Ethereum Virtual Machine.
@@ -19,27 +20,46 @@ include "state.dfy"
 abstract module EVM {
     import opened EvmState
     import opened Int
+    import opened ExtraTypes
 
     /** The semantics of opcodes.
-     *  It is defined as a total function from non failure states.
+     *
+     *  @param op   The opcode to look up.
+     *  @returns    The state transformer that corresponds to the opcode 
+     *              or `None` if no defined/implemented.
      */
-    const SEMANTICS: map<u8, OKState -> State>
+    function method OpSem(op: u8): Option<OKState -> State> 
 
-    const GAS: map<u8, OKState -> nat>
+    /** The gas cost of opcodes.
+     *
+     *  @param op   The opcode to look up.
+     *  @returns    The gas cost function that corresponds to the opcode 
+     *              or `None` if no defined/implemented.
+     */
+    function method OpGas(op: u8): Option<OKState -> nat> 
 
+    /**
+     *  Execute the next instruction.
+     *  
+     *  @param  st  A non-failure state.
+     *  @returns    The state reached after executing the instruction 
+     *              pointed to by 'st.PC()'. 
+     *  @note       If the opcode semantics/gas is not implemented, the next
+     *              state is INVALID.
+     */
     function method Execute(st:State) : State
-    // To execute a bytecode requires the machine is in a non-terminal state.
-    requires !st.IsFailure()
-    requires st.PC() < Code.Size(st.evm.code) as nat
-    {
-      var opcode := st.Decode();
-      if opcode in SEMANTICS && opcode in GAS && st.Gas() >= GAS[opcode](st) as nat then
-        //  Note: SEMANTICS and GAS not commutative.
-        SEMANTICS[opcode](st.UseGas(GAS[opcode](st)))
-      else
-        // Invalid/unsupported opcode
-        State.INVALID
-  }
+      // To execute a bytecode requires the machine is in a non-terminal state.
+      requires !st.IsFailure()
+      requires st.PC() < Code.Size(st.evm.code) as nat
+      {
+        var opcode := st.Decode();
+        if OpSem(opcode).Some? && OpGas(opcode).Some? && st.Gas() >= (OpGas(opcode).v)(st) as nat then
+          //  Note: OpSem and OpGas not commutative.
+          (OpSem(opcode).v)(st.UseGas((OpGas(opcode).v)(st)))
+        else
+          // Invalid/unsupported opcode
+          State.INVALID
+    }
 
   /**
     * Create a fresh EVM to execute a given sequence of bytecode instructions.
