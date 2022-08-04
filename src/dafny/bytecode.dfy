@@ -607,8 +607,25 @@ module Bytecode {
     }
 
     /**
-    * Get word from memory.
-    */
+     * Get the size of active memory in bytes.
+     */
+    function method MSize(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            var s := Memory.Size(st.evm.memory);
+            if s <= MAX_U256
+            then
+                st.Push(s as u256).Next()
+            else
+                State.INVALID
+        else
+            State.INVALID
+    }
+
+    /**
+     * Get word from memory.
+     */
     function method MLoad(st: State) : State
     requires !st.IsFailure() {
         //
@@ -623,7 +640,7 @@ module Bytecode {
                 then
                 var val := st.Read(loc);
                 // Write big endian order
-                st.Pop().Push(val).Next()
+                st.Expand(loc+31).Pop().Push(val).Next()
             else
                 State.INVALID
         else
@@ -648,7 +665,7 @@ module Bytecode {
             if (loc as int) + 31 <= MAX_U256
                 then
                 // Write big endian order
-                st.Pop().Pop().Write(loc,val).Next()
+                st.Expand(loc+31).Pop().Pop().Write(loc,val).Next()
             else
                 State.INVALID
         else

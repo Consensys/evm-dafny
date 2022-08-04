@@ -102,6 +102,7 @@ module EvmBerlin refines EVM {
         Opcode.JUMP := (s:OKState) => Bytecode.Jump(s),
         Opcode.JUMPI := (s:OKState) => Bytecode.JumpI(s),
         Opcode.PC := (s:OKState) => if s.PC() <= MAX_U256 then Bytecode.Pc(s) else State.INVALID,
+        Opcode.MSIZE := (s:OKState) => Bytecode.MSize(s),
         Opcode.JUMPDEST := (s:OKState) => Bytecode.JumpDest(s),
         // 0x60s & 0x70s: Push operations
         Opcode.PUSH1 := (s: OKState) => Push(s,1),
@@ -163,13 +164,13 @@ module EvmBerlin refines EVM {
         Opcode.SWAP7 := (s:OKState) => Bytecode.Swap(s, 7),
         Opcode.SWAP8 := (s:OKState) => Bytecode.Swap(s, 8),
         Opcode.SWAP9 := (s:OKState) => Bytecode.Swap(s, 9),
-        Opcode.SWAP10 := (s:OKState) => Bytecode.Swap(s, 10),
-        Opcode.SWAP11 := (s:OKState) => Bytecode.Swap(s, 11),
-        Opcode.SWAP12 := (s:OKState) => Bytecode.Swap(s, 12),
-        Opcode.SWAP13 := (s:OKState) => Bytecode.Swap(s, 13),
-        Opcode.SWAP14 := (s:OKState) => Bytecode.Swap(s, 14),
-        Opcode.SWAP15 := (s:OKState) => Bytecode.Swap(s, 15),
-        Opcode.SWAP16 := (s:OKState) => Bytecode.Swap(s, 16),
+        // Opcode.SWAP10 := (s:OKState) => Bytecode.Swap(s, 10),
+        // Opcode.SWAP11 := (s:OKState) => Bytecode.Swap(s, 11),
+        // Opcode.SWAP12 := (s:OKState) => Bytecode.Swap(s, 12),
+        // Opcode.SWAP13 := (s:OKState) => Bytecode.Swap(s, 13),
+        // Opcode.SWAP14 := (s:OKState) => Bytecode.Swap(s, 14),
+        // Opcode.SWAP15 := (s:OKState) => Bytecode.Swap(s, 15),
+        // Opcode.SWAP16 := (s:OKState) => Bytecode.Swap(s, 16),
         // 0xA0s: Log operations
         // else if LOG0 <=opcode <= LOG4 := (s:OKState)
          //   var k := opcode - LOG0) as int; evalLOG(st,k),
