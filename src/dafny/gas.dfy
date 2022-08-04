@@ -342,4 +342,39 @@ module Gas {
         SELFDESTRUCT := (s:OKState) => 1
     ]
 
+    function method
+        max(n: nat, m: nat): nat
+            {
+                if m <= n
+                    then n
+                else
+                    m
+            }
+
+    function method
+        ceiling(n: nat, m: nat): (o: nat)
+        requires m > 0
+        ensures n / m <= o <= n / m + 1
+            {
+                if n % m == 0
+                    then n / m
+                else 
+                    (n / m) + 1
+            }
+    /* this is the function C_mem (YP, page 28, BERLIN VERSION 3078285 – 2022-07-13) */
+    function method
+        memoryCost(mu_i: nat): nat
+            {
+                G_MEMORY * mu_i + ((mu_i * mu_i) / 512)
+            }
+    /* this is the function M (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13) */
+    function method
+        memoryExpansion(s: nat, f: nat, l: nat): nat
+            {
+                if  l == 0
+                    then s
+                else
+                    max(s, ceiling(f + l, 32))
+            }
+    
 }
