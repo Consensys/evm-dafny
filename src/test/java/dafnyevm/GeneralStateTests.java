@@ -39,6 +39,7 @@ import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
 import evmtools.core.WorldState;
+import evmtools.util.Hex;
 
 /**
  * A test runner for executing the <code>GeneralStateTests</code> provided as
@@ -100,6 +101,7 @@ public class GeneralStateTests {
 				code = tx.data;
 				storage = new HashMap<>();
 			}
+			System.out.println("RUNNING: " + instance + " : " + Hex.toHexString(code));
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
