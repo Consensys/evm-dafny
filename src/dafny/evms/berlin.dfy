@@ -116,6 +116,7 @@ module EvmBerlin refines EVM {
             case JUMP =>  Some((s:OKState) => Bytecode.Jump(s))
             case JUMPI =>  Some((s:OKState) => Bytecode.JumpI(s))
             case PC =>  Some((s:OKState) => if s.PC() <= MAX_U256 then Bytecode.Pc(s) else State.INVALID)
+            case MSIZE => Some((s:OKState) => Bytecode.MSize(s))
             case JUMPDEST =>  Some((s:OKState) => Bytecode.JumpDest(s))
             // 0x60s & 0x70s: Push operations
             case PUSH1 =>  Some((s: OKState) => Push(s,1))
@@ -199,7 +200,6 @@ module EvmBerlin refines EVM {
             // SELFDESTRUCT := Some((s:OKState) => Bytecode.evalSELFDESTRUCT(s),)
             case _ => None
     }
-
 
     // A little helper method
     function method Push(s: OKState, k: nat) : State

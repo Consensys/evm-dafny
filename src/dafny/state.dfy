@@ -120,6 +120,14 @@ module EvmState {
         }
 
         /**
+         * Expand memory for given address.
+         */
+        function method Expand(address: u256) : State
+        requires !IsFailure() {
+            OK(evm.(memory:=Memory.Expand(evm.memory,address)))
+        }
+
+        /**
         * Read word from byte address in memory.
         */
         function method Read(address:u256) : u256

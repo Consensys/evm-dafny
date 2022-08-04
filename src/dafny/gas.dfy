@@ -128,6 +128,7 @@ module Gas {
             case JUMP => Some((s:OKState) => 1)
             case JUMPI => Some((s:OKState) => 1)
             case PC => Some((s:OKState) => 1)
+            case MSIZE => Some((s:OKState) => 1)
             case JUMPDEST => Some((s:OKState) => 1)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => Some((s: OKState) => 1)
@@ -278,11 +279,12 @@ module Gas {
         case MLOAD => Some((s:OKState) => G_VERYLOW)
         case MSTORE => Some((s:OKState) => G_VERYLOW)
         case MSTORE8 => Some((s:OKState) => G_VERYLOW)
-        // SLOAD => Some((s:OKState) => 1)
-        // SSTORE => Some((s:OKState) => 1)
+        // case SLOAD => Some((s:OKState) => G_HIGH)
+        // case SSTORE => Some((s:OKState) => G_HIGH)
         case JUMP => Some((s:OKState) => G_MID)
         // JUMPI => Some((s:OKState) => 1)
         case PC => Some((s:OKState) => G_BASE)
+        case MSIZE => Some((s:OKState) => G_BASE)
         case JUMPDEST => Some((s:OKState) => G_HIGH)
         // 0x60s & 0x70s: Push operations
         case PUSH1 => Some((s: OKState) => G_VERYLOW)

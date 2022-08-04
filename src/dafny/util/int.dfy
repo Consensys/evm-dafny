@@ -77,6 +77,20 @@ module Int {
   newtype u160 = i:int | 0 <= i <= MAX_U160
   newtype u256 = i:int | 0 <= i <= MAX_U256
 
+
+  // Determine maximum of two u256 integers.
+  function method Max(i1: int, i2: int) : int {
+    if i1 >= i2 then i1 else i2
+  }
+
+  // Round up a given number (i) by a given multiple (r).
+  function method RoundUp(i: int, r: nat) : int
+  requires r > 0 {
+    if (i % r) == 0 then i
+    else
+      ((i/r)*r) + r
+  }
+
   // =========================================================
   // Conversion to/from byte sequences
   // =========================================================
