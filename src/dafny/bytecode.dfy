@@ -640,7 +640,7 @@ module Bytecode {
                 then
                 var val := st.Read(loc);
                 // Write big endian order
-                st.Expand(loc).Pop().Push(val).Next()
+                st.Expand(loc+31).Pop().Push(val).Next()
             else
                 State.INVALID
         else
@@ -665,7 +665,7 @@ module Bytecode {
             if (loc as int) + 31 <= MAX_U256
                 then
                 // Write big endian order
-                st.Expand(loc).Pop().Pop().Write(loc,val).Next()
+                st.Expand(loc+31).Pop().Pop().Write(loc,val).Next()
             else
                 State.INVALID
         else

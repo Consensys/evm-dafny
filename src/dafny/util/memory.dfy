@@ -43,9 +43,9 @@ module Memory {
      * expansion happens in multiples of 32bytes.
      */
     function method Expand(mem:T, address: u256) : T {
-      // FIXME: this is WRONG!
-      var nsize := (address as nat)+1;
-      mem.(size:=nsize)
+      // Round up size to multiple of 32.
+      var rounded := RoundUp((address as nat)+1,32);
+      mem.(size:=Max(mem.size,rounded))
     }
 
     /**
@@ -120,6 +120,7 @@ module Memory {
      * Write a byte to a given address in Memory.
      */
     function method WriteUint8(mem:T, address:u256, val:u8) : T {
+        // Update size calc.
         var nsize := Max(mem.size, (address as nat) + 1);
         // Write location
         Memory(contents:=mem.contents[address:=val],size:=nsize)

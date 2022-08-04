@@ -312,8 +312,15 @@ public class Tests {
 	}
 
 	// ========================================================================
-	// MLOAD, MSTORE
+	// MLOAD, MSTORE, MSIZE
 	// ========================================================================
+
+	@Test
+	public void test_msize_01() {
+		// Check memory expansion from mload
+		byte[] output = call(new int[] { MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		assertArrayEquals(UINT256(0x0), output);
+	}
 
 	@Test
 	public void test_mstore_01() {
@@ -339,15 +346,29 @@ public class Tests {
 	@Test
 	public void test_mstore_04() {
 		// Check memory expansion from mstore
-		byte[] output = call(new int[] { PUSH1, 0xff, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
-		assertArrayEquals(UINT256(0x20), output);
+		byte[] output = call(new int[] { PUSH1, 0x15, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
+		assertArrayEquals(UINT256(0x40), output);
 	}
 
 	@Test
 	public void test_mstore_05() {
 		// Check memory expansion from mstore
-		byte[] output = call(new int[] { PUSH1, 0xff, PUSH1, 32, MSTORE, MSIZE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		byte[] output = call(new int[] { PUSH1, 0x7F, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x40), output);
+	}
+
+	@Test
+	public void test_mstore_06() {
+		// Check memory expansion from mstore
+		byte[] output = call(new int[] { PUSH1, 0x7F, PUSH1, 32, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
+		assertArrayEquals(UINT256(0x40), output);
+	}
+
+	@Test
+	public void test_mstore_07() {
+		// Check memory expansion from mstore
+		byte[] output = call(new int[] { PUSH1, 0x7F, PUSH1, 33, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
+		assertArrayEquals(UINT256(0x60), output);
 	}
 
 	@Test
@@ -360,14 +381,28 @@ public class Tests {
 	@Test
 	public void test_mload_02() {
 		// Check memory expansion from mload
-		byte[] output = call(new int[] { PUSH1, 31, MLOAD, MSIZE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		byte[] output = call(new int[] { PUSH1, 0, MLOAD, POP, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x20), output);
 	}
 
 	@Test
 	public void test_mload_03() {
 		// Check memory expansion from mload
-		byte[] output = call(new int[] { PUSH1, 32, MLOAD, MSIZE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		byte[] output = call(new int[] { PUSH1, 15, MLOAD, POP, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
+		assertArrayEquals(UINT256(0x40), output);
+	}
+
+	@Test
+	public void test_mload_04() {
+		// Check memory expansion from mload
+		byte[] output = call(new int[] { PUSH1, 31, MLOAD, POP, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
+		assertArrayEquals(UINT256(0x40), output);
+	}
+
+	@Test
+	public void test_mload_05() {
+		// Check memory expansion from mload
+		byte[] output = call(new int[] { PUSH1, 32, MLOAD, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x40), output);
 	}
 
