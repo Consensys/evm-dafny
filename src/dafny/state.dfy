@@ -184,14 +184,7 @@ module EvmState {
          * Decode next opcode from machine.
          */
         function method Decode() : u8
-        requires !IsFailure() {
-            // Sanity check pc location
-            if evm.pc < Code.Size(evm.code) as nat
-            then
-                Code.DecodeUint8(evm.code,evm.pc as nat)
-            else
-                Opcode.INVALID
-        }
+        requires !IsFailure() { Code.DecodeUint8(evm.code,evm.pc as nat) }
 
         /**
          * Move program counter to a given location.

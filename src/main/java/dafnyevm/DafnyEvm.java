@@ -172,13 +172,7 @@ public class DafnyEvm {
 		 */
 		public int getOpcode() {
 			State_OK sok = (State_OK) state;
-			int pc = sok.evm.pc.intValueExact();
-			//
-			if (pc < sok.evm.code.contents.length()) {
-				return sok.evm.code.contents.select(pc).intValue() & 0xff;
-			} else {
-				return Bytecodes.INVALID;
-			}
+			return sok.Decode() & 0xff;
 		}
 
 		/**

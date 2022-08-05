@@ -20,7 +20,7 @@ module Gas {
 	import opened Opcode
 	import opened EvmState
     import opened Int
-    import opened ExtraTypes 
+    import opened ExtraTypes
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -60,9 +60,9 @@ module Gas {
 	const G_QUADDIVISOR: nat := 100;
 
     /** The constant Gas cost for each  */
-    function method GasOne(op: u8): Option<OKState -> nat> 
+    function method GasOne(op: u8): Option<OKState -> nat>
     {
-        match op 
+        match op
             case STOP => Some((s:OKState) => 1 as nat)
             case ADD => Some((s:OKState) => 1)
             case MUL => Some((s:OKState) => 1)
@@ -135,34 +135,34 @@ module Gas {
             case PUSH2 => Some((s: OKState) => 1)
             case PUSH3 => Some((s: OKState) => 1)
             case PUSH4 => Some((s: OKState) => 1)
-            // PUSH5 => Some((s: OKState) => 1)
-            case  PUSH6 => Some((s: OKState) => 1)
-            case  PUSH7 => Some((s: OKState) => 1)
-            case  PUSH8 => Some((s: OKState) => 1)
-            case  PUSH9 => Some((s: OKState) => 1)
-            case  PUSH10 => Some((s: OKState) => 1)
-            case  PUSH11 => Some((s: OKState) => 1)
-            case  PUSH12 => Some((s: OKState) => 1)
-            case  PUSH13 => Some((s: OKState) => 1)
-            case  PUSH14 => Some((s: OKState) => 1)
-            case  PUSH15 => Some((s: OKState) => 1)
-            case  PUSH16 => Some((s: OKState) => 1)
-            case  PUSH17 => Some((s: OKState) => 1)
-            case  PUSH18 => Some((s: OKState) => 1)
-            case  PUSH19 => Some((s: OKState) => 1)
-            case  PUSH20 => Some((s: OKState) => 1)
-            case  PUSH21 => Some((s: OKState) => 1)
-            case  PUSH22 => Some((s: OKState) => 1)
-            case  PUSH23 => Some((s: OKState) => 1)
-            case  PUSH24 => Some((s: OKState) => 1)
-            case  PUSH25 => Some((s: OKState) => 1)
-            case  PUSH26 => Some((s: OKState) => 1)
-            case  PUSH27 => Some((s: OKState) => 1)
-            case  PUSH28 => Some((s: OKState) => 1)
-            case  PUSH29 => Some((s: OKState) => 1)
-            case  PUSH30 => Some((s: OKState) => 1)
-            case  PUSH31 => Some((s: OKState) => 1)
-            case  PUSH32 => Some((s: OKState) => 1)
+            case PUSH5 => Some((s: OKState) => 1)
+            case PUSH6 => Some((s: OKState) => 1)
+            case PUSH7 => Some((s: OKState) => 1)
+            case PUSH8 => Some((s: OKState) => 1)
+            case PUSH9 => Some((s: OKState) => 1)
+            case PUSH10 => Some((s: OKState) => 1)
+            case PUSH11 => Some((s: OKState) => 1)
+            case PUSH12 => Some((s: OKState) => 1)
+            case PUSH13 => Some((s: OKState) => 1)
+            case PUSH14 => Some((s: OKState) => 1)
+            case PUSH15 => Some((s: OKState) => 1)
+            case PUSH16 => Some((s: OKState) => 1)
+            case PUSH17 => Some((s: OKState) => 1)
+            case PUSH18 => Some((s: OKState) => 1)
+            case PUSH19 => Some((s: OKState) => 1)
+            case PUSH20 => Some((s: OKState) => 1)
+            case PUSH21 => Some((s: OKState) => 1)
+            case PUSH22 => Some((s: OKState) => 1)
+            case PUSH23 => Some((s: OKState) => 1)
+            case PUSH24 => Some((s: OKState) => 1)
+            case PUSH25 => Some((s: OKState) => 1)
+            case PUSH26 => Some((s: OKState) => 1)
+            case PUSH27 => Some((s: OKState) => 1)
+            case PUSH28 => Some((s: OKState) => 1)
+            case PUSH29 => Some((s: OKState) => 1)
+            case PUSH30 => Some((s: OKState) => 1)
+            case PUSH31 => Some((s: OKState) => 1)
+            case PUSH32 => Some((s: OKState) => 1)
             // 0x80s: Duplicate operations
             case DUP1 => Some((s:OKState) => 1)
             case DUP2 => Some((s:OKState) => 1)
@@ -211,14 +211,14 @@ module Gas {
             case REVERT => Some((s:OKState) => 1)
             case SELFDESTRUCT => Some((s:OKState) => 1)
             case _ =>  None
-    } 
+    }
 
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
      */
     function method GasBerlin(op: u8): Option<OKState -> nat> {
-        match op 
+        match op
         case STOP => Some((s:OKState) => G_ZERO as nat)
         case ADD => Some((s:OKState) => G_VERYLOW)
         case MUL => Some((s:OKState) => G_LOW)
@@ -255,9 +255,9 @@ module Gas {
         case CALLER => Some((s:OKState) => G_BASE)
         case CALLVALUE => Some((s:OKState) => G_BASE)
         case CALLDATALOAD => Some((s:OKState) => G_VERYLOW)
-        // CALLDATASIZE => Some((s:OKState) => 1)
+        case CALLDATASIZE => Some((s:OKState) => G_BASE)
         case CALLDATACOPY => Some((s:OKState) => G_COPY)
-        // CODESIZE => Some((s:OKState) => 1)
+        case CODESIZE => Some((s:OKState) => G_BASE)
         case CODECOPY => Some((s:OKState) => G_COPY)
         case GASPRICE => Some((s:OKState) => G_BASE)
         // EXTCODESIZE => Some((s:OKState) => 1)
@@ -279,25 +279,46 @@ module Gas {
         case MLOAD => Some((s:OKState) => G_VERYLOW)
         case MSTORE => Some((s:OKState) => G_VERYLOW)
         case MSTORE8 => Some((s:OKState) => G_VERYLOW)
-        // case SLOAD => Some((s:OKState) => G_HIGH)
-        // case SSTORE => Some((s:OKState) => G_HIGH)
+        case SLOAD => Some((s:OKState) => G_HIGH) // for now
+        case SSTORE => Some((s:OKState) => G_HIGH) // for now
         case JUMP => Some((s:OKState) => G_MID)
-        // JUMPI => Some((s:OKState) => 1)
+        case JUMPI => Some((s:OKState) => 1) // for now
         case PC => Some((s:OKState) => G_BASE)
         case MSIZE => Some((s:OKState) => G_BASE)
         case JUMPDEST => Some((s:OKState) => G_HIGH)
         // 0x60s & 0x70s: Push operations
         case PUSH1 => Some((s: OKState) => G_VERYLOW)
         case PUSH2 => Some((s:OKState) => G_VERYLOW)
-        // PUSH3 => Some((s:OKState) => 1)
-        // PUSH4 => Some((s:OKState) => 1)
-        // PUSH5 => Some((s:OKState) => 1)
-        // PUSH6 => Some((s:OKState) => 1)
-        // PUSH7 => Some((s:OKState) => 1)
-        // PUSH8 => Some((s:OKState) => 1)
-        // PUSH9 => Some((s:OKState) => 1)
-        // PUSH10 => Some((s:OKState) => 1)
-        // PUSH11 => Some((s:OKState) => 1)
+        case PUSH3 => Some((s:OKState) => G_VERYLOW)
+        case PUSH4 => Some((s:OKState) => G_VERYLOW)
+        case PUSH5 => Some((s:OKState) => G_VERYLOW)
+        case PUSH6 => Some((s:OKState) => G_VERYLOW)
+        case PUSH7 => Some((s:OKState) => G_VERYLOW)
+        case PUSH8 => Some((s:OKState) => G_VERYLOW)
+        case PUSH9 => Some((s:OKState) => G_VERYLOW)
+        case PUSH10 => Some((s:OKState) => G_VERYLOW)
+        case PUSH11 => Some((s:OKState) => G_VERYLOW)
+        case PUSH12 => Some((s:OKState) => G_VERYLOW)
+        case PUSH13 => Some((s:OKState) => G_VERYLOW)
+        case PUSH14 => Some((s:OKState) => G_VERYLOW)
+        case PUSH15 => Some((s:OKState) => G_VERYLOW)
+        case PUSH16 => Some((s:OKState) => G_VERYLOW)
+        case PUSH17 => Some((s:OKState) => G_VERYLOW)
+        case PUSH18 => Some((s:OKState) => G_VERYLOW)
+        case PUSH19 => Some((s:OKState) => G_VERYLOW)
+        case PUSH20 => Some((s:OKState) => G_VERYLOW)
+        case PUSH21 => Some((s:OKState) => G_VERYLOW)
+        case PUSH22 => Some((s:OKState) => G_VERYLOW)
+        case PUSH23 => Some((s:OKState) => G_VERYLOW)
+        case PUSH24 => Some((s:OKState) => G_VERYLOW)
+        case PUSH25 => Some((s:OKState) => G_VERYLOW)
+        case PUSH26 => Some((s:OKState) => G_VERYLOW)
+        case PUSH27 => Some((s:OKState) => G_VERYLOW)
+        case PUSH28 => Some((s:OKState) => G_VERYLOW)
+        case PUSH29 => Some((s:OKState) => G_VERYLOW)
+        case PUSH30 => Some((s:OKState) => G_VERYLOW)
+        case PUSH31 => Some((s:OKState) => G_VERYLOW)
+        case PUSH32 => Some((s:OKState) => G_VERYLOW)
         // 0x80s: Duplicate operations
         case DUP1 => Some((s:OKState) => G_VERYLOW)
         case DUP2 => Some((s:OKState) => G_VERYLOW)
@@ -345,7 +366,7 @@ module Gas {
         // STATICCALL => Some((s:OKState) => 1)
         case REVERT => Some((s:OKState) => G_ZERO)
         case SELFDESTRUCT => Some((s:OKState) => 1)
-        case _ => None 
+        case _ => None
     }
 
 }

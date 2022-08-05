@@ -511,19 +511,20 @@ module Bytecode {
         then
             var m_loc := st.Peek(0);
             var d_loc := st.Peek(1);
-            var len := st.Peek(2);
+            var len := st.Peek(2) as int;
+            var last := (m_loc as int) + len;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (m_loc as int) + (len as int) < MAX_U256
+            if last < MAX_U256
             then
                 // Slice bytes out of call data (with padding as needed)
-                var data := Context.DataSlice(st.evm.context,d_loc,len);
+                var data := Context.DataSlice(st.evm.context,d_loc,len as u256);
                 // Sanity check
-                assert |data| == (len as int);
+                assert |data| == len;
                 // Copy slice into memory
-                st.Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -554,18 +555,19 @@ module Bytecode {
             var m_loc := st.Peek(0);
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
+            var last := (m_loc as int) + len;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (m_loc as int) + len < MAX_U256
+            if last < MAX_U256
             then
                 // Slice bytes out of code (with padding as needed)
                 var data := Code.Slice(st.evm.code,d_loc,len);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
