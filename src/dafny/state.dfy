@@ -191,7 +191,7 @@ module EvmState {
         /**
          * Decode next opcode from machine. 
          */
-        function method Decode2() : ExtraTypes.Option<u8>
+        function method OpDecode() : ExtraTypes.Option<u8>
         { 
             if this.IsFailure() then ExtraTypes.None
             else ExtraTypes.Some(Code.DecodeUint8(evm.code,evm.pc as nat))

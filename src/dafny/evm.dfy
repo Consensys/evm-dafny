@@ -67,7 +67,7 @@ abstract module EVM {
 
     function method Execute(st:State) : State
     {
-        match st.Decode2()  
+        match st.OpDecode()  
           case Some(opcode) => OpSem2(opcode, OpGas2(opcode, st))
           case None => State.INVALID
     }
