@@ -687,7 +687,7 @@ module Bytecode {
             if (loc as int) < MAX_U256
                 then
                 // Write byte
-                st.Pop().Pop().Write8(loc,val).Next()
+                st.Expand(loc).Pop().Pop().Write8(loc,val).Next()
             else
                 State.INVALID
         else
