@@ -772,10 +772,9 @@ module Bytecode {
     */
     function method Pc(st: State) : State
     requires !st.IsFailure()
-    requires st.PC() <= MAX_U256
     {
         //
-        if st.Capacity() >= 1
+        if st.Capacity() >= 1 && st.PC() <= MAX_U256
         then
             st.Push(st.PC() as u256).Next()
         else
