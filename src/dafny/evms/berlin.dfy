@@ -42,6 +42,23 @@ module EvmBerlin refines EVM {
         Gas.GasOne(op)
     }
 
+    function method OpGas2(op: u8, s: State): State {
+        match s
+            case OK(st) => s.UseGas(1)
+            case _ => s 
+    }
+
+    function method OpSem2(op: u8, s: State): State {
+        match s
+            case OK(st) => 
+                (
+                    match OpSem(op)
+                        case Some(f) => f(s)
+                        case _ => State.INVALID
+                )
+            case _ => s 
+    }
+
     /** The semantics of opcodes.
      *
      *  @param op   The opcode to look up.

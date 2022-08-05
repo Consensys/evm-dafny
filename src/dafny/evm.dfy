@@ -30,6 +30,8 @@ abstract module EVM {
      */
     function method OpSem(op: u8): Option<OKState -> State> 
 
+    function method OpSem2(op: u8, s: State) : (s': State) 
+
     /** The gas cost of opcodes.
      *
      *  @param op   The opcode to look up.
@@ -37,6 +39,8 @@ abstract module EVM {
      *              or `None` if no defined/implemented.
      */
     function method OpGas(op: u8): Option<OKState -> nat> 
+
+    function method OpGas2(op: u8, s: State): State 
 
     /**
      *  Execute the next instruction.
@@ -47,7 +51,7 @@ abstract module EVM {
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
-    function method Execute(st:State) : State
+    function method Execute2(st:State) : State
       // To execute a bytecode requires the machine is in a non-terminal state.
       requires !st.IsFailure()
       requires st.PC() < Code.Size(st.evm.code) as nat
@@ -59,6 +63,13 @@ abstract module EVM {
         else
           // Invalid/unsupported opcode
           State.INVALID
+    }
+
+    function method Execute(st:State) : State
+    {
+        match st.Decode2()  
+          case Some(opcode) => OpSem2(opcode, OpGas2(opcode, st))
+          case None => State.INVALID
     }
 
   /**
