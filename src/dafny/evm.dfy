@@ -25,50 +25,36 @@ abstract module EVM {
     /** The semantics of opcodes.
      *
      *  @param op   The opcode to look up.
-     *  @returns    The state transformer that corresponds to the opcode 
-     *              or `None` if no defined/implemented.
+     *  @param s    The state to apply the opcode to.
+     *  @returns    The new state obtained after applying the semantics
+     *              of the opcode. 
+     *  @note       If an opcode is not supported, or there is not enough gas 
+     *              the returned state is INVALID.
      */
-    function method OpSem(op: u8): Option<OKState -> State> 
+    function method OpSem(op: u8, s: State): State 
 
-    function method OpSem2(op: u8, s: State) : (s': State) 
-
-    /** The gas cost of opcodes.
+    /** The gas cost semantics of an opcode.
      *
      *  @param op   The opcode to look up.
-     *  @returns    The gas cost function that corresponds to the opcode 
-     *              or `None` if no defined/implemented.
+     *  @param s    A state.
+     *  @returns    The new state obtained having consumed the gas that corresponds to
+     *              the cost of `opcode` is `s`.
      */
-    function method OpGas(op: u8): Option<OKState -> nat> 
-
-    function method OpGas2(op: u8, s: State): State 
+    function method OpGas(op: u8, s: State): State 
 
     /**
      *  Execute the next instruction.
      *  
-     *  @param  st  A non-failure state.
+     *  @param  st  A state.
      *  @returns    The state reached after executing the instruction 
      *              pointed to by 'st.PC()'. 
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
-    function method Execute2(st:State) : State
-      // To execute a bytecode requires the machine is in a non-terminal state.
-      requires !st.IsFailure()
-      requires st.PC() < Code.Size(st.evm.code) as nat
-      {
-        var opcode := st.Decode();
-        if OpSem(opcode).Some? && OpGas(opcode).Some? && st.Gas() >= (OpGas(opcode).v)(st) as nat then
-          //  Note: OpSem and OpGas not commutative.
-          (OpSem(opcode).v)(st.UseGas((OpGas(opcode).v)(st)))
-        else
-          // Invalid/unsupported opcode
-          State.INVALID
-    }
-
     function method Execute(st:State) : State
     {
         match st.OpDecode()  
-          case Some(opcode) => OpSem2(opcode, OpGas2(opcode, st))
+          case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
           case None => State.INVALID
     }
 
