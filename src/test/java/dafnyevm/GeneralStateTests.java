@@ -102,7 +102,6 @@ public class GeneralStateTests {
 				code = tx.data;
 				storage = new HashMap<>();
 			}
-			System.out.println("RUNNING: " + instance + " : " + Hex.toHexString(code) + " (" + code.length + "bytes)");
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
