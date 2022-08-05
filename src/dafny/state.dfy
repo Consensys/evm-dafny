@@ -18,6 +18,7 @@ include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 include "opcodes.dfy"
+include "util/ExtraTypes.dfy"
 
 module EvmState {
     import opened Int
@@ -27,6 +28,7 @@ module EvmState {
     import Context
     import Code
     import Opcode
+    import ExtraTypes
 
     datatype T = EVM(
         context: Context.T,
@@ -185,6 +187,15 @@ module EvmState {
          */
         function method Decode() : u8
         requires !IsFailure() { Code.DecodeUint8(evm.code,evm.pc as nat) }
+
+        /**
+         * Decode next opcode from machine. 
+         */
+        function method OpDecode() : ExtraTypes.Option<u8>
+        { 
+            if this.IsFailure() then ExtraTypes.None
+            else ExtraTypes.Some(Code.DecodeUint8(evm.code,evm.pc as nat))
+        }
 
         /**
          * Move program counter to a given location.
