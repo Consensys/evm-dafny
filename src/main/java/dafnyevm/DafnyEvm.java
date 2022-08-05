@@ -27,6 +27,7 @@ import EvmState_Compile.State_REVERTS;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.DafnySet;
+import dafnyevm.util.Bytecodes;
 import dafnyevm.util.Hex;
 import dafnyevm.util.Tracers;
 
@@ -171,7 +172,7 @@ public class DafnyEvm {
 		 */
 		public int getOpcode() {
 			State_OK sok = (State_OK) state;
-			return sok.evm.code.contents.select(sok.evm.pc).intValue() & 0xff;
+			return sok.Decode() & 0xff;
 		}
 
 		/**
@@ -226,7 +227,7 @@ public class DafnyEvm {
 			byte[] bytes = new byte[getMemorySize()];
 			//
 			DafnySet<? extends BigInteger> keys = memory.keySet();
-			// Determine largest address in use!
+			// Write used addresses only :)
 			for (BigInteger key : keys.Elements()) {
 				int address = key.intValueExact();
 				bytes[address] = memory.get(key);
@@ -237,19 +238,9 @@ public class DafnyEvm {
 
 		public int getMemorySize() {
 			State_OK sok = (State_OK) state;
-			DafnyMap<? extends BigInteger, ? extends Byte> memory = sok.evm.memory.contents;
-			DafnySet<? extends BigInteger> keys = memory.keySet();
-			BigInteger max = BigInteger.ZERO;
-			// Determine largest address in use!
-			for (BigInteger addr : keys.Elements()) {
-				addr = addr.add(BigInteger.ONE);
-				if (max.compareTo(addr) < 0) {
-					max = addr;
-				}
-			}
-			return max.intValueExact();
+			BigInteger size = sok.evm.memory.size;
+			return size.intValueExact();
 		}
-
 
 		/**
 		 * Get the state of the stack when the machine halted.
