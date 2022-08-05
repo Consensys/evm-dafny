@@ -19,7 +19,7 @@ module EvmBerlin refines EVM {
     import opened Opcode
     import Bytecode
     import Gas
- 
+
     /** An empty VM, with some gas.
      *
      *  @param  g   The gas loaded in this EVM.
@@ -28,7 +28,7 @@ module EvmBerlin refines EVM {
     function method InitEmpty(g: nat): State
         ensures !InitEmpty(g).IsFailure()
     {
-        var tx := Context.Create(0x0,0,0,[],0); 
+        var tx := Context.Create(0x0,0,0,[],0);
         Create(tx, map[], g, [])
     }
 
@@ -41,8 +41,8 @@ module EvmBerlin refines EVM {
      */
     function method OpGas(op: u8, s: State): State {
         match s
-            case OK(_) => Gas.UseOneGas(op, s)   
-            case _ => s 
+            case OK(_) => Gas.UseOneGas(op, s)
+            case _ => s
     }
 
     /** The semantics of opcodes.
@@ -50,13 +50,13 @@ module EvmBerlin refines EVM {
      *  @param op   The opcode to look up.
      *  @param s    The state to apply the opcode to.
      *  @returns    The new state obtained after applying the semantics
-     *              of the opcode. 
-     *  @note       If an opcode is not supported, or there is not enough gas 
+     *              of the opcode.
+     *  @note       If an opcode is not supported, or there is not enough gas
      *              the returned state is INVALID.
      */
     function method OpSem(op: u8, s: State): State {
         match s
-            case OK(st) => 
+            case OK(st) =>
                 (
                     match op
                         case STOP =>  Bytecode.Stop(s)
@@ -69,7 +69,7 @@ module EvmBerlin refines EVM {
                         case SMOD =>  Bytecode.SMod(s)
                         case ADDMOD =>  Bytecode.AddMod(s)
                         case MULMOD =>  Bytecode.MulMod(s)
-                        //  EXP =>  Bytecode.evalEXP(s),
+                        case EXP =>  Bytecode.Exp(s)
                         //  SIGNEXTEND =>  Bytecode.evalSIGNEXTEND(s),
                         // 0x10s: Comparison & Bitwise Logic
                         case LT =>  Bytecode.Lt(s)
@@ -208,18 +208,18 @@ module EvmBerlin refines EVM {
                         // SELFDESTRUCT := Some((s:OKState) => Bytecode.evalSELFDESTRUCT(s),)
                         case _ => State.INVALID
                         )
-            case _ => s 
+            case _ => s
     }
 
-    //  The following should be embedded directly into the function `OpSem`. 
+    //  The following should be embedded directly into the function `OpSem`.
 
     /** The semantics of opcodes.
      *
      *  @param op   The opcode to look up.
-     *  @returns    The state transformer that corresponds to the opcode 
+     *  @returns    The state transformer that corresponds to the opcode
      *              or `None` if no defined/implemented.
      */
-    function method OpSemInt(op: u8): Option<OKState -> State> 
+    function method OpSemInt(op: u8): Option<OKState -> State>
     {
         match op
             case STOP =>  Some((s:OKState) => Bytecode.Stop(s))
@@ -232,7 +232,7 @@ module EvmBerlin refines EVM {
             case SMOD =>  Some((s:OKState) => Bytecode.SMod(s))
             case ADDMOD =>  Some((s:OKState) => Bytecode.AddMod(s))
             case MULMOD =>  Some((s:OKState) => Bytecode.MulMod(s))
-            //  EXP =>  Some((s:OKState) => Bytecode.evalEXP(s),)
+            case EXP =>  Some((s:OKState) => Bytecode.Exp(s))
             //  SIGNEXTEND =>  Some((s:OKState) => Bytecode.evalSIGNEXTEND(s),)
             // 0x10s: Comparison & Bitwise Logic
             case LT =>  Some((s:OKState) => Bytecode.Lt(s))
