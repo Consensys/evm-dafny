@@ -125,15 +125,18 @@ module Int {
   // Exponent
   // =========================================================
 
-  /**
-   * Compute n^k.
-   */
-  function method Pow(n:int, k:nat) : int
-  requires k > 0 {
-    if k == 1 then n
-    else
-      n * Pow(n,k-1)
-  }
+    /**
+     * Compute n^k.
+     */
+    function method Pow(n:nat, k:nat) : int {
+        if k == 0 then 1
+        else if k == 1 then n
+        else
+            var p := k / 2;
+            var np := Pow(n,p);
+            if p*2 == k then np * np
+            else np * np * n
+    }
 
   // Various sanity tests for exponentiation.
   method PowTests() {

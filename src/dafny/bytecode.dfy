@@ -167,8 +167,8 @@ module Bytecode {
     }
 
     /**
-    * Unsigned integer modulo multiplication.
-    */
+     * Unsigned integer modulo multiplication.
+     */
     function method MulMod(st: State) : State
     requires !st.IsFailure() {
         //
@@ -179,6 +179,22 @@ module Bytecode {
             var rem := st.Peek(2) as int;
             var res := if rem == 0 then 0 else(lhs * rhs) % rem;
             st.Pop().Pop().Pop().Push(res as u256).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Exponential operation
+     */
+    function method Exp(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var base := st.Peek(0) as int;
+            var power := st.Peek(1) as int;
+            var res := Int.Pow(base,power) % TWO_256;
+            st.Pop().Pop().Push(res as u256).Next()
         else
             State.INVALID
     }

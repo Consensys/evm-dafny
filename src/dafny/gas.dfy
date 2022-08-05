@@ -15,8 +15,8 @@ include "util/int.dfy"
 include "opcodes.dfy"
 include "state.dfy"
 include "util/ExtraTypes.dfy"
-module Gas {
 
+module Gas {
 	import opened Opcode
 	import opened EvmState
     import opened Int
@@ -69,7 +69,7 @@ module Gas {
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
      */
-    function method GasBerlin(op: u8, s: OKState): State 
+    function method GasBerlin(op: u8, s: OKState): State
     {
         match op
             case STOP => s.UseGas(G_ZERO)
@@ -82,7 +82,7 @@ module Gas {
             case SMOD => s.UseGas(G_LOW)
             case ADDMOD => s.UseGas(G_MID)
             case MULMOD => s.UseGas(G_MID)
-            // EXP => s.UseGas(1)
+            case EXP => s.UseGas(G_EXP) // FIXME
             case SIGNEXTEND => s.UseGas(G_LOW)
             // 0x10s: Comparison & Bitwise Logic
             case LT => s.UseGas(G_VERYLOW)
@@ -208,7 +208,7 @@ module Gas {
             case SWAP16 => s.UseGas(G_VERYLOW)
             // 0xA0s: Log operations
             // else if LOG0 <=opcode <= LOG4 => Some((s:OKState))
-            //   var k => Some(opcode - LOG0) as int; evalLOG(st,k)) 
+            //   var k => Some(opcode - LOG0) as int; evalLOG(st,k))
             // 0xf0
             // CREATE => s.UseGas(1)
             // CALL => s.UseGas(1)
@@ -221,5 +221,4 @@ module Gas {
             case SELFDESTRUCT => s.UseGas(1)
             case _ => State.INVALID
     }
-
 }
