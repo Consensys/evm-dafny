@@ -14,6 +14,7 @@
 package dafnyevm;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
@@ -744,7 +745,61 @@ public class Tests {
 		assertArrayEquals(UINT256(0x7F0), output);
 	}
 
-	// Add more shift tests here!
+	@Test
+	public void test_shr_01() {
+		// 0x1FC >> 1 = 0xFE
+		byte[] output = call(new int[] { PUSH2, 0x1, 0xFC, PUSH1, 0x1, SHR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xFE), output);
+	}
+
+	@Test
+	public void test_shr_02() {
+		// 0x3F8 >> 2 = 0xFE
+		byte[] output = call(new int[] { PUSH2, 0x3, 0xF8, PUSH1, 0x2, SHR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xFE), output);
+	}
+
+	@Test
+	public void test_shr_03() {
+		// 0x7F0 >> 3 = 0xFE
+		byte[] output = call(new int[] { PUSH2, 0x7, 0xF0, PUSH1, 0x3, SHR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xFE), output);
+	}
+
+	@Test
+	public void test_sar_01() {
+		// (0 - 0x2) >> 1 = -0x1
+		byte[] output = call(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0x1), output);
+	}
+
+	@Test
+	public void test_sar_02() {
+		// 0x1FC >> 1 = 0xFE
+		byte[] output = call(new int[] { PUSH2, 0x1, 0xFC, PUSH1, 0x1, SAR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xFE), output);
+	}
+
+	@Test
+	public void test_sar_03() {
+		// (0 - 0x1FC) >> 1 = -0xFE
+		byte[] output = call(new int[] { PUSH2, 0x1, 0xFC, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0xFE), output);
+	}
+
+	@Test
+	public void test_sar_04() {
+		// (0 - 0x3F8) >> 2 = -0xFE
+		byte[] output = call(new int[] { PUSH2, 0x3, 0xF8, PUSH1, 0x0, SUB, PUSH1, 0x2, SAR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0xFE), output);
+	}
+
+	@Test
+	public void test_sar_05() {
+		// (0 - 0x7F0) >> 3 = -0xFE
+		byte[] output = call(new int[] { PUSH2, 0x7, 0xF0, PUSH1, 0x0, SUB, PUSH1, 0x3, SAR, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0xFE), output);
+	}
 
 	// ========================================================================
 	// LT / GT / SLT / SGT / EQ / ISZERO
@@ -1575,6 +1630,25 @@ public class Tests {
 		bytes[29] = (byte) ((x >> 16) & 0xFF);
 		bytes[28] = (byte) ((x >> 24) & 0xFF);
 		return bytes;
+	}
+
+	/**
+	 * Construct a 256bit representation (in big endian form) of a signed Java int.
+	 * @param x
+	 * @return
+	 */
+	private byte[] INT256(int x) {
+		if (x >= 0) {
+			return UINT256(x);
+		} else {
+			byte[] bytes = new byte[32];
+			Arrays.fill(bytes, 0, 31, (byte) 0xff);
+			bytes[31] = (byte) (x & 0xFF);
+			bytes[30] = (byte) ((x >> 8) & 0xFF);
+			bytes[29] = (byte) ((x >> 16) & 0xFF);
+			bytes[28] = (byte) ((x >> 24) & 0xFF);
+			return bytes;
+		}
 	}
 
 	/**

@@ -98,7 +98,7 @@ module Gas {
             case BYTE => s.UseGas(G_VERYLOW)
             case SHL => s.UseGas(G_VERYLOW)
             case SHR => s.UseGas(G_VERYLOW)
-            // SAR => s.UseGas(1)
+            case SAR => s.UseGas(G_VERYLOW)
             // 0x20s
             //  KECCAK256 => s.UseGas(1)
             // 0x30s: Environment Information
