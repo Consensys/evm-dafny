@@ -396,35 +396,49 @@ module Bytecode {
     }
 
     /**
-    * Left shift operation.
-    */
+     * Left shift operation.
+     */
     function method Shl(st: State) : State
     requires !st.IsFailure() {
         //
         if st.Operands() >= 2
         then
-            var lhs := st.Peek(0);
-            var rhs := st.Peek(1) as bv256;
-            // NOTE: unclear whether shifting is optimal choice here.
-            var res := if lhs < 256 then (rhs << lhs) else 0;
-            st.Pop().Pop().Push(res as u256).Next()
+            var rhs := st.Peek(0);
+            var lhs := st.Peek(1);
+            var res := U256.Shl(lhs,rhs);
+            st.Pop().Pop().Push(res).Next()
         else
             State.INVALID
     }
 
     /**
-    * Right shift operation.
-    */
+     * Right shift operation.
+     */
     function method {:verify false} Shr(st: State) : State
     requires !st.IsFailure() {
         //
         if st.Operands() >= 2
         then
-            var lhs := st.Peek(0);
-            var rhs := st.Peek(1) as bv256;
-            // NOTE: unclear whether shifting is optimal choice here.
-            var res := if lhs < 256 then (rhs >> lhs) else 0;
-            st.Pop().Pop().Push(res as u256).Next()
+            var rhs := st.Peek(0);
+            var lhs := st.Peek(1);
+            var res := U256.Shr(lhs,rhs);
+            st.Pop().Pop().Push(res).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Arithmetic (signed) right shift operation.
+     */
+    function method Sar(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var rhs := st.Peek(0);
+            var lhs := Word.asI256(st.Peek(1));
+            var res := I256.Sar(lhs,rhs);
+            st.Pop().Pop().Push(res).Next()
         else
             State.INVALID
     }
