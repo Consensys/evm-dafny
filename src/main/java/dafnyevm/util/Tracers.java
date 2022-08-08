@@ -67,7 +67,7 @@ public class Tracers {
 		@Override
 		public void step(DafnyEvm.SnapShot state) {
 			final String p = state.getPC().toString();
-			final String m = Arrays.toString(state.getMemory());
+			final String m = state.getMemory().toString();
 			final String s = state.getStorage().toString();
 			final String a = state.getStack().toString();
 			String st = String.format("pc=%s, storage=%s, memory=%s, stack=%s", p, s, m, a);
@@ -104,11 +104,11 @@ public class Tracers {
 				obj.key("pc").value(state.getPC());
 				obj.key("op").value(state.getOpcode());
 				obj.key("gas").value(Hex.toHexString(state.getRemainingGas()));
-				byte[] mem = state.getMemory();
-				if (mem.length > 0) {
+				if (state.getMemorySize() > 0) {
+					byte[] mem = DafnySequence.toByteArray((DafnySequence) state.getMemory());
 					obj.key("memory").value(Hex.toHexString(mem));
 				}
-				obj.key("memSize").value(mem.length);
+				obj.key("memSize").value(state.getMemorySize());
 				obj.key("stack").value(toStackArray(state.getStack()));
 				// TODO: update this when internal contract calls are supported.
 				obj.key("depth").value(1);
