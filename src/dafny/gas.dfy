@@ -222,3 +222,4 @@ module Gas {
             case _ => State.INVALID
     }
 }
+

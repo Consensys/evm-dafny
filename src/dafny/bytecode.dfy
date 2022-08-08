@@ -388,8 +388,8 @@ module Bytecode {
         if st.Operands() >= 2
         then
             var val := st.Peek(1);
-            var k := st.Peek(0);
-            var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
+            var k := st.Peek(0) as nat;
+            var res := if k < 32 then U256.NthUint8(val,k) else 0;
             st.Pop().Pop().Push(res as u256).Next()
         else
             State.INVALID
@@ -539,15 +539,15 @@ module Bytecode {
         //
         if st.Operands() >= 3
         then
-            var m_loc := st.Peek(0);
+            var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
-            var len := st.Peek(2) as int;
-            var last := (m_loc as int) + len;
+            var len := st.Peek(2) as nat;
+
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if last < MAX_U256
+            if m_loc + len < |st.evm.memory.contents|
             then
                 // Slice bytes out of call data (with padding as needed)
                 var data := Context.DataSlice(st.evm.context,d_loc,len as u256);
@@ -582,7 +582,7 @@ module Bytecode {
         //
         if st.Operands() >= 3
         then
-            var m_loc := st.Peek(0);
+            var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
             var last := (m_loc as int) + len;
@@ -590,7 +590,7 @@ module Bytecode {
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if last < MAX_U256
+            if m_loc + len < |st.evm.memory.contents|
             then
                 // Slice bytes out of code (with padding as needed)
                 var data := Code.Slice(st.evm.code,d_loc,len);
@@ -663,16 +663,16 @@ module Bytecode {
         //
         if st.Operands() >= 1
         then
-            var loc := st.Peek(0);
+            var loc := st.Peek(0) as nat;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (loc as int) + 31 <= MAX_U256
+            if loc + 31 < |st.evm.memory.contents|
                 then
                 var val := st.Read(loc);
                 // Write big endian order
-                st.Expand(loc+31).Pop().Push(val).Next()
+                st.Pop().Push(val).Next()
             else
                 State.INVALID
         else
@@ -694,12 +694,14 @@ module Bytecode {
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (loc as int) + 31 <= MAX_U256
+            if (loc as nat) + 31 < |st.evm.memory.contents|
                 then
                 // Write big endian order
-                st.Expand(loc+31).Pop().Pop().Write(loc,val).Next()
+                st.Pop().Pop().Write(loc as nat,val).Next()
             else
-                State.INVALID
+                //State.INVALID
+                var newMem := Memory.Expand(st.evm.memory, loc as nat, 31);
+                st.Expand(st.evm.memory, loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next()    
         else
         State.INVALID
     }
@@ -712,9 +714,9 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            var loc := st.Peek(0);
+            var loc := st.Peek(0) as nat;
             var val := (st.Peek(1) % 256) as u8;
-            if (loc as int) < MAX_U256
+            if loc < |st.evm.memory.contents|
                 then
                 // Write byte
                 st.Expand(loc).Pop().Pop().Write8(loc,val).Next()
@@ -926,13 +928,13 @@ module Bytecode {
         if st.Operands() >= 2
         then
             // Determine amount of data to return.
-            var len := st.Peek(1) as int;
-            var start := st.Peek(0) as int;
+            var len := st.Peek(1) as nat;
+            var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) <= MAX_U256
+            if (start+len) < |st.evm.memory.contents|
             then
                 // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start as u256, len);
+                var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
                 State.RETURNS(gas:=st.evm.gas,data:=data)
             else
@@ -950,13 +952,13 @@ module Bytecode {
         if st.Operands() >= 2
         then
             // Determine amount of data to return.
-            var len := st.Peek(1) as int;
-            var start := st.Peek(0) as int;
+            var len := st.Peek(1) as nat;
+            var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) <= MAX_U256
+            if (start+len) < |st.evm.memory.contents|
             then
                 // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start as u256, len);
+                var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
                 State.REVERTS(gas:=st.evm.gas,data:=data)
             else
