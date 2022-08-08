@@ -35,10 +35,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import dafny.DafnyMap;
+import dafnyevm.util.Bytecodes;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
 import evmtools.core.WorldState;
+import evmtools.util.Hex;
 
 /**
  * A test runner for executing the <code>GeneralStateTests</code> provided as
@@ -157,35 +159,54 @@ public class GeneralStateTests {
 	// ======================================================================
 
 	public static Stream<TraceTest.Instance> readTestFiles(Path dir) throws IOException {
-		ArrayList<TraceTest.Instance> testcases = new ArrayList<>();
+		ArrayList<Path> testfiles = new ArrayList<>();
 		//
 		Files.walk(dir).forEach(f -> {
 			if (f.toString().endsWith(".json")) {
-				try {
-					// Read contents of fixture file
-					String contents = Files.readString(f);
-					// Convert fixture into JSON
-					JSONObject json = new JSONObject(contents);
-					// Parse into one or more tests
-					for(String test : JSONObject.getNames(json)) {
-						TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
-						if(tt.hasInstances(FORK)) {
-							// Add all instances
-							testcases.addAll(tt.getInstances(FORK));
-						}
-					}
-				} catch(JSONException e) {
-					System.out.println("Problem parsing file into JSON (" + f + ")");
-				} catch(IOException e) {
-					System.out.println("Problem reading file (" + f + ")");
-				} catch(Exception e) {
-					System.out.println("Problem reading file (" + f + ")");
-					e.printStackTrace();
-				}
+				testfiles.add(f);
 			}
 		});
 		// Instantiate each state test into one or more
-		return testcases.stream();
+		return streamTestsFromFiles(testfiles.stream());
+	}
+
+	/**
+	 * Given a stream of filenames convert this into a stream of test instances. The
+	 * reason for doing this is that it can be done lazily, therefore reducing
+	 * overall memory footprint.
+	 *
+	 * @param files
+	 * @return
+	 */
+	private static Stream<TraceTest.Instance> streamTestsFromFiles(Stream<Path> files) {
+		return files.flatMap(f -> {
+			try {
+				// Read contents of fixture file
+				String contents = Files.readString(f);
+				// Convert fixture into JSON
+				JSONObject json = new JSONObject(contents);
+				// Parse into one or more tests
+				ArrayList<TraceTest.Instance> instances = new ArrayList<>();
+				for (String test : JSONObject.getNames(json)) {
+					TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
+					if (tt.hasInstances(FORK)) {
+						// Add all instances
+						instances.addAll(tt.getInstances(FORK));
+					}
+				}
+				return instances.stream();
+			} catch (JSONException e) {
+				System.out.println("Problem parsing file into JSON (" + f + ")");
+				return null;
+			} catch (IOException e) {
+				System.out.println("Problem reading file (" + f + ")");
+				return null;
+			} catch (Exception e) {
+				System.out.println("Problem reading file (" + f + ")");
+				e.printStackTrace();
+				return null;
+			}
+		});
 	}
 
 	public static class StructuredTracer extends DafnyEvm.TraceAdaptor {
@@ -199,18 +220,24 @@ public class GeneralStateTests {
 		public void step(DafnyEvm.SnapShot state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
-			byte[] memory = state.getMemory();
-			BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
-			DafnyMap<? extends BigInteger, ? extends BigInteger> rawStorage = state.getStorage();
-			HashMap<BigInteger, BigInteger> storage = new HashMap<>();
-			for (BigInteger addr : storage.keySet()) {
-				storage.put(addr, rawStorage.get(addr));
+			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
+			// the invalid bytecode.
+			if(op != Bytecodes.INVALID) {
+				byte[] memory = state.getMemory();
+				BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
+				DafnyMap<? extends BigInteger, ? extends BigInteger> rawStorage = state.getStorage();
+				HashMap<BigInteger, BigInteger> storage = new HashMap<>();
+				for (BigInteger addr : storage.keySet()) {
+					storage.put(addr, rawStorage.get(addr));
+				}
+				// NOTE: we need to reverse the stack elements here as the Dafny stores them
+				// internally with index at zero.
+				Collections.reverse(Arrays.asList(stack));
+				//
+				out.add(new Trace.Step(pc, op, stack, memory, storage));
+			} else {
+				System.out.println("SKIPPING");
 			}
-			// NOTE: we need to reverse the stack elements here as the Dafny stores them
-			// internally with index at zero.
-			Collections.reverse(Arrays.asList(stack));
-			//
-			out.add(new Trace.Step(pc, op, stack, memory, storage));
 		}
 
 		@Override

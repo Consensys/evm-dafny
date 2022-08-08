@@ -167,8 +167,8 @@ module Bytecode {
     }
 
     /**
-    * Unsigned integer modulo multiplication.
-    */
+     * Unsigned integer modulo multiplication.
+     */
     function method MulMod(st: State) : State
     requires !st.IsFailure() {
         //
@@ -179,6 +179,22 @@ module Bytecode {
             var rem := st.Peek(2) as int;
             var res := if rem == 0 then 0 else(lhs * rhs) % rem;
             st.Pop().Pop().Pop().Push(res as u256).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Exponential operation
+     */
+    function method Exp(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var base := st.Peek(0) as int;
+            var power := st.Peek(1) as int;
+            var res := Int.Pow(base,power) % TWO_256;
+            st.Pop().Pop().Push(res as u256).Next()
         else
             State.INVALID
     }
@@ -380,35 +396,49 @@ module Bytecode {
     }
 
     /**
-    * Left shift operation.
-    */
+     * Left shift operation.
+     */
     function method Shl(st: State) : State
     requires !st.IsFailure() {
         //
         if st.Operands() >= 2
         then
-            var lhs := st.Peek(0);
-            var rhs := st.Peek(1) as bv256;
-            // NOTE: unclear whether shifting is optimal choice here.
-            var res := if lhs < 256 then (rhs << lhs) else 0;
-            st.Pop().Pop().Push(res as u256).Next()
+            var rhs := st.Peek(0);
+            var lhs := st.Peek(1);
+            var res := U256.Shl(lhs,rhs);
+            st.Pop().Pop().Push(res).Next()
         else
             State.INVALID
     }
 
     /**
-    * Right shift operation.
-    */
+     * Right shift operation.
+     */
     function method {:verify false} Shr(st: State) : State
     requires !st.IsFailure() {
         //
         if st.Operands() >= 2
         then
-            var lhs := st.Peek(0);
-            var rhs := st.Peek(1) as bv256;
-            // NOTE: unclear whether shifting is optimal choice here.
-            var res := if lhs < 256 then (rhs >> lhs) else 0;
-            st.Pop().Pop().Push(res as u256).Next()
+            var rhs := st.Peek(0);
+            var lhs := st.Peek(1);
+            var res := U256.Shr(lhs,rhs);
+            st.Pop().Pop().Push(res).Next()
+        else
+            State.INVALID
+    }
+
+    /**
+     * Arithmetic (signed) right shift operation.
+     */
+    function method Sar(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var rhs := st.Peek(0);
+            var lhs := Word.asI256(st.Peek(1));
+            var res := I256.Sar(lhs,rhs);
+            st.Pop().Pop().Push(res).Next()
         else
             State.INVALID
     }
@@ -512,6 +542,7 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
             var len := st.Peek(2) as nat;
+
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
@@ -519,11 +550,11 @@ module Bytecode {
             if m_loc + len < |st.evm.memory.contents|
             then
                 // Slice bytes out of call data (with padding as needed)
-                var data := Context.DataSlice(st.evm.context,d_loc,len);
+                var data := Context.DataSlice(st.evm.context,d_loc,len as u256);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -554,6 +585,7 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
+            var last := (m_loc as int) + len;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
@@ -565,7 +597,7 @@ module Bytecode {
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -687,7 +719,7 @@ module Bytecode {
             if loc < |st.evm.memory.contents|
                 then
                 // Write byte
-                st.Pop().Pop().Write8(loc as nat,val).Next()
+                st.Expand(loc).Pop().Pop().Write8(loc,val).Next()
             else
                 State.INVALID
         else
@@ -772,10 +804,9 @@ module Bytecode {
     */
     function method Pc(st: State) : State
     requires !st.IsFailure()
-    requires st.PC() <= MAX_U256
     {
         //
-        if st.Capacity() >= 1
+        if st.Capacity() >= 1 && st.PC() <= MAX_U256
         then
             st.Push(st.PC() as u256).Next()
         else

@@ -45,11 +45,10 @@ module Code {
    */
   function method Size(c:T) : u256 { |c.contents| as u256 }
 
-  function method DecodeUint8(c:T, address:nat) : u8
-    // Decode position must be valid.
-    requires address < |c.contents| {
-      // Read word at given location
-      c.contents[address]
+  function method DecodeUint8(c:T, address:nat) : u8 {
+    // Read word at given location
+    if address < |c.contents| then c.contents[address]
+    else 0 // Opcodes.STOP
   }
 
   /**
