@@ -550,11 +550,11 @@ module Bytecode {
             if m_loc + len < |st.evm.memory.contents|
             then
                 // Slice bytes out of call data (with padding as needed)
-                var data := Context.DataSlice(st.evm.context,d_loc,len as u256);
+                var data := Context.DataSlice(st.evm.context,d_loc,len as nat);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -585,7 +585,7 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
-            var last := (m_loc as int) + len;
+            var last := (m_loc as nat) + len;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
@@ -597,7 +597,7 @@ module Bytecode {
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc as nat, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -700,8 +700,7 @@ module Bytecode {
                 st.Pop().Pop().Write(loc as nat,val).Next()
             else
                 //State.INVALID
-                var newMem := Memory.Expand(st.evm.memory, loc as nat, 31);
-                st.Expand(st.evm.memory, loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next()    
+                st.Expand(loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next()    
         else
         State.INVALID
     }
@@ -719,7 +718,7 @@ module Bytecode {
             if loc < |st.evm.memory.contents|
                 then
                 // Write byte
-                st.Expand(loc).Pop().Pop().Write8(loc,val).Next()
+                st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
             else
                 State.INVALID
         else
