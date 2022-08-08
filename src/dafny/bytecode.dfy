@@ -85,6 +85,64 @@ module Bytecode {
             State.INVALID
     }
 
+// =============================================================================
+    // Helpers
+    // =============================================================================
+
+    /**
+    * Unsigned integer division with handling for zero.
+    */
+    function method DivWithZero(lhs:u256, rhs:u256) : u256 {
+        if rhs == 0 then 0 as u256
+        else
+        (lhs / rhs) as u256
+    }
+
+    /**
+    * Unsigned integer remainder with handling for zero.
+    */
+    function method ModWithZero(lhs:u256, rhs:u256) : u256 {
+        if rhs == 0 then 0 as u256
+        else
+        (lhs % rhs) as u256
+    }
+
+    /**
+    * Signed integer division with handling for zero and overflow.
+    * A key challenge here is that, in Dafny, division is Euclidean
+    * (i.e. rounds down).  In contrast, division on the EVM is
+    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+    * use Dafny's division operator as is for implementing SDIV
+    * (though for DIV it is OK).  Instead, we have to explicitly
+    * manage the cases for negative operands.
+    */
+    function method SDivWithZero(lhs:i256, rhs:i256) : i256 {
+        if rhs == 0 then 0 as i256
+        else if rhs == -1 && lhs == (-TWO_255 as i256)
+        then
+        -TWO_255 as i256
+        else
+        // Do not use Dafny's division operator here!
+        I256.div(lhs,rhs)
+    }
+
+    /**
+    * Signed integer remainder with handling for zero.
+    * A key challenge here is that, in Dafny, division is Euclidean
+    * (i.e. rounds down).  In contrast, division on the EVM is
+    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+    * use Dafny's remainder operator as is for implementing SMOD
+    * (though for MOD it is OK).  Instead, we have to explicitly
+    * manage the cases for negative operands.
+    */
+    function method SModWithZero(lhs:i256, rhs:i256) : i256 {
+        if rhs == 0 then 0 as i256
+        else
+        // Do not use Dafny's remainder operator here!
+        I256.Rem(lhs,rhs)
+    }
+
+    
     /**
     * Unsigned integer division.
     */
@@ -389,7 +447,7 @@ module Bytecode {
         then
             var val := st.Peek(1);
             var k := st.Peek(0) as nat;
-            var res := if k < 32 then U256.NthUint8(val,k) else 0;
+            var res := if k < 32 then U256.NthUint8(val,k) else 0 as u8;
             st.Pop().Pop().Push(res as u256).Next()
         else
             State.INVALID
@@ -965,61 +1023,5 @@ module Bytecode {
         else
             State.INVALID
     }
-
-    // =============================================================================
-    // Helpers
-    // =============================================================================
-
-    /**
-    * Unsigned integer division with handling for zero.
-    */
-    function method DivWithZero(lhs:u256, rhs:u256) : u256 {
-        if rhs == 0 then 0 as u256
-        else
-        (lhs / rhs) as u256
-    }
-
-    /**
-    * Unsigned integer remainder with handling for zero.
-    */
-    function method ModWithZero(lhs:u256, rhs:u256) : u256 {
-        if rhs == 0 then 0 as u256
-        else
-        (lhs % rhs) as u256
-    }
-
-    /**
-    * Signed integer division with handling for zero and overflow.
-    * A key challenge here is that, in Dafny, division is Euclidean
-    * (i.e. rounds down).  In contrast, division on the EVM is
-    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
-    * use Dafny's division operator as is for implementing SDIV
-    * (though for DIV it is OK).  Instead, we have to explicitly
-    * manage the cases for negative operands.
-    */
-    function method SDivWithZero(lhs:i256, rhs:i256) : i256 {
-        if rhs == 0 then 0 as i256
-        else if rhs == -1 && lhs == (-TWO_255 as i256)
-        then
-        -TWO_255 as i256
-        else
-        // Do not use Dafny's division operator here!
-        I256.div(lhs,rhs)
-    }
-
-    /**
-    * Signed integer remainder with handling for zero.
-    * A key challenge here is that, in Dafny, division is Euclidean
-    * (i.e. rounds down).  In contrast, division on the EVM is
-    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
-    * use Dafny's remainder operator as is for implementing SMOD
-    * (though for MOD it is OK).  Instead, we have to explicitly
-    * manage the cases for negative operands.
-    */
-    function method SModWithZero(lhs:i256, rhs:i256) : i256 {
-        if rhs == 0 then 0 as i256
-        else
-        // Do not use Dafny's remainder operator here!
-        I256.Rem(lhs,rhs)
-    }
+    
 }
