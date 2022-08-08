@@ -40,20 +40,6 @@ module Memory {
      */
     function method Size(mem:T) : nat { |mem.contents| }
 
-    /**
-     * Expand memory to include the given address.  Note that the EVM dictates that
-     * expansion happens in multiples of 32bytes.
-     */
-
-    function method
-        max(n: nat, m: nat): nat
-            {
-                if m <= n
-                    then n
-                else
-                    m
-            }
-
     function method
         ceiling(n: nat, m: nat): (o: nat)
         requires m > 0
