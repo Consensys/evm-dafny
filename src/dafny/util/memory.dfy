@@ -12,6 +12,7 @@
  * under the License.
  */
 include "int.dfy"
+include "bytes.dfy"
 
 /**
  * Memory on the EVM is a byte-addressable (volatile) random access memory.
@@ -19,6 +20,7 @@ include "int.dfy"
 module Memory {
     import opened Int
     import U256
+    import opened Bytes
 
     // =============================================================================
     // Random Access Memory
@@ -30,7 +32,7 @@ module Memory {
      * Create a memory from an initial sequence of words.
      */
     function method Create() : T {
-        Memory(contents:=[])    
+        Memory(contents:=[])
     }
 
     /**
@@ -42,19 +44,69 @@ module Memory {
      * Expand memory to include the given address.  Note that the EVM dictates that
      * expansion happens in multiples of 32bytes.
      */
-     /* the following no longer works with the new memory model. Not removing it for now, but it is best to be removed. */
-     /*
-    function method Expand(mem:T, address: nat) : T {
-      // Round up size to multiple of 32.
-      var rounded := RoundUp((address)+1,32);
-      mem.(size:=Max(|mem.contents|,rounded))
+
+    function method
+        max(n: nat, m: nat): nat
+            {
+                if m <= n
+                    then n
+                else
+                    m
+            }
+
+    function method
+        ceiling(n: nat, m: nat): (o: nat)
+        requires m > 0
+        ensures n / m <= o <= n / m + 1
+            {
+                if n % m == 0
+                    then n / m
+                else 
+                    (n / m) + 1
+            }
+
+    /* this is the function M (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13) */
+    function method
+        maxMemoryUsedSizeExpansion(s: nat, f: nat, l: nat): nat
+            {
+                if  l == 0
+                    then s
+                else
+                    max(s, ceiling(f + l, 32))
+            }
+            
+    function method Expand(mem:T, address: nat, length: nat) : T {
+        if length == 0
+          then mem
+        else
+          if address + length < |mem.contents|
+            then mem
+          else 
+            var expansionAmount := (address + length + 1 - |mem.contents|) * 32;
+            mem.(contents := mem.contents + Padding(expansionAmount))
     }
-    */
+
+    /* implements the function M in (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13), and expands the memory if needed */
+    function method Expand_CompleteVersion(mem:T, address: nat, length: nat) : T {
+      if length == 0
+        then mem
+      else
+        var checkForExpanansion := maxMemoryUsedSizeExpansion(|mem.contents|, address, length);
+        if checkForExpanansion == |mem.contents|
+          then mem
+        else 
+          var expansionAmount := (checkForExpanansion - |mem.contents|) * 32;
+          mem.(contents := mem.contents + Padding(expansionAmount))
+     
+      // Round up size to multiple of 32.
+     // var rounded := RoundUp((address as nat)+1,32);
+     // mem.(size:=Max(mem.size,rounded))
+    }
+
     /**
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
-     /* technically the branch undr else should throw an invalid-memory-access error */
     function method ReadUint8(mem:T, address:nat) : u8 {
         // Read location
         if address < |mem.contents|
@@ -122,10 +174,11 @@ module Memory {
     /**
      * Write a byte to a given address in Memory.
      */
+
     function method WriteUint8(mem:T, address:nat, val:u8) : T
-    requires address < |mem.contents| {
+        requires address < |mem.contents| {
+        // Update size calc.
         // Write location
-        
         Memory(contents:=mem.contents[address:=val])
     }
 

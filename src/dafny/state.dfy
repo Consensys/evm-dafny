@@ -122,12 +122,12 @@ module EvmState {
         /**
          * Expand memory for given address.
          */
-        /* 
-        function method Expand(address: u256) : State
+         
+        function method Expand(address: nat, len: nat) : State
         requires !IsFailure() {
-            OK(evm.(memory:=Memory.Expand(evm.memory,address)))
+            OK(evm.(memory:=Memory.Expand(evm.memory,address,len)))
         }
-        */
+        
 
         /**
         * Read word from byte address in memory.

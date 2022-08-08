@@ -667,7 +667,9 @@ module Bytecode {
                 // Write big endian order
                 st.Pop().Pop().Write(loc as nat,val).Next()
             else
-                State.INVALID
+                //State.INVALID
+                var newMem := Memory.Expand(st.evm.memory, loc as nat, 31);
+                st.Expand(st.evm.memory, loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next()    
         else
         State.INVALID
     }
