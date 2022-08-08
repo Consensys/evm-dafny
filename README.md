@@ -6,12 +6,114 @@
 
  <!-- ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/PegaSysEng/eth2.0-dafny?style=flat) -->
 
-# Overview / Objectives
+# Table of Contents
+
+1. [Overview](#overview)
+   1. [Dafny](#dafny)
+   1. [Example](#example)
+1. [Building](#building-the-code)
+1. [Contributing](#contributing)
+1. [Resources](#resources)
+
+# Overview
 
 The aim of this project is to develop a functional specification of
 the [Ethereum Virtual
 Machine](https://ethereum.org/en/developers/docs/evm/) in
-[Dafny](https://github.com/dafny-lang/dafny).
+[Dafny](https://github.com/dafny-lang/dafny).  Developing this
+specification in Dafny allows us to apply [formal
+reasoning](https://en.wikipedia.org/wiki/Formal_methods) to Smart
+Contracts at the EVM Bytecode level.  For example, one can prove that
+certain key properties are maintained by the contract.  We choose
+Dafny over other verification systems
+(e.g. [Coq](https://en.wikipedia.org/wiki/Coq) or
+[Isabelle/HOL](https://en.wikipedia.org/wiki/Isabelle_(proof_assistant)))
+because it is relatively accessible to someone without significant
+prior experience.
+
+Our functional specification is also _executable_, meaning that we can
+run contracts using it and compare their output with existing clients
+(e.g. [Geth](https://geth.ethereum.org/)).  In particular, we are
+interested in comparing against the [Ethereum Reference
+Tests](https://github.com/ethereum/tests) and have made some progress
+towards this.
+
+## Dafny
+
+[Dafny](https://github.com/dafny-lang/dafny) supports automated
+software verification by leveraging the power of state-of-the-art
+automated theorem provers (e.g with [SMT
+solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)
+like [Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover)).  This
+means Dafny can prove a program is **correct** with respect to its
+specification.  To do this, Dafny requires the developer to provide
+[preconditions](https://en.wikipedia.org/wiki/Precondition) and
+[postconditions](https://en.wikipedia.org/wiki/Postcondition) where
+appropriate, along with [loop
+invariants](https://en.wikipedia.org/wiki/Loop_invariant) as
+necessary.
+
+_In this project, we are providing a specification of the Ethereum
+Virtual Machine against which other programs (e.g. in EVM Bytecode)
+can be verified._
+
+## Example
+
+As a simple example, consider the following specification given for
+the [`ADD`](https://ethereum.org/en/developers/docs/evm/opcodes/)
+bytecode:
+
+```Dafny
+/**
+ * Unsigned integer addition with modulo arithmetic.
+ */
+function method Add(st: State) : State
+requires !st.IsFailure() {
+  var OK(vm) := st;
+  //
+  if st.Operands() >= 2
+  then
+    var lhs := st.Peek(0) as int;
+    var rhs := st.Peek(1) as int;
+    var res := (lhs + rhs) % TWO_256;
+    st.Pop().Pop().Push(res as u256).Next()
+  else
+    State.INVALID
+}
+```
+
+This tells us that `ADD` requires _two operands_ on the stack
+(otherwise, the exceptional `INVALID` state is reached).  Furthermore,
+addition employs _modulo arithmetic_ (hence, overflows wrap around)
+and that the final result is pushed onto the stack after the operands
+are popped.
+
+# Building the Code
+
+This repository uses [`gradle`](https://gradle.org/) as the de facto
+build system.  To build the code, you need the following components:
+
+* **[Java 11](https://openjdk.org/)** (or greater)
+
+* **[Dafny 3.7](https://github.com/dafny-lang/dafny)** (or greater).
+
+* **[Gradle 7](https://gradle.org)** (or greater)
+
+With these installed, you can build the code using the following command:
+
+```
+> gradle build
+```
+
+This will verify the codebase using Dafny along with some examples,
+generate a Java implementation of the `EVM`, and run two test suites
+against it in Java.
+
+# Contributing
+
+By default contributors accept the terms of the license.  We also
+endeavour to follow the conventions of the Dafny [style
+guide](https://github.com/dafny-lang/dafny/blob/master/docs/StyleGuide/Style-Guide.md).
 
 # Resources
 Some useful links:
@@ -25,35 +127,3 @@ Some useful links:
 * An [Interactive reference to EVM opcodes](https://www.evm.codes)
 * The Yul intermediate representation [Yul documentation](https://docs.soliditylang.org/en/v0.8.10/yul.html)
 * Another proposal [Yul+](https://fuellabs.medium.com/introducing-yul-a-new-low-level-language-for-ethereum-aa64ce89512f)
-
-# Methodology
-
-[Dafny](https://github.com/dafny-lang/dafny) provides extensive support for automated reasoning leveraging the power of state-of-start automated reasoning engines (SMT-solvers).
-As a result, Dafny can assist in proving program **correctness** with respect to a specification.
-In this project, the specifications of functions are given as _pre_ and _post_ conditions. The abscence of runtime errors (under/overflows, division by zero, array/sequence out-of-bounds) is checked by default in Dafny so there is no need to add specific specifications for them.
-All the proofs can be **mechanically verified** using theorem provers.
-
-# Contributing
-
-By default contributors accept the terms of the license. 
-We also endeavour to follow the conventions of the Dafny [style guide](https://github.com/dafny-lang/dafny/blob/master/docs/StyleGuide/Style-Guide.md).
-
-
-
-
-
-
-## Install Dafny on your computer
-
-Pre-requisites:
-
-* install Dafny, see [our Dafny wiki](wiki/dafny.md).
-* clone or fork this repository.
-
-Assuming you have a running Dafny compiler, you may use the following command line to check a `*.dfy` file:
-```bash
-> dafny /dafnyVerify:1 /compile:0  /timeLimit:60 src/dafny/arbitrum/packages/arb-bridge-eth/contracts/rollup/RollupCore.dfy
-Dafny 3.3.0.31104
-
-Dafny program verifier finished with 23 verified, 0 errors
-```
