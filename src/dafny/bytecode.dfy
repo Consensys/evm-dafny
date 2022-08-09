@@ -142,7 +142,7 @@ module Bytecode {
         I256.Rem(lhs,rhs)
     }
 
-    
+
     /**
     * Unsigned integer division.
     */
@@ -605,7 +605,7 @@ module Bytecode {
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if m_loc + len < |st.evm.memory.contents|
+            if m_loc + len < MAX_U256
             then
                 // Slice bytes out of call data (with padding as needed)
                 var data := Context.DataSlice(st.evm.context,d_loc,len as nat);
@@ -648,7 +648,7 @@ module Bytecode {
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if m_loc + len < |st.evm.memory.contents|
+            if last < MAX_U256
             then
                 // Slice bytes out of code (with padding as needed)
                 var data := Code.Slice(st.evm.code,d_loc,len);
@@ -726,11 +726,12 @@ module Bytecode {
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if loc + 31 < |st.evm.memory.contents|
-                then
-                var val := st.Read(loc);
-                // Write big endian order
-                st.Pop().Push(val).Next()
+            if loc + 31 < MAX_U256
+            then
+                // Break out expanded state
+                var nst := st.Expand(loc,32);
+                // Read from expanded state
+                nst.Pop().Push(nst.Read(loc)).Next()
             else
                 State.INVALID
         else
@@ -746,21 +747,20 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            var loc := st.Peek(0);
+            var loc := st.Peek(0) as nat;
             var val := st.Peek(1);
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (loc as nat) + 31 < |st.evm.memory.contents|
+            if (loc + 31) < MAX_U256
                 then
                 // Write big endian order
-                st.Pop().Pop().Write(loc as nat,val).Next()
+                st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
             else
-                //State.INVALID
-                st.Expand(loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next()    
+                State.INVALID
         else
-        State.INVALID
+            State.INVALID
     }
 
     /**
@@ -773,7 +773,7 @@ module Bytecode {
         then
             var loc := st.Peek(0) as nat;
             var val := (st.Peek(1) % 256) as u8;
-            if loc < |st.evm.memory.contents|
+            if loc < MAX_U256
                 then
                 // Write byte
                 st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
@@ -988,7 +988,7 @@ module Bytecode {
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) < |st.evm.memory.contents|
+            if (start+len) < MAX_U256
             then
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
@@ -1012,7 +1012,7 @@ module Bytecode {
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) < |st.evm.memory.contents|
+            if (start+len) < MAX_U256
             then
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
@@ -1023,5 +1023,5 @@ module Bytecode {
         else
             State.INVALID
     }
-    
+
 }

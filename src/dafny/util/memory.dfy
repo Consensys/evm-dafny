@@ -44,63 +44,17 @@ module Memory {
      * Expand memory to include the given address.  Note that the EVM dictates that
      * expansion happens in multiples of 32bytes.
      */
-
-    function method
-        max(n: nat, m: nat): nat
-            {
-                if m <= n
-                    then n
-                else
-                    m
-            }
-
-    function method
-        ceiling(n: nat, m: nat): (o: nat)
-        requires m > 0
-        ensures n / m <= o <= n / m + 1
-            {
-                if n % m == 0
-                    then n / m
-                else 
-                    (n / m) + 1
-            }
-
-    /* this is the function M (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13) */
-    function method
-        maxMemoryUsedSizeExpansion(s: nat, f: nat, l: nat): nat
-            {
-                if  l == 0
-                    then s
-                else
-                    max(s, ceiling(f + l, 32))
-            }
-            
     function method Expand(mem:T, address: nat, length: nat) : T {
-        if length == 0
-          then mem
+        // Round up size to multiple of 32.
+        var rounded := RoundUp((address as nat)+length,32);
+        var diff := rounded - |mem.contents|;
+        if diff > 0
+        then
+            // Expand memory
+            mem.(contents := mem.contents + Padding(diff))
         else
-          if address + length < |mem.contents|
-            then mem
-          else 
-            var expansionAmount := (address + length + 1 - |mem.contents|) * 32;
-            mem.(contents := mem.contents + Padding(expansionAmount))
-    }
-
-    /* implements the function M in (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13), and expands the memory if needed */
-    function method Expand_CompleteVersion(mem:T, address: nat, length: nat) : T {
-      if length == 0
-        then mem
-      else
-        var checkForExpanansion := maxMemoryUsedSizeExpansion(|mem.contents|, address, length);
-        if checkForExpanansion == |mem.contents|
-          then mem
-        else 
-          var expansionAmount := (checkForExpanansion - |mem.contents|) * 32;
-          mem.(contents := mem.contents + Padding(expansionAmount))
-     
-      // Round up size to multiple of 32.
-     // var rounded := RoundUp((address as nat)+1,32);
-     // mem.(size:=Max(mem.size,rounded))
+            // Do nothing
+            mem
     }
 
     /**
@@ -243,49 +197,18 @@ module Memory {
     }
 
     /**
-     * Slice out a section of memory.  This is implemented in a subdivision
-     * style as this seems to work better (in terms of theorem prover performance).
+     * Slice out a section of memory.
      */
-    function method Slice(mem:T, address:nat, len:nat) : seq<u8>
-      requires (address + len) < |mem.contents| 
-      decreases len
-    {
-      if len == 0
-      then
-        []
-      else if len == 1
-        then
-        [ReadUint8(mem,address)]
-      else
-        var pivot := len / 2;
-        var middle := address + pivot;
-        Slice(mem,address,pivot) + Slice(mem,middle, len - pivot)
+    function method Slice(mem:T, address:nat, len:nat) : seq<u8> {
+      Bytes.Slice(mem.contents,address,len)
     }
 
     function method Copy(mem:T, address:nat, data:seq<u8>) : T
-      requires (address + |data|) < |mem.contents|
+      requires (address + |data|) <= |mem.contents|
       decreases |data| {
         if |data| == 0 then mem
         else
           var step := WriteUint8(mem,address,data[0]);
           Copy(step,address+1,data[1..])
     }
-
-    /* the following does not get fixed easily. I am commenting it out but am keeping it for later, if useful. Note that a linear time implementation does just fine and is more 
-        verification friendly */
-    /**
-     * Copy a sequence of bytes into this memory at a given address. 
-     
-    function method Copy2(mem:T, address:nat, data:seq<u8>) : T
-      requires (address + |data|) < |mem.contents|
-      decreases |data| {
-        if |data| == 0 then mem
-        else if |data| == 1 then WriteUint8(mem,address,data[0])
-        else
-          var pivot := |data| / 2;
-          var middle := address + pivot;
-          var nmem := Copy2(mem,address,data[0..pivot]);
-          Copy2(nmem,middle,data[pivot..])
-    }
-    */
 }

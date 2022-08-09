@@ -124,19 +124,19 @@ module EvmState {
         /**
          * Expand memory for given address.
          */
-         
+
         function method Expand(address: nat, len: nat) : State
         requires !IsFailure() {
             OK(evm.(memory:=Memory.Expand(evm.memory,address,len)))
         }
-        
+
 
         /**
         * Read word from byte address in memory.
         */
         function method Read(address:nat) : u256
         requires !IsFailure()
-        requires address + 31 < |evm.memory.contents| {
+        requires address + 31 < Memory.Size(evm.memory) {
             Memory.ReadUint256(evm.memory,address)
         }
 
@@ -145,7 +145,7 @@ module EvmState {
         */
         function method Write(address:nat, val: u256) : State
         requires !IsFailure()
-        requires address + 31 < |evm.memory.contents| {
+        requires address + 31 < Memory.Size(evm.memory) {
             OK(evm.(memory:=Memory.WriteUint256(evm.memory,address,val)))
         }
 
@@ -154,7 +154,7 @@ module EvmState {
         */
         function method Write8(address:nat, val: u8) : State
         requires !IsFailure()
-        requires address < |evm.memory.contents| {
+        requires address < Memory.Size(evm.memory) {
             OK(evm.(memory := Memory.WriteUint8(evm.memory,address,val)))
         }
 
@@ -163,8 +163,8 @@ module EvmState {
         * that overflow are dropped.
         */
         function method Copy(address:nat, data: seq<u8>) : State
-        requires !IsFailure() 
-        requires address + |data| < |evm.memory.contents|
+        requires !IsFailure()
+        requires address + |data| <= Memory.Size(evm.memory)
         {
             OK(evm.(memory:=Memory.Copy(evm.memory,address,data)))
         }
@@ -192,10 +192,10 @@ module EvmState {
         requires !IsFailure() { Code.DecodeUint8(evm.code,evm.pc as nat) }
 
         /**
-         * Decode next opcode from machine. 
+         * Decode next opcode from machine.
          */
         function method OpDecode() : ExtraTypes.Option<u8>
-        { 
+        {
             if this.IsFailure() then ExtraTypes.None
             else ExtraTypes.Some(Code.DecodeUint8(evm.code,evm.pc as nat))
         }
