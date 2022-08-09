@@ -14,7 +14,7 @@
 include "util/int.dfy"
 include "opcodes.dfy"
 include "state.dfy"
-include "util/EtraTypes.dfy"
+include "util/ExtraTypes.dfy"
 
 module Gas {
 	import opened Opcode
