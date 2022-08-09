@@ -14,7 +14,7 @@
 include "util/int.dfy"
 include "opcodes.dfy"
 include "state.dfy"
-include "util/ExtraTypes.dfy"
+include "util/EtraTypes.dfy"
 
 module Gas {
 	import opened Opcode
@@ -222,4 +222,3 @@ module Gas {
             case _ => State.INVALID
     }
 }
-
