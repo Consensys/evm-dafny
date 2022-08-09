@@ -124,35 +124,37 @@ module EvmState {
         /**
          * Expand memory for given address.
          */
-        function method Expand(address: u256) : State
+
+        function method Expand(address: nat, len: nat) : State
         requires !IsFailure() {
-            OK(evm.(memory:=Memory.Expand(evm.memory,address)))
+            OK(evm.(memory:=Memory.Expand(evm.memory,address,len)))
         }
+
 
         /**
         * Read word from byte address in memory.
         */
-        function method Read(address:u256) : u256
+        function method Read(address:nat) : u256
         requires !IsFailure()
-        requires (address as int) + 31 <= MAX_U256 {
+        requires address + 31 < Memory.Size(evm.memory) {
             Memory.ReadUint256(evm.memory,address)
         }
 
         /**
         * Write word to byte address in memory.
         */
-        function method Write(address:u256, val: u256) : State
+        function method Write(address:nat, val: u256) : State
         requires !IsFailure()
-        requires (address as int) + 31 <= MAX_U256 {
+        requires address + 31 < Memory.Size(evm.memory) {
             OK(evm.(memory:=Memory.WriteUint256(evm.memory,address,val)))
         }
 
         /**
         * Write byte to byte address in memory.
         */
-        function method Write8(address:u256, val: u8) : State
-        requires (address as int) < MAX_U256
-        requires !IsFailure() {
+        function method Write8(address:nat, val: u8) : State
+        requires !IsFailure()
+        requires address < Memory.Size(evm.memory) {
             OK(evm.(memory := Memory.WriteUint8(evm.memory,address,val)))
         }
 
@@ -160,9 +162,10 @@ module EvmState {
         * Copy byte sequence to byte address in memory.  Any bytes
         * that overflow are dropped.
         */
-        function method Copy(address:u256, data: seq<u8>) : State
-        requires (address as int) + |data| <= MAX_U256
-        requires !IsFailure() {
+        function method Copy(address:nat, data: seq<u8>) : State
+        requires !IsFailure()
+        requires address + |data| <= Memory.Size(evm.memory)
+        {
             OK(evm.(memory:=Memory.Copy(evm.memory,address,data)))
         }
 
@@ -189,10 +192,10 @@ module EvmState {
         requires !IsFailure() { Code.DecodeUint8(evm.code,evm.pc as nat) }
 
         /**
-         * Decode next opcode from machine. 
+         * Decode next opcode from machine.
          */
         function method OpDecode() : ExtraTypes.Option<u8>
-        { 
+        {
             if this.IsFailure() then ExtraTypes.None
             else ExtraTypes.Some(Code.DecodeUint8(evm.code,evm.pc as nat))
         }

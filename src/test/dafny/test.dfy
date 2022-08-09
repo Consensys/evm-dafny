@@ -1,5 +1,5 @@
 include "../../dafny/evm.dfy"
-include "../../dafny/evms/berlin.dfy" 
+include "../../dafny/evms/berlin.dfy"
 
 import opened Int
 import opened Opcode
@@ -72,6 +72,7 @@ requires x > 1
   vm := Bytecode.Push1(vm,0x1);
   vm := Bytecode.Push1(vm,0x1F);
   vm := Bytecode.Return(vm);
+  assert vm.RETURNS?;
   //
   assert vm.data  == [x];
 }

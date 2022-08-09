@@ -64,7 +64,7 @@ module Context {
     /**
      * Slice a sequence of bytes from the call data associated with this context.
      */
-    function method DataSlice(ctx: T, loc: u256, len: u256) : seq<u8> {
-      Bytes.Slice(ctx.callData,loc as nat, len as nat)
+    function method DataSlice(ctx: T, loc: u256, len: nat) : seq<u8> {
+      Bytes.Slice(ctx.callData,loc as nat, len)
     }
 }

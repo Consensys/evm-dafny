@@ -85,6 +85,64 @@ module Bytecode {
             State.INVALID
     }
 
+// =============================================================================
+    // Helpers
+    // =============================================================================
+
+    /**
+    * Unsigned integer division with handling for zero.
+    */
+    function method DivWithZero(lhs:u256, rhs:u256) : u256 {
+        if rhs == 0 then 0 as u256
+        else
+        (lhs / rhs) as u256
+    }
+
+    /**
+    * Unsigned integer remainder with handling for zero.
+    */
+    function method ModWithZero(lhs:u256, rhs:u256) : u256 {
+        if rhs == 0 then 0 as u256
+        else
+        (lhs % rhs) as u256
+    }
+
+    /**
+    * Signed integer division with handling for zero and overflow.
+    * A key challenge here is that, in Dafny, division is Euclidean
+    * (i.e. rounds down).  In contrast, division on the EVM is
+    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+    * use Dafny's division operator as is for implementing SDIV
+    * (though for DIV it is OK).  Instead, we have to explicitly
+    * manage the cases for negative operands.
+    */
+    function method SDivWithZero(lhs:i256, rhs:i256) : i256 {
+        if rhs == 0 then 0 as i256
+        else if rhs == -1 && lhs == (-TWO_255 as i256)
+        then
+        -TWO_255 as i256
+        else
+        // Do not use Dafny's division operator here!
+        I256.div(lhs,rhs)
+    }
+
+    /**
+    * Signed integer remainder with handling for zero.
+    * A key challenge here is that, in Dafny, division is Euclidean
+    * (i.e. rounds down).  In contrast, division on the EVM is
+    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
+    * use Dafny's remainder operator as is for implementing SMOD
+    * (though for MOD it is OK).  Instead, we have to explicitly
+    * manage the cases for negative operands.
+    */
+    function method SModWithZero(lhs:i256, rhs:i256) : i256 {
+        if rhs == 0 then 0 as i256
+        else
+        // Do not use Dafny's remainder operator here!
+        I256.Rem(lhs,rhs)
+    }
+
+
     /**
     * Unsigned integer division.
     */
@@ -388,8 +446,8 @@ module Bytecode {
         if st.Operands() >= 2
         then
             var val := st.Peek(1);
-            var k := st.Peek(0);
-            var res := if k < 32 then U256.NthUint8(val,k as int) else 0;
+            var k := st.Peek(0) as nat;
+            var res := if k < 32 then U256.NthUint8(val,k) else 0 as u8;
             st.Pop().Pop().Push(res as u256).Next()
         else
             State.INVALID
@@ -539,22 +597,22 @@ module Bytecode {
         //
         if st.Operands() >= 3
         then
-            var m_loc := st.Peek(0);
+            var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
-            var len := st.Peek(2) as int;
-            var last := (m_loc as int) + len;
+            var len := st.Peek(2) as nat;
+
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if last < MAX_U256
+            if m_loc + len < MAX_U256
             then
                 // Slice bytes out of call data (with padding as needed)
-                var data := Context.DataSlice(st.evm.context,d_loc,len as u256);
+                var data := Context.DataSlice(st.evm.context,d_loc,len as nat);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -582,10 +640,10 @@ module Bytecode {
         //
         if st.Operands() >= 3
         then
-            var m_loc := st.Peek(0);
+            var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
-            var last := (m_loc as int) + len;
+            var last := (m_loc as nat) + len;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
@@ -597,7 +655,7 @@ module Bytecode {
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc as nat, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -663,16 +721,17 @@ module Bytecode {
         //
         if st.Operands() >= 1
         then
-            var loc := st.Peek(0);
+            var loc := st.Peek(0) as nat;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (loc as int) + 31 <= MAX_U256
-                then
-                var val := st.Read(loc);
-                // Write big endian order
-                st.Expand(loc+31).Pop().Push(val).Next()
+            if loc + 31 < MAX_U256
+            then
+                // Break out expanded state
+                var nst := st.Expand(loc,32);
+                // Read from expanded state
+                nst.Pop().Push(nst.Read(loc)).Next()
             else
                 State.INVALID
         else
@@ -688,20 +747,20 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            var loc := st.Peek(0);
+            var loc := st.Peek(0) as nat;
             var val := st.Peek(1);
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
             // involved).
-            if (loc as int) + 31 <= MAX_U256
+            if (loc + 31) < MAX_U256
                 then
                 // Write big endian order
-                st.Expand(loc+31).Pop().Pop().Write(loc,val).Next()
+                st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
             else
                 State.INVALID
         else
-        State.INVALID
+            State.INVALID
     }
 
     /**
@@ -712,12 +771,12 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            var loc := st.Peek(0);
+            var loc := st.Peek(0) as nat;
             var val := (st.Peek(1) % 256) as u8;
-            if (loc as int) < MAX_U256
+            if loc < MAX_U256
                 then
                 // Write byte
-                st.Expand(loc).Pop().Pop().Write8(loc,val).Next()
+                st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
             else
                 State.INVALID
         else
@@ -926,13 +985,13 @@ module Bytecode {
         if st.Operands() >= 2
         then
             // Determine amount of data to return.
-            var len := st.Peek(1) as int;
-            var start := st.Peek(0) as int;
+            var len := st.Peek(1) as nat;
+            var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) <= MAX_U256
+            if (start+len) < MAX_U256
             then
                 // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start as u256, len);
+                var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
                 State.RETURNS(gas:=st.evm.gas,data:=data)
             else
@@ -950,13 +1009,13 @@ module Bytecode {
         if st.Operands() >= 2
         then
             // Determine amount of data to return.
-            var len := st.Peek(1) as int;
-            var start := st.Peek(0) as int;
+            var len := st.Peek(1) as nat;
+            var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) <= MAX_U256
+            if (start+len) < MAX_U256
             then
                 // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start as u256, len);
+                var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
                 State.REVERTS(gas:=st.evm.gas,data:=data)
             else
@@ -965,60 +1024,4 @@ module Bytecode {
             State.INVALID
     }
 
-    // =============================================================================
-    // Helpers
-    // =============================================================================
-
-    /**
-    * Unsigned integer division with handling for zero.
-    */
-    function method DivWithZero(lhs:u256, rhs:u256) : u256 {
-        if rhs == 0 then 0 as u256
-        else
-        (lhs / rhs) as u256
-    }
-
-    /**
-    * Unsigned integer remainder with handling for zero.
-    */
-    function method ModWithZero(lhs:u256, rhs:u256) : u256 {
-        if rhs == 0 then 0 as u256
-        else
-        (lhs % rhs) as u256
-    }
-
-    /**
-    * Signed integer division with handling for zero and overflow.
-    * A key challenge here is that, in Dafny, division is Euclidean
-    * (i.e. rounds down).  In contrast, division on the EVM is
-    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
-    * use Dafny's division operator as is for implementing SDIV
-    * (though for DIV it is OK).  Instead, we have to explicitly
-    * manage the cases for negative operands.
-    */
-    function method SDivWithZero(lhs:i256, rhs:i256) : i256 {
-        if rhs == 0 then 0 as i256
-        else if rhs == -1 && lhs == (-TWO_255 as i256)
-        then
-        -TWO_255 as i256
-        else
-        // Do not use Dafny's division operator here!
-        I256.div(lhs,rhs)
-    }
-
-    /**
-    * Signed integer remainder with handling for zero.
-    * A key challenge here is that, in Dafny, division is Euclidean
-    * (i.e. rounds down).  In contrast, division on the EVM is
-    * non-Euclidean (i.e. rounds towards zero).  This means we cannot
-    * use Dafny's remainder operator as is for implementing SMOD
-    * (though for MOD it is OK).  Instead, we have to explicitly
-    * manage the cases for negative operands.
-    */
-    function method SModWithZero(lhs:i256, rhs:i256) : i256 {
-        if rhs == 0 then 0 as i256
-        else
-        // Do not use Dafny's remainder operator here!
-        I256.Rem(lhs,rhs)
-    }
 }
