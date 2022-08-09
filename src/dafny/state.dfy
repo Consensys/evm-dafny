@@ -125,9 +125,12 @@ module EvmState {
          * Expand memory for given address.
          */
          
-        function method Expand(address: nat, len: nat) : State
-        requires !IsFailure() {
-            OK(evm.(memory:=Memory.Expand(evm.memory,address,len)))
+        function method Expand(address: nat, len: nat): State
+            requires !IsFailure() 
+            requires len > 0
+        {
+            // OK(evm.(memory:=Memory.Expand(evm.memory,address, len))) 
+            OK(evm.(memory:=Memory.Expand2(evm.memory,address + len - 1))) 
         }
         
 
