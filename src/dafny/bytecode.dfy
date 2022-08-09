@@ -542,6 +542,7 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
             var len := st.Peek(2) as nat;
+            var last := (m_loc as nat) + len;
 
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
@@ -550,11 +551,11 @@ module Bytecode {
             if m_loc + len < |st.evm.memory.contents|
             then
                 // Slice bytes out of call data (with padding as needed)
-                var data := Context.DataSlice(st.evm.context,d_loc,len as u256);
+                var data := Context.DataSlice(st.evm.context,d_loc,len);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(last, 1).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -585,7 +586,7 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
-            var last := (m_loc as int) + len;
+            var last := (m_loc as nat) + len;
             // NOTE: This condition is not specified in the yellow paper.
             // Its not clear whether that was intended or not.  However, its
             // impossible to trigger this in practice (due to the gas costs
@@ -596,8 +597,8 @@ module Bytecode {
                 var data := Code.Slice(st.evm.code,d_loc,len);
                 // Sanity check
                 assert |data| == len;
-                // Copy slice into memory
-                st.Expand(last as u256).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                // Copy slice into memory 
+                st.Expand(last, 1).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
                 State.INVALID
         else
@@ -695,13 +696,14 @@ module Bytecode {
             // impossible to trigger this in practice (due to the gas costs
             // involved).
             if (loc as nat) + 31 < |st.evm.memory.contents|
-                then
+                then 
                 // Write big endian order
                 st.Pop().Pop().Write(loc as nat,val).Next()
             else
-                //State.INVALID
-                var newMem := Memory.Expand(st.evm.memory, loc as nat, 31);
-                st.Expand(st.evm.memory, loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next()    
+                // var newMem := Memory.Expand(st.evm.memory, loc as nat, 31);
+                // var x := st.Expand(loc as nat, 31).Pop().Pop().Write(loc as nat,val).Next() ;
+                // x
+                st.Expand(loc as nat, 32).Pop().Pop().Write(loc as nat,val).Next()    
         else
         State.INVALID
     }
@@ -709,7 +711,7 @@ module Bytecode {
     /**
     * Save byte to memory.
     */
-    function method MStore8(st: State) : State
+    function method MStore8(st: State) : State 
     requires !st.IsFailure() {
         //
         if st.Operands() >= 2
@@ -719,7 +721,7 @@ module Bytecode {
             if loc < |st.evm.memory.contents|
                 then
                 // Write byte
-                st.Expand(loc).Pop().Pop().Write8(loc,val).Next()
+                st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
             else
                 State.INVALID
         else
@@ -931,7 +933,7 @@ module Bytecode {
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) < |st.evm.memory.contents|
+            if (start+len) <= |st.evm.memory.contents|
             then
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
@@ -955,7 +957,7 @@ module Bytecode {
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
             // Sanity check bounds
-            if (start+len) < |st.evm.memory.contents|
+            if (start+len) <= |st.evm.memory.contents|   
             then
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
