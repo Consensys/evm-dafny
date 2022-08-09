@@ -35,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import dafny.DafnyMap;
+import dafny.DafnySequence;
 import dafnyevm.util.Bytecodes;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -223,7 +224,7 @@ public class GeneralStateTests {
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
 			// the invalid bytecode.
 			if(op != Bytecodes.INVALID) {
-				byte[] memory = state.getMemory();
+				byte[] memory = DafnySequence.toByteArray((DafnySequence) state.getMemory());
 				BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
 				DafnyMap<? extends BigInteger, ? extends BigInteger> rawStorage = state.getStorage();
 				HashMap<BigInteger, BigInteger> storage = new HashMap<>();

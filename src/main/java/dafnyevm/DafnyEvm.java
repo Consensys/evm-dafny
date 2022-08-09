@@ -218,28 +218,19 @@ public class DafnyEvm {
 		 *
 		 * @return
 		 */
-		public byte[] getMemory() {
+		public DafnySequence<? extends Byte> getMemory() {
 			State_OK sok = (State_OK) state;
-			DafnyMap<? extends BigInteger, ? extends Byte> memory = sok.evm.memory.contents;
-			// FIXME: this is something of a hack for now due to the way in which I have
-			// implemented memory (i.e. as a map). This should be corrected at some point to
-			// be a sequence.
-			byte[] bytes = new byte[getMemorySize()];
-			//
-			DafnySet<? extends BigInteger> keys = memory.keySet();
-			// Write used addresses only :)
-			for (BigInteger key : keys.Elements()) {
-				int address = key.intValueExact();
-				bytes[address] = memory.get(key);
-			}
-			// Done
-			return bytes;
+			return sok.evm.memory.contents;
 		}
 
+		/**
+		 * Get the current size of memory (in bytes).
+		 *
+		 * @return
+		 */
 		public int getMemorySize() {
 			State_OK sok = (State_OK) state;
-			BigInteger size = sok.evm.memory.size;
-			return size.intValueExact();
+			return sok.evm.memory.contents.length();
 		}
 
 		/**

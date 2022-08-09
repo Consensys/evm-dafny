@@ -290,29 +290,11 @@ module Memory {
     }
 
     function method Copy(mem:T, address:nat, data:seq<u8>) : T
-      requires (address + |data|) < |mem.contents|
+      requires (address + |data|) <= |mem.contents|
       decreases |data| {
         if |data| == 0 then mem
         else
           var step := WriteUint8(mem,address,data[0]);
           Copy(step,address+1,data[1..])
     }
-
-    /* the following does not get fixed easily. I am commenting it out but am keeping it for later, if useful. Note that a linear time implementation does just fine and is more 
-        verification friendly */
-    /**
-     * Copy a sequence of bytes into this memory at a given address. 
-     
-    function method Copy2(mem:T, address:nat, data:seq<u8>) : T
-      requires (address + |data|) < |mem.contents|
-      decreases |data| {
-        if |data| == 0 then mem
-        else if |data| == 1 then WriteUint8(mem,address,data[0])
-        else
-          var pivot := |data| / 2;
-          var middle := address + pivot;
-          var nmem := Copy2(mem,address,data[0..pivot]);
-          Copy2(nmem,middle,data[pivot..])
-    }
-    */
 }
