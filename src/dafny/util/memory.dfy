@@ -58,36 +58,72 @@ module Memory {
                 if  l == 0
                     then s
                 else
-                    max(s, ceiling(f + l, 32))
+                    Int.Max(s, ceiling(f + l, 32))
             }
             
-    function method Expand(mem:T, address: nat, length: nat) : T {
-        if length == 0
-          then mem
-        else
-          if address + length < |mem.contents|
+    /**
+     *  Expand memory if needed.
+     *
+     *  @param  mem     The memory representation.
+     *  @param  address The start address to read from.
+     *  @param  len     The number of bytes to read.
+     *  @returns        
+     *
+     *  @note           The memory size is a multiple of 32.
+     *  @example        `mem` is `[20, 21, 22, 23]
+     *                  `Expand(mem, k, 1)` for `0 <= k < 4` is `mem`.
+     *                  `Expand(mem, 2, 2)` expands memory as the elem
+     */
+    function method Expand(mem:T, address: nat, len: nat) : (r:T) 
+      ensures |r.contents| >= address + len 
+      // ensures address + len > |mem.contents| ==> |r.contents| % 32 == 0 
+    {
+          if address + len <= |mem.contents|
             then mem
-          else 
-            var expansionAmount := (address + length + 1 - |mem.contents|) * 32;
+          else
+            var expansionAmount := ceiling(address + len + 1 - |mem.contents|, 32) * 32;
             mem.(contents := mem.contents + Padding(expansionAmount))
     }
 
-    /* implements the function M in (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13), and expands the memory if needed */
-    function method Expand_CompleteVersion(mem:T, address: nat, length: nat) : T {
-      if length == 0
-        then mem
-      else
-        var checkForExpanansion := maxMemoryUsedSizeExpansion(|mem.contents|, address, length);
-        if checkForExpanansion == |mem.contents|
-          then mem
-        else 
-          var expansionAmount := (checkForExpanansion - |mem.contents|) * 32;
-          mem.(contents := mem.contents + Padding(expansionAmount))
-     
-      // Round up size to multiple of 32.
-     // var rounded := RoundUp((address as nat)+1,32);
-     // mem.(size:=Max(mem.size,rounded))
+    /**
+     *  Expand memory if needed.
+     *
+     *  @param  mem     The memory representation.
+     *  @param  address The largest address to read from.
+     *  @returns        
+     *
+     *  @note           The memory size is a multiple of 32.
+     *  @example        `mem` is `[20, 21, 22, 23].
+     *                  ExpandRec(mem, k)` for `0 <= k < 4` is mem.
+     *                  If `k >= 4`, then `mem` is expanded by 32 bytes until
+     *                  `address < |mem.contents|`. 
+     */
+    function method {:tailrecursion} Expand2(mem:T, address: nat) : (r:T) 
+      ensures |r.contents| > address
+      decreases address - |mem.contents|
+    {
+          if address < |mem.contents|
+            then mem
+          else
+            Expand2(mem.(contents := mem.contents + Padding(32)), address)
     }
+
+    /* implements the function M in (YP, page 29, BERLIN VERSION 3078285 – 2022-07-13), and expands the memory if needed */
+    // function method Expand_CompleteVersion(mem:T, address: nat, length: nat) : T {
+    //   if length == 0
+    //     then mem
+    //   else
+    //     var checkForExpanansion := maxMemoryUsedSizeExpansion(|mem.contents|, address, length);
+    //     if checkForExpanansion == |mem.contents|
+    //       then mem
+    //     else 
+    //       var expansionAmount := (checkForExpanansion - |mem.contents|) * 32;
+    //       mem.(contents := mem.contents + Padding(expansionAmount))
+     
+    //   // Round up size to multiple of 32.
+    //  // var rounded := RoundUp((address as nat)+1,32);
+    //  // mem.(size:=Max(mem.size,rounded))
+    // }
 
     /**
      * Read the byte at a given address in Memory.  If the given location
@@ -228,24 +264,29 @@ module Memory {
       WriteUint128(mem',address+16,w2 as u128)
     }
 
-    /**
-     * Slice out a section of memory.  This is implemented in a subdivision
-     * style as this seems to work better (in terms of theorem prover performance).
+    /** Extract a subsequence of memory.
+     *  
+     *  @param  mem     The memory representation.
+     *  @param  address The start of the slice.
+     *  @param  len     The number of bytes to extract.
+     *  @return         `len` bytes starting at `address`.
+     *
+     *  @example        mem is [10, 11, 13]
+     *                  SliceRec(mem, 4, 0) == []       // len is 0
+     *                  SliceRec(mem, 2, 1) == [13]     // start at index 2, 1 elements
+     *                  SliceRec(mem, 0, 2) == [10, 11] // start at index 0, 2 elements
+     *  @note           The first element read is at `address` and the last one at `address + len - 1`
+     *                  so the constraint should `(address + len) <= |mem.contents|`.
      */
-    function method Slice(mem:T, address:nat, len:nat) : seq<u8>
-      requires (address + len) < |mem.contents| 
+    function method {:tailrec} Slice(mem:T, address:nat, len:nat) : seq<u8>
+      requires (address + len) <= |mem.contents| 
+      ensures |Slice(mem, address, len)| == len 
       decreases len
     {
-      if len == 0
-      then
+      if len == 0 then
         []
-      else if len == 1
-        then
-        [ReadUint8(mem,address)]
-      else
-        var pivot := len / 2;
-        var middle := address + pivot;
-        Slice(mem,address,pivot) + Slice(mem,middle, len - pivot)
+      else 
+        [ReadUint8(mem,address)] + Slice(mem, address + 1, len - 1)
     }
 
     function method Copy(mem:T, address:nat, data:seq<u8>) : T
