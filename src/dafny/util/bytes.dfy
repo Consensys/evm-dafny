@@ -113,14 +113,4 @@ module Bytes {
     // Append it!
     Padding(k) + bytes
   }
-
-  /* this causes problems for me when running F5; the error encountered is "Xunit Namespace Could not be Found in Visual Studio Code" */
-  /*
-  method {:test} LeftPadTests() {
-    assert LeftPad([0],2) == [0,0];
-    assert LeftPad([1],2) == [0,1];
-    assert LeftPad([1],4) == [0,0,0,1];
-    assert LeftPad([1,2],4) == [0,0,1,2];
-  }
-  */
 }
