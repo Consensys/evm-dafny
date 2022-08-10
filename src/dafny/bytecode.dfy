@@ -723,7 +723,7 @@ module Bytecode {
         then
             var loc := st.Peek(0) as nat;
             // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
+            // It is not clear whether that was intended or not.  However, it is
             // impossible to trigger this in practice (due to the gas costs
             // involved).
             if loc + 31 < MAX_U256
