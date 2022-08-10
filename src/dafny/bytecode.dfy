@@ -595,7 +595,7 @@ module Bytecode {
     function method CallDataCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3
+        if st.Operands() >= 3 && st.Peek(2) > 0 
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
@@ -638,7 +638,7 @@ module Bytecode {
     function method CodeCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3
+        if st.Operands() >= 3 && st.Peek(2) > 0 
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
@@ -714,16 +714,34 @@ module Bytecode {
     }
 
     /**
-     * Get word from memory.
+     *  Read a word from memory.
+     *
+     *  @param  st  A state.
+     *  @returns    A new state with:
+     *              if some conditions are met (see spec):
+     *              1. pop the top of stack
+     *              2. push the value of the 32 bytes starting at memory[stack[0]]
+     *              on top of the stack;
+     *              3. the program counter advanced by one.
+     *              and otherwise an invalid state.
+     *
+     *  @note       The memory may be expanded during this process, and this incurs
+     *              some gas costs (charged separately).
      */
     function method MLoad(st: State) : State
-    requires !st.IsFailure() {
+        requires !st.IsFailure() 
+        ensures 
+            (Stack.Size(st.GetStack()) >= 1 && st.Peek(0) as nat + 31 < MAX_U256) 
+                <==> 
+            !MLoad(st).IsFailure()
+        ensures st.IsFailure() ==> MLoad(st).IsFailure()
+    {
         //
         if st.Operands() >= 1
         then
             var loc := st.Peek(0) as nat;
             // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
+            // It is not clear whether that was intended or not.  However, it is
             // impossible to trigger this in practice (due to the gas costs
             // involved).
             if loc + 31 < MAX_U256
@@ -738,19 +756,35 @@ module Bytecode {
         State.INVALID
     }
 
-
     /**
-    * Save word to memory.
-    */
+     *  Store a word into memory.
+     *
+     *  @param  st  A state.
+     *  @returns    A new state with:
+     *              if some conditions are met (see spec):
+     *              1. stack[1] stored at stack[0] in memory,
+     *              2. the two top elements of the stack popped,
+     *              3. the program counter advanced by one.
+     *              and otherwise an invalid state.
+     *
+     *  @note       The memory may be expanded during this process, and this incurs
+     *              some gas costs (charged separately).
+     */
     function method MStore(st: State) : State
-    requires !st.IsFailure() {
+        requires !st.IsFailure() 
+        ensures 
+            (Stack.Size(st.GetStack()) >= 2 && st.Peek(0) as nat + 31 < MAX_U256) 
+                <==> 
+            !MStore(st).IsFailure()
+        ensures st.IsFailure() ==> MStore(st).IsFailure()
+    {
         //
         if st.Operands() >= 2
         then
             var loc := st.Peek(0) as nat;
             var val := st.Peek(1);
             // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
+            // It is not clear whether that was intended or not.  However, it is
             // impossible to trigger this in practice (due to the gas costs
             // involved).
             if (loc + 31) < MAX_U256
