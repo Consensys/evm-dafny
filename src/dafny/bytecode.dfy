@@ -595,7 +595,7 @@ module Bytecode {
     function method CallDataCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3
+        if st.Operands() >= 3 && st.Peek(2) > 0 
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
@@ -638,7 +638,7 @@ module Bytecode {
     function method CodeCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3
+        if st.Operands() >= 3 && st.Peek(2) > 0 
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
@@ -747,7 +747,7 @@ module Bytecode {
             if loc + 31 < MAX_U256
             then
                 // Break out expanded state
-                var nst := st.Expand(loc,31);
+                var nst := st.Expand(loc,32);
                 // Read from expanded state
                 nst.Pop().Push(nst.Read(loc)).Next()
             else
@@ -790,7 +790,7 @@ module Bytecode {
             if (loc + 31) < MAX_U256
                 then
                 // Write big endian order
-                st.Expand(loc,31).Pop().Pop().Write(loc,val).Next()
+                st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
             else
                 State.INVALID
         else
