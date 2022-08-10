@@ -123,7 +123,12 @@ module EvmState {
         }
 
         /**
-         * Expand memory for given address.
+         *  Expand memory to include a given address.
+         *  
+         *  @param  address The start address.
+         *  @param  len     The number of bytes to read from `address`, i.e.
+         *                  we want to read `len` bytes starting at `address`. 
+         *  @returns        A possibly expanded memory that contains index `address + len - 1`
          */
 
         function method Expand(address: nat, len: nat) : State
