@@ -44,8 +44,10 @@ module Memory {
      * Expand memory to include the given address.  Note that the EVM dictates that
      * expansion happens in multiples of 32bytes.
      */
-    function method Expand(mem:T, address: nat, length: nat) : T {
-        // Round up size to multiple of 32.
+    function method Expand(mem:T, address: nat, length: nat) : T 
+      ensures |Expand(mem, address, length).contents| >= address as nat + length
+    {
+        // Round up size to multiple of 32. 
         var rounded := RoundUp((address as nat)+length,32);
         var diff := rounded - |mem.contents|;
         if diff > 0
