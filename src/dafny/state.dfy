@@ -130,10 +130,19 @@ module EvmState {
          *                  we want to read `len` bytes starting at `address`. 
          *  @returns        A possibly expanded memory that contains index `address + len - 1`
          */
-
-        function method Expand(address: nat, len: nat) : State
-        requires !IsFailure() {
-            OK(evm.(memory:=Memory.Expand2(evm.memory,address + len)))
+        function method Expand(address: nat, len: nat): (s': State)
+            requires !IsFailure() 
+            requires len > 0
+            ensures !s'.IsFailure()
+            ensures address + len <= s'.MemSize() 
+            //  If last byte read is in range, no need to expand.
+            ensures address + len < MemSize() ==> evm.memory == s'.evm.memory 
+            //  If last byte read is out of range, expand with smallest amount to include
+            //  address + len - 1
+            ensures address + len - 1 >= MemSize() ==>
+                s'.MemSize() % 32 == 0 &&  s'.MemSize() - 32 <= address + len - 1
+        {
+            OK(evm.(memory:=Memory.Expand2(evm.memory, address + len - 1)))
         }
 
         /**
