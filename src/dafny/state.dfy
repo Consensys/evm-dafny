@@ -131,6 +131,14 @@ module EvmState {
             OK(evm.(memory:=Memory.Expand(evm.memory,address,len)))
         }
 
+        /**
+         *  Get the size of the memory.
+         */
+        function method MemSize(): nat 
+            requires !IsFailure()
+        {
+            Memory.Size(evm.memory)
+        }
 
         /**
         * Read word from byte address in memory.
