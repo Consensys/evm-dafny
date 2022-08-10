@@ -729,7 +729,13 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MLoad(st: State) : State
-    requires !st.IsFailure() {
+        requires !st.IsFailure() 
+        ensures 
+            (Stack.Size(st.GetStack()) >= 1 && st.Peek(0) as nat + 31 < MAX_U256) 
+                <==> 
+            !MLoad(st).IsFailure()
+        ensures st.IsFailure() ==> MLoad(st).IsFailure()
+    {
         //
         if st.Operands() >= 1
         then
