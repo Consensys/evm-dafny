@@ -714,7 +714,19 @@ module Bytecode {
     }
 
     /**
-     * Get word from memory.
+     *  Read a word from memory.
+     *
+     *  @param  st  A state.
+     *  @returns    A new state with:
+     *              if some conditions are met (see spec):
+     *              1. pop the top of stack
+     *              2. push the value of the 32 bytes starting at memory[stack[0]]
+     *              on top of the stack;
+     *              3. the program counter advanced by one.
+     *              and otherwise an invalid state.
+     *
+     *  @note       The memory may be expanded during this process, and this incurs
+     *              some gas costs (charged separately).
      */
     function method MLoad(st: State) : State
     requires !st.IsFailure() {
