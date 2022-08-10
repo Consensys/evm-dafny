@@ -15,12 +15,22 @@ include "util/int.dfy"
 include "opcodes.dfy"
 include "state.dfy"
 include "util/ExtraTypes.dfy"
+include "util/memory.dfy"
+include "util/bytes.dfy"
+include "util/code.dfy"
+include "util/context.dfy"
+include "bytecode.dfy"
 
 module Gas {
 	import opened Opcode
 	import opened EvmState
     import opened Int
     import opened ExtraTypes
+    import opened Memory
+    import opened Bytes
+    import opened Code
+    import opened Context
+    import opened Bytecode
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -63,6 +73,47 @@ module Gas {
     function method UseOneGas(op: u8, s: OKState): State
     {
         s.UseGas(1)
+    }
+
+    /* this implements a helper function YP calls C_mem (page 28, equation 328, BERLIN VERSION 3078285 – 2022-07-13) */
+    function method memoryExpansionCostHelper(mem: Memory.T): nat
+    {   var memUsed := |mem.contents|;
+        G_MEMORY * memUsed + ((memUsed * memUsed) / 512)
+    }
+
+    /* this implements the gas cost encountered upn memory expansion 
+     * the newMem is the memory after applying expansion. Note that 
+     * might be the old mem in which case no cost is encountered 
+     *  see YP, page 28, BERLIN VERSION 3078285 – 2022-07-13 
+     */
+    function method computeDynGasMSTORE(mem: Memory.T, address: nat) : nat
+    {
+        var newMem := Memory.Expand(mem, address, 32);
+        var memCost := memoryExpansionCostHelper(mem);
+        var newMemCost := memoryExpansionCostHelper(newMem); 
+        newMemCost - memCost
+    }
+
+    /* this is an alternative gas charging mechanism for MSTORE. Here we are specifying
+     * the amount of gas to charge in case the memory usage exceeds the maximum allowed 
+     * memory use, or if we encounter an underflow of stack. In any of the exceptional
+     * cases, we charge the base gas fee
+     */
+    function method gasCostMStore(st: State) : State
+        requires !st.IsFailure() 
+    {
+        if st.Operands() >= 2
+        then
+            var loc := st.Peek(0) as nat;
+            var val := st.Peek(1);
+            if (loc + 31) < MAX_U256
+                then
+                var costMemExpansion := computeDynGasMSTORE(st.evm.memory, loc as nat);
+                st.UseGas(costMemExpansion)
+            else
+                st.UseGas(3)
+        else
+            st.UseGas(3)
     }
 
     /** The Berlin gas cost function.
