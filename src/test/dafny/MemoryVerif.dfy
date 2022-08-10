@@ -28,7 +28,7 @@ abstract module MemoryVerif_01 {
    *  Check MSTORE.
    *  Starting from an OKState with 2 elements on the stack.
    */
-  lemma MSTORE_01_Thms(vm: OKState) 
+  method MSTORE_01_Proofs(vm: OKState) 
     requires Stack.Size(vm.GetStack()) >= 2
   {
     var r := Bytecode.MStore(vm); 
