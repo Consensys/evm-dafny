@@ -107,15 +107,16 @@ module EvmState {
         }
 
         /**
-        * Determine current PC value.
-        */
+         * Determine current PC value.
+         */
         function method PC(): nat
         requires !IsFailure() {
             this.evm.pc
         }
+        
         /**
-        * Get the state of the internal stack.
-        */
+         * Get the state of the internal stack.
+         */
         function method GetStack(): Stack.T
         requires !IsFailure() {
             this.evm.stack
