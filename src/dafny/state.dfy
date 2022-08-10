@@ -113,7 +113,7 @@ module EvmState {
         requires !IsFailure() {
             this.evm.pc
         }
-        
+
         /**
          * Get the state of the internal stack.
          */
@@ -128,7 +128,7 @@ module EvmState {
 
         function method Expand(address: nat, len: nat) : State
         requires !IsFailure() {
-            OK(evm.(memory:=Memory.Expand(evm.memory,address,len)))
+            OK(evm.(memory:=Memory.Expand2(evm.memory,address + len)))
         }
 
         /**

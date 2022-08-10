@@ -729,7 +729,7 @@ module Bytecode {
             if loc + 31 < MAX_U256
             then
                 // Break out expanded state
-                var nst := st.Expand(loc,32);
+                var nst := st.Expand(loc,31);
                 // Read from expanded state
                 nst.Pop().Push(nst.Read(loc)).Next()
             else
@@ -738,12 +738,17 @@ module Bytecode {
         State.INVALID
     }
 
-
     /**
-    * Save word to memory.
-    */
+     * Save word to memory.
+     */
     function method MStore(st: State) : State
-    requires !st.IsFailure() {
+        requires !st.IsFailure() 
+        ensures 
+            (Stack.Size(st.GetStack()) >= 2 && st.Peek(0) as nat + 31 < MAX_U256) 
+                <==> 
+            !MStore(st).IsFailure()
+        ensures st.IsFailure() ==> MStore(st).IsFailure()
+    {
         //
         if st.Operands() >= 2
         then
@@ -756,7 +761,7 @@ module Bytecode {
             if (loc + 31) < MAX_U256
                 then
                 // Write big endian order
-                st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
+                st.Expand(loc,31).Pop().Pop().Write(loc,val).Next()
             else
                 State.INVALID
         else
