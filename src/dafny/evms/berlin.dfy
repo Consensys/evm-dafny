@@ -25,11 +25,12 @@ module EvmBerlin refines EVM {
      *  @param  g   The gas loaded in this EVM.
      *  @returns    An ready-to-use EVM.
      */
-    function method InitEmpty(g: nat): State
-        ensures !InitEmpty(g).IsFailure()
+    function method InitEmpty(gas: nat, code: seq<u8> := []): State
+        requires |code| <= Code.MAX_CODE_SIZE
+        ensures !InitEmpty(gas, code).IsFailure()
     {
         var tx := Context.Create(0x0,0,0,[],0);
-        Create(tx, map[], g, [])
+        Create(tx, map[], gas, code)
     }
 
     /** The gas cost semantics of an opcode.
