@@ -100,7 +100,11 @@ module Bytes {
   /**
    * Construct a sequence of an arbitrary sized padded out with zeros.
    */
-  function method Padding(n:nat) : seq<u8> { seq(n, i => 0) }
+  function method Padding(n:nat) : seq<u8> 
+    ensures |Padding(n)| == n 
+  { 
+    seq(n, i => 0) 
+  }
 
   /**
    * Pad an array of bytes with zeros in the low addresses upto a given
