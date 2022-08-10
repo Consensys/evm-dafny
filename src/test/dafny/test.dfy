@@ -4,165 +4,179 @@ include "../../dafny/evms/berlin.dfy"
 import opened Int
 import opened Opcode
 
-// Arbitrary limit for now
-const GASLIMIT : nat := 100;
+/**
+ */
+module SimpleTests {
 
-// Check most simple program possible
-method test_Execute_01(x: u8)
-requires x > 1
-{
-  // Initialise Bytecode
-  var tx := Context.Create(0xabc,0xdef,0,[],0);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
-  // PUSH1 x
-  vm := EvmBerlin.Execute(vm);
-  // PUSH1 0x2
-  vm := EvmBerlin.Execute(vm);
-  // MSTORE
-  vm := EvmBerlin.Execute(vm);
-  // PUSH
-  vm := EvmBerlin.Execute(vm);
-  // PUSH
-  vm := EvmBerlin.Execute(vm);
-  // RETURN
-  vm := EvmBerlin.Execute(vm);
-  //
-  assert vm.data == [x];
-  // print vm.gas, "\n";
-  assert vm.Gas() == GASLIMIT - 6;
-}
+    import opened Int
+    import opened Opcode
+    import EvmBerlin
+    import Bytecode
+    import Bytes
 
-// ===========================================================================
-// Straightline Tests
-// ===========================================================================
+    /** The gas loaded in the EVM before executing a program. */
+    const INITGAS := 20; 
 
-method {:test} test_basic_01()
-{
-  var x := 3;
-  // Initialise EVM
-  var tx := Context.Create(0xabc,0xdef,0,[],0);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
-  // PUSH1 x
-  vm := EvmBerlin.Execute(vm);
-  // PUSH1 0x2
-  vm := EvmBerlin.Execute(vm);
-  // MSTORE
-  vm := EvmBerlin.Execute(vm);
-  // PUSH
-  vm := EvmBerlin.Execute(vm);
-  // PUSH
-  vm := EvmBerlin.Execute(vm);
-  // RETURN
-  vm := EvmBerlin.Execute(vm);
-  //
-  expect vm.Gas() == GASLIMIT - 6;
-  expect vm.data == [x], ("failed. vm.data=", vm.data); //, "failed";
-}
+    // ===========================================================================
+    // Straight line test 
+    // ===========================================================================
 
-// Write parameter into return data
-method test_basic_02(x: u8)
-requires x > 1
-{
-  var tx := Context.Create(0xabc,0xdef,0,[],0);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
-  //
-  vm := Bytecode.Push1(vm,x);
-  vm := Bytecode.Push1(vm,0);
-  vm := Bytecode.MStore(vm);
-  vm := Bytecode.Push1(vm,0x1);
-  vm := Bytecode.Push1(vm,0x1F);
-  vm := Bytecode.Return(vm);
-  assert vm.RETURNS?;
-  //
-  assert vm.data  == [x];
-}
+    /**
+     *  Run a program with MSTORE and check:
+     *  1. execution can go through
+     *  2. the gas left at the end of the program.
+     */
+    method Test_EVM_01(x: u8)
+    {
+        // Initialise Bytecode
+        var vm := EvmBerlin.InitEmpty(
+          gas := INITGAS, 
+          code := [
+            PUSH1, x, 
+            PUSH1, 0x0, 
+            MSTORE, 
+            PUSH1, 0x1, 
+            PUSH1, 0x1F, 
+            RETURN
+            ]);
 
-// Add two values and return
-method test_basic_03(x: u8, y: u8) returns (z:u16)
-ensures z == (x as u16) + (y as u16)
-{
-  var tx := Context.Create(0xabc,0xdef,0,[],0);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[]);
-  //
-  vm := Bytecode.Push1(vm,x);
-  vm := Bytecode.Push1(vm,y);
-  vm := Bytecode.Add(vm);
-  assert vm.Peek(0) == (x as u256) + (y as u256);
-  vm := Bytecode.Push1(vm,0);
-  vm := Bytecode.MStore(vm);
-  vm := Bytecode.Push1(vm,0x2);
-  vm := Bytecode.Push1(vm,0x1E);
-  vm := Bytecode.Return(vm);
-  // //
-  return Bytes.ReadUint16(vm.data,0);
-}
+        // PUSH1 x
+        vm := EvmBerlin.Execute(vm);
+        // PUSH1 0x2
+        vm := EvmBerlin.Execute(vm);
+        // MSTORE
+        vm := EvmBerlin.Execute(vm);
+        // PUSH
+        vm := EvmBerlin.Execute(vm);
+        // PUSH
+        vm := EvmBerlin.Execute(vm);
+        // RETURN
+        vm := EvmBerlin.Execute(vm);
+        //
+        assert vm.data == [x];
+        assert vm.Gas() == INITGAS - 6;
+    }
 
-method test_basic_04(x: u8, y: u8) returns (z:u8)
-requires x >= y
-ensures z <= x
-{
-  var tx := Context.Create(0xabc,0xdef,0,[],0);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, y, PUSH1, x, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
-  //
-  vm := Bytecode.Push1(vm,y);
-  vm := Bytecode.Push1(vm,x);
-  vm := Bytecode.Sub(vm); // x - y
-  assert vm.Peek(0) == (x as u256) - (y as u256);
-  vm := Bytecode.Push1(vm,0);
-  vm := Bytecode.MStore(vm);
-  vm := Bytecode.Push1(vm,0x1);
-  vm := Bytecode.Push1(vm,0x1F);
-  vm := Bytecode.Return(vm);
-  //
-  return Bytes.ReadUint8(vm.data,0);
-}
+    /**
+     *  Same as Test_EVM_01 but using EVM-IR instructions (no code, no PC).
+     */
+    method Test_IR_01(x: u8)
+    {
+        var vm := EvmBerlin.InitEmpty(gas := INITGAS);
 
-// ===========================================================================
-// Branching Tests
-// ===========================================================================
+        vm := Bytecode.Push1(vm,x);
+        vm := Bytecode.Push1(vm,0);
+        vm := Bytecode.MStore(vm);
+        vm := Bytecode.Push1(vm,0x1);
+        vm := Bytecode.Push1(vm,0x1F);
+        vm := Bytecode.Return(vm);
+        assert vm.RETURNS?;
+        //
+        assert vm.data  == [x];
+    }
 
-// This is an underflow test.  Either the contract reverts, or there was no underflow.
-method test_branch_01(x: u8, y: u8) returns (z:u8, revert:bool)
-  // Check revert only when overflow would have occurred.
-  ensures revert <==> y > x
-  // If didn't revert, then result is less.
-  ensures !revert <==> (z <= x)
-{
-  var tx := Context.Create(0xabc,0xdef,0,[],0);
-  var vm := EvmBerlin.Create(tx,map[],GASLIMIT,[PUSH1, x, PUSH1, y, GT, ISZERO, PUSH1, 0x0A, JUMPI, REVERT, JUMPDEST, PUSH1, x, PUSH1, y, SUB, PUSH1, 0x0, MSTORE, PUSH1, 0x1, PUSH1, 0x1F, RETURN]);
-  //
-  vm := Bytecode.Push1(vm,x);   // 0x00
-  vm := Bytecode.Push1(vm,y);   // 0x02
-  vm := Bytecode.Gt(vm);        // 0x04
-  vm := Bytecode.IsZero(vm);    // 0x05
-  vm := Bytecode.Push1(vm,0xA); // 0x06
-  vm := Bytecode.JumpI(vm);     // 0x08
-  //
-  assert vm.evm.pc == 0x09 <==> y > x;
-  if vm.evm.pc == 0x09 {
-    vm := Bytecode.Revert(vm);  // 0x09
-    return y,true;
-  } else {
-    // Happy path
-    vm := Bytecode.JumpDest(vm); // 0xA
-    assert x >= y;
-    vm := Bytecode.Push1(vm,y);
-    vm := Bytecode.Push1(vm,x);
-    vm := Bytecode.Sub(vm); // x - y
-    assert vm.Peek(0) == (x as u256) - (y as u256);
-    vm := Bytecode.Push1(vm,0);
-    vm := Bytecode.MStore(vm);
-    vm := Bytecode.Push1(vm,0x1);
-    vm := Bytecode.Push1(vm,0x1F);
-    vm := Bytecode.Return (vm);
-    Foo(x, y);
-    //
-    return Bytes.ReadUint8(vm.data,0), false;
-  }
-}
+    /**
+     *  Add two values `x` and `y` and return result in `z`.
+     */
+    method Test_IR_02(x: u8, y: u8) returns (z:u16)
+      ensures z == (x as u16) + (y as u16)
+    {
+        var vm := EvmBerlin.InitEmpty(gas := INITGAS);
+        //
+        vm := Bytecode.Push1(vm,x);
+        vm := Bytecode.Push1(vm,y);
+        vm := Bytecode.Add(vm);
+        assert vm.Peek(0) == (x as u256) + (y as u256);
+        vm := Bytecode.Push1(vm,0);
+        vm := Bytecode.MStore(vm);
+        vm := Bytecode.Push1(vm,0x2);
+        vm := Bytecode.Push1(vm,0x1E);
+        vm := Bytecode.Return(vm);
+        // read 2 bytes from vm.data starting at 0
+        return Bytes.ReadUint16(vm.data,0);
+    }
 
-lemma Foo(x:u8, y:u8)
-  ensures y <= x ==> x - y <= x
-{
+    /**
+     *  Subtract `y` from `x` and return result in `z`.
+     */
+    method Test_IR_03(x: u8, y: u8) returns (z:u8)
+    requires x >= y
+    ensures z <= x
+    {
+      var vm := EvmBerlin.InitEmpty(gas := INITGAS);
 
+      //
+      vm := Bytecode.Push1(vm,y);
+      vm := Bytecode.Push1(vm,x);
+      vm := Bytecode.Sub(vm); // x - y
+      assert vm.Peek(0) == (x as u256) - (y as u256);
+      vm := Bytecode.Push1(vm,0);
+      vm := Bytecode.MStore(vm);
+      vm := Bytecode.Push1(vm,0x1);
+      vm := Bytecode.Push1(vm,0x1F);
+      vm := Bytecode.Return(vm);
+      //  read one byte from vm.data starting at 0
+      return Bytes.ReadUint8(vm.data,0);
+    }
+
+    // ===========================================================================
+    // Branching Tests
+    // ===========================================================================
+
+    // This is an underflow test.  Either the contract reverts, or there was no underflow.
+    method Test_IR_04(x: u8, y: u8) returns (z:u8, revert:bool)
+        // Check revert only when overflow would have occurred.
+        ensures revert <==> y > x
+        // If didn't revert, then result is less.
+        ensures !revert <==> (z <= x)
+    {
+        // var tx := Context.Create(0xabc,0xdef,0,[],0);
+        var vm := EvmBerlin.InitEmpty(
+            gas := INITGAS,
+            code := [
+                PUSH1, x, 
+                PUSH1, y, 
+                GT, 
+                ISZERO, 
+                PUSH1, 0x0A, 
+                JUMPI, 
+                REVERT, 
+                JUMPDEST, 
+                PUSH1, x, 
+                PUSH1, y, 
+                SUB, 
+                PUSH1, 0x0, 
+                MSTORE, 
+                PUSH1, 0x1, 
+                PUSH1, 0x1F,
+                RETURN]);
+        //
+        vm := Bytecode.Push1(vm,x);   // 0x00
+        vm := Bytecode.Push1(vm,y);   // 0x02
+        vm := Bytecode.Gt(vm);        // 0x04
+        vm := Bytecode.IsZero(vm);    // 0x05
+        vm := Bytecode.Push1(vm,0xA); // 0x06
+        vm := Bytecode.JumpI(vm);     // 0x08
+        //
+        assert vm.evm.pc == 0x09 <==> y > x;
+        if vm.evm.pc == 0x09 {
+          vm := Bytecode.Revert(vm);  // 0x09
+          return y,true;
+        } else {
+          // Happy path
+          vm := Bytecode.JumpDest(vm); // 0xA
+          assert x >= y;
+          vm := Bytecode.Push1(vm,y);
+          vm := Bytecode.Push1(vm,x);
+          vm := Bytecode.Sub(vm); // x - y
+          assert vm.Peek(0) == (x as u256) - (y as u256);
+          vm := Bytecode.Push1(vm,0);
+          vm := Bytecode.MStore(vm);
+          vm := Bytecode.Push1(vm,0x1);
+          vm := Bytecode.Push1(vm,0x1F);
+          vm := Bytecode.Return (vm);
+          //
+          return Bytes.ReadUint8(vm.data,0), false;
+        }
+    } 
 }
