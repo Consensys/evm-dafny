@@ -59,6 +59,37 @@ module Memory {
             mem
     }
 
+    /** Expand memory size if needed.
+     *
+     *  @param  mem     A memory representation.
+     *  @param  address An address to read (an u8) in memory.
+     *  @returns        The smallest extension of `mem` that contains `address`
+     *                  and has a multiple of 32 bytes elements. 
+     *
+     *  @note           At the end, `address` should be a valid index of `r` 
+     *                  i.e. in 0..(r.size - 1).
+     */
+    function method Expand2(mem: T, address: nat) : (r: T) 
+      ensures |r.contents| > address 
+      ensures address >= |mem.contents| ==> 
+        (|r.contents| % 32 == 0 &&  |r.contents| - 32 <= address)
+    {
+        if address < |mem.contents| then 
+          mem
+        else 
+          var extLength := SmallestLarg32(address);
+          mem.(contents := mem.contents + Padding(extLength - |mem.contents|))
+    }
+
+    /** Smallest number multiple of 32 that is larger than k. */
+    function method SmallestLarg32(k: nat): (x:nat)
+      ensures x > k
+      ensures x % 32 == 0
+      ensures (x - 32) <= k
+    {
+      (k / 32 + 1) * 32
+    }
+
     /**
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
