@@ -739,7 +739,18 @@ module Bytecode {
     }
 
     /**
-     * Save word to memory.
+     *  Store a word into memory.
+     *
+     *  @param  st  A state.
+     *  @returns    A new state with:
+     *              if some conditions are met (see spec):
+     *              1. stack[1] stored at stack[0] in memory,
+     *              2. the two top elements of the stack popped,
+     *              3. the program counter advanced by one.
+     *              and otherwise an invalid state.
+     *
+     *  @note       The memory may be expanded during this process, and this incurs
+     *              some gas costs (charged separately).
      */
     function method MStore(st: State) : State
         requires !st.IsFailure() 
@@ -755,7 +766,7 @@ module Bytecode {
             var loc := st.Peek(0) as nat;
             var val := st.Peek(1);
             // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
+            // It is not clear whether that was intended or not.  However, it is
             // impossible to trigger this in practice (due to the gas costs
             // involved).
             if (loc + 31) < MAX_U256
