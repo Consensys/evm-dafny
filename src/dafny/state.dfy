@@ -20,6 +20,9 @@ include "util/code.dfy"
 include "opcodes.dfy"
 include "util/ExtraTypes.dfy"
 
+/**
+ *  Provide State type to encode the current state of the EVM.
+ */
 module EvmState {
     import opened Int
     import Stack
@@ -30,6 +33,22 @@ module EvmState {
     import Opcode
     import ExtraTypes
 
+    /**
+     *  A normal state.
+     *  
+     *  @param  context     An execution context (initiator, etc)
+     *  @param  storage     The state of permanent storage
+     *  @param  stack       A stack (the EVN is a stack machine)
+     *  @param  memory      The state of the memory
+     *  @param  code        Some bytecode
+     *  @param  gas         The available gas
+     *  @param  pc          The program counter pointing to the next
+     *                      opcode to be executed. 
+     *  @note               `pc` is a `nat` and go beyond the range of `code`
+     *                      When using this representation you may have to check 
+     *                      some constrainst on the value of `pc`.
+     *  @note               Previous remark applies to `gas`.
+     */
     datatype T = EVM(
         context: Context.T,
         storage : Storage.T,
@@ -66,9 +85,9 @@ module EvmState {
         | REVERTS(gas:nat,data:seq<u8>) {
 
         /**
-        * Check whether EVM has failed (e.g. due to an exception
-        * or a revert, etc) or not.
-        */
+         * Check whether EVM has failed (e.g. due to an exception
+         * or a revert, etc) or not.
+         */
         predicate method IsFailure() { !this.OK? }
 
         /**
@@ -78,6 +97,7 @@ module EvmState {
         requires !IsFailure() {
             this.evm
         }
+
         /**
          * Determine number of operands on stack.
          */
@@ -85,6 +105,7 @@ module EvmState {
         requires !IsFailure() {
             Stack.Size(evm.stack)
         }
+
         /**
          * Determine remaining gas.
          */
@@ -128,7 +149,13 @@ module EvmState {
          *  @param  address The start address.
          *  @param  len     The number of bytes to read from `address`, i.e.
          *                  we want to read `len` bytes starting at `address`. 
-         *  @returns        A possibly expanded memory that contains index `address + len - 1`
+         *  @returns        A possibly expanded memory that contains 
+         *                  memory slots upto index `address + len - 1`.
+         *  
+         *  @note           This assumes unbounded memory, so the `Memory.Expand`
+         *                  call never fails. When using this function, you may check
+         *                  first that the extended chunk satisfies some constraints,
+         *                  e.g. begin less then `MAX_U256`. 
          */
         function method Expand(address: nat, len: nat): (s': State)
             requires !IsFailure() 
@@ -155,8 +182,8 @@ module EvmState {
         }
 
         /**
-        * Read word from byte address in memory.
-        */
+         * Read word from byte address in memory.
+         */
         function method Read(address:nat) : u256
         requires !IsFailure()
         requires address + 31 < Memory.Size(evm.memory) {
@@ -164,8 +191,8 @@ module EvmState {
         }
 
         /**
-        * Write word to byte address in memory.
-        */
+         * Write word to byte address in memory.
+         */
         function method Write(address:nat, val: u256) : State
         requires !IsFailure()
         requires address + 31 < Memory.Size(evm.memory) {
@@ -173,8 +200,8 @@ module EvmState {
         }
 
         /**
-        * Write byte to byte address in memory.
-        */
+         * Write byte to byte address in memory.
+         */
         function method Write8(address:nat, val: u8) : State
         requires !IsFailure()
         requires address < Memory.Size(evm.memory) {
@@ -182,9 +209,9 @@ module EvmState {
         }
 
         /**
-        * Copy byte sequence to byte address in memory.  Any bytes
-        * that overflow are dropped.
-        */
+         * Copy byte sequence to byte address in memory.  Any bytes
+         * that overflow are dropped.
+         */
         function method Copy(address:nat, data: seq<u8>) : State
         requires !IsFailure()
         requires address + |data| <= Memory.Size(evm.memory)
@@ -228,11 +255,7 @@ module EvmState {
          */
         function method Goto(k:u256) : State
         requires !IsFailure() {
-        // Sanity check valid target address
-        // if k <= Code.Size(evm.code)
-        // then
-        State.OK(evm.(pc := k as nat))
-        // else State.INVALID
+            State.OK(evm.(pc := k as nat))
         }
 
         /**
@@ -240,10 +263,7 @@ module EvmState {
          */
         function method Next() : State
         requires !IsFailure() {
-            // if evm.pc < Code.Size(evm.code)
-            // then
             State.OK(evm.(pc := evm.pc + 1))
-            // else State.INVALID
         }
 
         /**
@@ -252,10 +272,7 @@ module EvmState {
         function method Skip(k:nat) : State
         requires !IsFailure() {
             var pc_k := (evm.pc as nat) + k;
-            // if pc_k < |evm.code.contents|
-            // then
             State.OK(evm.(pc := pc_k))
-            // else State.INVALID
         }
 
         /**
