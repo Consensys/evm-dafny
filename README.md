@@ -111,9 +111,12 @@ against it in Java.
 
 # Contributing
 
-By default contributors accept the terms of the license.  We also
-endeavour to follow the conventions of the Dafny [style
+See the [CONTRIBUTORS](CONTRIBUTORS.md) file for more information on
+contributing to this repository.  By default contributors accept the
+terms of the license.  We also endeavour to follow the conventions of
+the Dafny [style
 guide](https://github.com/dafny-lang/dafny/blob/master/docs/StyleGuide/Style-Guide.md).
+
 
 # Resources
 Some useful links:
