@@ -44,10 +44,10 @@ module Memory {
      * Expand memory to include the given address.  Note that the EVM dictates that
      * expansion happens in multiples of 32bytes.
      */
-    function method Expand(mem:T, address: nat, length: nat) : T 
+    function method Expand(mem:T, address: nat, length: nat) : T
       ensures |Expand(mem, address, length).contents| >= address as nat + length
     {
-        // Round up size to multiple of 32. 
+        // Round up size to multiple of 32.
         var rounded := RoundUp((address as nat)+length,32);
         var diff := rounded - |mem.contents|;
         if diff > 0
@@ -64,19 +64,19 @@ module Memory {
      *  @param  mem     A memory representation.
      *  @param  address An address to read (an u8) in memory.
      *  @returns        The smallest extension of `mem` that contains `address`
-     *                  and has a multiple of 32 bytes elements. 
+     *                  and has a multiple of 32 bytes elements.
      *
-     *  @note           At the end, `address` should be a valid index of `r` 
+     *  @note           At the end, `address` should be a valid index of `r`
      *                  i.e. in 0..(r.size - 1).
      */
-    function method Expand2(mem: T, address: nat) : (r: T) 
-      ensures |r.contents| > address 
-      ensures address >= |mem.contents| ==> 
+    function method Expand2(mem: T, address: nat) : (r: T)
+      ensures |r.contents| > address
+      ensures address >= |mem.contents| ==>
         (|r.contents| % 32 == 0 &&  |r.contents| - 32 <= address)
     {
-        if address < |mem.contents| then 
+        if address < |mem.contents| then
           mem
-        else 
+        else
           var extLength := SmallestLarg32(address);
           mem.(contents := mem.contents + Padding(extLength - |mem.contents|))
     }
