@@ -219,7 +219,6 @@ module Gas {
             // STATICCALL => s.UseGas(1)
             case REVERT => s.UseGas(G_ZERO)
             case SELFDESTRUCT => s.UseGas(1)
-            case _ => State.INVALID
+            case _ => State.INVALID(INVALID_OPCODE)
     }
 }
-
