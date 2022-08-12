@@ -75,9 +75,15 @@ module Gas {
         s.UseGas(1)
     }
 
-    /* for computing the gas charge if memory expansion was needed, we first compute by how much
-     * the memory should be expanded. If there was no need for memory expansion, the function returns 
-     * the size of the old memory. 
+    /* @param   mem         the current memory (sometimes also referred to as the old memory)
+     * @param   address     the starting memory slot to expand from
+     * @param   length      the length of the bytes to store in the memory
+     * @returns             if there is no need for expanding the current memory, returns the 
+                            size of the current memory. Otherwise, returns the size of the new
+                            memory which equals the size of the current memory plus the expansion amount
+     * @note                for computing the gas charge if memory expansion was needed, we first compute by how much
+     *                      the memory should be expanded. If there was no need for memory expansion, the function returns 
+     *                      the size of the old memory. 
      */
     function method ExpansionSize(mem: Memory.T, address: nat, length: nat) : nat
     {
@@ -93,21 +99,24 @@ module Gas {
             |mem.contents|
     }
 
-    /* compute the cost of the current memory (as if the memory was expanded from an empty sequence 
-     * to a sequence with size equal to memUsedSize). memUSedSize is the size of the current memory
-     * the returned value of the computation is the cost of memory usage given its current size set as memUsedSize
-     * notice the memory cost is linear up to a certain point (512 * 32 bytes), and non-linear beyond that amount
+    /* @param   memUsedSize     the size of the a memory
+     * @returns                 the cost of the expanding to the memory whose size in input as memUsedSize   
+     * @note                    compute the cost of the current memory (as if the memory was expanded from an empty sequence 
+     *                          to a sequence with size equal to memUsedSize). memUSedSize is the size of the current memory
+     *                          the returned value of the computation is the cost of memory usage given its current size set as memUsedSize
+     *                          notice the memory cost is linear up to a certain point (704 bytes), and non-linear beyond that amount
      */
     function method memoryExpansionCostHelper(memUsedSize: nat): nat
     {  
         G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
     }
 
-    /* this implements the gas cost encountered upon memory expansion
-     * in which case no expansion cost is encountered
-     * @param   mem         the current memory (also referred to as old memory)
+    /* @param   mem         the current memory (also referred to as old memory)
      * @param   address     the offset to start storing from 
-     */ 
+
+     * @note                this implements the gas cost encountered upon memory expansion
+     *                      in which case no expansion cost is encountered
+     */
     function method computeDynGasMSTORE(mem: Memory.T, address: nat) : nat
     {   
         /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
@@ -142,7 +151,7 @@ module Gas {
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
                 var costMemExpansion := computeDynGasMSTORE(st.evm.memory, loc as nat);
                 /* check if there is enough gas available to cover the expansion costs */
-                if costMemExpansion <= st.Gas() 
+                if costMemExpansion + G_VERYLOW <= st.Gas() 
                     then 
                         st.UseGas(costMemExpansion + G_VERYLOW)
                 /* return an invalid state if there was not enough gas to pay for the memory expansion */
