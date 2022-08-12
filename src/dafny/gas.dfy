@@ -75,45 +75,83 @@ module Gas {
         s.UseGas(1)
     }
 
-    /* this implements a helper function YP calls C_mem (page 28, equation 328, BERLIN VERSION 3078285 – 2022-07-13) */
-    function method memoryExpansionCostHelper(mem: Memory.T): nat
-    {   var memUsed := |mem.contents|;
-        G_MEMORY * memUsed + ((memUsed * memUsed) / 512)
-    }
-
-    /* this implements the gas cost encountered upn memory expansion 
-     * the newMem is the memory after applying expansion. Note that 
-     * might be the old mem in which case no cost is encountered 
-     *  see YP, page 28, BERLIN VERSION 3078285 – 2022-07-13 
+    /* for computing the gas charge if memory expansion was needed, we first compute by how much
+     * the memory should be expanded. If there was no need for memory expansion, the function returns 
+     * the size of the old memory. 
      */
-    function method computeDynGasMSTORE(mem: Memory.T, address: nat) : nat
+    function method ExpansionSize(mem: Memory.T, address: nat, length: nat) : nat
     {
-        var newMem := Memory.Expand(mem, address, 32);
-        var memCost := memoryExpansionCostHelper(mem);
-        var newMemCost := memoryExpansionCostHelper(newMem); 
-        newMemCost - memCost
+        // Round up size to multiple of 32. 
+        var rounded := RoundUp((address as nat)+length,32);
+        var diff := rounded - |mem.contents|;
+        if diff > 0
+        then
+            // Return the size of the expanded memory
+            |mem.contents| + diff
+        else
+            // Do nothing, simply return the size of the current memory used
+            |mem.contents|
     }
 
-    /* this is an alternative gas charging mechanism for MSTORE. Here we are specifying
-     * the amount of gas to charge in case the memory usage exceeds the maximum allowed 
-     * memory use, or if we encounter an underflow of stack. In any of the exceptional
-     * cases, we charge the base gas fee
+    /* compute the cost of the current memory (as if the memory was expanded from an empty sequence 
+     * to a sequence with size equal to memUsedSize). memUSedSize is the size of the current memory
+     * the returned value of the computation is the cost of memory usage given its current size set as memUsedSize
+     * notice the memory cost is linear up to a certain point (512 * 32 bytes), and non-linear beyond that amount
      */
-    function method gasCostMStore(st: State) : State
+    function method memoryExpansionCostHelper(memUsedSize: nat): nat
+    {  
+        G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
+    }
+
+    /* this implements the gas cost encountered upon memory expansion
+     * in which case no expansion cost is encountered
+     * @param   mem         the current memory (also referred to as old memory)
+     * @param   address     the offset to start storing from 
+     */ 
+    function method computeDynGasMSTORE(mem: Memory.T, address: nat) : nat
+    {   
+        /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
+        var ExpandedMemSize := ExpansionSize(mem, address, 32);
+        /* compute the cost of the old memory */
+        var oldMemCost := memoryExpansionCostHelper(|mem.contents|);
+        /* compute the cost of the new memory, considering any needed expansion */
+        var newMemCost := memoryExpansionCostHelper(ExpandedMemSize); 
+        /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
+         * the gas already charged for the old memory in previous expansions, and only charges for the newly
+         * added bytes to the old memory for obtaining the new memory */ 
+        newMemCost - oldMemCost
+    }
+
+    /* compute the gas cost of memory expansion. Consider corner cases where exceptions
+     * may have happened due to accessing maximum allowed memory, or underflowing the stack
+     */
+    function method gasCostMSTORE(st: State) : State
         requires !st.IsFailure() 
     {
+        /* check for the stack underflow */
         if st.Operands() >= 2
         then
+            /* get the address which is the starting memory slot for storing the value in the memory*/
             var loc := st.Peek(0) as nat;
+            /* get the value which is to be stored in the memory */
             var val := st.Peek(1);
+            /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
+             * memory size */
             if (loc + 31) < MAX_U256
                 then
+                /* compute if memory expansion is needed, and return the cost of the potential expansion */
                 var costMemExpansion := computeDynGasMSTORE(st.evm.memory, loc as nat);
-                st.UseGas(costMemExpansion)
+                /* check if there is enough gas available to cover the expansion costs */
+                if costMemExpansion <= st.Gas() 
+                    then 
+                        st.UseGas(costMemExpansion + G_VERYLOW)
+                /* return an invalid state if there was not enough gas to pay for the memory expansion */
+                else State.INVALID
             else
-                st.UseGas(3)
+                /* charge the constant gas amount, even if maximum accessible memory was encountered */
+                st.UseGas(G_VERYLOW)
         else
-            st.UseGas(3)
+            State.INVALID
     }
 
     /** The Berlin gas cost function.
@@ -181,7 +219,7 @@ module Gas {
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
             case MLOAD => s.UseGas(G_VERYLOW)
-            case MSTORE => s.UseGas(G_VERYLOW)
+            case MSTORE => gasCostMSTORE(s)
             case MSTORE8 => s.UseGas(G_VERYLOW)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
