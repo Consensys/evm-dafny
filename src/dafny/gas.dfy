@@ -75,40 +75,38 @@ module Gas {
         s.UseGas(1)
     }
 
-    /* @param   mem         the current memory (sometimes also referred to as the old memory)
-     * @param   address     the starting memory slot to expand from
-     * @param   length      the length of the bytes to store in the memory
-     * @returns             if there is no need for expanding the current memory, returns the 
-                            size of the current memory. Otherwise, returns the size of the new
-                            memory which equals the size of the current memory plus the expansion amount
-     * @note                for computing the gas charge if memory expansion was needed, we first compute by how much
-     *                      the memory should be expanded. If there was no need for memory expansion, the function returns 
-     *                      the size of the old memory. 
+    /**
+     *  Expand memory to include a given address.
+     *  Calls the function Expand2 implemented in the memory module
+
+     *  @param  address The start address.
+     *  @param  len     The number of bytes to read from `address`, i.e.
+     *                  we want to read `len` bytes starting at `address`. 
+     *  @returns        A possibly expanded memory that contains 
+     *                  memory slots upto index `address + len - 1`.
+     *  
+     *  @note           When using this function, you may check
+     *                  first that the extended chunk satisfies some constraints,
+     *                  e.g. begin less then `MAX_U256`. 
      */
-    function method ExpansionSize(mem: Memory.T, address: nat, length: nat) : nat
+    function method ExpandMem(mem: Memory.T, address: nat, len: nat): (r: Memory.T)
+    requires len > 0
     {
-        // Round up size to multiple of 32. 
-        var rounded := RoundUp((address as nat)+length,32);
-        var diff := rounded - |mem.contents|;
-        if diff > 0
-        then
-            // Return the size of the expanded memory
-            |mem.contents| + diff
-        else
-            // Do nothing, simply return the size of the current memory used
-            |mem.contents|
+        Expand2(mem, address + len - 1)
     }
 
-    /* @param   memUsedSize     the size of the a memory
-     * @returns                 the cost of the expanding to the memory whose size in input as memUsedSize   
+     /* @param   memUsedSize    the number of words used the a memory
+     * @returns                 the cost of the expanding to the memory whose activate number of words is input as memUsedSize   
      * @note                    compute the cost of the current memory (as if the memory was expanded from an empty sequence 
-     *                          to a sequence with size equal to memUsedSize). memUSedSize is the size of the current memory
-     *                          the returned value of the computation is the cost of memory usage given its current size set as memUsedSize
+     *                          to a sequence of u8 where the active number of words in the new memory equals to memUsedSize). 
+     *                          memUSedSize is the number of active words of the current memory
+     *                          the returned value of the computation is the cost of memory usage given its current number 
+     *                          of active words, which is memUsedSize
      *                          notice the memory cost is linear up to a certain point (704 bytes), and non-linear beyond that amount
      */
-    function method memoryExpansionCostHelper(memUsedSize: nat): nat
+    function method memoryExpansionCostHelper(numWordsUsed: nat): nat
     {  
-        G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
+        G_MEMORY * numWordsUsed + ((numWordsUsed * numWordsUsed) / 512)
     }
 
     /* @param   mem         the current memory (also referred to as old memory)
@@ -120,11 +118,11 @@ module Gas {
     function method computeDynGasMSTORE(mem: Memory.T, address: nat) : nat
     {   
         /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
-        var ExpandedMemSize := ExpansionSize(mem, address, 32);
+        var ExpandedMemSize := ExpandMem(mem, address, 32);
         /* compute the cost of the old memory */
-        var oldMemCost := memoryExpansionCostHelper(|mem.contents|);
+        var oldMemCost := memoryExpansionCostHelper(|mem.contents|/32);
         /* compute the cost of the new memory, considering any needed expansion */
-        var newMemCost := memoryExpansionCostHelper(ExpandedMemSize); 
+        var newMemCost := memoryExpansionCostHelper(|ExpandedMemSize.contents|/32); 
         /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
          * the gas already charged for the old memory in previous expansions, and only charges for the newly
          * added bytes to the old memory for obtaining the new memory */ 
