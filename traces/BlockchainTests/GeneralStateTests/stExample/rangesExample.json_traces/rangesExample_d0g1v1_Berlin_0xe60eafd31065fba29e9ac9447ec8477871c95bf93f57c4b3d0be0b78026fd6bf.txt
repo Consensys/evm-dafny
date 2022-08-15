@@ -1,0 +1,6 @@
+{"pc":0,"op":96,"gas":"0x150aa8","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":53,"gas":"0x150aa5","gasCost":"0x3","memSize":0,"stack":["0x0"],"depth":1,"refund":0,"opName":"CALLDATALOAD"}
+{"pc":3,"op":96,"gas":"0x150aa2","gasCost":"0x3","memSize":0,"stack":["0x100000000000000000000000000000000000000000000000000000000000000"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":5,"op":85,"gas":"0x150a9f","gasCost":"0x5654","memSize":0,"stack":["0x100000000000000000000000000000000000000000000000000000000000000","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":6,"op":0,"gas":"0x14b44b","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x565d","time":137083}

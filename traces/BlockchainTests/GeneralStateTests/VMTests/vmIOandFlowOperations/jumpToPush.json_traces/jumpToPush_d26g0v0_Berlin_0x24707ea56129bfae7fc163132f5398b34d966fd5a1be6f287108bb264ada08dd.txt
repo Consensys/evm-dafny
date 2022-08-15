@@ -1,0 +1,15 @@
+{"pc":0,"op":96,"gas":"0x4c4612c","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":53,"gas":"0x4c46129","gasCost":"0x3","memSize":0,"stack":["0x4"],"depth":1,"refund":0,"opName":"CALLDATALOAD"}
+{"pc":3,"op":96,"gas":"0x4c46126","gasCost":"0x3","memSize":0,"stack":["0x1c"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":5,"op":96,"gas":"0x4c46123","gasCost":"0x3","memSize":0,"stack":["0x1c","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":96,"gas":"0x4c46120","gasCost":"0x3","memSize":0,"stack":["0x1c","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":9,"op":96,"gas":"0x4c4611d","gasCost":"0x3","memSize":0,"stack":["0x1c","0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":11,"op":132,"gas":"0x4c4611a","gasCost":"0x3","memSize":0,"stack":["0x1c","0x0","0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"DUP5"}
+{"pc":12,"op":97,"gas":"0x4c46117","gasCost":"0x3","memSize":0,"stack":["0x1c","0x0","0x0","0x0","0x0","0x1c"],"depth":1,"refund":0,"opName":"PUSH2"}
+{"pc":15,"op":90,"gas":"0x4c46114","gasCost":"0x2","memSize":0,"stack":["0x1c","0x0","0x0","0x0","0x0","0x1c","0x1388"],"depth":1,"refund":0,"opName":"GAS"}
+{"pc":16,"op":3,"gas":"0x4c46112","gasCost":"0x3","memSize":0,"stack":["0x1c","0x0","0x0","0x0","0x0","0x1c","0x1388","0x4c46112"],"depth":1,"refund":0,"opName":"SUB"}
+{"pc":17,"op":244,"gas":"0x4c4610f","gasCost":"0x4b14fb4","memSize":0,"stack":["0x1c","0x0","0x0","0x0","0x0","0x1c","0x4c44d8a"],"depth":1,"refund":0,"opName":"DELEGATECALL"}
+{"pc":18,"op":80,"gas":"0x4c456e7","gasCost":"0x2","memSize":0,"stack":["0x1c","0x1"],"depth":1,"refund":0,"opName":"POP"}
+{"pc":19,"op":80,"gas":"0x4c456e5","gasCost":"0x2","memSize":0,"stack":["0x1c"],"depth":1,"refund":0,"opName":"POP"}
+{"pc":20,"op":0,"gas":"0x4c456e3","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0xa49","time":514667}

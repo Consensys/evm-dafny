@@ -1,0 +1,20 @@
+{"pc":0,"op":96,"gas":"0x4c46138","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x4c46135","gasCost":"0x3","memSize":0,"stack":["0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":96,"gas":"0x4c46132","gasCost":"0x3","memSize":0,"stack":["0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":6,"op":96,"gas":"0x4c4612f","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":8,"op":96,"gas":"0x4c4612c","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":10,"op":53,"gas":"0x4c46129","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x4"],"depth":1,"refund":0,"opName":"CALLDATALOAD"}
+{"pc":11,"op":97,"gas":"0x4c46126","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH2"}
+{"pc":14,"op":1,"gas":"0x4c46123","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0","0x100"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":15,"op":98,"gas":"0x4c46120","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x100"],"depth":1,"refund":0,"opName":"PUSH3"}
+{"pc":19,"op":244,"gas":"0x4c4611d","gasCost":"0x10a28","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x100","0x10000"],"depth":1,"refund":0,"opName":"DELEGATECALL"}
+{"pc":0,"op":97,"gas":"0x10000","gasCost":"0x3","memSize":0,"stack":[],"depth":2,"refund":0,"opName":"PUSH2"}
+{"pc":3,"op":96,"gas":"0xfffd","gasCost":"0x3","memSize":0,"stack":["0x600d"],"depth":2,"refund":0,"opName":"PUSH1"}
+{"pc":5,"op":85,"gas":"0xfffa","gasCost":"0x1388","memSize":0,"stack":["0x600d","0x0"],"depth":2,"refund":0,"opName":"SSTORE"}
+{"pc":6,"op":96,"gas":"0xec72","gasCost":"0x3","memSize":0,"stack":[],"depth":2,"refund":0,"opName":"PUSH1"}
+{"pc":8,"op":96,"gas":"0xec6f","gasCost":"0x3","memSize":0,"stack":["0x10"],"depth":2,"refund":0,"opName":"PUSH1"}
+{"pc":10,"op":2,"gas":"0xec6c","gasCost":"0x5","memSize":0,"stack":["0x10","0x20"],"depth":2,"refund":0,"opName":"MUL"}
+{"pc":11,"op":86,"gas":"0xec67","gasCost":"0x8","memSize":0,"stack":["0x200"],"depth":2,"refund":0,"opName":"JUMP"}
+{"pc":11,"op":86,"gas":"0xec67","gasCost":"0x8","memSize":0,"stack":[],"depth":2,"refund":0,"opName":"JUMP","error":"invalid jump destination"}
+{"pc":20,"op":0,"gas":"0x4c356f5","gasCost":"0x0","memSize":0,"stack":["0x0"],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x10a43","time":261542}

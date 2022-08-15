@@ -1,0 +1,17 @@
+{"pc":0,"op":96,"gas":"0x4c4612c","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x4c46129","gasCost":"0x3","memSize":0,"stack":["0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":96,"gas":"0x4c46126","gasCost":"0x3","memSize":0,"stack":["0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":6,"op":96,"gas":"0x4c46123","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":8,"op":96,"gas":"0x4c46120","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":10,"op":96,"gas":"0x4c4611d","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":12,"op":53,"gas":"0x4c4611a","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0","0x4"],"depth":1,"refund":0,"opName":"CALLDATALOAD"}
+{"pc":13,"op":97,"gas":"0x4c46117","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0","0xc"],"depth":1,"refund":0,"opName":"PUSH2"}
+{"pc":16,"op":1,"gas":"0x4c46114","gasCost":"0x3","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0","0xc","0x100"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":17,"op":90,"gas":"0x4c46111","gasCost":"0x2","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0","0x10c"],"depth":1,"refund":0,"opName":"GAS"}
+{"pc":18,"op":241,"gas":"0x4c4610f","gasCost":"0x4b14fb4","memSize":0,"stack":["0x0","0x0","0x0","0x0","0x0","0x10c","0x4c4610f"],"depth":1,"refund":0,"opName":"CALL"}
+{"pc":0,"op":108,"gas":"0x4b1458c","gasCost":"0x3","memSize":0,"stack":[],"depth":2,"refund":0,"opName":"PUSH13"}
+{"pc":14,"op":96,"gas":"0x4b14589","gasCost":"0x3","memSize":0,"stack":["0x33445566778899aabbccddeeff"],"depth":2,"refund":0,"opName":"PUSH1"}
+{"pc":16,"op":85,"gas":"0x4b14586","gasCost":"0x5654","memSize":0,"stack":["0x33445566778899aabbccddeeff","0x0"],"depth":2,"refund":0,"opName":"SSTORE"}
+{"pc":17,"op":0,"gas":"0x4b0ef32","gasCost":"0x0","memSize":0,"stack":[],"depth":2,"refund":0,"opName":"STOP"}
+{"pc":19,"op":0,"gas":"0x4c4008d","gasCost":"0x0","memSize":0,"stack":["0x1"],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x609f","time":1086042}

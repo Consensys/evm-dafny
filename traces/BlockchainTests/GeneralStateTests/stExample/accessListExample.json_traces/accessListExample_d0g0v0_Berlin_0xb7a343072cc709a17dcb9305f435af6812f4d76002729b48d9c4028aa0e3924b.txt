@@ -1,0 +1,7 @@
+{"pc":0,"op":96,"gas":"0x59f70","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0x59f6d","gasCost":"0x3","memSize":0,"stack":["0x1"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":1,"gas":"0x59f6a","gasCost":"0x3","memSize":0,"stack":["0x1","0x1"],"depth":1,"refund":0,"opName":"ADD"}
+{"pc":5,"op":96,"gas":"0x59f67","gasCost":"0x3","memSize":0,"stack":["0x2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":7,"op":85,"gas":"0x59f64","gasCost":"0x4e20","memSize":0,"stack":["0x2","0x0"],"depth":1,"refund":0,"opName":"SSTORE"}
+{"pc":8,"op":0,"gas":"0x55144","gasCost":"0x0","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"STOP"}
+{"output":"","gasUsed":"0x4e2c","time":183500}
