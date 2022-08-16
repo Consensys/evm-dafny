@@ -155,8 +155,12 @@ module Gas {
                 /* return an invalid state if there was not enough gas to pay for the memory expansion */
                 else State.INVALID(INSUFFICIENT_GAS)
             else
-                /* charge the constant gas amount, even if maximum accessible memory was encountered */
-                st.UseGas(G_VERYLOW)
+                if G_VERYLOW <= st.Gas()
+                    then
+                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
+                        st.UseGas(G_VERYLOW)
+                else    
+                    State.INVALID(INSUFFICIENT_GAS)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
