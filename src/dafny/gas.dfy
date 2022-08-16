@@ -83,28 +83,7 @@ module Gas {
      *  @note                   The memory cost is linear up to a certain point (
      *                          22*32 = 704 bytes), and then quadratic.
      */
-    // function method ExpansionSize(mem: Memory.T, address: nat, length: nat) : nat
-    // {
-    //     // Round up size to multiple of 32. 
-    //     var rounded := RoundUp((address as nat)+length,32);
-    //     var diff := rounded - |mem.contents|;
-    //     if diff > 0
-    //     then
-    //         // Return the size of the expanded memory
-    //         |mem.contents| + diff
-    //     else
-    //         // Do nothing, simply return the size of the current memory used
-    //         |mem.contents|
-    // }
-
-    /* @param   memUsedSize     the size of the a memory
-     * @returns                 the cost of the expanding to the memory whose size in input as memUsedSize   
-     * @note                    compute the cost of the current memory (as if the memory was expanded from an empty sequence 
-     *                          to a sequence with size equal to memUsedSize). memUSedSize is the size of the current memory
-     *                          the returned value of the computation is the cost of memory usage given its current size set as memUsedSize
-     *                          notice the memory cost is linear up to a certain point (704 bytes), and non-linear beyond that amount
-     */
-    function method memoryExpansionCostHelper(memUsedSize: nat): (x:nat)
+    function method QuadraticCost(memUsedSize: nat): nat
     {  
         G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
     }
@@ -131,77 +110,21 @@ module Gas {
      * @note                this implements the gas cost encountered upon memory expansion
      *                      in which case no expansion cost is encountered
      */
-    function method computeDynGasMSTORE2(mem: Memory.T, address: nat) : nat 
+    function method ComputeDynGasMSTORE(mem: Memory.T, address: nat) : nat 
     {   
         if address + 31 < |mem.contents| then 
             0
         else 
-            // reveal_memoryExpansionCostHelper();
-            /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
-            // var ExpandedMemSize := ExpansionSize(mem, address, 32);
-            var ExpandedMemSize := Memory.SmallestLarg32(address + 31);
-            assert ExpandedMemSize >= |mem.contents|;
-            /* compute the cost of the old memory */
-            var oldMemCost := memoryExpansionCostHelper(|mem.contents|);
-            /* compute the cost of the new memory, considering any needed expansion */
-            var newMemCost := memoryExpansionCostHelper(ExpandedMemSize); 
-            /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
-            * the gas already charged for the old memory in previous expansions, and only charges for the newly
-            * added bytes to the old memory for obtaining the new memory */ 
-            newMemCost - oldMemCost
-    }
-
-    function method {:verify true} computeDynGasMSTORE(mem: Memory.T, address: nat) : nat 
-    {   
-        if address + 31 < |mem.contents| then 
-            0
-        else 
-            // reveal_memoryExpansionCostHelper();
-            /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
-            // var ExpandedMemSize := ExpansionSize(mem, address, 32);
-            // ghost var ExpandedMemSize := Memory.SmallestLarg32(address + 31);
-            // assert ExpandedMemSize >= |mem.contents|;
-            /* compute the cost of the old memory */
-            // var oldMemCost := memoryExpansionCostHelper(|mem.contents|);
-            /* compute the cost of the new memory, considering any needed expansion */
-            // var newMemCost := memoryExpansionCostHelper(ExpandedMemSize); 
-            /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
-            * the gas already charged for the old memory in previous expansions, and only charges for the newly
-            * added bytes to the old memory for obtaining the new memory */ 
-            // newMemCost - oldMemCost
-            // Y_monotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
-            //  Y monotonic 
-            // if Memory.SmallestLarg32(address + 31) >= |mem.contents| {
-            // calc {
-            //     Y(Memory.SmallestLarg32(address + 31));
-            //     G_MEMORY * Memory.SmallestLarg32(address + 31) + ((Memory.SmallestLarg32(address + 31) * Memory.SmallestLarg32(address + 31)) / 512);
-            //     >= { assert address + 31 >= |mem.contents|;}
-            //     G_MEMORY * |mem.contents| + ((|mem.contents| * |mem.contents|) / 512);
-            //     Y(|mem.contents|);
-            // }
-            // calc ==> {
-            //     true;
-            //     calc >= {
-            //         Y(Memory.SmallestLarg32(address + 31));
-            //         G_MEMORY * Memory.SmallestLarg32(address + 31) + ((Memory.SmallestLarg32(address + 31) * Memory.SmallestLarg32(address + 31)) / 512);
-            //         { assert address + 31 >= |mem.contents|;}
-            //         G_MEMORY * |mem.contents| + ((|mem.contents| * |mem.contents|) / 512);
-            //         Y(|mem.contents|);
-                
-            //     }
-            //     Y(Memory.SmallestLarg32(address + 31)) >= Y(|mem.contents|);
-            // }
-            Y_monotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
-            assert Y(Memory.SmallestLarg32(address + 31)) >= Y(|mem.contents|); 
-            // }
-            Y(Memory.SmallestLarg32(address + 31)) - Y(|mem.contents|)
+            QuadraticCostIsMonotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
+            assert QuadraticCost(Memory.SmallestLarg32(address + 31)) >= QuadraticCost(|mem.contents|);
+            QuadraticCost(Memory.SmallestLarg32(address + 31)) - QuadraticCost(|mem.contents|)
     } 
 
     /* compute the gas cost of memory expansion. Consider corner cases where exceptions
      * may have happened due to accessing maximum allowed memory, or underflowing the stack
      */
-    function method gasCostMSTORE(st: State) : State
-        requires !st.IsFailure() 
+    function method GasCostMSTORE(st: State) : State
+        requires !st.IsFailure()
     {
         /* check for the stack underflow */
         if st.Operands() >= 1
@@ -213,7 +136,7 @@ module Gas {
             if (loc + 31) < MAX_U256
                 then
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
-                var costMemExpansion := computeDynGasMSTORE(st.evm.memory, loc as nat);
+                var costMemExpansion := ComputeDynGasMSTORE(st.evm.memory, loc as nat);
                 /* check if there is enough gas available to cover the expansion costs */
                 if costMemExpansion + G_VERYLOW <= st.Gas() 
                     then 
@@ -296,7 +219,7 @@ module Gas {
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
             case MLOAD => s.UseGas(G_VERYLOW)
-            case MSTORE => gasCostMSTORE(s)
+            case MSTORE => GasCostMSTORE(s)
             case MSTORE8 => s.UseGas(G_VERYLOW)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
