@@ -204,12 +204,10 @@ module Gas {
         requires !st.IsFailure() 
     {
         /* check for the stack underflow */
-        if st.Operands() >= 2
+        if st.Operands() >= 1
         then
             /* get the address which is the starting memory slot for storing the value in the memory*/
             var loc := st.Peek(0) as nat;
-            /* get the value which is to be stored in the memory */
-            var val := st.Peek(1);
             /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
              * memory size */
             if (loc + 31) < MAX_U256
