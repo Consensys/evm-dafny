@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dafny.DafnySequence;
-import dafnyevm.DafnyEvm.SnapShot;
+import dafnyevm.DafnyEvm.Outcome;
 import dafnyevm.util.Hex;
 import dafnyevm.util.Tracers;
 
@@ -1442,6 +1442,17 @@ public class Tests {
 	}
 
 	// ========================================================================
+	// Call
+	// ========================================================================
+
+	@Test
+	public void test_call_01() {
+		// Check gas price == 1
+		byte[] output = call(new int[] { GASPRICE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(1), output);
+	}
+
+	// ========================================================================
 	// Misc
 	// ========================================================================
 
@@ -1490,13 +1501,13 @@ public class Tests {
 			e.setTracer(new Tracers.Debug());
 		}
 		// Execute the EVM
-		SnapShot r = e.call(to, from, gas, value, calldata);
+		Outcome r = e.call(to, from, gas, value, calldata);
 		// Check we haven't reverted
-		assertFalse(r.isRevert());
+		assertFalse(r instanceof Outcome.Revert);
 		// Check something was returned
 		assertNotNull(r.getReturnData());
 		// Ok!
-		return toBytes(r.getReturnData());
+		return r.getReturnData();
 	}
 
 	private byte[] call(long from, byte[] calldata, int[] code) {
@@ -1538,13 +1549,13 @@ public class Tests {
 	private byte[] revertingCall(byte[] code) {
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(), code).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_GAS, DEFAULT_VALUE, new byte[0]);
+		Outcome r = new DafnyEvm(new HashMap<>(), code).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_GAS, DEFAULT_VALUE, new byte[0]);
 		// Check we have reverted
-		assertTrue(r.isRevert());
+		assertTrue(r instanceof Outcome.Revert);
 		// Check something was returned
 		assertNotNull(r.getReturnData());
 		// Ok!
-		return toBytes(r.getReturnData());
+		return r.getReturnData();
 	}
 
 	/**
@@ -1565,9 +1576,9 @@ public class Tests {
 	 */
 	private void invalidCall(int[] words) {
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_VALUE, DEFAULT_GAS, new byte[0]);
+		Outcome r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_VALUE, DEFAULT_GAS, new byte[0]);
 		// Check expected outcome
-		assert r.isInvalid();
+		assert r instanceof Outcome.Invalid;
 	}
 
 	/**
@@ -1578,7 +1589,7 @@ public class Tests {
 	private void insufficientGasCall(int[] words) {
 		System.out.println("Excuting: " + Hex.toHexString(toBytes(words)));
 		// Execute the EVM
-		SnapShot r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_VALUE, DEFAULT_GAS, new byte[0]);
+		Outcome r = new DafnyEvm(new HashMap<>(),toBytes(words)).call(DEFAULT_RECEIVER, DEFAULT_ORIGIN, DEFAULT_VALUE, DEFAULT_GAS, new byte[0]);
 		// FIXME: better reporting for out-of-gas.
 		assert(r.getReturnData() == null);
 	}

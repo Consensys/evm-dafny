@@ -199,7 +199,7 @@ module EvmBerlin refines EVM {
                         //   var k =>  case opcode - LOG0) as int; evalLOG(st,k)
                         // 0xf0
                         //  CREATE => Bytecode.evalCREATE(s),
-                        //  CALL => Bytecode.evalCALL(s),
+                        case CALL => Bytecode.Call(s)
                         //  CALLCODE => Bytecode.evalCALLCODE(s),
                         case RETURN => Bytecode.Return(s)
                         // DELEGATECALL => Bytecode.evalDELEGATECALL(s),

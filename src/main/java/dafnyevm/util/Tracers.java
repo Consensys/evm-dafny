@@ -65,7 +65,7 @@ public class Tracers {
 	public static class Debug extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(DafnyEvm.SnapShot state) {
+		public void step(DafnyEvm.Outcome.Ok state) {
 			final String p = state.getPC().toString();
 			final String m = state.getMemory().toString();
 			final String s = state.getStorage().toString();
@@ -75,18 +75,18 @@ public class Tracers {
 		}
 
 		@Override
-		public void exception(BigInteger gasUsed) {
+		public void exception(DafnyEvm.Outcome.Invalid state) {
 			System.out.println("error");
 		}
 
 		@Override
-		public void end(byte[] output, BigInteger gasUsed) {
-			System.out.println(Hex.toHexString(output));
+		public void end(DafnyEvm.Outcome.Return state) {
+			System.out.println(Hex.toHexString(state.getReturnData()));
 		}
 
 		@Override
-		public void revert(byte[] output, BigInteger gasUsed) {
-			System.out.println(Hex.toHexString(output));
+		public void revert(DafnyEvm.Outcome.Revert state) {
+			System.out.println(Hex.toHexString(state.getReturnData()));
 			System.out.println("error: execution reverted");
 		}
 	}
@@ -97,7 +97,7 @@ public class Tracers {
 	public static class JSON extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(DafnyEvm.SnapShot state) {
+		public void step(DafnyEvm.Outcome.Ok state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
@@ -105,7 +105,7 @@ public class Tracers {
 				obj.key("op").value(state.getOpcode());
 				obj.key("gas").value(Hex.toHexString(state.getRemainingGas()));
 				if (state.getMemorySize() > 0) {
-					byte[] mem = DafnySequence.toByteArray((DafnySequence) state.getMemory());
+					byte[] mem = state.getMemory();
 					obj.key("memory").value(Hex.toHexString(mem));
 				}
 				obj.key("memSize").value(state.getMemorySize());
@@ -120,12 +120,12 @@ public class Tracers {
 		}
 
 		@Override
-		public void end(byte[] output, BigInteger gasUsed) {
+		public void end(DafnyEvm.Outcome.Return state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
-				obj.key("output").value(Hex.toHexString(output));
-				obj.key("gasUsed").value(Hex.toHexString(gasUsed));
+				obj.key("output").value(Hex.toHexString(state.getReturnData()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGasUsed()));
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
 				// In principle, this should never happen!
@@ -134,12 +134,12 @@ public class Tracers {
 		}
 
 		@Override
-		public void revert(byte[] output, BigInteger gasUsed) {
+		public void revert(DafnyEvm.Outcome.Revert state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
-				obj.key("output").value(Hex.toHexString(output));
-				obj.key("gasUsed").value(Hex.toHexString(gasUsed));
+				obj.key("output").value(Hex.toHexString(state.getReturnData()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGasUsed()));
 				obj.key("error").value("execution reverted");
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
@@ -149,11 +149,11 @@ public class Tracers {
 		}
 
 		@Override
-		public void exception(BigInteger gasUsed) {
+		public void exception(DafnyEvm.Outcome.Invalid state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
-				obj.key("gasUsed").value(Hex.toHexString(gasUsed));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGasUsed()));
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
 				// In principle, this should never happen!
@@ -167,10 +167,10 @@ public class Tracers {
 		 * @param seq
 		 * @return
 		 */
-		private JSONArray toStackArray(DafnySequence<? extends BigInteger> seq) {
+		private JSONArray toStackArray(BigInteger[] stack) {
 			JSONArray arr = new JSONArray();
-			for(int i=seq.length()-1;i>=0;--i) {
-				arr.put(Hex.toHexString(seq.select(i)));
+			for(int i=0;i<stack.length;++i) {
+				arr.put(Hex.toHexString(stack[i]));
 			}
 			return arr;
 		}

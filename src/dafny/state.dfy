@@ -95,7 +95,8 @@ module EvmState {
     datatype State = OK(evm:T)
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>)
-        | REVERTS(gas:nat,data:seq<u8>) {
+        | REVERTS(gas:nat,data:seq<u8>)
+        | CALLS(gas:nat, to:u160, calldata:seq<u8>) {
 
         /**
          * Check whether EVM has failed (e.g. due to an exception
@@ -123,11 +124,12 @@ module EvmState {
          * Determine remaining gas.
          */
         function method Gas(): nat
-        requires !this.INVALID? {
+        requires !IsFailure() {
             match this
                 case OK(evm) => evm.gas
                 case RETURNS(g, _) => g
                 case REVERTS(g, _) => g
+                case CALLS(_, _, _) => 0
         }
 
         /** Use some gas if possible. */

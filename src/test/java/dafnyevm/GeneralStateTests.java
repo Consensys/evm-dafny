@@ -218,7 +218,7 @@ public class GeneralStateTests {
 		}
 
 		@Override
-		public void step(DafnyEvm.SnapShot state) {
+		public void step(DafnyEvm.Outcome state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"

@@ -1011,8 +1011,29 @@ module Bytecode {
     // =====================================================================
 
     /**
-    * Halt execution returning output data.
-    */
+     * Message-call into an account.
+     */
+    function method Call(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 7
+        then
+            var outSize := st.Peek(6) as nat;
+            var outOffset := st.Peek(5) as nat;
+            var inSize := st.Peek(4) as nat;
+            var inOffset := st.Peek(3) as nat;
+            var value := st.Peek(2) as nat;
+            var to := (st.Peek(1) as int) % TWO_160;
+            var gas := st.Peek(0) as nat;
+            var calldata := Memory.Slice(st.evm.memory, inSize, inOffset);
+            State.CALLS(gas,to as u160,calldata)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Halt execution returning output data.
+     */
     function method Return(st: State) : State
     requires !st.IsFailure() {
         //
