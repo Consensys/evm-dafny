@@ -67,6 +67,15 @@ public class ExecutionContext {
 	 */
 	public class Transaction {
 		/**
+		 * Address of end-user account initiating this call (default is
+		 * <code>0xdef</code>).
+		 */
+		private BigInteger origin = Hex.toBigInt("0xdef");
+		/**
+		 * Address of received for this transaction (default is <code>0xabc</code>).
+		 */
+		private BigInteger to = Hex.toBigInt("0xabc");
+		/**
 		 * Gas limit for this CALL (default is <code>10000000000</code>)
 		 */
 		private BigInteger gasLimit = DEFAULT_GAS;
@@ -78,10 +87,60 @@ public class ExecutionContext {
 		 * The call data to supply in this call (default is <code>[]</code>).
 		 */
 		private byte[] calldata = new byte[0];
+
 		/**
-		 * Address of end-user account initiating this call (default is <code>1</code>).
+		 * Specify from which account this transaction is being initiated.
+		 *
+		 * @param origin
+		 * @return
 		 */
-		private BigInteger from = BigInteger.ONE;
+		public Transaction from(long origin) {
+			this.origin = BigInteger.valueOf(origin);
+			return this;
+		}
+
+		/**
+		 * Specify from which account this transaction is being initiated.
+		 *
+		 * @param origin
+		 * @return
+		 */
+		public Transaction from(BigInteger origin) {
+			this.origin = origin;
+			return this;
+		}
+
+		/**
+		 * Specify some calldata for this transaction.
+		 *
+		 * @param calldata
+		 * @return
+		 */
+		public Transaction data(byte[] calldata) {
+			this.calldata = calldata;
+			return this;
+		}
+
+		/**
+		 * Specify value to deposit as part of this transaction.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public Transaction value(long value) {
+			return value(BigInteger.valueOf(value));
+		}
+
+		/**
+		 * Specify value to deposit as part of this transaction.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public Transaction value(BigInteger value) {
+			this.value = value;
+			return this;
+		}
 
 		/**
 		 * Run a given sequence of bytecodes, expecting things to go OK and to produce
@@ -89,19 +148,38 @@ public class ExecutionContext {
 		 *
 		 * @param to Receiver for this call.
 		 */
-		public byte[] call(BigInteger to) {
+		public DafnyEvm.Outcome call() {
 			// FIXME: check sufficient balance for transfer.
 
 			// Extract account info
 			Account acct = ExecutionContext.this.state.get(to);
-			System.out.println("Excuting: " + Hex.toHexString(acct.code));
-			// FIXME: this is not necessary a contract call!!
-			DafnyEvm e = new DafnyEvm(acct.storage, acct.code);
+			// FIXME: check for end-user-account.
+			return call(acct.storage,acct.code);
+		}
+
+		/**
+		 * Execute a given sequence of bytecodes using this EVM, assuming an initially
+		 * empty storage.
+		 *
+		 * @param code Code to execute.
+		 * @return
+		 */
+		public DafnyEvm.Outcome call(byte[] code) {
+			return call(new HashMap<>(),code);
+		}
+
+		/**
+		 * Execute a given sequence of bytecodes using this EVM.
+		 *
+		 * @param storage Initial state of storage.
+		 * @param code    Code to execute.
+		 * @return
+		 */
+		public DafnyEvm.Outcome call(Map<BigInteger, BigInteger> storage, byte[] code) {
+			DafnyEvm e = new DafnyEvm(storage, code);
 			e.setTracer(tracer);
 			// Execute the EVM
-			Outcome r = e.call(to, from, gasLimit, value, calldata);
-			// Ok!
-			return r.getReturnData();
+			return e.call(to, origin, gasLimit, value, calldata);
 		}
 	}
 
@@ -132,4 +210,8 @@ public class ExecutionContext {
 			this.storage = new HashMap<>(storage);
 		}
 	}
+
+	// ===================================================================================
+	// Helpers
+	// ===================================================================================
 }
