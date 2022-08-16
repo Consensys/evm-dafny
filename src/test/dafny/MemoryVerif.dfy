@@ -67,44 +67,22 @@ abstract module MemoryVerif_01 {
     if vm.Peek(0) as nat + 31 < vm.MemSize() {
       var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm)); 
       assert r.Gas() == vm.Gas() - Gas.G_VERYLOW;
-    }
+    } 
    
-   // memory is empty, address required is 0, Expansion should be 32 bytes
-   if vm.Peek(0) == 0 && vm.MemSize() == 0 && vm.Gas() >= 200 {
-      assert vm.Peek(0) as nat + 31 >= vm.MemSize();
-      //  compute expanded size
-      var ex := Memory.SmallestLarg32(vm.Peek(0) as nat + 31);
-      //  expansion is 32 bytes
-      assert ex == 32;
-      calc == {
-        Gas.memoryExpansionCostHelper(32);
-        Gas.G_MEMORY * 32 + 2;
-      }
-      //  expansion cost is 
-      calc == {
-        Gas.memoryExpansionCostHelper(0);
-        Gas.G_MEMORY * 0 + ((0 * 0) / 512); 
-        0;
-      }
-      var exCost := Gas.computeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat);
-      
-      assume Gas.memoryExpansionCostHelper(0) == 0;
-      // calc == {
-      //   Gas.computeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat + 31);
-        
-      // }
-      // calc == {
-      //   Gas.computeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat + 31);
-      //   Gas.Y(Memory.SmallestLarg32(vm.Peek(0) as nat + 31)) - Gas.Y(|vm.MemSize()|);
-      // }
-      assert exCost == Gas.G_MEMORY * 32 + 2; 
-      // var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm)); 
-      // assert r.Gas() == vm.Gas() - Gas.G_VERYLOW;
+    // memory is empty, address required is 0, Expansion should be 32 bytes
+    if vm.Peek(0) == 0 && vm.MemSize() == 0 && vm.Gas() >= 200 {
+        assert vm.Peek(0) as nat + 31 >= vm.MemSize();
+        //  compute expanded size
+        var ex := Memory.SmallestLarg32(vm.Peek(0) as nat + 31);
+        //  expansion is 32 bytes
+        assert ex == 32;
+        var exCost := Gas.computeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat);
+        assert exCost == Gas.G_MEMORY * 32 + 2; 
+
+        var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+        assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + Gas.G_MEMORY * 32 + 2);
+    }
   }
-
-  }
-
-
 }
 
 
