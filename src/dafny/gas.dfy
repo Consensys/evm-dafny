@@ -76,15 +76,8 @@ module Gas {
     }
 
     /**
-     *  Expand memory to include a given address.
-     *  Calls the function Expand2 implemented in the memory module
-
-     *  @param  address The start address.
-     *  @param  len     The number of bytes to read from `address`, i.e.
-     *                  we want to read `len` bytes starting at `address`. 
-     *  @returns        A possibly expanded memory that contains 
-     *                  memory slots upto index `address + len - 1`.
-     *  
+     *  Assign a cost as a function of the memory size. 
+     *
      *  @note           When using this function, you may check
      *                  first that the extended chunk satisfies some constraints,
      *                  e.g. begin less then `MAX_U256`. 
@@ -115,13 +108,11 @@ module Gas {
         G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
     }
 
-    function method Y(memUsedSize: nat): (x:nat)
-    {  
-        G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
-    }
-
-    lemma Y_monotonic(x: nat, y: nat) 
-        ensures x >= y ==> Y(x) >= Y(y)
+    /**
+     *  The quadrratic cost function is increasing.
+     */
+    lemma QuadraticCostIsMonotonic(x: nat, y: nat) 
+        ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
     {
         if x >= y {
             calc >= {
