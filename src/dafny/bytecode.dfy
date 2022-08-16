@@ -50,7 +50,7 @@ module Bytecode {
             var res := (lhs + rhs) % TWO_256;
             st.Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -66,7 +66,7 @@ module Bytecode {
             var res := (lhs * rhs) % TWO_256;
             st.Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -82,10 +82,10 @@ module Bytecode {
             var res := (lhs - rhs) % TWO_256;
             st.Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
-// =============================================================================
+    // =============================================================================
     // Helpers
     // =============================================================================
 
@@ -156,7 +156,7 @@ module Bytecode {
             var res := DivWithZero(lhs,rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -172,7 +172,7 @@ module Bytecode {
             var res := Word.fromI256(SDivWithZero(lhs,rhs));
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -188,7 +188,7 @@ module Bytecode {
             var res := ModWithZero(lhs,rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -204,7 +204,7 @@ module Bytecode {
             var res := Word.fromI256(SModWithZero(lhs,rhs));
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -221,7 +221,7 @@ module Bytecode {
             var res := if rem == 0 then 0 else(lhs + rhs) % rem;
             st.Pop().Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -238,7 +238,7 @@ module Bytecode {
             var res := if rem == 0 then 0 else(lhs * rhs) % rem;
             st.Pop().Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -254,7 +254,7 @@ module Bytecode {
             var res := Int.Pow(base,power) % TWO_256;
             st.Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     // =====================================================================
@@ -277,7 +277,7 @@ module Bytecode {
             else
                 st.Pop().Pop().Push(0).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -296,7 +296,7 @@ module Bytecode {
             else
                 st.Pop().Pop().Push(0).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -315,7 +315,7 @@ module Bytecode {
             else
                 st.Pop().Pop().Push(0).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -334,7 +334,7 @@ module Bytecode {
             else
                 st.Pop().Pop().Push(0).Next()
         else
-                State.INVALID
+                State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -353,7 +353,7 @@ module Bytecode {
         else
             st.Pop().Pop().Push(0).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -371,7 +371,7 @@ module Bytecode {
             else
                 st.Pop().Push(0).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -387,7 +387,7 @@ module Bytecode {
             var res := (lhs & rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -403,7 +403,7 @@ module Bytecode {
             var res := (lhs | rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -419,7 +419,7 @@ module Bytecode {
             var res := (lhs ^ rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -434,7 +434,7 @@ module Bytecode {
             var res := (!mhs) as u256;
             st.Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -450,7 +450,7 @@ module Bytecode {
             var res := if k < 32 then U256.NthUint8(val,k) else 0 as u8;
             st.Pop().Pop().Push(res as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -466,7 +466,7 @@ module Bytecode {
             var res := U256.Shl(lhs,rhs);
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -482,7 +482,7 @@ module Bytecode {
             var res := U256.Shr(lhs,rhs);
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -498,7 +498,7 @@ module Bytecode {
             var res := I256.Sar(lhs,rhs);
             st.Pop().Pop().Push(res).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     // =====================================================================
@@ -518,7 +518,7 @@ module Bytecode {
         then
             st.Push(st.evm.context.address as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -531,7 +531,7 @@ module Bytecode {
         then
             st.Push(st.evm.context.origin as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -543,7 +543,7 @@ module Bytecode {
         then
             st.Push(st.evm.context.caller as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -556,7 +556,7 @@ module Bytecode {
         then
             st.Push(st.evm.context.callValue).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -572,7 +572,7 @@ module Bytecode {
                 else Context.DataRead(st.evm.context,loc);
             st.Pop().Push(val).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -586,7 +586,7 @@ module Bytecode {
             var len := |st.evm.context.callData|;
             st.Push(len as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -595,7 +595,7 @@ module Bytecode {
     function method CallDataCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3 && st.Peek(2) > 0 
+        if st.Operands() >= 3 && st.Peek(2) > 0
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
@@ -614,9 +614,9 @@ module Bytecode {
                 // Copy slice into memory
                 st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -629,7 +629,7 @@ module Bytecode {
         then
             st.Push(Code.Size(st.evm.code)).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -638,7 +638,7 @@ module Bytecode {
     function method CodeCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3 && st.Peek(2) > 0 
+        if st.Operands() >= 3 && st.Peek(2) > 0
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
@@ -657,9 +657,9 @@ module Bytecode {
                 // Copy slice into memory
                 st.Expand(m_loc as nat, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -671,7 +671,7 @@ module Bytecode {
         then
             st.Push(st.evm.context.gasPrice).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     // =====================================================================
@@ -693,7 +693,7 @@ module Bytecode {
         then
             st.Pop().Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -708,9 +708,9 @@ module Bytecode {
             then
                 st.Push(s as u256).Next()
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -729,10 +729,10 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MLoad(st: State) : State
-        requires !st.IsFailure() 
-        ensures 
-            (Stack.Size(st.GetStack()) >= 1 && st.Peek(0) as nat + 31 < MAX_U256) 
-                <==> 
+        requires !st.IsFailure()
+        ensures
+            (Stack.Size(st.GetStack()) >= 1 && st.Peek(0) as nat + 31 < MAX_U256)
+                <==>
             !MLoad(st).IsFailure()
         ensures st.IsFailure() ==> MLoad(st).IsFailure()
     {
@@ -751,9 +751,9 @@ module Bytecode {
                 // Read from expanded state
                 nst.Pop().Push(nst.Read(loc)).Next()
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-        State.INVALID
+        State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -771,10 +771,10 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MStore(st: State) : State
-        requires !st.IsFailure() 
-        ensures 
-            (Stack.Size(st.GetStack()) >= 2 && st.Peek(0) as nat + 31 < MAX_U256) 
-                <==> 
+        requires !st.IsFailure()
+        ensures
+            (Stack.Size(st.GetStack()) >= 2 && st.Peek(0) as nat + 31 < MAX_U256)
+                <==>
             !MStore(st).IsFailure()
         ensures st.IsFailure() ==> MStore(st).IsFailure()
     {
@@ -792,9 +792,9 @@ module Bytecode {
                 // Write big endian order
                 st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -812,9 +812,9 @@ module Bytecode {
                 // Write byte
                 st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-        State.INVALID
+        State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -830,7 +830,7 @@ module Bytecode {
             // Push word
             st.Pop().Push(val).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -846,7 +846,7 @@ module Bytecode {
             // Store word
             st.Pop().Pop().Store(loc,val).Next()
         else
-        State.INVALID
+        State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -863,9 +863,9 @@ module Bytecode {
             then
                 st.Pop().Goto(pc)
             else
-                State.INVALID
+                State.INVALID(INVALID_JUMPDEST)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -885,9 +885,9 @@ module Bytecode {
             then
                 st.Pop().Pop().Goto(pc)
             else
-                State.INVALID
+                State.INVALID(INVALID_JUMPDEST)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -901,7 +901,7 @@ module Bytecode {
         then
             st.Push(st.PC() as u256).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -927,7 +927,7 @@ module Bytecode {
         then
             st.Push(k as u256).Skip(2)
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -940,7 +940,7 @@ module Bytecode {
         then
             st.Push(k as u256).Skip(3)
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
@@ -962,7 +962,7 @@ module Bytecode {
             // Done
             st.Push(k).Skip(|bytes|+1)
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 
     // =====================================================================
@@ -981,7 +981,7 @@ module Bytecode {
         var kth := st.Peek(k-1);
             st.Push(kth).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     // =====================================================================
@@ -998,7 +998,7 @@ module Bytecode {
         then
             st.Swap(k).Next()
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     // =====================================================================
@@ -1029,9 +1029,9 @@ module Bytecode {
                 // Done
                 State.RETURNS(gas:=st.evm.gas,data:=data)
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -1053,9 +1053,9 @@ module Bytecode {
                 // Done
                 State.REVERTS(gas:=st.evm.gas,data:=data)
             else
-                State.INVALID
+                State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
 }

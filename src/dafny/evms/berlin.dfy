@@ -207,7 +207,7 @@ module EvmBerlin refines EVM {
                         // STATICCALL => Bytecode.evalSTATICCALL(s),
                         case REVERT => Bytecode.Revert(s)
                         // SELFDESTRUCT := Some((s:OKState) => Bytecode.evalSELFDESTRUCT(s),)
-                        case _ => State.INVALID
+                        case _ => State.INVALID(INVALID_OPCODE)
                         )
             case _ => s
     }
@@ -221,6 +221,6 @@ module EvmBerlin refines EVM {
             assert 0 < |bytes| && |bytes| <= 32;
             Bytecode.Push(s,bytes)
         else
-            State.INVALID
+            State.INVALID(STACK_OVERFLOW)
     }
 }
