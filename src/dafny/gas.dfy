@@ -118,6 +118,7 @@ module Gas {
         if x >= y {
             calc >= {
                 G_MEMORY * x + ((x * x) / 512);
+                G_MEMORY * y + ((y * y) / 512);
             }
         }
     }
