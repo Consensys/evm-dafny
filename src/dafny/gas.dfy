@@ -78,9 +78,10 @@ module Gas {
     /**
      *  Assign a cost as a function of the memory size. 
      *
-     *  @note           When using this function, you may check
-     *                  first that the extended chunk satisfies some constraints,
-     *                  e.g. begin less then `MAX_U256`. 
+     *  @param  memUsedSize     The size of the memory in 32bytes (words).
+     *  @returns                The cost of using a memory of size `memUsedSize`
+     *  @note                   The memory cost is linear up to a certain point (
+     *                          22*32 = 704 bytes), and then quadratic.
      */
     // function method ExpansionSize(mem: Memory.T, address: nat, length: nat) : nat
     // {
@@ -122,9 +123,11 @@ module Gas {
         
     }
 
-    /* @param   mem         the current memory (also referred to as old memory)
-     * @param   address     the offset to start storing from 
-
+    /*  Compute the cost of a memory expansion to cover a given address.
+     *  
+     *  @param   mem         the current memory (also referred to as old memory)
+     *  @param   address     the offs to start storing from 
+     *
      * @note                this implements the gas cost encountered upon memory expansion
      *                      in which case no expansion cost is encountered
      */
