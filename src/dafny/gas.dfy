@@ -153,12 +153,12 @@ module Gas {
                     then 
                         st.UseGas(costMemExpansion + G_VERYLOW)
                 /* return an invalid state if there was not enough gas to pay for the memory expansion */
-                else State.INVALID
+                else State.INVALID(INSUFFICIENT_GAS)
             else
                 /* charge the constant gas amount, even if maximum accessible memory was encountered */
                 st.UseGas(G_VERYLOW)
         else
-            State.INVALID
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /** The Berlin gas cost function.
