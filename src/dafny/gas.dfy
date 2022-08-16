@@ -120,7 +120,6 @@ module Gas {
                 G_MEMORY * x + ((x * x) / 512);
             }
         }
-        
     }
 
     /*  Compute the cost of a memory expansion to cover a given address.
