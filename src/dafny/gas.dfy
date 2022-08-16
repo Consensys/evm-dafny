@@ -13,7 +13,7 @@
  */
 include "util/int.dfy"
 include "opcodes.dfy"
-include "state.dfy"
+include "state.dfy" 
 include "util/ExtraTypes.dfy"
 include "util/memory.dfy"
 include "util/bytes.dfy"
@@ -89,24 +89,46 @@ module Gas {
      *                  first that the extended chunk satisfies some constraints,
      *                  e.g. begin less then `MAX_U256`. 
      */
-    function method ExpandMem(mem: Memory.T, address: nat, len: nat): (r: Memory.T)
-    requires len > 0
-    {
-        Expand2(mem, address + len - 1)
-    }
+    // function method ExpansionSize(mem: Memory.T, address: nat, length: nat) : nat
+    // {
+    //     // Round up size to multiple of 32. 
+    //     var rounded := RoundUp((address as nat)+length,32);
+    //     var diff := rounded - |mem.contents|;
+    //     if diff > 0
+    //     then
+    //         // Return the size of the expanded memory
+    //         |mem.contents| + diff
+    //     else
+    //         // Do nothing, simply return the size of the current memory used
+    //         |mem.contents|
+    // }
 
-     /* @param   memUsedSize    the number of words used the a memory
-     * @returns                 the cost of the expanding to the memory whose activate number of words is input as memUsedSize   
+    /* @param   memUsedSize     the size of the a memory
+     * @returns                 the cost of the expanding to the memory whose size in input as memUsedSize   
      * @note                    compute the cost of the current memory (as if the memory was expanded from an empty sequence 
-     *                          to a sequence of u8 where the active number of words in the new memory equals to memUsedSize). 
-     *                          memUSedSize is the number of active words of the current memory
-     *                          the returned value of the computation is the cost of memory usage given its current number 
-     *                          of active words, which is memUsedSize
+     *                          to a sequence with size equal to memUsedSize). memUSedSize is the size of the current memory
+     *                          the returned value of the computation is the cost of memory usage given its current size set as memUsedSize
      *                          notice the memory cost is linear up to a certain point (704 bytes), and non-linear beyond that amount
      */
-    function method memoryExpansionCostHelper(numWordsUsed: nat): nat
+    function method memoryExpansionCostHelper(memUsedSize: nat): (x:nat)
     {  
-        G_MEMORY * numWordsUsed + ((numWordsUsed * numWordsUsed) / 512)
+        G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
+    }
+
+    function method Y(memUsedSize: nat): (x:nat)
+    {  
+        G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
+    }
+
+    lemma Y_monotonic(x: nat, y: nat) 
+        ensures x >= y ==> Y(x) >= Y(y)
+    {
+        if x >= y {
+            calc >= {
+                G_MEMORY * x + ((x * x) / 512);
+            }
+        }
+        
     }
 
     /* @param   mem         the current memory (also referred to as old memory)
@@ -115,19 +137,71 @@ module Gas {
      * @note                this implements the gas cost encountered upon memory expansion
      *                      in which case no expansion cost is encountered
      */
-    function method computeDynGasMSTORE(mem: Memory.T, address: nat) : nat
+    function method computeDynGasMSTORE2(mem: Memory.T, address: nat) : nat 
     {   
-        /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
-        var ExpandedMemSize := ExpandMem(mem, address, 32);
-        /* compute the cost of the old memory */
-        var oldMemCost := memoryExpansionCostHelper(|mem.contents|/32);
-        /* compute the cost of the new memory, considering any needed expansion */
-        var newMemCost := memoryExpansionCostHelper(|ExpandedMemSize.contents|/32); 
-        /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
-         * the gas already charged for the old memory in previous expansions, and only charges for the newly
-         * added bytes to the old memory for obtaining the new memory */ 
-        newMemCost - oldMemCost
+        if address + 31 < |mem.contents| then 
+            0
+        else 
+            // reveal_memoryExpansionCostHelper();
+            /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
+            // var ExpandedMemSize := ExpansionSize(mem, address, 32);
+            var ExpandedMemSize := Memory.SmallestLarg32(address + 31);
+            assert ExpandedMemSize >= |mem.contents|;
+            /* compute the cost of the old memory */
+            var oldMemCost := memoryExpansionCostHelper(|mem.contents|);
+            /* compute the cost of the new memory, considering any needed expansion */
+            var newMemCost := memoryExpansionCostHelper(ExpandedMemSize); 
+            /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
+            * the gas already charged for the old memory in previous expansions, and only charges for the newly
+            * added bytes to the old memory for obtaining the new memory */ 
+            newMemCost - oldMemCost
     }
+
+    function method {:verify true} computeDynGasMSTORE(mem: Memory.T, address: nat) : nat 
+    {   
+        if address + 31 < |mem.contents| then 
+            0
+        else 
+            // reveal_memoryExpansionCostHelper();
+            /* compute the size of the new memory, which be turn out to be equal to the old memory */ 
+            // var ExpandedMemSize := ExpansionSize(mem, address, 32);
+            // ghost var ExpandedMemSize := Memory.SmallestLarg32(address + 31);
+            // assert ExpandedMemSize >= |mem.contents|;
+            /* compute the cost of the old memory */
+            // var oldMemCost := memoryExpansionCostHelper(|mem.contents|);
+            /* compute the cost of the new memory, considering any needed expansion */
+            // var newMemCost := memoryExpansionCostHelper(ExpandedMemSize); 
+            /* return the cost of the expansion from the old memory to the new memory. This basically excludes 
+            * the gas already charged for the old memory in previous expansions, and only charges for the newly
+            * added bytes to the old memory for obtaining the new memory */ 
+            // newMemCost - oldMemCost
+            // Y_monotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
+            //  Y monotonic 
+            // if Memory.SmallestLarg32(address + 31) >= |mem.contents| {
+            // calc {
+            //     Y(Memory.SmallestLarg32(address + 31));
+            //     G_MEMORY * Memory.SmallestLarg32(address + 31) + ((Memory.SmallestLarg32(address + 31) * Memory.SmallestLarg32(address + 31)) / 512);
+            //     >= { assert address + 31 >= |mem.contents|;}
+            //     G_MEMORY * |mem.contents| + ((|mem.contents| * |mem.contents|) / 512);
+            //     Y(|mem.contents|);
+            // }
+            // calc ==> {
+            //     true;
+            //     calc >= {
+            //         Y(Memory.SmallestLarg32(address + 31));
+            //         G_MEMORY * Memory.SmallestLarg32(address + 31) + ((Memory.SmallestLarg32(address + 31) * Memory.SmallestLarg32(address + 31)) / 512);
+            //         { assert address + 31 >= |mem.contents|;}
+            //         G_MEMORY * |mem.contents| + ((|mem.contents| * |mem.contents|) / 512);
+            //         Y(|mem.contents|);
+                
+            //     }
+            //     Y(Memory.SmallestLarg32(address + 31)) >= Y(|mem.contents|);
+            // }
+            Y_monotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
+            assert Y(Memory.SmallestLarg32(address + 31)) >= Y(|mem.contents|); 
+            // }
+            Y(Memory.SmallestLarg32(address + 31)) - Y(|mem.contents|)
+    } 
 
     /* compute the gas cost of memory expansion. Consider corner cases where exceptions
      * may have happened due to accessing maximum allowed memory, or underflowing the stack
