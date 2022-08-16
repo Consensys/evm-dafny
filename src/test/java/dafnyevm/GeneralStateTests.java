@@ -36,7 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import dafny.DafnyMap;
 import dafny.DafnySequence;
-import dafnyevm.DafnyEvm.Outcome;
+import dafnyevm.DafnyEvm.State;
 import dafnyevm.util.Bytecodes;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -220,7 +220,7 @@ public class GeneralStateTests {
 		}
 
 		@Override
-		public void step(DafnyEvm.Outcome.Ok state) {
+		public void step(DafnyEvm.State.Ok state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
@@ -238,17 +238,17 @@ public class GeneralStateTests {
 		}
 
 		@Override
-		public void end(Outcome.Return state) {
+		public void end(State.Return state) {
 			out.add(new Trace.Returns(state.getReturnData()));
 		}
 
 		@Override
-		public void revert(Outcome.Revert state) {
+		public void revert(State.Revert state) {
 			out.add(new Trace.Reverts(state.getReturnData()));
 		}
 
 		@Override
-		public void exception(Outcome.Invalid state) {
+		public void exception(State.Invalid state) {
 			out.add(new Trace.Exception());
 		}
 	}

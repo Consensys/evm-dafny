@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dafnyevm.DafnyEvm.Outcome;
+import dafnyevm.DafnyEvm.State;
 import dafnyevm.util.ExecutionContext;
 import static dafnyevm.util.ExecutionContext.DEFAULT_ORIGIN;
 import static dafnyevm.util.ExecutionContext.DEFAULT_RECEIVER;
@@ -1432,11 +1432,68 @@ public class Tests {
 
 	@Test
 	public void test_call_01() {
-		// Absolutely minimal contract call
-		ExecutionContext context = create(CONTEXT.DEFAULT_RECEIVER, new int[] { STOP });
+		// Contract call to address 0xabc which returns 0x123, and this is then returned
+		// by the caller.
+		ExecutionContext context = create(Hex.toBigInt("0xabc"), new int[] { STOP });
+
 		ExecutionContext.Transaction tx = context.tx();
-		byte[] output = call(tx, new int[] { PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xa, 0xbc, PUSH2, 0xff, 0xff, CALL });
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xabc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xa, 0xbc, PUSH2, 0xff, 0xff, CALL,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
 		assertArrayEquals(UINT256(1), output);
+	}
+
+	@Test
+	public void test_call_02() {
+		// Contract call to address 0xabc which raised an exception, and the subsequence exit code
+		// is then returned by the caller.
+		ExecutionContext context = create(Hex.toBigInt("0xabc"), new int[] { INVALID });
+
+		ExecutionContext.Transaction tx = context.tx();
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xabc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xa, 0xbc, PUSH2, 0xff, 0xff, CALL,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_call_03() {
+		// Contract call to address 0xabc which reverts, and the subsequence exit code
+		// is then returned by the caller.
+		ExecutionContext context = create(Hex.toBigInt("0xabc"), new int[] { PUSH1, 0x00, DUP1, REVERT });
+
+		ExecutionContext.Transaction tx = context.tx();
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xabc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xa, 0xbc, PUSH2, 0xff, 0xff, CALL,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_call_04() {
+		// Contract call to address 0xabc which returns "0x123", which the caller then
+		// itself returns,
+		ExecutionContext context = create(Hex.toBigInt("0xabc"), new int[] {
+				PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
+		});
+		ExecutionContext.Transaction tx = context.tx();
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xabc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xa, 0xbc, PUSH2, 0xff, 0xff, CALL,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0x123), output);
 	}
 
 	// ========================================================================
@@ -1454,9 +1511,9 @@ public class Tests {
 		byte[] code = toBytes(words);
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the transaction
-		Outcome r = tx.call(code);
+		State r = tx.call(code);
 		// Check we haven't reverted
-		assertFalse(r instanceof Outcome.Revert);
+		assertFalse(r instanceof State.Revert);
 		// Check something was returned
 		assertNotNull(r.getReturnData());
 		// Ok!
@@ -1486,9 +1543,9 @@ public class Tests {
 		byte[] code = toBytes(words);
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		Outcome r = CONTEXT.tx().call(code);
+		State r = CONTEXT.tx().call(code);
 		// Check we have reverted as expected
-		assertTrue(r instanceof Outcome.Revert);
+		assertTrue(r instanceof State.Revert);
 		// Check something was returned
 		assertNotNull(r.getReturnData());
 		// Ok!
@@ -1505,9 +1562,9 @@ public class Tests {
 		byte[] code = toBytes(words);
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		Outcome r = CONTEXT.tx().call(code);
+		State r = CONTEXT.tx().call(code);
 		// Check exception was thrown as expected.
-		assert r instanceof Outcome.Invalid;
+		assert r instanceof State.Invalid;
 	}
 
 	/**

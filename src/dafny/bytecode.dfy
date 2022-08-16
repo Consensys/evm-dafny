@@ -31,9 +31,7 @@ module Bytecode {
     */
     function method Stop(st: State) : State
     requires !st.IsFailure() {
-        var OK(vm) := st;
-        //
-        State.RETURNS(gas:=vm.gas,data:=[])
+        State.RETURNS(gas:=st.Gas(),data:=[])
     }
 
     /**
@@ -41,8 +39,6 @@ module Bytecode {
     */
     function method Add(st: State) : State
     requires !st.IsFailure() {
-        var OK(vm) := st;
-        //
         if st.Operands() >= 2
         then
             var lhs := st.Peek(0) as int;
@@ -1025,8 +1021,16 @@ module Bytecode {
             var value := st.Peek(2) as nat;
             var to := (st.Peek(1) as int) % TWO_160;
             var gas := st.Peek(0) as nat;
-            var calldata := Memory.Slice(st.evm.memory, inSize, inOffset);
-            State.CALLS(gas,to as u160,calldata)
+             // Sanity check bounds
+            if (inOffset + inSize) < MAX_U256
+            then
+                var calldata := Memory.Slice(st.evm.memory, inSize, inOffset);
+                // Compute the continuation (i.e. following) state.
+                var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                // Pass back continuation.
+                State.CALLS(nst.evm,to as u160,calldata, outOffset:=outOffset, outSize:=outSize)
+            else
+                State.INVALID(MEMORY_OVERFLOW)
         else
             State.INVALID(STACK_UNDERFLOW)
     }

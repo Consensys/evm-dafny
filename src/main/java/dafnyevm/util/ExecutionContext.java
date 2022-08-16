@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import dafnyevm.DafnyEvm;
-import dafnyevm.DafnyEvm.Outcome;
+import dafnyevm.DafnyEvm.State;
 import dafnyevm.DafnyEvm.Tracer;
 
 /**
@@ -173,7 +173,7 @@ public class ExecutionContext {
 		 *
 		 * @param to Receiver for this call.
 		 */
-		public DafnyEvm.Outcome call() {
+		public DafnyEvm.State call() {
 			// FIXME: check sufficient balance for transfer.
 
 			// Extract account info
@@ -189,7 +189,7 @@ public class ExecutionContext {
 		 * @param code Code to execute.
 		 * @return
 		 */
-		public DafnyEvm.Outcome call(byte[] code) {
+		public DafnyEvm.State call(byte[] code) {
 			return call(new HashMap<>(),code);
 		}
 
@@ -200,26 +200,34 @@ public class ExecutionContext {
 		 * @param code    Code to execute.
 		 * @return
 		 */
-		public DafnyEvm.Outcome call(Map<BigInteger, BigInteger> storage, byte[] code) {
+		public DafnyEvm.State call(Map<BigInteger, BigInteger> storage, byte[] code) {
+			return this.call(0,storage,code);
+		}
+
+		/**
+		 * Helper method for handling a contract call.
+		 *
+		 * @param storage
+		 * @param code
+		 * @return
+		 */
+		private DafnyEvm.State call(int depth, Map<BigInteger, BigInteger> storage, byte[] code) {
 			DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer);
 			// Execute initial code.
-			Outcome r = evm.call(to, origin, gasLimit, value, calldata);
+			State r = evm.call(to, origin, gasLimit, value, calldata);
 			// Execute the EVM
-			while (r instanceof Outcome.Call) {
-				System.out.println("GOING AROUND");
+			while (r instanceof State.CallContinue) {
 				// Check whether has finished or not.
-				Outcome.Call cc = (Outcome.Call) r;
+				State.CallContinue cc = (State.CallContinue) r;
 				// A nested contract call has been made.
 				Account rx = state.get(cc.receiver());
 				// FIXME: write in call data
-				Outcome nr = call(rx.storage, rx.code);
-				System.out
-						.println("INNER - " + nr.getClass().getName() + " with " + Arrays.toString(nr.getReturnData()));
+				State nr = call(depth + 1,rx.storage, rx.code);
+				boolean success = nr instanceof State.Return;
 				// FIXME: read out return data
 				// FIXME: handle reverts, etc.
 				// Continue from where we left off.
-				r = cc.callContinue();
-				System.out.println("NOW - " + r.getClass().getName());
+				r = cc.callContinue(success, nr.getReturnData());
 			}
 			return r;
 		}

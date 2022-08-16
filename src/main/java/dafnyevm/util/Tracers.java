@@ -40,7 +40,7 @@ public class Tracers {
 	public static class Debug extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(DafnyEvm.Outcome.Ok state) {
+		public void step(DafnyEvm.State.Ok state) {
 			final String p = state.getPC().toString();
 			final String m = state.getMemory().toString();
 			final String s = state.getStorage().toString();
@@ -50,17 +50,17 @@ public class Tracers {
 		}
 
 		@Override
-		public void exception(DafnyEvm.Outcome.Invalid state) {
+		public void exception(DafnyEvm.State.Invalid state) {
 			System.out.println("error");
 		}
 
 		@Override
-		public void end(DafnyEvm.Outcome.Return state) {
+		public void end(DafnyEvm.State.Return state) {
 			System.out.println(Hex.toHexString(state.getReturnData()));
 		}
 
 		@Override
-		public void revert(DafnyEvm.Outcome.Revert state) {
+		public void revert(DafnyEvm.State.Revert state) {
 			System.out.println(Hex.toHexString(state.getReturnData()));
 			System.out.println("error: execution reverted");
 		}
@@ -72,7 +72,7 @@ public class Tracers {
 	public static class JSON extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(DafnyEvm.Outcome.Ok state) {
+		public void step(DafnyEvm.State.Ok state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
@@ -95,7 +95,7 @@ public class Tracers {
 		}
 
 		@Override
-		public void end(DafnyEvm.Outcome.Return state) {
+		public void end(DafnyEvm.State.Return state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
@@ -109,7 +109,7 @@ public class Tracers {
 		}
 
 		@Override
-		public void revert(DafnyEvm.Outcome.Revert state) {
+		public void revert(DafnyEvm.State.Revert state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
@@ -124,7 +124,7 @@ public class Tracers {
 		}
 
 		@Override
-		public void exception(DafnyEvm.Outcome.Invalid state) {
+		public void exception(DafnyEvm.State.Invalid state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();

@@ -15,10 +15,10 @@ module SimpleTests {
     import Bytes
 
     /** The gas loaded in the EVM before executing a program. */
-    const INITGAS := 20; 
+    const INITGAS := 20;
 
     // ===========================================================================
-    // Straight line test 
+    // Straight line test
     // ===========================================================================
 
     /**
@@ -30,13 +30,13 @@ module SimpleTests {
     {
         // Initialise Bytecode
         var vm := EvmBerlin.InitEmpty(
-          gas := INITGAS, 
+          gas := INITGAS,
           code := [
-            PUSH1, x, 
-            PUSH1, 0x0, 
-            MSTORE, 
-            PUSH1, 0x1, 
-            PUSH1, 0x1F, 
+            PUSH1, x,
+            PUSH1, 0x0,
+            MSTORE,
+            PUSH1, 0x1,
+            PUSH1, 0x1F,
             RETURN
             ]);
 
@@ -52,6 +52,7 @@ module SimpleTests {
         vm := EvmBerlin.Execute(vm);
         // RETURN
         vm := EvmBerlin.Execute(vm);
+        assert vm.RETURNS?;
         //
         assert vm.data == [x];
         assert vm.Gas() == INITGAS - 6;
@@ -134,20 +135,20 @@ module SimpleTests {
         var vm := EvmBerlin.InitEmpty(
             gas := INITGAS,
             code := [
-                PUSH1, x, 
-                PUSH1, y, 
-                GT, 
-                ISZERO, 
-                PUSH1, 0x0A, 
-                JUMPI, 
-                REVERT, 
-                JUMPDEST, 
-                PUSH1, x, 
-                PUSH1, y, 
-                SUB, 
-                PUSH1, 0x0, 
-                MSTORE, 
-                PUSH1, 0x1, 
+                PUSH1, x,
+                PUSH1, y,
+                GT,
+                ISZERO,
+                PUSH1, 0x0A,
+                JUMPI,
+                REVERT,
+                JUMPDEST,
+                PUSH1, x,
+                PUSH1, y,
+                SUB,
+                PUSH1, 0x0,
+                MSTORE,
+                PUSH1, 0x1,
                 PUSH1, 0x1F,
                 RETURN]);
         //
@@ -178,5 +179,5 @@ module SimpleTests {
           //
           return Bytes.ReadUint8(vm.data,0), false;
         }
-    } 
+    }
 }
