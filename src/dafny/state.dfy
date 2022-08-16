@@ -35,7 +35,7 @@ module EvmState {
 
     /**
      *  A normal state.
-     *  
+     *
      *  @param  context     An execution context (initiator, etc)
      *  @param  storage     The state of permanent storage
      *  @param  stack       A stack (the EVN is a stack machine)
@@ -43,9 +43,9 @@ module EvmState {
      *  @param  code        Some bytecode
      *  @param  gas         The available gas
      *  @param  pc          The program counter pointing to the next
-     *                      opcode to be executed. 
+     *                      opcode to be executed.
      *  @note               `pc` is a `nat` and go beyond the range of `code`
-     *                      When using this representation you may have to check 
+     *                      When using this representation you may have to check
      *                      some constrainst on the value of `pc`.
      *  @note               Previous remark applies to `gas`.
      */
@@ -74,13 +74,26 @@ module EvmState {
     )
 
     /**
-    * Captures the possible state of the machine.  Normal execution is indicated
-    * by OK (with the current machine data).  An exceptional halt is indicated by INVALID
-    * (e.g. insufficient gas, insufficient stack operands, etc).  Finally, a RETURN or REVERT
-    * with return data are indicated accordingly (along with any gas returned).
-    */
+     * Identifiers the reason that an exceptional (i.e. INVALID) state was
+     * reached. This is not strictly part of the EVM specification (as per the
+     * Yellow Paper), but it does provide useful debugging information.
+     */
+    datatype Error = INSUFFICIENT_GAS
+        | INVALID_OPCODE
+        | STACK_UNDERFLOW
+        | STACK_OVERFLOW
+        | MEMORY_OVERFLOW
+        | INVALID_JUMPDEST
+
+    /**
+     * Captures the possible state of the machine.  Normal execution is
+     * indicated by OK (with the current machine data).  An exceptional halt is
+     * indicated by INVALID (e.g. insufficient gas, insufficient stack operands,
+     * etc). Finally, a RETURN or REVERT with return data are indicated
+     * accordingly (along with any gas returned).
+     */
     datatype State = OK(evm:T)
-        | INVALID
+        | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>)
         | REVERTS(gas:nat,data:seq<u8>) {
 
@@ -122,7 +135,7 @@ module EvmState {
             requires !IsFailure()
         {
             if this.Gas() < k as nat then
-                State.INVALID
+                State.INVALID(INSUFFICIENT_GAS)
             else
                 OK(evm.(gas := this.Gas() - k as nat))
         }
@@ -145,25 +158,25 @@ module EvmState {
 
         /**
          *  Expand memory to include a given address.
-         *  
+         *
          *  @param  address The start address.
          *  @param  len     The number of bytes to read from `address`, i.e.
-         *                  we want to read `len` bytes starting at `address`. 
-         *  @returns        A possibly expanded memory that contains 
+         *                  we want to read `len` bytes starting at `address`.
+         *  @returns        A possibly expanded memory that contains
          *                  memory slots upto index `address + len - 1`.
-         *  
+         *
          *  @note           This assumes unbounded memory, so the `Memory.Expand`
          *                  call never fails. When using this function, you may check
          *                  first that the extended chunk satisfies some constraints,
-         *                  e.g. begin less then `MAX_U256`. 
+         *                  e.g. begin less then `MAX_U256`.
          */
         function method Expand(address: nat, len: nat): (s': State)
-            requires !IsFailure() 
+            requires !IsFailure()
             requires len > 0
             ensures !s'.IsFailure()
-            ensures address + len <= s'.MemSize() 
+            ensures address + len <= s'.MemSize()
             //  If last byte read is in range, no need to expand.
-            ensures address + len < MemSize() ==> evm.memory == s'.evm.memory 
+            ensures address + len < MemSize() ==> evm.memory == s'.evm.memory
             //  If last byte read is out of range, expand with smallest amount to include
             //  address + len - 1
             ensures address + len - 1 >= MemSize() ==>
@@ -175,7 +188,7 @@ module EvmState {
         /**
          *  Get the size of the memory.
          */
-        function method MemSize(): nat 
+        function method MemSize(): nat
             requires !IsFailure()
         {
             Memory.Size(evm.memory)

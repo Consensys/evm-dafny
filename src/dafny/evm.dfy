@@ -12,7 +12,7 @@
  * under the License.
  */
 include "state.dfy"
-include "util/ExtraTypes.dfy" 
+include "util/ExtraTypes.dfy"
 
 /**
  * Top-level definition of an Ethereum Virtual Machine.
@@ -27,11 +27,11 @@ abstract module EVM {
      *  @param op   The opcode to look up.
      *  @param s    The state to apply the opcode to.
      *  @returns    The new state obtained after applying the semantics
-     *              of the opcode. 
-     *  @note       If an opcode is not supported, or there is not enough gas 
+     *              of the opcode.
+     *  @note       If an opcode is not supported, or there is not enough gas
      *              the returned state is INVALID.
      */
-    function method OpSem(op: u8, s: State): State 
+    function method OpSem(op: u8, s: State): State
 
     /** The gas cost semantics of an opcode.
      *
@@ -40,22 +40,22 @@ abstract module EVM {
      *  @returns    The new state obtained having consumed the gas that corresponds to
      *              the cost of `opcode` is `s`.
      */
-    function method OpGas(op: u8, s: State): State 
+    function method OpGas(op: u8, s: State): State
 
     /**
      *  Execute the next instruction.
-     *  
+     *
      *  @param  st  A state.
-     *  @returns    The state reached after executing the instruction 
-     *              pointed to by 'st.PC()'. 
+     *  @returns    The state reached after executing the instruction
+     *              pointed to by 'st.PC()'.
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
     function method Execute(st:State) : State
     {
-        match st.OpDecode()  
+        match st.OpDecode()
           case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
-          case None => State.INVALID
+          case None => State.INVALID(INVALID_OPCODE)
     }
 
   /**
