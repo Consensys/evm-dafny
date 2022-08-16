@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import EvmState_Compile.State;
+import EvmState_Compile.State_CALLS;
 import EvmState_Compile.State_INVALID;
 import EvmState_Compile.State_OK;
 import EvmState_Compile.State_RETURNS;
@@ -38,9 +39,14 @@ import dafnyevm.util.Tracers;
  */
 public class DafnyEvm {
 	/**
+	 * A default tracer which does nothing.
+	 */
+	public static final Tracer DEFAULT_TRACER = (ctx, st) -> {
+	};
+	/**
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
-	private Tracer tracer = new Tracers.Default();
+	private Tracer tracer = DEFAULT_TRACER;
 	/**
 	 * Initial state of storage prior.
 	 */
@@ -102,22 +108,12 @@ public class DafnyEvm {
 	 */
 	public Outcome call(BigInteger to, BigInteger from, BigInteger gasLimit, BigInteger callValue, byte[] calldata) {
 		// Create call context.
-		Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, callValue, DafnySequence.fromBytes(calldata),
-				gasPrice);
+		Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, callValue,
+				DafnySequence.fromBytes(calldata), gasPrice);
 		// Create the EVM
 		EvmState_Compile.State r = Create(ctx, storage, gasLimit, code);
 		// Execute it!
-		tracer.step(r);
-		r = Execute(r);
-		// Continue whilst the EVM is happy.
-		while(r instanceof State_OK) {
-			tracer.step(r);
-			r = Execute(r);
-		}
-		// Final step
-		tracer.step(r);
-		// Done
-		return Outcome.from(r);
+		return Outcome.from(tracer, ctx, r).run();
 	}
 
 	/**
@@ -129,17 +125,66 @@ public class DafnyEvm {
 	 * @author David J. Pearce
 	 *
 	 */
-	public static abstract class Outcome {
+	public abstract static class Outcome {
+		protected final Tracer tracer;
+		/**
+		 * Raw EVM context
+		 */
+		protected final Context_Compile.Raw context;
 		/**
 		 * State of the EVM (so we can query it).
 		 */
 		protected final EvmState_Compile.State state;
 
-		public Outcome(EvmState_Compile.State state) {
+		public Outcome(Tracer tracer, Context_Compile.Raw context, EvmState_Compile.State state) {
+			this.tracer = tracer;
+			this.context = context;
 			this.state = state;
 		}
 
 		public byte[] getReturnData() { return null; }
+
+		/**
+		 * Execute dafny EVM until it reaches a terminal (or continuation) state.
+		 *
+		 * @param ctx
+		 * @param r
+		 * @return
+		 */
+		protected Outcome run() {
+			// Execute it!
+			tracer.step(context, state);
+			EvmState_Compile.State r = Execute(state);
+			// Continue whilst the EVM is happy.
+			while (r instanceof State_OK) {
+				tracer.step(context, r);
+				r = Execute(r);
+			}
+			// Final step
+			tracer.step(context, r);
+			// Done
+			return from(tracer, context, r);
+		}
+
+		/**
+		 * Construct an appropriate wrapper from an internal Dafny EVM state.
+		 *
+		 * @param state
+		 * @return
+		 */
+		public static Outcome from(Tracer tracer, Context_Compile.Raw context, State state) {
+			if (state instanceof State_INVALID) {
+				return new Outcome.Invalid(tracer, context, state);
+			} else if (state instanceof State_OK) {
+				return new Outcome.Ok(tracer, context, state);
+			} else if (state instanceof State_REVERTS) {
+				return new Outcome.Revert(tracer, context, state);
+			} else if (state instanceof State_RETURNS) {
+				return new Outcome.Return(tracer, context, state);
+			} else {
+				return new Outcome.Call(tracer, context, state);
+			}
+		}
 
 		/**
 		 * Indicates the EVM is running normally.
@@ -148,8 +193,9 @@ public class DafnyEvm {
 		 *
 		 */
 		public static class Ok extends Outcome {
-			public Ok(State state) { super(state); }
-
+			public Ok(Tracer tracer, Context_Compile.Raw context, State state) {
+				super(tracer, context, state);
+			}
 
 			/**
 			 * Get current <code>pc</code> value.
@@ -189,6 +235,7 @@ public class DafnyEvm {
 				DafnyMap<? extends BigInteger, ? extends BigInteger> m = sok.evm.storage.contents;
 				HashMap<BigInteger,BigInteger> storage = new HashMap<>();
 				m.forEach((k,v) -> storage.put(k,v));
+				System.out.println("GOT: " + storage);
 				return storage;
 			}
 
@@ -241,7 +288,9 @@ public class DafnyEvm {
 		 *
 		 */
 		public static class Revert extends Outcome {
-			public Revert(State state) { super(state); }
+			public Revert(Tracer tracer, Context_Compile.Raw context, State state) {
+				super(tracer, context, state);
+			}
 
 			/**
 			 * Get any return data from this contract call.
@@ -268,7 +317,9 @@ public class DafnyEvm {
 		 *
 		 */
 		public static class Return extends Outcome {
-			public Return(State state) { super(state); }
+			public Return(Tracer tracer, Context_Compile.Raw context, State state) {
+				super(tracer, context, state);
+			}
 			/**
 			 * Get any return data from this contract call.
 			 *
@@ -294,7 +345,9 @@ public class DafnyEvm {
 		 *
 		 */
 		public static class Invalid extends Outcome {
-			public Invalid(State state) { super(state); }
+			public Invalid(Tracer tracer, Context_Compile.Raw context, State state) {
+				super(tracer, context,state);
+			}
 
 			public BigInteger getGasUsed() {
 				// TODO: fixme!
@@ -310,27 +363,22 @@ public class DafnyEvm {
 		 *
 		 */
 		public static class Call extends Outcome {
-			public Call(State state) { super(state); }
-		}
+			public Call(Tracer tracer, Context_Compile.Raw context, State state) {
+				super(tracer, context, state);
+			}
 
+			public BigInteger receiver() {
+				State_CALLS st = (State_CALLS) state;
+				return st.to;
+			}
 
-		/**
-		 * Construct an appropriate wrapper from an internal Dafny EVM state.
-		 *
-		 * @param state
-		 * @return
-		 */
-		public static Outcome from(State state) {
-			if(state instanceof State_INVALID) {
-				return new Outcome.Invalid(state);
-			} else if(state instanceof State_OK) {
-				return new Outcome.Ok(state);
-			} else if(state instanceof State_REVERTS) {
-				return new Outcome.Revert(state);
-			} else if(state instanceof State_RETURNS) {
-				return new Outcome.Return(state);
-			} else {
-				throw new IllegalArgumentException("invalid Dafny EVM state encountered: " + state.getClass().getName());
+			/**
+			 * Continue this continuation.
+			 *
+			 * @return
+			 */
+			public Outcome callContinue() {
+				return run();
 			}
 		}
 	}
@@ -348,7 +396,7 @@ public class DafnyEvm {
 		 *
 		 * @param evm
 		 */
-		public void step(EvmState_Compile.State st);
+		public void step(Context_Compile.Raw context, EvmState_Compile.State st);
 	}
 
 	/**
@@ -361,15 +409,15 @@ public class DafnyEvm {
 	 */
 	public static abstract class TraceAdaptor implements Tracer {
 		@Override
-		public final void step(EvmState_Compile.State st) {
+		public final void step(Context_Compile.Raw context, EvmState_Compile.State st) {
 			if(st instanceof State_OK) {
-				step(new Outcome.Ok(st));
+				step(new Outcome.Ok(this, context, st));
 			} else if(st instanceof State_RETURNS) {
-				end(new Outcome.Return(st));
+				end(new Outcome.Return(this, context,st));
 			} else if(st instanceof State_REVERTS) {
-				revert(new Outcome.Revert(st));
+				revert(new Outcome.Revert(this, context,st));
 			} else {
-				exception(new Outcome.Invalid(st));
+				exception(new Outcome.Invalid(this, context,st));
 			}
 		}
 

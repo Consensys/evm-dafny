@@ -14,6 +14,7 @@
 package dafnyevm.util;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +33,18 @@ import dafnyevm.DafnyEvm.Tracer;
  */
 public class ExecutionContext {
 	/**
+	 * Default receiver to use for a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_RECEIVER = Hex.toBigInt("0xabc");
+	/**
+	 * Default origin to use for a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_ORIGIN = Hex.toBigInt("0xdef");
+	/**
+	 * Default value to deposit for a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_VALUE = BigInteger.ZERO;
+	/**
 	 * Default gas limit to use for contract calls.
 	 */
 	private static final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
@@ -46,8 +59,14 @@ public class ExecutionContext {
 	private Tracer tracer;
 
 	public ExecutionContext() {
-		this.tracer = new Tracers.Default();
+		this.tracer = (ctx, st) -> {
+		};
 		this.state = new HashMap<>();
+	}
+
+	private ExecutionContext(ExecutionContext other) {
+		this.state = new HashMap<>(other.state);
+		this.tracer = other.tracer;
 	}
 
 	public ExecutionContext setTracer(Tracer tracer) {
@@ -57,6 +76,12 @@ public class ExecutionContext {
 
 	public Transaction tx() {
 		return new Transaction();
+	}
+
+	public ExecutionContext put(BigInteger address, Account account) {
+		ExecutionContext nthis = new ExecutionContext(this);
+		nthis.state.put(address,account);
+		return nthis;
 	}
 
 	/**
@@ -70,11 +95,11 @@ public class ExecutionContext {
 		 * Address of end-user account initiating this call (default is
 		 * <code>0xdef</code>).
 		 */
-		private BigInteger origin = Hex.toBigInt("0xdef");
+		private BigInteger origin = DEFAULT_ORIGIN;
 		/**
 		 * Address of received for this transaction (default is <code>0xabc</code>).
 		 */
-		private BigInteger to = Hex.toBigInt("0xabc");
+		private BigInteger to = DEFAULT_RECEIVER;
 		/**
 		 * Gas limit for this CALL (default is <code>10000000000</code>)
 		 */
@@ -82,7 +107,7 @@ public class ExecutionContext {
 		/**
 		 * The value to deposit in this call.
 		 */
-		private BigInteger value = BigInteger.ZERO;
+		private BigInteger value = DEFAULT_VALUE;
 		/**
 		 * The call data to supply in this call (default is <code>[]</code>).
 		 */
@@ -176,10 +201,27 @@ public class ExecutionContext {
 		 * @return
 		 */
 		public DafnyEvm.Outcome call(Map<BigInteger, BigInteger> storage, byte[] code) {
-			DafnyEvm e = new DafnyEvm(storage, code);
-			e.setTracer(tracer);
+			DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer);
+			// Execute initial code.
+			Outcome r = evm.call(to, origin, gasLimit, value, calldata);
 			// Execute the EVM
-			return e.call(to, origin, gasLimit, value, calldata);
+			while (r instanceof Outcome.Call) {
+				System.out.println("GOING AROUND");
+				// Check whether has finished or not.
+				Outcome.Call cc = (Outcome.Call) r;
+				// A nested contract call has been made.
+				Account rx = state.get(cc.receiver());
+				// FIXME: write in call data
+				Outcome nr = call(rx.storage, rx.code);
+				System.out
+						.println("INNER - " + nr.getClass().getName() + " with " + Arrays.toString(nr.getReturnData()));
+				// FIXME: read out return data
+				// FIXME: handle reverts, etc.
+				// Continue from where we left off.
+				r = cc.callContinue();
+				System.out.println("NOW - " + r.getClass().getName());
+			}
+			return r;
 		}
 	}
 
@@ -203,6 +245,10 @@ public class ExecutionContext {
 		 * Current state of the contract storage.
 		 */
 		private final HashMap<BigInteger,BigInteger> storage;
+
+		public Account(byte[] code) {
+			this(code,BigInteger.ZERO,new HashMap<>());
+		}
 
 		public Account(byte[] code, BigInteger balance, Map<BigInteger,BigInteger> storage) {
 			this.code = code;

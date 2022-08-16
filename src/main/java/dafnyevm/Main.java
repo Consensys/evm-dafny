@@ -99,7 +99,7 @@ public class Main {
 		} else if (cmd.hasOption("debug")) {
 			return new Tracers.Debug();
 		} else {
-			return new Tracers.Default();
+			return DafnyEvm.DEFAULT_TRACER;
 		}
 	}
 }

@@ -34,31 +34,6 @@ import dafnyevm.DafnyEvm.Tracer;
 public class Tracers {
 
 	/**
-	 * The default tracer does nothing at all.
-	 */
-	public static final class Default implements Tracer {
-
-		@Override
-		public void step(State st) {
-			if (st instanceof State_OK) {
-				// Do nothing.
-			} else if (st instanceof State_RETURNS) {
-				State_RETURNS sr = (State_RETURNS) st;
-				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
-				System.out.println(Hex.toHexString(bytes));
-			} else if (st instanceof State_REVERTS) {
-				State_REVERTS sr = (State_REVERTS) st;
-				byte[] bytes = DafnySequence.toByteArray((DafnySequence<Byte>) sr.data);
-				System.out.println(Hex.toHexString(bytes));
-				System.out.println("error: execution reverted");
-			} else {
-				// TODO: add error information
-				System.out.println("error");
-			}
-		}
-	};
-
-	/**
 	 * Generate the default debug output.
 	 *
 	 */

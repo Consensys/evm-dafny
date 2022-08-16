@@ -12,8 +12,8 @@
  * under the License.
  */
 package dafnyevm;
+
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
@@ -23,39 +23,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dafny.DafnySequence;
 import dafnyevm.DafnyEvm.Outcome;
 import dafnyevm.util.ExecutionContext;
+import static dafnyevm.util.ExecutionContext.DEFAULT_ORIGIN;
+import static dafnyevm.util.ExecutionContext.DEFAULT_RECEIVER;
 import dafnyevm.util.Hex;
-import dafnyevm.util.Tracers;
 
 import static dafnyevm.util.Bytecodes.*;
 
 public class Tests {
 	/**
-	 * Enable to see additional debug information (e.g. internal states).
+	 * The executiong context used for all tests.
 	 */
-	private final boolean DEBUG = false;
-
-	/**
-	 * Default gas limit to use (unless otherwise specified).
-	 */
-	private final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
-
-	/**
-	 * Default value to deposit on a call (unless otherwise specified).
-	 */
-	private final BigInteger DEFAULT_VALUE = BigInteger.ZERO;
-
-	/**
-	 * Default receiver to use for a call (unless otherwise specified).
-	 */
-	private final BigInteger DEFAULT_RECEIVER = Hex.toBigInt("0xabc");
-
-	/**
-	 * Default origin to use for a call (unless otherwise specified).
-	 */
-	private final BigInteger DEFAULT_ORIGIN = Hex.toBigInt("0xdef");
+	private static final ExecutionContext CONTEXT = new ExecutionContext();
 
 	// ========================================================================
 	// STOP / INVALID
@@ -957,28 +937,28 @@ public class Tests {
 
 	@Test
 	public void test_calldatasize_01() {
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0);
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0);
 		byte[] output = call(tx, new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_calldatasize_02() {
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(new byte[1]);
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(new byte[1]);
 		byte[] output = call(tx, new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_calldatasize_03() {
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(new byte[7]);
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(new byte[7]);
 		byte[] output = call(tx, new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x7), output);
 	}
 
 	@Test
 	public void test_calldataload_01() {
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(UINT256(0xab4f7b));
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(UINT256(0xab4f7b));
 		byte[] output = call(tx, new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0xab4f7b));
 	}
@@ -986,7 +966,7 @@ public class Tests {
 	@Test
 	public void test_calldataload_02() {
 		// Calldata has 31bytes, so CALLDATALOAD adds additional zero byte as lsb.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(
 				new byte[] { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x74 });
 		byte[] output = call(tx, new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x7400));
@@ -995,7 +975,7 @@ public class Tests {
 	@Test
 	public void test_calldataload_03() {
 		// Calldata has 31bytes, so CALLDATALOAD adds two additional zero bytes.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(
 				new byte[] { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x74 });
 		byte[] output = call(tx, new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x740000));
@@ -1004,7 +984,7 @@ public class Tests {
 	@Test
 	public void test_calldataload_04() {
 		// Read from non-zero offset in calldata (which results in padding)
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(UINT256(0xab4f7b));
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(UINT256(0xab4f7b));
 		byte[] output = call(tx, new int[] { PUSH1, 1, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0xab4f7b00L));
 	}
@@ -1012,7 +992,7 @@ public class Tests {
 	@Test
 	public void test_calldataload_05() {
 		// Load multiple items from calldata
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(append(UINT256(0xab4f7b), UINT256(0x7c4ead)));
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(append(UINT256(0xab4f7b), UINT256(0x7c4ead)));
 		byte[] output = call(tx, new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x20, CALLDATALOAD, ADD, PUSH1, 0x00,
 				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output, UINT256(0xab4f7b + 0x7c4ead));
@@ -1021,7 +1001,7 @@ public class Tests {
 	@Test
 	public void test_calldatacopy_01() {
 		// Copy call data into memory and return.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(UINT256(0xab4f7b));
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(UINT256(0xab4f7b));
 		byte[] output = call(tx, new int[] { PUSH1, 0x20, PUSH1, 0x0, PUSH1, 0x0, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0xab4f7b));
 	}
@@ -1029,7 +1009,7 @@ public class Tests {
 	@Test
 	public void test_calldatacopy_02() {
 		// Partially copy call data into memory and return.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(UINT256(0xab4f7b));
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(UINT256(0xab4f7b));
 		byte[] output = call(tx, new int[] { PUSH1, 0x1F, PUSH1, 0x0, PUSH1, 0x0, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0xab4f00));
 	}
@@ -1037,7 +1017,7 @@ public class Tests {
 	@Test
 	public void test_calldatacopy_03() {
 		// Copy call data into memory at non-zero offset and return.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(new byte[] { 0x4f, 0x7b });
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(new byte[] { 0x4f, 0x7b });
 		byte[] output = call(tx, new int[] { PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1F, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x7b));
 	}
@@ -1045,7 +1025,7 @@ public class Tests {
 	@Test
 	public void test_calldatacopy_04() {
 		// Copy call data into memory at non-zero offset and return.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(new byte[] { 0x4f, 0x7b });
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(new byte[] { 0x4f, 0x7b });
 		byte[] output = call(tx, new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x1F, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x4f));
 	}
@@ -1053,7 +1033,7 @@ public class Tests {
 	@Test
 	public void test_calldatacopy_05() {
 		// Copy call data into memory at non-zero offset and return.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(new byte[] { 0x4f, 0x7b });
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(new byte[] { 0x4f, 0x7b });
 		byte[] output = call(tx, new int[] { PUSH1, 0x1, PUSH1, 0x1, PUSH1, 0x1E, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x7b00));
 	}
@@ -1061,7 +1041,7 @@ public class Tests {
 	@Test
 	public void test_calldatacopy_06() {
 		// Copy call data into memory at non-zero offset and return.
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().from(0).data(new byte[] { 0x4f });
+		ExecutionContext.Transaction tx = CONTEXT.tx().from(0).data(new byte[] { 0x4f });
 		byte[] output = call(tx, new int[] { PUSH1, 0x2, PUSH1, 0x0, PUSH1, 0x1E, CALLDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output,UINT256(0x4f00));
 	}
@@ -1378,15 +1358,15 @@ public class Tests {
 
 	@Test
 	public void test_callvalue_01() {
-		// Check callvalue == DEFAULT_VALUE
+		// Check callvalue == 0 (i.e. default)
 		byte[] output = call(new int[] { CALLVALUE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(UINT256(DEFAULT_VALUE.intValueExact()), output);
+		assertArrayEquals(UINT256(0), output);
 	}
 
 	@Test
 	public void test_callvalue_02() {
 		// Check callvalue == suplied value
-		ExecutionContext.Transaction tx = new ExecutionContext().tx().value(10);
+		ExecutionContext.Transaction tx = CONTEXT.tx().value(10);
 		byte[] output = call(tx, new int[] { CALLVALUE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(10), output);
 	}
@@ -1452,8 +1432,10 @@ public class Tests {
 
 	@Test
 	public void test_call_01() {
-		// Check gas price == 1
-		byte[] output = call(new int[] { GASPRICE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		// Absolutely minimal contract call
+		ExecutionContext context = create(CONTEXT.DEFAULT_RECEIVER, new int[] { STOP });
+		ExecutionContext.Transaction tx = context.tx();
+		byte[] output = call(tx, new int[] { PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xa, 0xbc, PUSH2, 0xff, 0xff, CALL });
 		assertArrayEquals(UINT256(1), output);
 	}
 
@@ -1490,7 +1472,7 @@ public class Tests {
 	 */
 	private byte[] call(int[] words) {
 		byte[] code = toBytes(words);
-		return new ExecutionContext().tx().call(code).getReturnData();
+		return CONTEXT.tx().call(code).getReturnData();
 	}
 
 	/**
@@ -1504,7 +1486,7 @@ public class Tests {
 		byte[] code = toBytes(words);
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		Outcome r = new ExecutionContext().tx().call(code);
+		Outcome r = CONTEXT.tx().call(code);
 		// Check we have reverted as expected
 		assertTrue(r instanceof Outcome.Revert);
 		// Check something was returned
@@ -1523,9 +1505,20 @@ public class Tests {
 		byte[] code = toBytes(words);
 		System.out.println("Excuting: " + Hex.toHexString(code));
 		// Execute the EVM
-		Outcome r = new ExecutionContext().tx().call(code);
+		Outcome r = CONTEXT.tx().call(code);
 		// Check exception was thrown as expected.
 		assert r instanceof Outcome.Invalid;
+	}
+
+	/**
+	 * Allocate a new contract account in the default execution context.
+	 *
+	 * @param address
+	 * @param code
+	 * @return
+	 */
+	private ExecutionContext create(BigInteger address, int[] code) {
+		return CONTEXT.put(address, new ExecutionContext.Account(toBytes(code)));
 	}
 
 	/**
