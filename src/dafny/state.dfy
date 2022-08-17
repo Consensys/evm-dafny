@@ -93,6 +93,7 @@ module EvmState {
      * accordingly (along with any gas returned).
      */
     datatype State = OK(evm:T)
+        | CALLS(evm:T, to:u160, calldata:seq<u8>, outOffset: nat, outSize: nat)
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>)
         | REVERTS(gas:nat,data:seq<u8>) {
@@ -101,7 +102,7 @@ module EvmState {
          * Check whether EVM has failed (e.g. due to an exception
          * or a revert, etc) or not.
          */
-        predicate method IsFailure() { !this.OK? }
+        predicate method IsFailure() { !this.OK? && !this.CALLS? }
 
         /**
          * Extract underlying raw state.
@@ -126,6 +127,7 @@ module EvmState {
         requires !this.INVALID? {
             match this
                 case OK(evm) => evm.gas
+                case CALLS(evm, _, _, _, _) => evm.gas
                 case RETURNS(g, _) => g
                 case REVERTS(g, _) => g
         }
@@ -163,8 +165,8 @@ module EvmState {
          *  @param  len     The number of bytes to read from `address`, i.e.
          *                  we want to read `len` bytes starting at `address`.
          *  @returns        A possibly expanded memory that contains
-         *                  memory slots upto index `address + len - 1`.
-         *
+         *                  memory slots upto index `address + len - 1`, unless
+         *                  `len==0` in which case it returns the state as is.
          *  @note           This assumes unbounded memory, so the `Memory.Expand`
          *                  call never fails. When using this function, you may check
          *                  first that the extended chunk satisfies some constraints,
@@ -172,17 +174,15 @@ module EvmState {
          */
         function method Expand(address: nat, len: nat): (s': State)
             requires !IsFailure()
-            requires len > 0
             ensures !s'.IsFailure()
-            ensures address + len <= s'.MemSize()
+             ensures address + len <= s'.MemSize()
             //  If last byte read is in range, no need to expand.
             ensures address + len < MemSize() ==> evm.memory == s'.evm.memory
-            //  If last byte read is out of range, expand with smallest amount to include
-            //  address + len - 1
-            ensures address + len - 1 >= MemSize() ==>
-                s'.MemSize() % 32 == 0 &&  s'.MemSize() - 32 <= address + len - 1
         {
-            OK(evm.(memory:=Memory.Expand2(evm.memory, address + len - 1)))
+            // Determine last address which must be valid after.
+            var last := if len == 0 then address else address + len - 1;
+            // Expand memory to include at least the last address.
+            OK(evm.(memory:=Memory.Expand(evm.memory, last)))
         }
 
         /**
@@ -341,6 +341,30 @@ module EvmState {
         function method CodeOperands() : int
         requires !IsFailure() {
             (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
+        }
+
+        /**
+         * Process a return from a nested call to either an end-user account or
+         * a contract.
+         */
+        function method CallReturn(exitCode: u256, returnData: seq<u8>) : State
+        requires this.CALLS? {
+            // copy over return data, etc.
+            var st := OK(evm);
+            if st.Capacity() > 1
+            then
+                if (outOffset + outSize) <= MAX_U256
+                then
+                    // Determine amount of data to actually return
+                    var m := Min(|returnData|,outSize);
+                    // Slice out that data
+                    var data := returnData[0..m];
+                    //
+                    st.Expand(outOffset,outSize).Push(exitCode).Copy(outOffset,data)
+                else
+                    INVALID(MEMORY_OVERFLOW)
+            else
+                INVALID(STACK_UNDERFLOW)
         }
 
         /**

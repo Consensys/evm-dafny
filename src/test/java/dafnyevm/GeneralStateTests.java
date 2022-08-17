@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import dafny.DafnyMap;
 import dafny.DafnySequence;
+import dafnyevm.DafnyEvm.State;
 import dafnyevm.util.Bytecodes;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -88,27 +89,28 @@ public class GeneralStateTests {
 		} else {
 			Transaction tx = instance.getTransaction();
 			WorldState ws = instance.getWorldState();
-			byte[] code;
-			Map<BigInteger, BigInteger> storage;
+			BigInteger to = tx.to != null ? tx.to : DafnyEvm.DEFAULT_RECEIVER;
+			DafnyEvm.Account account;
 			if (tx.to != null) {
 				// Normal situation. We are calling a contract account and we need to run its
 				// code.
-				storage = ws.get(tx.to).storage;
-				code = ws.get(tx.to).code;
+				Map<BigInteger,BigInteger> storage = ws.get(tx.to).storage;
+				byte[] code = ws.get(tx.to).code;
+				account = new DafnyEvm.Account(code, BigInteger.ZERO, storage);
 			} else {
 				// In this case, we have an empty "to" field. Its not clear exactly what this
 				// means, but I believe we can imagine it as something like the contract
 				// creation account. Specifically, the code to execute is stored within the
 				// transaction data.
-				code = tx.data;
-				storage = new HashMap<>();
+				account = new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>());
 			}
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
-			DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer).setGasPrice(tx.gasPrice);
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(tx.to).from(tx.sender)
+					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).put(to, account);
 			// Run the transaction!
-			evm.call(tx.to, tx.sender, tx.gasLimit, tx.value, tx.data);
+			evm.call();
 			//
 			Trace tr = new Trace(elements);
 			// Finally check for equality.
@@ -197,6 +199,7 @@ public class GeneralStateTests {
 				}
 				return instances.stream();
 			} catch (JSONException e) {
+				e.printStackTrace();
 				System.out.println("Problem parsing file into JSON (" + f + ")");
 				return null;
 			} catch (IOException e) {
@@ -218,23 +221,17 @@ public class GeneralStateTests {
 		}
 
 		@Override
-		public void step(DafnyEvm.SnapShot state) {
+		public void step(DafnyEvm.State.Ok state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
 			// the invalid bytecode.
 			if(op != Bytecodes.INVALID) {
-				byte[] memory = DafnySequence.toByteArray((DafnySequence) state.getMemory());
-				BigInteger[] stack = (BigInteger[]) state.getStack().toRawArray();
-				DafnyMap<? extends BigInteger, ? extends BigInteger> rawStorage = state.getStorage();
-				HashMap<BigInteger, BigInteger> storage = new HashMap<>();
-				for (BigInteger addr : storage.keySet()) {
-					storage.put(addr, rawStorage.get(addr));
-				}
-				// NOTE: we need to reverse the stack elements here as the Dafny stores them
-				// internally with index at zero.
-				Collections.reverse(Arrays.asList(stack));
-				//
+				byte[] memory = state.getMemory();
+				BigInteger[] stack = (BigInteger[]) state.getStack();
+				// FIXME: this is a hack until such time as Geth actually reports storage.
+				//Map<BigInteger, BigInteger> storage = state.getStorage();
+				Map<BigInteger, BigInteger> storage = new HashMap<>();
 				out.add(new Trace.Step(pc, op, stack, memory, storage));
 			} else {
 				System.out.println("SKIPPING");
@@ -242,17 +239,17 @@ public class GeneralStateTests {
 		}
 
 		@Override
-		public void end(byte[] output, BigInteger gasUsed) {
-			out.add(new Trace.Returns(output));
+		public void end(State.Return state) {
+			out.add(new Trace.Returns(state.getReturnData()));
 		}
 
 		@Override
-		public void revert(byte[] output, BigInteger gasUsed) {
-			out.add(new Trace.Reverts(output));
+		public void revert(State.Revert state) {
+			out.add(new Trace.Reverts(state.getReturnData()));
 		}
 
 		@Override
-		public void exception(BigInteger gasUsed) {
+		public void exception(State.Invalid state) {
 			out.add(new Trace.Exception());
 		}
 	}

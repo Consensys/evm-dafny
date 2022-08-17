@@ -3,16 +3,6 @@ include "utils.dfy"
 
 import opened Int
 
-// Various tests for roundup
-method {:test} RoundUpTests() {
-    Assert(()=> RoundUp(2,16) == 16);
-    Assert(()=> RoundUp(16,16) == 16);
-    Assert(()=> RoundUp(17,16) == 32);
-    Assert(()=> RoundUp(31,16) == 32);
-    Assert(()=> RoundUp(32,16) == 32);
-    Assert(()=> RoundUp(33,16) == 48);
-}
-
 // Various sanity tests for division.
 method {:test} DivTests() {
     // pos-pos
