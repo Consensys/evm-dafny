@@ -89,27 +89,28 @@ public class GeneralStateTests {
 		} else {
 			Transaction tx = instance.getTransaction();
 			WorldState ws = instance.getWorldState();
-			byte[] code;
-			Map<BigInteger, BigInteger> storage;
+			BigInteger to = tx.to != null ? tx.to : DafnyEvm.DEFAULT_RECEIVER;
+			DafnyEvm.Account account;
 			if (tx.to != null) {
 				// Normal situation. We are calling a contract account and we need to run its
 				// code.
-				storage = ws.get(tx.to).storage;
-				code = ws.get(tx.to).code;
+				Map<BigInteger,BigInteger> storage = ws.get(tx.to).storage;
+				byte[] code = ws.get(tx.to).code;
+				account = new DafnyEvm.Account(code, BigInteger.ZERO, storage);
 			} else {
 				// In this case, we have an empty "to" field. Its not clear exactly what this
 				// means, but I believe we can imagine it as something like the contract
 				// creation account. Specifically, the code to execute is stored within the
 				// transaction data.
-				code = tx.data;
-				storage = new HashMap<>();
+				account = new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>());
 			}
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
-			DafnyEvm evm = new DafnyEvm(storage, code).setTracer(tracer).setGasPrice(tx.gasPrice);
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(tx.to).from(tx.sender)
+					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).put(to, account);
 			// Run the transaction!
-			evm.call(tx.to, tx.sender, tx.gasLimit, tx.value, tx.data);
+			evm.call();
 			//
 			Trace tr = new Trace(elements);
 			// Finally check for equality.

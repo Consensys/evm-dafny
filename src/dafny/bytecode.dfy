@@ -1024,7 +1024,7 @@ module Bytecode {
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
-                var calldata := Memory.Slice(st.evm.memory, inSize, inOffset);
+                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.

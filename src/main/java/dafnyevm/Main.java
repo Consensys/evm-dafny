@@ -17,13 +17,12 @@ import org.apache.commons.cli.*;
 import org.json.JSONException;
 
 import dafnyevm.util.Tracers;
+import dafnyevm.DafnyEvm.Account;
 import dafnyevm.DafnyEvm.Tracer;
 import dafnyevm.util.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.HashMap;
-
 
 public class Main {
 	/**
@@ -86,11 +85,10 @@ public class Main {
 		// Parse input string
 		byte[] bytes = Hex.toBytes(args[0]);
 		// Construct EVM
-		DafnyEvm evm = new DafnyEvm(new HashMap<>(), bytes).setGasPrice(gasPrice);
-		//
-		evm.setTracer(determineTracer(cmd));
+		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).gasPrice(gasPrice).put(receiver, new Account(bytes))
+				.to(receiver).from(sender).origin(sender).gas(gas).data(calldata).value(callValue);
 		// Execute the EVM
-		evm.call(receiver, sender, gas, callValue, calldata);
+		evm.call();
 	}
 
 	public static Tracer determineTracer(CommandLine cmd) {

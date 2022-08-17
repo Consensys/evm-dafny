@@ -17,7 +17,6 @@ import static EvmBerlin_Compile.__default.Create;
 import static EvmBerlin_Compile.__default.Execute;
 
 import java.math.BigInteger;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +27,7 @@ import EvmState_Compile.State_RETURNS;
 import EvmState_Compile.State_REVERTS;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
+import dafnyevm.util.Hex;
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
@@ -43,13 +43,34 @@ public class DafnyEvm {
 	public static final Tracer DEFAULT_TRACER = (st) -> {
 	};
 	/**
+	 * Default receiver to use for a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_RECEIVER = Hex.toBigInt("0xabc");
+	/**
+	 * Default origin to use for a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_ORIGIN = Hex.toBigInt("0xdef");
+	/**
+	 * Default value to deposit for a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_VALUE = BigInteger.ZERO;
+	/**
+	 * Default gas limit to use for contract calls.
+	 */
+	public static final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
+	/**
+	 * Default call data to use for a call (unless otherwise specified).
+	 */
+	public final static byte[] DEFAULT_DATA = new byte[0];
+
+	/**
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
 	private Tracer tracer = DEFAULT_TRACER;
 	/**
 	 * Gas price to use.
 	 */
-	private BigInteger gasPrice = BigInteger.ZERO;
+	private BigInteger gasPrice = BigInteger.ONE;
 	/**
 	 * World state to use for this call.
 	 */
@@ -58,28 +79,28 @@ public class DafnyEvm {
 	 * Initiator of this call, which could be an end-user account or a contract
 	 * account.
 	 */
-	private BigInteger from = BigInteger.ZERO;
+	private BigInteger from = DEFAULT_ORIGIN;
 	/**
 	 * Receiver of this call, which again could be an end-user account or a contract
 	 * account.
 	 */
-	private BigInteger to = BigInteger.ZERO;
+	private BigInteger to = DEFAULT_RECEIVER;
 	/**
 	 * End-user account which initiated the outermost call.
 	 */
-	private BigInteger origin = BigInteger.ZERO;
+	private BigInteger origin = DEFAULT_ORIGIN;
 	/**
 	 * Value to be deposited as part of this call.
 	 */
-	private BigInteger value = BigInteger.ZERO;
+	private BigInteger value = DEFAULT_VALUE;
 	/**
 	 * Gas provided to execute this call.
 	 */
-	private BigInteger gas = BigInteger.ZERO;
+	private BigInteger gas = DEFAULT_GAS;
 	/**
 	 * Data to be supplied with this call.
 	 */
-	private byte[] callData = new byte[0];
+	private byte[] callData = DEFAULT_DATA;
 
 	/**
 	 * Set the gas price to use when executing transactions.
@@ -105,61 +126,160 @@ public class DafnyEvm {
 		return this;
 	}
 
+	/**
+	 * Assign a new account to a given address.
+	 *
+	 * @param address
+	 * @param account
+	 * @return
+	 */
 	public DafnyEvm put(BigInteger address, Account account) {
 		this.worldState.put(address, account);
 		return this;
 	}
 
+	/**
+	 * Assign zero or more addresses to given accounts.
+	 *
+	 * @param state
+	 * @return
+	 */
 	public DafnyEvm putAll(Map<BigInteger, Account> state) {
 		this.worldState.putAll(state);
 		return this;
 	}
 
+	/**
+	 * Get the sender of this call.
+	 *
+	 * @return
+	 */
+	public BigInteger from() {
+		return this.from;
+	}
+
+	/**
+	 * Set the sender of this call.
+	 *
+	 * @param from
+	 * @return
+	 */
 	public DafnyEvm from(long from) {
 		return from(BigInteger.valueOf(from));
 	}
 
+	/**
+	 * Set the sender of this call.
+	 *
+	 * @param from
+	 * @return
+	 */
 	public DafnyEvm from(BigInteger from) {
 		this.from = from;
 		return this;
 	}
 
-	public DafnyEvm to(long from) {
-		return to(BigInteger.valueOf(from));
+	/**
+	 * Set the receiver of this calln.
+	 *
+	 * @param from
+	 * @return
+	 */
+	public DafnyEvm to(long to) {
+		return to(BigInteger.valueOf(to));
 	}
 
+	/**
+	 * Set the receiver of this calln.
+	 *
+	 * @param from
+	 * @return
+	 */
 	public DafnyEvm to(BigInteger to) {
 		this.to = to;
 		return this;
 	}
 
-	public DafnyEvm origin(long from) {
-		return origin(BigInteger.valueOf(from));
+	/**
+	 * Get the origin of the enclosing transaction. That may be the same as the
+	 * receiver (if the call depth is <code>0</code>), or not (if the call depth is
+	 * not <code>0</code>).
+	 *
+	 * @return
+	 */
+	public BigInteger origin() {
+		return origin;
 	}
 
+	/**
+	 * Set the origin of the enclosing transaction.
+	 *
+	 * @param origin
+	 * @return
+	 */
+	public DafnyEvm origin(long origin) {
+		return origin(BigInteger.valueOf(origin));
+	}
+
+	/**
+	 * Set the origin of the enclosing transaction.
+	 *
+	 * @param origin
+	 * @return
+	 */
 	public DafnyEvm origin(BigInteger origin) {
 		this.origin = origin;
 		return this;
 	}
 
-	public DafnyEvm value(long from) {
-		return value(BigInteger.valueOf(from));
+	/**
+	 * Get the value to be deposited by this call.
+	 *
+	 * @param value
+	 * @return
+	 */
+	public DafnyEvm value(long value) {
+		return value(BigInteger.valueOf(value));
 	}
 
+	/**
+	 * Set the value to be deposited by this call.
+	 *
+	 * @param value
+	 * @return
+	 */
 	public DafnyEvm value(BigInteger value) {
 		this.value = value;
 		return this;
 	}
 
-	public DafnyEvm gas(long from) {
-		return gas(BigInteger.valueOf(from));
+	/**
+	 * Get the gas limit for this call.
+	 *
+	 * @param value
+	 * @return
+	 */
+	public DafnyEvm gas(long gas) {
+		return gas(BigInteger.valueOf(gas));
 	}
 
+	/**
+	 * Set the gas limit for this call.
+	 *
+	 * @param value
+	 * @return
+	 */
 	public DafnyEvm gas(BigInteger gas) {
 		this.gas = gas;
 		return this;
 	}
 
+	/**
+	 * Get the input data for this call.
+	 *
+	 * @param data
+	 * @return
+	 */
 	public DafnyEvm data(byte[] data) {
 		this.callData = data;
 		return this;
