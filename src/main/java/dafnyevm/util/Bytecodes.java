@@ -14,7 +14,6 @@
 package dafnyevm.util;
 
 public class Bytecodes {
-
 	// 0s: Stop and Arithmetic Operations
 	public static final int STOP = 0x0;
 	public static final int ADD = 0x01;
