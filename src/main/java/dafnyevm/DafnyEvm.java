@@ -307,10 +307,9 @@ public class DafnyEvm {
 			// Make the recursive call.
 			State nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).origin(origin)
 					.data(cc.callData()).call();
-			boolean success = nr instanceof State.Return;
 			// FIXME: update worldstate upon success.
 			// Continue from where we left off.
-			r = cc.callContinue(success, nr.getReturnData());
+			r = cc.callReturn(nr);
 		}
 		return r;
 	}
@@ -533,7 +532,7 @@ public class DafnyEvm {
 			 */
 			public byte[] callData() {
 				State_CALLS sok = (State_CALLS) state;
-				return DafnySequence.toByteArray((DafnySequence) sok.calldata);
+				return DafnySequence.toByteArray((DafnySequence) sok.callData);
 			}
 
 			@Override
@@ -547,13 +546,9 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
-			public State callContinue(boolean success, byte[] returnData) {
-				// Determine appropriate exit code.
-				BigInteger exitCode = success ? BigInteger.ONE : BigInteger.ZERO;
-				// Sanitise the return data.
-				returnData = (returnData == null) ? new byte[0] : returnData;
+			public State callReturn(State callee) {
 				// Convert into OK state
-				EvmState_Compile.State st = state.CallReturn(exitCode, DafnySequence.fromBytes(returnData));
+				EvmState_Compile.State st = state.CallReturn(callee.state);
 				// Continue execution.
 				return run(tracer, st);
 			}

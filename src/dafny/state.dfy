@@ -93,7 +93,7 @@ module EvmState {
      * accordingly (along with any gas returned).
      */
     datatype State = OK(evm:T)
-        | CALLS(evm:T, to:u160, calldata:seq<u8>, outOffset: nat, outSize: nat)
+        | CALLS(evm:T, to:u160, gas: nat, callValue: u256, callData:seq<u8>, outOffset: nat, outSize: nat)
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>)
         | REVERTS(gas:nat,data:seq<u8>) {
@@ -127,7 +127,7 @@ module EvmState {
         requires !this.INVALID? {
             match this
                 case OK(evm) => evm.gas
-                case CALLS(evm, _, _, _, _) => evm.gas
+                case CALLS(evm, _, _, _, _, _, _) => evm.gas
                 case RETURNS(g, _) => g
                 case REVERTS(g, _) => g
         }
@@ -175,7 +175,8 @@ module EvmState {
         function method Expand(address: nat, len: nat): (s': State)
             requires !IsFailure()
             ensures !s'.IsFailure()
-             ensures address + len <= s'.MemSize()
+            ensures MemSize() <= s'.MemSize()
+            ensures address + len <= s'.MemSize()
             //  If last byte read is in range, no need to expand.
             ensures address + len < MemSize() ==> evm.memory == s'.evm.memory
         {
@@ -344,21 +345,49 @@ module EvmState {
         }
 
         /**
+         * Begin a nested contract call.
+         */
+        function method CallEnter(storage: map<u256,u256>, code: seq<u8>) : State
+        requires this.CALLS?
+        requires |callData| <= MAX_U256
+        requires |code| <= Code.MAX_CODE_SIZE {
+            // Extract what is needed from context
+            var sender := evm.context.address;
+            var origin := evm.context.origin;
+            var gasPrice := evm.context.gasPrice;
+            // Construct new context
+            var ctx := Context.Create(to,origin,callValue,callData,gasPrice);
+            // Construct fresh EVM
+            var stack := Stack.Create();
+            var mem := Memory.Create();
+            var sto := Storage.Create(storage);
+            var cod := Code.Create(code);
+            var evm := EVM(evm.context,sto,stack,mem,cod,gas,0);
+            // Off we go!
+            State.OK(evm)
+        }
+
+        /**
          * Process a return from a nested call to either an end-user account or
          * a contract.
          */
-        function method CallReturn(exitCode: u256, returnData: seq<u8>) : State
+        function method CallReturn(vm:State) : (nst:State)
+        requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
         requires this.CALLS? {
             // copy over return data, etc.
             var st := OK(evm);
-            if st.Capacity() > 1
+            if st.Capacity() >= 1
             then
-                if (outOffset + outSize) <= MAX_U256
+                // Calculate the exitcode
+                var exitCode := if vm.RETURNS? then 1 else 0;
+                // Extract return data (if applicable)
+                if vm.INVALID? then st.Push(0)
+                else if (outOffset + outSize) <= MAX_U256
                 then
                     // Determine amount of data to actually return
-                    var m := Min(|returnData|,outSize);
+                    var m := Min(|vm.data|,outSize);
                     // Slice out that data
-                    var data := returnData[0..m];
+                    var data := vm.data[0..m];
                     //
                     st.Expand(outOffset,outSize).Push(exitCode).Copy(outOffset,data)
                 else

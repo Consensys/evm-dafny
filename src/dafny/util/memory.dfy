@@ -226,8 +226,9 @@ module Memory {
      * Write a 256bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method WriteUint256(mem:T, address:nat, val:u256) : T
-    requires address + 31 < |mem.contents| {
+    function method WriteUint256(mem:T, address:nat, val:u256) : (mem':T)
+    requires address + 31 < |mem.contents|
+    ensures EqualsExcept(mem,mem',address,32) {
       var w1 := val / (TWO_128 as u256);
       var w2 := val % (TWO_128 as u256);
       var mem' := WriteUint128(mem,address,w1 as u128);
@@ -241,12 +242,39 @@ module Memory {
       Bytes.Slice(mem.contents,address,len)
     }
 
-    function method Copy(mem:T, address:nat, data:seq<u8>) : T
-      requires (address + |data|) <= |mem.contents|
-      decreases |data| {
+    /**
+     * Copy a sequence of bytes into this memory at a given address.  This uses
+     * a decomposition technique (rather than the obvious iterative technique)
+     * as the former seems to improve verification performance.
+     */
+    function method Copy(mem:T, address:nat, data:seq<u8>) : (mem':T)
+    // Must have sufficient memory for copy.
+    requires (address + |data|) <= |mem.contents|
+    // Following inductive invariant is required.
+    ensures EqualsExcept(mem,mem',address,|data|)
+    // Check data actually copied
+    ensures data == mem'.contents[address .. address+|data|]
+    decreases |data| {
         if |data| == 0 then mem
+        else if |data| == 1 then WriteUint8(mem,address,data[0])
         else
-          var step := WriteUint8(mem,address,data[0]);
-          Copy(step,address+1,data[1..])
+          var pivot := |data| / 2;
+          var middle := address + pivot;
+          var nmem := Copy(mem,address,data[0..pivot]);
+          Copy(nmem,middle,data[pivot..])
+    }
+
+    /**
+     * Everything is the same, except for those bytes within the given region.
+     */
+    predicate EqualsExcept(lhs:T, rhs:T, address:nat, length: nat)
+    // Data region must be within available memory
+    requires address + length <= |lhs.contents| {
+        // Memory sizes are the same
+        |lhs.contents| == |rhs.contents| &&
+        // Check nothing below data region changed
+        lhs.contents[..address] == rhs.contents[..address] &&
+        // Check nothing above data region changed
+        lhs.contents[address+length..] == rhs.contents[address+length..]
     }
 }

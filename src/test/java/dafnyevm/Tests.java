@@ -1437,10 +1437,8 @@ public class Tests {
 
 	@Test
 	public void test_call_01() {
-		// Address of contract to call
-
-		//
-		// Contract call which returns 0x123, and this is then returned by the caller.
+		// Absolutely minimal contract call which does nothing, and the caller then
+		// returns the (successful) exit code.
 		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(STOP)));
 		byte[] output = call(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
