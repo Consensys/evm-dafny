@@ -51,10 +51,10 @@ module Test10 {
     }
 
     /**
-    *  A loop.
-    *      
-    *  @param  c   The number of times to iterate the loop.
-    */
+     *  A loop.
+     *       
+     *  @param  c   The number of times to iterate the loop.
+     */
     method main2(c: u8)
     {
         // Initialise VM
@@ -118,6 +118,45 @@ module Test10 {
         }
         assert count == 0;
         assert vm.GetStack() == Stack.Make([0]);
+    }
+
+    /**
+     *  A modular proof. main4a calls main4b
+     *       
+     *  @param  c   The number of times to iterate the loop.
+     */
+    method main4a(c: u8)
+    {
+        // Initialise VM
+        var vm := EvmBerlin.InitEmpty(0);
+
+        var a: u8 := 0x01;
+        var b : u8 := 0x02;
+        var count: u8 := c;
+
+        ghost var g := vm.GetStack();
+
+        while count > 0
+            invariant !vm.IsFailure()
+            invariant  vm.GetStack() == g
+        {
+            vm := main4b(vm);
+            count := count - 1 ;
+        }
+        assert vm.GetStack() == g;
+    }
+
+    /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
+    method main4b(v: EvmState.State) returns (v': EvmState.State)
+        requires !v.IsFailure()
+        requires Stack.Size(v.GetStack()) < 3
+        ensures !v'.IsFailure() && v'.GetStack() == v.GetStack()
+    {
+        v':= v;
+        v' := Push1(v', 0x1);
+        v' := Push1(v', 0x2);
+        v' := Add(v');
+        v' := Pop(v');
     }
 
     /**
