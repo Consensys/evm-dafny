@@ -149,7 +149,7 @@ module Test10 {
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
     method main4b(v: EvmState.State) returns (v': EvmState.State)
         requires !v.IsFailure()
-        requires Stack.Size(v.GetStack()) < 3
+        requires v.Capacity() >= 2
         ensures !v'.IsFailure() && v'.GetStack() == v.GetStack()
     {
         v':= v;
