@@ -13,6 +13,7 @@
  */
  
 include "../../dafny/bytecode.dfy"
+include "../../dafny/gas.dfy"
 
 /**
  *  Provide some verification for properties of Memory opcodes. 
@@ -49,5 +50,54 @@ abstract module MemoryVerif_01 {
       assert r.MemSize() - 32 <= vm.Peek(0) as nat + 31;
     }
   }
+
+  //  Create an EVM using Berlin gas function
+  import Gas 
+
+  /**
+   *  Check gas consumption of MSTORE.
+   *  Starting from an OKState with 2 elements on the stack.
+   */
+  method MSTORE_02_Proofs(vm: OKState) 
+    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.MemSize() <= MAX_U256
+    requires vm.Gas() >= Gas.G_VERYLOW;
+  {
+    //  address is in range, no expansion 
+    if vm.Peek(0) as nat + 31 < vm.MemSize() {
+      var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+      assert r.Gas() == vm.Gas() - Gas.G_VERYLOW;
+    } 
+   
+    // memory is empty, address required is 0, Expansion should be 32 bytes
+    if vm.Peek(0) == 0 && vm.MemSize() == 0 && vm.Gas() >= 200 { 
+        assert vm.Peek(0) as nat + 31 >= vm.MemSize();
+        //  compute expanded size
+        var ex := Memory.SmallestLarg32(vm.Peek(0) as nat + 31);
+        //  expansion is 32 bytes
+        assert ex == 32;
+        var exCost := Gas.ComputeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat);
+        assert exCost == Gas.G_MEMORY * 32 + 2; 
+
+        var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+        assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + Gas.G_MEMORY * 32 + 2);
+    }
+
+    //  memory is 32 bytes, address is 16. Expansion to 64 bytes.
+    if vm.Peek(0) == 16 && vm.MemSize() == 32 && vm.Gas() >= 200 { 
+        assert vm.Peek(0) as nat + 31 >= vm.MemSize();
+        //  compute expanded size
+        var ex := Memory.SmallestLarg32(vm.Peek(0) as nat + 31);
+        //  expansion is 64 bytes
+        assert ex == 64;
+        var exCost := Gas.ComputeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat);
+        assert exCost == Gas.G_MEMORY * 64 + 8 - (Gas.G_MEMORY * 32 + 2); 
+
+        var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+        assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
+    }
+  }
 }
+
+
 

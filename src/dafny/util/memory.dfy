@@ -72,6 +72,30 @@ module Memory {
     }
 
     /**
+     *  Expand memory to include a given address.
+     *  Calls the function Expand2 implemented in the memory module
+
+     *  @param  address The start address.
+     *  @param  len     The number of bytes to read from `address`, i.e.
+     *                  we want to read `len` bytes starting at `address`. 
+     *  @returns        A possibly expanded memory that contains 
+     *                  memory slots upto index `address + len - 1`.
+     *  
+     *  @note           When using this function, you may check
+     *                  first that the extended chunk satisfies some constraints,
+     *                  e.g. begin less then `MAX_U256`. 
+     */
+    function method ExpandMem(mem: T, address: nat, len: nat): (r: T)
+    requires len > 0
+    {
+        Expand(mem, address + len - 1)
+    }
+
+    // =============================================================================
+    //  Read/Write helpers
+    // =============================================================================
+
+    /**
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */

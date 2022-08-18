@@ -13,14 +13,24 @@
  */
 include "util/int.dfy"
 include "opcodes.dfy"
-include "state.dfy"
+include "state.dfy" 
 include "util/ExtraTypes.dfy"
+include "util/memory.dfy"
+include "util/bytes.dfy"
+include "util/code.dfy"
+include "util/context.dfy"
+include "bytecode.dfy"
 
 module Gas {
 	import opened Opcode
 	import opened EvmState
     import opened Int
     import opened ExtraTypes
+    import opened Memory
+    import opened Bytes
+    import opened Code
+    import opened Context
+    import opened Bytecode
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -63,6 +73,85 @@ module Gas {
     function method UseOneGas(op: u8, s: OKState): State
     {
         s.UseGas(1)
+    }
+
+    /**
+     *  Assign a cost as a function of the memory size. 
+     *
+     *  @param  memUsedSize     The size of the memory in 32bytes (words).
+     *  @returns                The cost of using a memory of size `memUsedSize`
+     *  @note                   The memory cost is linear up to a certain point (
+     *                          22*32 = 704 bytes), and then quadratic.
+     */
+    function method QuadraticCost(memUsedSize: nat): nat
+    {  
+        G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
+    }
+
+    /**
+     *  The quadrratic cost function is increasing.
+     */
+    lemma QuadraticCostIsMonotonic(x: nat, y: nat) 
+        ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
+    {
+        if x >= y {
+            calc >= {
+                G_MEMORY * x + ((x * x) / 512);
+                G_MEMORY * y + ((y * y) / 512);
+            }
+        }
+    }
+
+    /*  Compute the cost of a memory expansion to cover a given address.
+     *  
+     *  @param   mem         the current memory (also referred to as old memory)
+     *  @param   address     the offs to start storing from 
+     *
+     * @note                this implements the gas cost encountered upon memory expansion
+     *                      in which case no expansion cost is encountered
+     */
+    function method ComputeDynGasMSTORE(mem: Memory.T, address: nat) : nat 
+    {   
+        if address + 31 < |mem.contents| then 
+            0
+        else 
+            QuadraticCostIsMonotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
+            assert QuadraticCost(Memory.SmallestLarg32(address + 31)) >= QuadraticCost(|mem.contents|);
+            QuadraticCost(Memory.SmallestLarg32(address + 31)) - QuadraticCost(|mem.contents|)
+    } 
+
+    /* compute the gas cost of memory expansion. Consider corner cases where exceptions
+     * may have happened due to accessing maximum allowed memory, or underflowing the stack
+     */
+    function method GasCostMSTORE(st: State) : State
+        requires !st.IsFailure()
+    {
+        /* check for the stack underflow */
+        if st.Operands() >= 1
+        then
+            /* get the address which is the starting memory slot for storing the value in the memory*/
+            var loc := st.Peek(0) as nat;
+            /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
+             * memory size */
+            if (loc + 31) < MAX_U256
+                then
+                /* compute if memory expansion is needed, and return the cost of the potential expansion */
+                var costMemExpansion := ComputeDynGasMSTORE(st.evm.memory, loc as nat);
+                /* check if there is enough gas available to cover the expansion costs */
+                if costMemExpansion + G_VERYLOW <= st.Gas() 
+                    then 
+                        st.UseGas(costMemExpansion + G_VERYLOW)
+                /* return an invalid state if there was not enough gas to pay for the memory expansion */
+                else State.INVALID(INSUFFICIENT_GAS)
+            else
+                if G_VERYLOW <= st.Gas()
+                    then
+                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
+                        st.UseGas(G_VERYLOW)
+                else    
+                    State.INVALID(INSUFFICIENT_GAS)
+        else
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /** The Berlin gas cost function.
@@ -130,7 +219,7 @@ module Gas {
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
             case MLOAD => s.UseGas(G_VERYLOW)
-            case MSTORE => s.UseGas(G_VERYLOW)
+            case MSTORE => GasCostMSTORE(s)
             case MSTORE8 => s.UseGas(G_VERYLOW)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
