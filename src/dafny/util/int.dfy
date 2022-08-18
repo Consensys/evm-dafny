@@ -118,6 +118,20 @@ module Int {
         (b1 * (TWO_32 as u64)) + b2
     }
 
+    function method ReadUint128(bytes: seq<u8>, address:nat) : u128
+    requires (address+15) < |bytes| {
+        var b1 := ReadUint64(bytes, address) as u128;
+        var b2 := ReadUint64(bytes, address+8) as u128;
+        (b1 * (TWO_64 as u128)) + b2
+    }
+
+    function method ReadUint256(bytes: seq<u8>, address:nat) : u256
+    requires (address+31) < |bytes| {
+        var b1 := ReadUint128(bytes, address) as u256;
+        var b2 := ReadUint128(bytes, address+16) as u256;
+        (b1 * (TWO_128 as u256)) + b2
+    }
+
     // =========================================================
     // Exponent
     // =========================================================

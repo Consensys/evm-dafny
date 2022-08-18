@@ -1009,7 +1009,7 @@ module Bytecode {
     /**
      * Message-call into an account.
      */
-    function method Call(st: State) : State
+    function method Call(st: State) : (nst: State)
     requires !st.IsFailure() {
         //
         if st.Operands() >= 7
@@ -1018,7 +1018,7 @@ module Bytecode {
             var outOffset := st.Peek(5) as nat;
             var inSize := st.Peek(4) as nat;
             var inOffset := st.Peek(3) as nat;
-            var value := st.Peek(2) as nat;
+            var value := st.Peek(2);
             var to := (st.Peek(1) as int) % TWO_160;
             var gas := st.Peek(0) as nat;
              // Sanity check bounds
@@ -1028,7 +1028,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm,to as u160,calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm,to as u160, gas, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
