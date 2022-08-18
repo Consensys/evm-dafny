@@ -76,11 +76,11 @@ abstract module MemoryVerif_01 {
         var ex := Memory.SmallestLarg32(vm.Peek(0) as nat + 31);
         //  expansion is 32 bytes
         assert ex == 32;
-        var exCost := Gas.ComputeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat);
-        assert exCost == Gas.G_MEMORY * 32 + 2; 
+        var exCost := Gas.ComputeDynGasOneWordExpansion(vm.evm.memory, vm.Peek(0) as nat);
+        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32; 
 
         var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
-        assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + Gas.G_MEMORY * 32 + 2);
+        assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + (Gas.G_MEMORY * 32 + 2) / 32);
     }
 
     //  memory is 32 bytes, address is 16. Expansion to 64 bytes.
@@ -90,8 +90,8 @@ abstract module MemoryVerif_01 {
         var ex := Memory.SmallestLarg32(vm.Peek(0) as nat + 31);
         //  expansion is 64 bytes
         assert ex == 64;
-        var exCost := Gas.ComputeDynGasMSTORE(vm.evm.memory, vm.Peek(0) as nat);
-        assert exCost == Gas.G_MEMORY * 64 + 8 - (Gas.G_MEMORY * 32 + 2); 
+        var exCost := Gas.ComputeDynGasOneWordExpansion(vm.evm.memory, vm.Peek(0) as nat);
+        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32); 
 
         var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
