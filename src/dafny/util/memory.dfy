@@ -88,7 +88,7 @@ module Memory {
     function method ExpandMem(mem: T, address: nat, len: nat): (r: T)
     requires len > 0
     {
-        Expand2(mem, address + len - 1)
+        Expand(mem, address + len - 1)
     }
 
     // =============================================================================
