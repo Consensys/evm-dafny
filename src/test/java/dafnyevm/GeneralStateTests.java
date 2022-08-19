@@ -268,13 +268,31 @@ public class GeneralStateTests {
 		@Override
 		public void exception(State.Invalid state) {
 			if(state.depth == 1) {
-				out.add(new Trace.Exception(state.getErrorCode()));
+				out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
 			}
 		}
 
 		@Override
 		public void callContinue(CallContinue state) {
 			// For now we do nothing.
+		}
+
+		private Trace.Exception.Error toErrorCode(EvmState_Compile.Error err) {
+			if(err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
+				return Trace.Exception.Error.INSUFFICIENT_GAS;
+			} else if(err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
+				return Trace.Exception.Error.INVALID_OPCODE;
+			} else if(err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
+				return Trace.Exception.Error.INVALID_JUMPDEST;
+			} else if(err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
+				return Trace.Exception.Error.STACK_OVERFLOW;
+			} else if(err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
+				return Trace.Exception.Error.STACK_UNDERFLOW;
+			} else if(err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
+				return Trace.Exception.Error.MEMORY_OVERFLOW;
+			} else {
+				return Trace.Exception.Error.UNKNOWN;
+			}
 		}
 	}
 }

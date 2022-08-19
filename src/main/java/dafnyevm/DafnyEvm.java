@@ -28,7 +28,6 @@ import EvmState_Compile.State_REVERTS;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafnyevm.util.Hex;
-import evmtools.core.Trace;
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
@@ -634,23 +633,8 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
-			public Trace.Exception.Error getErrorCode() {
-				EvmState_Compile.Error err = state._a0;
-				if(err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
-					return Trace.Exception.Error.INSUFFICIENT_GAS;
-				} else if(err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
-					return Trace.Exception.Error.INVALID_OPCODE;
-				} else if(err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
-					return Trace.Exception.Error.INVALID_JUMPDEST;
-				} else if(err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
-					return Trace.Exception.Error.STACK_OVERFLOW;
-				} else if(err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
-					return Trace.Exception.Error.STACK_UNDERFLOW;
-				} else if(err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
-					return Trace.Exception.Error.MEMORY_OVERFLOW;
-				} else {
-					return Trace.Exception.Error.UNKNOWN;
-				}
+			public EvmState_Compile.Error getErrorCode() {
+				return state._a0;
 			}
 
 			public BigInteger getGasUsed() {
