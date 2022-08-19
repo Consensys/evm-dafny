@@ -77,13 +77,13 @@ module Memory {
 
      *  @param  address The start address.
      *  @param  len     The number of bytes to read from `address`, i.e.
-     *                  we want to read `len` bytes starting at `address`. 
-     *  @returns        A possibly expanded memory that contains 
+     *                  we want to read `len` bytes starting at `address`.
+     *  @returns        A possibly expanded memory that contains
      *                  memory slots upto index `address + len - 1`.
-     *  
+     *
      *  @note           When using this function, you may check
      *                  first that the extended chunk satisfies some constraints,
-     *                  e.g. begin less then `MAX_U256`. 
+     *                  e.g. begin less then `MAX_U256`.
      */
     function method ExpandMem(mem: T, address: nat, len: nat): (r: T)
     requires len > 0
@@ -249,11 +249,13 @@ module Memory {
      */
     function method Copy(mem:T, address:nat, data:seq<u8>) : (mem':T)
     // Must have sufficient memory for copy.
-    requires (address + |data|) <= |mem.contents|
+    requires |data| == 0 || (address + |data|) <= |mem.contents|
     // Following inductive invariant is required.
-    ensures EqualsExcept(mem,mem',address,|data|)
+    ensures |data| == 0 || EqualsExcept(mem,mem',address,|data|)
     // Check data actually copied
-    ensures data == mem'.contents[address .. address+|data|]
+    ensures |data| == 0 || data == mem'.contents[address .. address+|data|]
+    // If no data is copied, nothing is changed.
+    ensures |data| == 0 ==> mem == mem'
     decreases |data| {
         if |data| == 0 then mem
         else if |data| == 1 then WriteUint8(mem,address,data[0])

@@ -37,6 +37,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm.State;
+import dafnyevm.DafnyEvm.State.CallContinue;
 import dafnyevm.util.Bytecodes;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -88,27 +89,15 @@ public class GeneralStateTests {
 			assumeTrue(false);
 		} else {
 			Transaction tx = instance.getTransaction();
-			WorldState ws = instance.getWorldState();
+			// Figure out an appopriate receiver
 			BigInteger to = tx.to != null ? tx.to : DafnyEvm.DEFAULT_RECEIVER;
-			DafnyEvm.Account account;
-			if (tx.to != null) {
-				// Normal situation. We are calling a contract account and we need to run its
-				// code.
-				Map<BigInteger,BigInteger> storage = ws.get(tx.to).storage;
-				byte[] code = ws.get(tx.to).code;
-				account = new DafnyEvm.Account(code, BigInteger.ZERO, storage);
-			} else {
-				// In this case, we have an empty "to" field. Its not clear exactly what this
-				// means, but I believe we can imagine it as something like the contract
-				// creation account. Specifically, the code to execute is stored within the
-				// transaction data.
-				account = new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>());
-			}
+			// Convert world state over.
+			Map<BigInteger,DafnyEvm.Account> ws = buildWorldState(tx,instance.getWorldState());
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
-			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(tx.to).from(tx.sender)
-					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).put(to, account);
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(to).from(tx.sender)
+					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).putAll(ws);
 			// Run the transaction!
 			evm.call();
 			//
@@ -116,6 +105,30 @@ public class GeneralStateTests {
 			// Finally check for equality.
 			assertEquals(instance.getTrace(),tr);
 		}
+	}
+
+	/**
+	 * Apply
+	 * @param st
+	 * @param evm
+	 * @return
+	 */
+	public Map<BigInteger,DafnyEvm.Account> buildWorldState(Transaction tx, WorldState ws) {
+		HashMap<BigInteger,DafnyEvm.Account> dws = new HashMap<>();
+		// Initialise world statew
+		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
+			evmtools.core.Account acct = e.getValue();
+			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,acct.storage));
+		}
+		// Finally, configure transaction receiver (if necessary).
+		if (tx.to == null) {
+			// In this case, we have an empty "to" field. Its not clear exactly what this
+			// means, but I believe we can imagine it as something like the contract
+			// creation account. Specifically, the code to execute is stored within the
+			// transaction data.
+			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>()));
+		}
+		return dws;
 	}
 
 	// Here we enumerate all available test cases.
@@ -240,17 +253,46 @@ public class GeneralStateTests {
 
 		@Override
 		public void end(State.Return state) {
-			out.add(new Trace.Returns(state.getReturnData()));
+			if(state.depth == 1) {
+				out.add(new Trace.Returns(state.getReturnData()));
+			}
 		}
 
 		@Override
 		public void revert(State.Revert state) {
-			out.add(new Trace.Reverts(state.getReturnData()));
+			if(state.depth == 1) {
+				out.add(new Trace.Reverts(state.getReturnData()));
+			}
 		}
 
 		@Override
 		public void exception(State.Invalid state) {
-			out.add(new Trace.Exception());
+			if(state.depth == 1) {
+				out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
+			}
+		}
+
+		@Override
+		public void callContinue(CallContinue state) {
+			// For now we do nothing.
+		}
+
+		private Trace.Exception.Error toErrorCode(EvmState_Compile.Error err) {
+			if(err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
+				return Trace.Exception.Error.INSUFFICIENT_GAS;
+			} else if(err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
+				return Trace.Exception.Error.INVALID_OPCODE;
+			} else if(err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
+				return Trace.Exception.Error.INVALID_JUMPDEST;
+			} else if(err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
+				return Trace.Exception.Error.STACK_OVERFLOW;
+			} else if(err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
+				return Trace.Exception.Error.STACK_UNDERFLOW;
+			} else if(err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
+				return Trace.Exception.Error.MEMORY_OVERFLOW;
+			} else {
+				return Trace.Exception.Error.UNKNOWN;
+			}
 		}
 	}
 }
