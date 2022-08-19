@@ -89,7 +89,7 @@ module Gas {
     }
 
     /**
-     *  The quadrratic cost function is increasing.
+     *  The quadratic cost function is increasing.
      */
     lemma QuadraticCostIsMonotonic(x: nat, y: nat) 
         ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
@@ -120,6 +120,25 @@ module Gas {
             QuadraticCost((Memory.SmallestLarg32(address + 31)) / 32) - QuadraticCost(|mem.contents| / 32)
     } 
 
+    /*  Compute the cost of a memory expansion by an arbitrary number of words to cover a given address and data of length len.
+     *  
+     *  @param   mem         the current memory (also referred to as old memory)
+     *  @param   address     the offs to start storing from
+     *  @param   len         the length of data to read or write in bytes 
+     *
+     * @note                this implements the gas cost encountered upon memory expansion
+     *                      if no expansion was necessary, no expansion cost would apply
+     */
+    function method ComputeDynGas(mem: Memory.T, address: nat, len: nat) : nat 
+    {   
+        if address + len - 1 < |mem.contents| then 
+            0
+        else 
+            QuadraticCostIsMonotonic(Memory.SmallestLarg32(address + len - 1), |mem.contents|);
+            assert QuadraticCost(Memory.SmallestLarg32(address + len - 1)) >= QuadraticCost(|mem.contents|);
+            QuadraticCost((Memory.SmallestLarg32(address + len - 1)) / 32) - QuadraticCost(|mem.contents| / 32)
+    } 
+
     /* compute the gas cost of memory expansion. Consider corner cases where exceptions
      * may have happened due to accessing maximum allowed memory, or underflowing the stack
      */
@@ -136,7 +155,7 @@ module Gas {
             if (loc + 31) < MAX_U256
                 then
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
-                var costMemExpansion := ComputeDynGasOneWordExpansion(st.evm.memory, loc as nat);
+                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 32);
                 /* check if there is enough gas available to cover the expansion costs */
                 if costMemExpansion + G_VERYLOW <= st.Gas() 
                     then 
@@ -173,7 +192,7 @@ module Gas {
             if loc + 31 < MAX_U256
             then
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
-                var costMemExpansion := ComputeDynGasOneWordExpansion(st.evm.memory, loc as nat);
+                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 32);
                 /* check if there is enough gas available to cover the expansion costs */
                 if costMemExpansion + G_VERYLOW <= st.Gas() 
                     then 
