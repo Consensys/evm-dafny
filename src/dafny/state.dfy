@@ -176,14 +176,15 @@ module EvmState {
             requires !IsFailure()
             ensures !s'.IsFailure()
             ensures MemSize() <= s'.MemSize()
-            ensures address + len <= s'.MemSize()
             //  If last byte read is in range, no need to expand.
             ensures address + len < MemSize() ==> evm.memory == s'.evm.memory
         {
-            // Determine last address which must be valid after.
-            var last := if len == 0 then address else address + len - 1;
-            // Expand memory to include at least the last address.
-            OK(evm.(memory:=Memory.Expand(evm.memory, last)))
+            if len == 0 then this
+            else
+                // Determine last address which must be valid after.
+                var last := address + len - 1;
+                // Expand memory to include at least the last address.
+                OK(evm.(memory:=Memory.Expand(evm.memory, last)))
         }
 
         /**
@@ -228,7 +229,7 @@ module EvmState {
          */
         function method Copy(address:nat, data: seq<u8>) : State
         requires !IsFailure()
-        requires address + |data| <= Memory.Size(evm.memory)
+        requires |data| == 0 || address + |data| <= Memory.Size(evm.memory)
         {
             OK(evm.(memory:=Memory.Copy(evm.memory,address,data)))
         }

@@ -37,6 +37,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm.State;
+import dafnyevm.DafnyEvm.State.CallContinue;
 import dafnyevm.util.Bytecodes;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -252,17 +253,28 @@ public class GeneralStateTests {
 
 		@Override
 		public void end(State.Return state) {
-			out.add(new Trace.Returns(state.getReturnData()));
+			if(state.depth == 1) {
+				out.add(new Trace.Returns(state.getReturnData()));
+			}
 		}
 
 		@Override
 		public void revert(State.Revert state) {
-			out.add(new Trace.Reverts(state.getReturnData()));
+			if(state.depth == 1) {
+				out.add(new Trace.Reverts(state.getReturnData()));
+			}
 		}
 
 		@Override
 		public void exception(State.Invalid state) {
-			out.add(new Trace.Exception());
+			if(state.depth == 1) {
+				out.add(new Trace.Exception(state.getErrorCode()));
+			}
+		}
+
+		@Override
+		public void callContinue(CallContinue state) {
+			// For now we do nothing.
 		}
 	}
 }
