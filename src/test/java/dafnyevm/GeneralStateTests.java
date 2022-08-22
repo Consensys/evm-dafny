@@ -15,27 +15,25 @@ package dafnyevm;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import dafny.DafnyMap;
-import dafny.DafnySequence;
 import dafnyevm.DafnyEvm.State;
 import dafnyevm.DafnyEvm.State.CallContinue;
 import dafnyevm.util.Bytecodes;
@@ -43,7 +41,6 @@ import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
 import evmtools.core.WorldState;
-import evmtools.util.Hex;
 
 /**
  * A test runner for executing the <code>GeneralStateTests</code> provided as
@@ -81,10 +78,114 @@ public class GeneralStateTests {
 	 */
 	public final static Path TESTS_DIR = Path.of("tests");
 
+	/**
+	 * The set of tests which are (for various reasons) currently ignored. Each
+	 * ignored test must be given a reason for this.
+	 */
+	public final static List<String> IGNORES = Arrays.asList( //
+			"stExample/invalidTr.json", // Intrinsic Gas.
+			"VMTests/vmArithmeticTest/exp.json", // #195
+			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
+			"VMTests/vmArithmeticTest/signextend.json", // #194
+			"stMemoryTest/bufferSrcOffset.json", // #199
+			"stMemoryTest/calldatacopy_dejavu.json", // Should raise exception
+			"stMemoryTest/codecopy_dejavu.json", // Should raise exception
+			"stMemoryTest/memCopySelf.json", // #200
+			"stMemoryTest/mload_dejavu.json", // Should raise exception
+			"stMemoryTest/mstore_dejavu.json", // Should raise exception
+			"stMemoryTest/mstroe8_dejavu.json", // Should raise exception
+			"stMemoryTest/oog.json", // Various problems
+			"stMemoryTest/stackLimitGas_1023.json", // #200
+			"stMemoryTest/stackLimitGas_1024.json", // Unrunnable?
+			"stMemoryTest/stackLimitGas_1025.json", //
+			//
+			"stCallCodes/callcall_00.json", // #202
+			"stCallCodes/callcallcall_000.json", // #202
+			//
+			"stCallCodes/callcall_00_OOGE.json", // OOG?
+			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
+			//
+			"stCallCodes/callcall_00_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcallcall_000_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcallcall_000_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcallcallcode_001_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcallcallcode_001_SuicideMiddle.json",// SELFDESTRUCT
+			//
+			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Stack Overflow
+			//
+			"stCallCodes/callcallcallcode_001.json", // #203
+			"stCallCodes/callcallcallcode_001_OOGE.json", // #203
+			"stCallCodes/callcallcallcode_001_OOGMAfter.json", // #203
+			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcallcode_01.json", // #203
+			"stCallCodes/callcallcode_01_OOGE.json", // #203
+			"stCallCodes/callcallcode_01_SuicideEnd.json", // #203
+			"stCallCodes/callcallcodecall_010.json", // #203
+			"stCallCodes/callcallcodecall_010_OOGE.json", // #203
+			"stCallCodes/callcallcodecall_010_OOGMAfter.json", // #203
+			"stCallCodes/callcallcodecall_010_OOGMBefore.json", // #203
+			"stCallCodes/callcallcodecall_010_SuicideEnd.json", // #203
+			"stCallCodes/callcallcodecall_010_SuicideMiddle.json", // #203
+			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcallcodecallcode_011.json", // #203
+			"stCallCodes/callcallcodecallcode_011_OOGE.json", // #203
+			"stCallCodes/callcallcodecallcode_011_OOGMAfter.json", // #203
+			"stCallCodes/callcallcodecallcode_011_OOGMBefore.json", // #203
+			"stCallCodes/callcallcodecallcode_011_SuicideEnd.json", // #203
+			"stCallCodes/callcallcodecallcode_011_SuicideMiddle.json", // #203
+			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcodecall_10.json", // #203
+			"stCallCodes/callcodecall_10_OOGE.json", // #203
+			"stCallCodes/callcodecall_10_SuicideEnd.json", // #203
+			"stCallCodes/callcodecallcall_100.json", // #203
+			"stCallCodes/callcodecallcall_100_OOGE.json", // #203
+			"stCallCodes/callcodecallcall_100_OOGMAfter.json", // #203
+			"stCallCodes/callcodecallcall_100_OOGMBefore.json", // #203
+			"stCallCodes/callcodecallcall_100_SuicideEnd.json", // #203
+			"stCallCodes/callcodecallcall_100_SuicideMiddle.json", // #203
+			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcodecallcallcode_101.json", // #203
+			"stCallCodes/callcodecallcallcode_101_OOGE.json", // #203
+			"stCallCodes/callcodecallcallcode_101_OOGMAfter.json", // #203
+			"stCallCodes/callcodecallcallcode_101_OOGMBefore.json", // #203
+			"stCallCodes/callcodecallcallcode_101_SuicideEnd.json", // #203
+			"stCallCodes/callcodecallcallcode_101_SuicideMiddle.json", // #203
+			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcodecallcode_11.json", // #203
+			"stCallCodes/callcodecallcode_11_OOGE.json", // #203
+			"stCallCodes/callcodecallcode_11_SuicideEnd.json", // #203
+			"stCallCodes/callcodecallcodecall_110.json", // #203
+			"stCallCodes/callcodecallcodecall_110_OOGE.json", // #203
+			"stCallCodes/callcodecallcodecall_110_OOGMAfter.json", // #203
+			"stCallCodes/callcodecallcodecall_110_OOGMBefore.json", // #203
+			"stCallCodes/callcodecallcodecall_110_SuicideEnd.json", // #203
+			"stCallCodes/callcodecallcodecall_110_SuicideMiddle.json", // #203
+			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcodecallcodecallcode_111.json", // #203
+			"stCallCodes/callcodecallcodecallcode_111_OOGE.json", // #203
+			"stCallCodes/callcodecallcodecallcode_111_OOGMAfter.json", // #203
+			"stCallCodes/callcodecallcodecallcode_111_OOGMBefore.json", // #203
+			"stCallCodes/callcodecallcodecallcode_111_SuicideEnd.json", // #203
+			"stCallCodes/callcodecallcodecallcode_111_SuicideMiddle.json", // #203
+			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // #203
+			"stCallCodes/callcodeEmptycontract.json", // #203
+			//
+			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
+			"stCallCodes/callcodeDynamicCode.json",  // CREATE
+			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // CREATE
+			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // CREATE
+			"stCallCodes/callcodeInInitcodeToExistingContract.json", // CREATE
+			"stCallCodes/callcodeInInitcodeToExistingContractWithValueTransfer.json", // CREATE
+			"stCallCodes/call_OOG_additionalGasCosts2.json", // Should raise exception
+			"stCallCodes/touchAndGo.json" // ?
+	);
+
 	@ParameterizedTest
 	@MethodSource("allTestFiles")
-	public void tests(TraceTest.Instance instance) throws IOException, JSONException {
-		if(isIgnored(instance.getExpectation())) {
+	public void tests(Pair<Path,TraceTest.Instance> pair) throws IOException, JSONException {
+		final TraceTest.Instance instance = pair.getRight();
+		//
+		if(isIgnored(pair.getLeft())) {
 			// Force test to be ignored.
 			assumeTrue(false);
 		} else {
@@ -132,7 +233,7 @@ public class GeneralStateTests {
 	}
 
 	// Here we enumerate all available test cases.
-	private static Stream<TraceTest.Instance> allTestFiles() throws IOException {
+	private static Stream<Pair<Path,TraceTest.Instance>> allTestFiles() throws IOException {
 		return readTestFiles(TESTS_DIR);
 	}
 
@@ -146,16 +247,17 @@ public class GeneralStateTests {
 	 * @param expect
 	 * @return
 	 */
-	private static boolean isIgnored(Transaction.Expectation expect) {
-		// NOTE: at the moment, the Dafny EVM does not support gas in any form and,
-		// therefore, cannot detect out-of-gas errors. Thus, for now, we simply ignore
-		// them.
-		switch (expect) {
-		case IntrinsicGas:
-			return true;
-		default:
-			return false;
+	private static boolean isIgnored(Path path) {
+		// Normalise path notation for platofmr
+		String p = path.toString().replace(File.separator, "/");
+		// Check whether this matches an IGNORE or not.
+		for (int i = 0; i != IGNORES.size(); ++i) {
+			String ith = IGNORES.get(i);
+			if (p.endsWith(ith)) {
+				return true;
+			}
 		}
+		return false;
 	}
 
 	// ======================================================================
@@ -174,7 +276,7 @@ public class GeneralStateTests {
 	// Data sources
 	// ======================================================================
 
-	public static Stream<TraceTest.Instance> readTestFiles(Path dir) throws IOException {
+	public static Stream<Pair<Path,TraceTest.Instance>> readTestFiles(Path dir) throws IOException {
 		ArrayList<Path> testfiles = new ArrayList<>();
 		//
 		Files.walk(dir).forEach(f -> {
@@ -194,7 +296,7 @@ public class GeneralStateTests {
 	 * @param files
 	 * @return
 	 */
-	private static Stream<TraceTest.Instance> streamTestsFromFiles(Stream<Path> files) {
+	private static Stream<Pair<Path,TraceTest.Instance>> streamTestsFromFiles(Stream<Path> files) {
 		return files.flatMap(f -> {
 			try {
 				// Read contents of fixture file
@@ -202,12 +304,14 @@ public class GeneralStateTests {
 				// Convert fixture into JSON
 				JSONObject json = new JSONObject(contents);
 				// Parse into one or more tests
-				ArrayList<TraceTest.Instance> instances = new ArrayList<>();
+				ArrayList<Pair<Path, TraceTest.Instance>> instances = new ArrayList<>();
 				for (String test : JSONObject.getNames(json)) {
 					TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
 					if (tt.hasInstances(FORK)) {
 						// Add all instances
-						instances.addAll(tt.getInstances(FORK));
+						for (TraceTest.Instance i : tt.getInstances(FORK)) {
+							instances.add(Pair.of(f, i));
+						}
 					}
 				}
 				return instances.stream();
