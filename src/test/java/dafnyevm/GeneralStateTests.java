@@ -95,9 +95,9 @@ public class GeneralStateTests {
 			"stMemoryTest/mstore_dejavu.json", // Should raise exception
 			"stMemoryTest/mstroe8_dejavu.json", // Should raise exception
 			"stMemoryTest/oog.json", // Various problems
-			"stMemoryTest/stackLimitGas_1023.json", // #200
-			"stMemoryTest/stackLimitGas_1024.json", // Unrunnable?
-			"stMemoryTest/stackLimitGas_1025.json", //
+			"stMemoryTest/stackLimitGas_1023.json", // #201
+			"stMemoryTest/stackLimitGas_1024.json", // #201
+			"stMemoryTest/stackLimitGas_1025.json", // #201
 			//
 			"stCallCodes/callcall_00.json", // #202
 			"stCallCodes/callcallcall_000.json", // #202
@@ -177,7 +177,39 @@ public class GeneralStateTests {
 			"stCallCodes/callcodeInInitcodeToExistingContract.json", // CREATE
 			"stCallCodes/callcodeInInitcodeToExistingContractWithValueTransfer.json", // CREATE
 			"stCallCodes/call_OOG_additionalGasCosts2.json", // Should raise exception
-			"stCallCodes/touchAndGo.json" // ?
+			"stCallCodes/touchAndGo.json", // ?
+			//
+			"vmTests/dup.json", // #200
+			"vmTests/swap.json", // #200
+			"vmTests/random.json", // #200
+			"vmTests/push.json", // #200
+			"vmTests/sha3.json", // SHA3?
+			"vmTests/calldatacopy.json", // CALLDATACOPY?
+			"vmTests/calldatasize.json", // CALLDATASIZE?
+			"vmTests/suicide.json", // SELFDESTRUCT
+			"vmTests/envInfo.json", // CODECOPY
+			"vmTests/blockInfo.json", // COINBASE
+			"vmLogTest/log0.json", // #206
+			"vmLogTest/log1.json", // #206
+			"vmLogTest/log2.json", // #206
+			"vmLogTest/log3.json", // #206
+			"vmLogTest/log4.json", // #206
+			"vmIOandFlowOperations/jump.json", // DELEGATECALL
+			"vmIOandFlowOperations/mstore8.json", // DELEGATECALL
+			"vmIOandFlowOperations/mload.json", // DELEGATECALL
+			"vmIOandFlowOperations/codecopy.json", // DELEGATECALL
+			"vmIOandFlowOperations/codecopy.json", // #200
+			"vmIOandFlowOperations/loopsConditionals.json", // DELEGATECALL
+			"vmIOandFlowOperations/msize.json", // DELEGATECALL
+			"vmIOandFlowOperations/pop.json", // DELEGATECALL
+			"vmIOandFlowOperations/return.json", // DELEGATECALL
+			"vmIOandFlowOperations/gas.json", // DELEGATECALL
+			"vmIOandFlowOperations/pc.json", // DELEGATECALL
+			"vmIOandFlowOperations/mstore.json", // DELEGATECALL
+			"vmIOandFlowOperations/jumpToPush.json", // #200
+			"vmIOandFlowOperations/jumpi.json", // DELEGATECALL
+			"vmIOandFlowOperations/sstore_sload.json", // #200
+			"dummy"
 	);
 
 	@ParameterizedTest
