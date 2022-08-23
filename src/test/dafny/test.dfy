@@ -13,9 +13,10 @@ module SimpleTests {
     import EvmBerlin
     import Bytecode
     import Bytes
+    import Gas
 
     /** The gas loaded in the EVM before executing a program. */
-    const INITGAS := 20;
+    const INITGAS := 0xFFFFFFFF;
 
     // ===========================================================================
     // Straight line test
@@ -42,7 +43,7 @@ module SimpleTests {
 
         // PUSH1 x
         vm := EvmBerlin.Execute(vm);
-        // PUSH1 0x2
+        // PUSH1 0x0
         vm := EvmBerlin.Execute(vm);
         // MSTORE
         vm := EvmBerlin.Execute(vm);
@@ -55,7 +56,10 @@ module SimpleTests {
         assert vm.RETURNS?;
         //
         assert vm.data == [x];
-        assert vm.Gas() == INITGAS - 6;
+        var g := (5 * Gas.G_VERYLOW) + Gas.G_MEMORY;
+        assert g == 0x12;
+        // FIXME: following should hold (I believe)
+        assert vm.Gas() == INITGAS - g;
     }
 
     /**

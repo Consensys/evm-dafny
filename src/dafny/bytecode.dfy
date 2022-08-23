@@ -901,9 +901,22 @@ module Bytecode {
     }
 
     /**
-    * Marks a valid destination for a jump, but otherwise has no effect
-    * on machine state.
-    */
+     * Get the amount of available gas, including the corresponding reduction
+     * for the cost of this instruction.
+     */
+    function method Gas(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1 && st.Gas() <= (MAX_U256 as nat)
+        then
+            st.Push(st.Gas() as u256).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Marks a valid destination for a jump, but otherwise has no effect
+     * on machine state.
+     */
     function method JumpDest(st: State) : State
     requires !st.IsFailure() {
         st.Next()

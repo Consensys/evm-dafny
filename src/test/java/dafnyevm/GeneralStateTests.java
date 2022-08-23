@@ -179,10 +179,7 @@ public class GeneralStateTests {
 			"stCallCodes/call_OOG_additionalGasCosts2.json", // Should raise exception
 			"stCallCodes/touchAndGo.json", // ?
 			//
-			"vmTests/dup.json", // #200
-			"vmTests/swap.json", // #200
 			"vmTests/random.json", // #200
-			"vmTests/push.json", // #200
 			"vmTests/sha3.json", // SHA3?
 			"vmTests/calldatacopy.json", // CALLDATACOPY?
 			"vmTests/calldatasize.json", // CALLDATASIZE?
@@ -198,7 +195,6 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/mstore8.json", // DELEGATECALL
 			"vmIOandFlowOperations/mload.json", // DELEGATECALL
 			"vmIOandFlowOperations/codecopy.json", // DELEGATECALL
-			"vmIOandFlowOperations/codecopy.json", // #200
 			"vmIOandFlowOperations/loopsConditionals.json", // DELEGATECALL
 			"vmIOandFlowOperations/msize.json", // DELEGATECALL
 			"vmIOandFlowOperations/pop.json", // DELEGATECALL

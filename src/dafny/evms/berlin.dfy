@@ -42,7 +42,7 @@ module EvmBerlin refines EVM {
      */
     function method OpGas(op: u8, s: State): State {
         match s
-            case OK(_) => Gas.UseOneGas(op, s)
+            case OK(_) => Gas.GasBerlin(op, s)
             case _ => s
     }
 
@@ -126,6 +126,7 @@ module EvmBerlin refines EVM {
                         case JUMPI => Bytecode.JumpI(s)
                         case PC => Bytecode.Pc(s)
                         case MSIZE => Bytecode.MSize(s)
+                        case GAS => Bytecode.Gas(s)
                         case JUMPDEST =>  Bytecode.JumpDest(s)
                         // 0x60s & 0x70s: Push operations
                         case PUSH1 => Push(s,1)
