@@ -13,7 +13,7 @@
  */
 include "util/int.dfy"
 include "opcodes.dfy"
-include "state.dfy" 
+include "state.dfy"
 include "util/ExtraTypes.dfy"
 include "util/memory.dfy"
 include "util/bytes.dfy"
@@ -76,7 +76,7 @@ module Gas {
     }
 
     /**
-     *  Assign a cost as a function of the memory size. 
+     *  Assign a cost as a function of the memory size.
      *
      *  @param  memUsedSize     The size of the memory in 32bytes (words).
      *  @returns                The cost of using a memory of size `memUsedSize`
@@ -84,14 +84,14 @@ module Gas {
      *                          22*32 = 704 bytes), and then quadratic.
      */
     function method QuadraticCost(memUsedSize: nat): nat
-    {  
+    {
         G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
     }
 
     /**
      *  The quadrratic cost function is increasing.
      */
-    lemma QuadraticCostIsMonotonic(x: nat, y: nat) 
+    lemma QuadraticCostIsMonotonic(x: nat, y: nat)
         ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
     {
         if x >= y {
@@ -103,22 +103,24 @@ module Gas {
     }
 
     /*  Compute the cost of a memory expansion to cover a given address.
-     *  
+     *
      *  @param   mem         the current memory (also referred to as old memory)
-     *  @param   address     the offs to start storing from 
+     *  @param   address     the offs to start storing from
      *
      * @note                this implements the gas cost encountered upon memory expansion
      *                      in which case no expansion cost is encountered
      */
-    function method ComputeDynGasMSTORE(mem: Memory.T, address: nat) : nat 
-    {   
-        if address + 31 < |mem.contents| then 
+    function method ComputeDynGasMSTORE(mem: Memory.T, address: nat) : nat
+    {
+        if address + 31 < |mem.contents| then
             0
-        else 
-            QuadraticCostIsMonotonic(Memory.SmallestLarg32(address + 31), |mem.contents|);
-            assert QuadraticCost(Memory.SmallestLarg32(address + 31)) >= QuadraticCost(|mem.contents|);
-            QuadraticCost(Memory.SmallestLarg32(address + 31)) - QuadraticCost(|mem.contents|)
-    } 
+        else
+            var before := |mem.contents| / 32;
+            var after := Memory.SmallestLarg32(address + 31) / 32;
+            QuadraticCostIsMonotonic(after, before);
+            assert QuadraticCost(after) >= QuadraticCost(before);
+            QuadraticCost(after) - QuadraticCost(before)
+    }
 
     /* compute the gas cost of memory expansion. Consider corner cases where exceptions
      * may have happened due to accessing maximum allowed memory, or underflowing the stack
@@ -138,8 +140,8 @@ module Gas {
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
                 var costMemExpansion := ComputeDynGasMSTORE(st.evm.memory, loc as nat);
                 /* check if there is enough gas available to cover the expansion costs */
-                if costMemExpansion + G_VERYLOW <= st.Gas() 
-                    then 
+                if costMemExpansion + G_VERYLOW <= st.Gas()
+                    then
                         st.UseGas(costMemExpansion + G_VERYLOW)
                 /* return an invalid state if there was not enough gas to pay for the memory expansion */
                 else State.INVALID(INSUFFICIENT_GAS)
@@ -148,7 +150,7 @@ module Gas {
                     then
                         /* charge the constant gas amount, even if maximum accessible memory was encountered */
                         st.UseGas(G_VERYLOW)
-                else    
+                else
                     State.INVALID(INSUFFICIENT_GAS)
         else
             State.INVALID(STACK_UNDERFLOW)
@@ -227,6 +229,7 @@ module Gas {
             case JUMPI => s.UseGas(1) // for now
             case PC => s.UseGas(G_BASE)
             case MSIZE => s.UseGas(G_BASE)
+            case GAS => s.UseGas(G_BASE)
             case JUMPDEST => s.UseGas(G_HIGH)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => s.UseGas(G_VERYLOW)
