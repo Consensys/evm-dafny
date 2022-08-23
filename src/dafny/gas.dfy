@@ -49,7 +49,6 @@ module Gas {
 	const G_SELFDESTRUCT: nat := 5000;
 	const G_CREATE: nat := 32000;
 	const G_CODEDEPOSIT: nat := 200;
-	const G_CALL: nat := 700;
 	const G_CALLVALUE: nat := 9000;
 	const G_CALLSTIPEND: nat := 2300;
 	const G_NEWACCOUNT: nat := 25000;
@@ -303,7 +302,7 @@ module Gas {
             //   var k => Some(opcode - LOG0) as int; evalLOG(st,k))
             // 0xf0
             // CREATE => s.UseGas(1)
-            // CALL => s.UseGas(1)
+            case CALL => s.UseGas(G_CALLSTIPEND) // for now
             // CALLCODE => s.UseGas(1)
             case RETURN => s.UseGas(G_ZERO)
             // DELEGATECALL => s.UseGas(1)
