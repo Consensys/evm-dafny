@@ -1615,7 +1615,6 @@ public class Tests {
 
 	private byte[] call(DafnyEvm context, int[] words) {
 		byte[] code = toBytes(words);
-		System.out.println("Excuting: " + Hex.toHexString(code));
 		return context.put(DEFAULT_RECEIVER, new Account(code)).call().getReturnData();
 	}
 
