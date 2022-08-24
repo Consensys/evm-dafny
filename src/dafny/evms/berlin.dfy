@@ -201,7 +201,7 @@ module EvmBerlin refines EVM {
                         // 0xf0
                         //  CREATE => Bytecode.evalCREATE(s),
                         case CALL => Bytecode.Call(s)
-                        //  CALLCODE => Bytecode.evalCALLCODE(s),
+                        case CALLCODE => Bytecode.CallCode(s)
                         case RETURN => Bytecode.Return(s)
                         // DELEGATECALL => Bytecode.evalDELEGATECALL(s),
                         // CREATE2 => Bytecode.evalCREATE2(s),
