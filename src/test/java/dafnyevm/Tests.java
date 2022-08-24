@@ -991,30 +991,28 @@ public class Tests {
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 2064), output);
 	}
 
-// NOTE: Following should be uncommented when gas calculation for MLOAD is implemented.
-//
-//	@Test
-//	public void test_gas_07() {
-//		byte[] output = call(new int[] { PUSH1, 0x01, PUSH1, 0x0, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-//		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 14), output);
-//	}
-//
-//	@Test
-//	public void test_gas_08() {
-//		// 3 + 3 + 3 + (3 * 3) + 2
-//		byte[] output = call(new int[] { PUSH1, 0x01, PUSH1, 0x40, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-//		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 20), output);
-//	}
-//
-//	@Test
-//	public void test_gas_09() {
-//		// 16415 / 32 = 513
-//		// (513 * 513) / 512 = 514
-//		// -------------------------------
-//		// 3 + 3 + 3 + (3 * 513 + 514) + 2
-//		byte[] output = call(new int[] { PUSH1, 0x01, PUSH2, 0x40, 0x00, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-//		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 2064), output);
-//	}
+	@Test
+	public void test_gas_07() {
+		byte[] output = call(new int[] { PUSH1, 0x01, PUSH1, 0x0, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 14), output);
+	}
+
+	@Test
+	public void test_gas_08() {
+		// 3 + 3 + 3 + (3 * 3) + 2
+		byte[] output = call(new int[] { PUSH1, 0x01, PUSH1, 0x40, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 20), output);
+	}
+
+	@Test
+	public void test_gas_09() {
+		// 16415 / 32 = 513
+		// (513 * 513) / 512 = 514
+		// -------------------------------
+		// 3 + 3 + 3 + (3 * 513 + 514) + 2
+		byte[] output = call(new int[] { PUSH1, 0x01, PUSH2, 0x40, 0x00, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 2064), output);
+	}
 
 	// ========================================================================
 	// 60s & 70s: Push Operations
