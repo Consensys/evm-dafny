@@ -213,6 +213,40 @@ module Gas {
             State.INVALID(STACK_UNDERFLOW)
     }
 
+    /* compute the gas cost of memory expansion. Consider corner cases where exceptions
+     * may have happened due to accessing maximum allowed memory, or underflowing the stack
+     */
+    function method GasCostMSTORE8(st: State) : State
+        requires !st.IsFailure()
+    {
+        /* check for the stack underflow */
+        if st.Operands() >= 1
+        then
+            /* get the address which is the starting memory slot for storing the value in the memory*/
+            var loc := st.Peek(0) as nat;
+            /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
+             * memory size */
+            if (loc + 31) < MAX_U256
+                then
+                /* compute if memory expansion is needed, and return the cost of the potential expansion */
+                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 1);
+                /* check if there is enough gas available to cover the expansion costs */
+                if costMemExpansion + G_VERYLOW <= st.Gas() 
+                    then 
+                        st.UseGas(costMemExpansion + G_VERYLOW)
+                /* return an invalid state if there was not enough gas to pay for the memory expansion */
+                else State.INVALID(INSUFFICIENT_GAS)
+            else
+                if G_VERYLOW <= st.Gas()
+                    then
+                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
+                        st.UseGas(G_VERYLOW)
+                else    
+                    State.INVALID(INSUFFICIENT_GAS)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -279,7 +313,7 @@ module Gas {
             case POP => s.UseGas(G_BASE)
             case MLOAD => GasCostMLOAD(s)
             case MSTORE => GasCostMSTORE(s)
-            case MSTORE8 => s.UseGas(G_VERYLOW)
+            case MSTORE8 => GasCostMSTORE8(s)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
             case JUMP => s.UseGas(G_MID)
