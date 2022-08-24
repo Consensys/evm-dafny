@@ -1567,6 +1567,175 @@ public class Tests {
 	}
 
 	@Test
+	public void test_call_09() {
+		// Contract call which returns its address. This should return the callers
+		// address (i.e. since we're using a CALLCODE instruction).
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(ADDRESS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(CONTRACT_1.longValueExact()), output);
+	}
+
+	@Test
+	public void test_callcode_01() {
+		// Absolutely minimal contract call which does nothing, and the caller then
+		// returns the (successful) exit code.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(STOP)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(1), output);
+	}
+
+	@Test
+	public void test_callcode_02() {
+		// Contract call which raises an exception, and the subsequence exit code is
+		// then returned by the caller.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(INVALID)));
+		//
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_callcode_03() {
+		// Contract call which reverts, and the subsequence exit code is then returned
+		// by the caller.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(PUSH1, 0x00, DUP1, REVERT)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_callcode_04() {
+		// Contract call which returns "0x123", which the caller then itself returns.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0x123), output);
+	}
+
+	@Test
+	public void test_callcode_05() {
+		// Contract call passing "0x123" as call data which is then returned, and
+		// subsequently the caller then itself returns that.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+
+		byte[] output = call(tx, new int[] {
+				// Write 0x123 to address 0x20
+				PUSH2, 0x1, 0x23, PUSH1, 0x20, MSTORE,
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x20, DUP1, PUSH1, 0x0, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0x123), output);
+	}
+
+	@Test
+	public void test_callcode_06() {
+		// Contract call passing "0x123" as call data which is then returned. However,
+		// the caller only request 31 bytes of return data which it then subsequently
+		// returns (ending up in a truncated result).
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+
+		byte[] output = call(tx, new int[] {
+				// Write 0x123 to address 0x20
+				PUSH2, 0x1, 0x23, PUSH1, 0x20, MSTORE,
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x1F, PUSH1, 0x00, PUSH1, 0x20, DUP1, PUSH1, 0x0, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0x100), output);
+	}
+
+	@Test
+	public void test_callcode_07() {
+		// Contract call passing "0x123" as call data which is then returned with the
+		// last byte truncated. Whilst the caller requested the full 32 bytes of return
+		// data, it will end up with a truncated result.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x1F, PUSH1, 0x00, RETURN)));
+
+		byte[] output = call(tx, new int[] {
+				// Write 0x123 to address 0x20
+				PUSH2, 0x1, 0x23, PUSH1, 0x20, MSTORE,
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x20, DUP1, PUSH1, 0x0, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0x100), output);
+	}
+
+	@Test
+	public void test_callcode_08() {
+		// Contract call passing "0x123" as call data which is then returned. However,
+		// the caller only sends 31 bytes of return data, but it then subsequently
+		// returns 32bytes (ending up in a truncated result).
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+
+		byte[] output = call(tx, new int[] {
+				// Write 0x123 to address 0x20
+				PUSH2, 0x1, 0x23, PUSH1, 0x20, MSTORE,
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x1F, PUSH1, 0x20, PUSH1, 0x0, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(0x100), output);
+	}
+
+	@Test
+	public void test_callcode_09() {
+		// Contract call which returns its address. This should return the callers
+		// address (i.e. since we're using a CALLCODE instruction).
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(ADDRESS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(DEFAULT_RECEIVER.longValueExact()), output);
+	}
+
+	@Test
 	public void test_revert_01() {
 		byte[] output = revertingCall(new int[] { PUSH1, 0x00, PUSH1, 0x00, REVERT });
 		assertArrayEquals(new byte[0], output);

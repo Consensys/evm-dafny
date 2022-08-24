@@ -102,28 +102,28 @@ module Gas {
     }
 
     /*  Compute the cost of a memory expansion by an arbitrary number of words to cover a given address and data of length len.
-     *  
+     *
      *  @param   mem         the current memory (also referred to as old memory)
      *  @param   address     the offs to start storing from
-     *  @param   len         the length of data to read or write in bytes 
+     *  @param   len         the length of data to read or write in bytes
      *
      * @note                this implements the gas cost encountered upon memory expansion
      *                      if no expansion was necessary, no expansion cost would apply
      */
-    function method ComputeDynGas(mem: Memory.T, address: nat, len: nat) : nat 
-    {   
-        if address + len - 1 < |mem.contents| then 
+    function method ComputeDynGas(mem: Memory.T, address: nat, len: nat) : nat
+    {
+        if address + len - 1 < |mem.contents| then
             0
-        else 
+        else
             var before := |mem.contents| / 32;
             var after := Memory.SmallestLarg32(address + len - 1) / 32;
             QuadraticCostIsMonotonic(after, before);
             assert QuadraticCost(after) >= QuadraticCost(before);
             QuadraticCost(after) - QuadraticCost(before)
-    } 
+    }
 
     /*  Compute the cost of a memory expansion by one word to cover a given address.
-     *  
+     *
      *  @param   mem         the current memory (also referred to as old memory)
      *  @param   address     the offs to start storing from
      *
@@ -160,8 +160,8 @@ module Gas {
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
                 var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 32);
                 /* check if there is enough gas available to cover the expansion costs */
-                if costMemExpansion + G_VERYLOW <= st.Gas() 
-                    then 
+                if costMemExpansion + G_VERYLOW <= st.Gas()
+                    then
                         st.UseGas(costMemExpansion + G_VERYLOW)
                 /* return an invalid state if there was not enough gas to pay for the memory expansion */
                 else State.INVALID(INSUFFICIENT_GAS)
@@ -170,7 +170,7 @@ module Gas {
                     then
                         /* charge the constant gas amount, even if maximum accessible memory was encountered */
                         st.UseGas(G_VERYLOW)
-                else    
+                else
                     State.INVALID(INSUFFICIENT_GAS)
         else
             State.INVALID(STACK_UNDERFLOW)
@@ -361,7 +361,7 @@ module Gas {
             // 0xf0
             // CREATE => s.UseGas(1)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
-            // CALLCODE => s.UseGas(1)
+            case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(G_ZERO)
             // DELEGATECALL => s.UseGas(1)
             // CREATE2 => s.UseGas(1)

@@ -1041,7 +1041,38 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm,to as u160, gas, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm,to as u160, to as u160, gas, value, calldata, outOffset:=outOffset, outSize:=outSize)
+            else
+                State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Message-call into this account with another account's code.
+     */
+    function method CallCode(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 7
+        then
+            var outSize := st.Peek(6) as nat;
+            var outOffset := st.Peek(5) as nat;
+            var inSize := st.Peek(4) as nat;
+            var inOffset := st.Peek(3) as nat;
+            var value := st.Peek(2);
+            var to := (st.Peek(1) as int) % TWO_160;
+            var gas := st.Peek(0) as nat;
+             // Sanity check bounds
+            if (inOffset + inSize) < MAX_U256
+            then
+                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                // Extract address of this account
+                var address := st.evm.context.address as u160;
+                // Compute the continuation (i.e. following) state.
+                var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                // Pass back continuation.
+                State.CALLS(nst.evm,address, to as u160, gas, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
