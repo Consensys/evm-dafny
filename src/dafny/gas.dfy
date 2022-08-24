@@ -226,7 +226,7 @@ module Gas {
             var loc := st.Peek(0) as nat;
             /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
              * memory size */
-            if (loc + 31) < MAX_U256
+            if loc < MAX_U256
                 then
                 /* compute if memory expansion is needed, and return the cost of the potential expansion */
                 var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 1);
