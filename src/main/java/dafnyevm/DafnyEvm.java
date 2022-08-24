@@ -290,10 +290,10 @@ public class DafnyEvm {
 	 *
 	 * @return
 	 */
-	public  DafnyEvm.State call() {
+	public  DafnyEvm.State<?> call() {
 		return call(1);
 	}
-	private DafnyEvm.State call(int depth) {
+	private DafnyEvm.State<?> call(int depth) {
 		Account acct = worldState.get(to);
 		//
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, value, DafnySequence.fromBytes(callData),
@@ -301,14 +301,13 @@ public class DafnyEvm {
 		// Create initial EVM state
 		EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(acct.code));
 		// Execute initial code.
-		State r = run(depth, tracer, st);
-		//System.out.println("depth=" + depth + ", memsize=" + r.state.MemSize());
+		State<?> r = run(depth, tracer, st);
 		// Execute the EVM
 		while (r instanceof State.CallContinue) {
 			// Check whether has finished or not.
 			State.CallContinue cc = (State.CallContinue) r;
 			// Make the recursive call.
-			State nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).origin(origin)
+			State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).origin(origin)
 					.data(cc.callData()).call(depth + 1);
 			// FIXME: update worldstate upon success.
 			// Continue from where we left off.
