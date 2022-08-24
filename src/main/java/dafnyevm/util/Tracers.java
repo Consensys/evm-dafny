@@ -29,6 +29,7 @@ import EvmState_Compile.State_RETURNS;
 import EvmState_Compile.State_REVERTS;
 import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
+import dafnyevm.DafnyEvm.State.CallContinue;
 import dafnyevm.DafnyEvm.Tracer;
 
 public class Tracers {
@@ -63,6 +64,11 @@ public class Tracers {
 		public void revert(DafnyEvm.State.Revert state) {
 			System.out.println(Hex.toHexString(state.getReturnData()));
 			System.out.println("error: execution reverted");
+		}
+
+		@Override
+		public void callContinue(CallContinue state) {
+			System.out.println("call enter");
 		}
 	}
 
@@ -134,6 +140,11 @@ public class Tracers {
 				// In principle, this should never happen!
 				throw new RuntimeException(e);
 			}
+		}
+
+		@Override
+		public void callContinue(CallContinue state) {
+			// NOTE: EIP-3155 has nothing for this as far as I am aware.
 		}
 
 		/**
