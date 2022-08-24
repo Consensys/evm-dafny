@@ -114,13 +114,13 @@ module Gas {
     {   
         if address + len - 1 < |mem.contents| then 
             0
-        else 
+        else
             var before := |mem.contents| / 32;
             var after := Memory.SmallestLarg32(address + len - 1) / 32;
             QuadraticCostIsMonotonic(after, before);
             assert QuadraticCost(after) >= QuadraticCost(before);
             QuadraticCost(after) - QuadraticCost(before)
-    } 
+    }
 
     /* Compute the gas cost of memory expansion. 
      *  
@@ -290,7 +290,7 @@ module Gas {
             // 0xf0
             // CREATE => s.UseGas(1)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
-            // CALLCODE => s.UseGas(1)
+            case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(G_ZERO)
             // DELEGATECALL => s.UseGas(1)
             // CREATE2 => s.UseGas(1)

@@ -100,7 +100,11 @@ public class DafnyEvm {
 	 * Data to be supplied with this call.
 	 */
 	private byte[] callData = DEFAULT_DATA;
-
+	/**
+	 * Code to be executed as part of this call. If this is <code>null</code>, then
+	 * the receivers code is used by default.
+	 */
+	private byte[] code = null;
 	/**
 	 * Set the gas price to use when executing transactions.
 	 *
@@ -274,7 +278,7 @@ public class DafnyEvm {
 	}
 
 	/**
-	 * Get the input data for this call.
+	 * Set the input data for this call.
 	 *
 	 * @param data
 	 * @return
@@ -285,30 +289,44 @@ public class DafnyEvm {
 	}
 
 	/**
+	 * Set the code to execute as part of this call.
+	 *
+	 * @param data
+	 * @return
+	 */
+	public DafnyEvm code(byte[] code) {
+		this.code = code;
+		return this;
+	}
+
+	/**
 	 * Perform a call to either an end-user account, or a contract (to be executed
 	 * by the Dafny EVM).
 	 *
 	 * @return
 	 */
-	public  DafnyEvm.State call() {
+	public  DafnyEvm.State<?> call() {
 		return call(1);
 	}
-	private DafnyEvm.State call(int depth) {
+	private DafnyEvm.State<?> call(int depth) {
 		Account acct = worldState.get(to);
+		// Determine code to be executed
+		byte[] code = this.code == null ? acct.code : this.code;
 		//
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, value, DafnySequence.fromBytes(callData),
 				gasPrice);
 		// Create initial EVM state
-		EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(acct.code));
+		EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(code));
 		// Execute initial code.
-		State r = run(depth, tracer, st);
-		//System.out.println("depth=" + depth + ", memsize=" + r.state.MemSize());
+		State<?> r = run(depth, tracer, st);
 		// Execute the EVM
 		while (r instanceof State.CallContinue) {
 			// Check whether has finished or not.
 			State.CallContinue cc = (State.CallContinue) r;
+			//
+			Account src = worldState.get(cc.code());
 			// Make the recursive call.
-			State nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).origin(origin)
+			State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).code(src.code).origin(origin)
 					.data(cc.callData()).call(depth + 1);
 			// FIXME: update worldstate upon success.
 			// Continue from where we left off.
@@ -533,6 +551,17 @@ public class DafnyEvm {
 			 */
 			public BigInteger receiver() {
 				return state.to;
+			}
+
+			/**
+			 * Identify the contract whose code should be used for executing the call.
+			 * Observe that this is not necessarily the same as the receiver (e.g. for the
+			 * <code>CALLCODE</code> instruction).
+			 *
+			 * @return
+			 */
+			public BigInteger code() {
+				return state.code;
 			}
 
 			/**
