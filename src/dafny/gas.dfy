@@ -213,7 +213,7 @@ module Gas {
             State.INVALID(STACK_UNDERFLOW)
     }
 
-    function method gasCostRETURN(st: State) : State
+    function method gasCostReturnRevert(st: State) : State
     requires !st.IsFailure() {
         //
         if st.Operands() >= 2
@@ -245,39 +245,41 @@ module Gas {
         else
             State.INVALID(STACK_UNDERFLOW)
     }
-
-    function method gasCostREVERT(st: State) : State
-    requires !st.IsFailure() {
-        //
-        if st.Operands() >= 2
+    
+    /* compute the gas cost of memory expansion. Consider corner cases where exceptions
+     * may have happened due to accessing maximum allowed memory, or underflowing the stack
+     */
+    function method GasCostMSTORE8(st: State) : State
+        requires !st.IsFailure()
+    {
+        /* check for the stack underflow */
+        if st.Operands() >= 1
         then
-            // Determine amount of data to return.
-            var len := st.Peek(1) as nat;
-            var start := st.Peek(0) as nat;
-            // Sanity check bounds
-            if (start+len) < MAX_U256
-            then
-                // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start, len);
-                assert |data| == len;
-                /* if the  length of data to read and revert on is zero, no gas charges apply 
-                 * note that we do not need caring if the starting slot of reading data exceeds the maximum memory used
-                 */
-                if len == 0
-                    then st.UseGas(G_ZERO)
-                else
-                /* if the length of data is greater than zero, check for possible expansions needed and apply the charges */
-                var costMemExpansion := ComputeDynGas(st.evm.memory, start, len);
-                if costMemExpansion <= st.Gas()
-                    then
-                        st.UseGas(G_ZERO + costMemExpansion)
-                else
-                    State.INVALID(INSUFFICIENT_GAS)
+            /* get the address which is the starting memory slot for storing the value in the memory*/
+            var loc := st.Peek(0) as nat;
+            /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
+             * memory size */
+            if loc < MAX_U256
+                then
+                /* compute if memory expansion is needed, and return the cost of the potential expansion */
+                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 1);
+                /* check if there is enough gas available to cover the expansion costs */
+                if costMemExpansion + G_VERYLOW <= st.Gas() 
+                    then 
+                        st.UseGas(costMemExpansion + G_VERYLOW)
+                /* return an invalid state if there was not enough gas to pay for the memory expansion */
+                else State.INVALID(INSUFFICIENT_GAS)
             else
-                st.UseGas(G_ZERO)
+                if G_VERYLOW <= st.Gas()
+                    then
+                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
+                        st.UseGas(G_VERYLOW)
+                else    
+                    State.INVALID(INSUFFICIENT_GAS)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -344,7 +346,7 @@ module Gas {
             case POP => s.UseGas(G_BASE)
             case MLOAD => GasCostMLOAD(s)
             case MSTORE => GasCostMSTORE(s)
-            case MSTORE8 => s.UseGas(G_VERYLOW)
+            case MSTORE8 => GasCostMSTORE8(s)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
             case JUMP => s.UseGas(G_MID)
@@ -427,11 +429,11 @@ module Gas {
             // CREATE => s.UseGas(1)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
             // CALLCODE => s.UseGas(1)
-            case RETURN => s.UseGas(G_ZERO)
+            case RETURN => gasCostReturnRevert(s)
             // DELEGATECALL => s.UseGas(1)
             // CREATE2 => s.UseGas(1)
             // STATICCALL => s.UseGas(1)
-            case REVERT => s.UseGas(G_ZERO)
+            case REVERT => gasCostReturnRevert(s)
             case SELFDESTRUCT => s.UseGas(1)
             case _ => State.INVALID(INVALID_OPCODE)
     }
