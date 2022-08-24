@@ -386,18 +386,20 @@ public class GeneralStateTests {
 		}
 
 		private Trace.Exception.Error toErrorCode(EvmState_Compile.Error err) {
-			if(err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
+			if (err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
 				return Trace.Exception.Error.INSUFFICIENT_GAS;
-			} else if(err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
+			} else if (err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
 				return Trace.Exception.Error.INVALID_OPCODE;
-			} else if(err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
+			} else if (err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
 				return Trace.Exception.Error.INVALID_JUMPDEST;
-			} else if(err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
+			} else if (err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
 				return Trace.Exception.Error.STACK_OVERFLOW;
-			} else if(err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
+			} else if (err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
 				return Trace.Exception.Error.STACK_UNDERFLOW;
-			} else if(err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
+			} else if (err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
 				return Trace.Exception.Error.MEMORY_OVERFLOW;
+			} else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
+				return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
 			} else {
 				return Trace.Exception.Error.UNKNOWN;
 			}
