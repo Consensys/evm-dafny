@@ -221,25 +221,22 @@ module Gas {
             // Determine amount of data to return.
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
-            // Sanity check bounds
-            if (start+len) < MAX_U256
-            then
-                // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start, len);
-                assert |data| == len;
-                /* if the  length of data to read and return is zero, no gas charges apply 
-                 * note that we do not need caring if the starting slot of reading data exceeds the maximum memory used
-                 */
-                if len == 0
+            if len == 0
                     then st.UseGas(G_ZERO)
-                else
-                /* if the length of data is greater than zero, check for possible expansions needed and apply the charges */
-                var costMemExpansion := ComputeDynGas(st.evm.memory, start, len);
-                if costMemExpansion <= st.Gas()
+            else
+                // Sanity check bounds
+                if (start+len) < MAX_U256
                     then
-                        st.UseGas(G_ZERO + costMemExpansion)
-                else
-                    State.INVALID(INSUFFICIENT_GAS)
+                    /* if the  length of data to read and return is zero, no gas charges apply 
+                     * note that we do not need caring if the starting slot of reading data exceeds the maximum memory used
+                     */
+                    /* if the length of data is greater than zero, check for possible expansions needed and apply the charges */
+                    var costMemExpansion := ComputeDynGas(st.evm.memory, start, len);
+                    if costMemExpansion <= st.Gas()
+                        then
+                            st.UseGas(G_ZERO + costMemExpansion)
+                    else
+                        State.INVALID(INSUFFICIENT_GAS)
             else
                 st.UseGas(G_ZERO)
         else
