@@ -93,7 +93,7 @@ module EvmState {
      * accordingly (along with any gas returned).
      */
     datatype State = OK(evm:T)
-        | CALLS(evm:T, to:u160, gas: nat, callValue: u256, callData:seq<u8>, outOffset: nat, outSize: nat)
+        | CALLS(evm:T, to:u160, code:u160, gas: nat, callValue: u256, callData:seq<u8>, outOffset: nat, outSize: nat)
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>)
         | REVERTS(gas:nat,data:seq<u8>) {
@@ -127,7 +127,7 @@ module EvmState {
         requires !this.INVALID? {
             match this
                 case OK(evm) => evm.gas
-                case CALLS(evm, _, _, _, _, _, _) => evm.gas
+                case CALLS(evm, _, _, _, _, _, _, _) => evm.gas
                 case RETURNS(g, _) => g
                 case REVERTS(g, _) => g
         }
