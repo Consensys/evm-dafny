@@ -213,6 +213,71 @@ module Gas {
             State.INVALID(STACK_UNDERFLOW)
     }
 
+    function method gasCostRETURN(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            // Determine amount of data to return.
+            var len := st.Peek(1) as nat;
+            var start := st.Peek(0) as nat;
+            // Sanity check bounds
+            if (start+len) < MAX_U256
+            then
+                // Read out that data.
+                var data := Memory.Slice(st.evm.memory, start, len);
+                assert |data| == len;
+                /* if the  length of data to read and return is zero, no gas charges apply 
+                 * note that we do not need caring if the starting slot of reading data exceeds the maximum memory used
+                 */
+                if len == 0
+                    then st.UseGas(G_ZERO)
+                else
+                /* if the length of data is greater than zero, check for possible expansions needed and apply the charges */
+                var costMemExpansion := ComputeDynGas(st.evm.memory, start, len);
+                if costMemExpansion <= st.Gas()
+                    then
+                        st.UseGas(G_ZERO + costMemExpansion)
+                else
+                    State.INVALID(INSUFFICIENT_GAS)
+            else
+                st.UseGas(G_ZERO)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    function method gasCostREVERT(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            // Determine amount of data to return.
+            var len := st.Peek(1) as nat;
+            var start := st.Peek(0) as nat;
+            // Sanity check bounds
+            if (start+len) < MAX_U256
+            then
+                // Read out that data.
+                var data := Memory.Slice(st.evm.memory, start, len);
+                assert |data| == len;
+                /* if the  length of data to read and revert on is zero, no gas charges apply 
+                 * note that we do not need caring if the starting slot of reading data exceeds the maximum memory used
+                 */
+                if len == 0
+                    then st.UseGas(G_ZERO)
+                else
+                /* if the length of data is greater than zero, check for possible expansions needed and apply the charges */
+                var costMemExpansion := ComputeDynGas(st.evm.memory, start, len);
+                if costMemExpansion <= st.Gas()
+                    then
+                        st.UseGas(G_ZERO + costMemExpansion)
+                else
+                    State.INVALID(INSUFFICIENT_GAS)
+            else
+                st.UseGas(G_ZERO)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
