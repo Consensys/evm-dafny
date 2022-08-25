@@ -143,20 +143,12 @@ public class GeneralStateTests {
 			"vmLogTest/log2.json", // #206
 			"vmLogTest/log3.json", // #206
 			"vmLogTest/log4.json", // #206
-			"vmIOandFlowOperations/jump.json", // DELEGATECALL
-			"vmIOandFlowOperations/mstore8.json", // DELEGATECALL
-			"vmIOandFlowOperations/mload.json", // DELEGATECALL
-			"vmIOandFlowOperations/codecopy.json", // DELEGATECALL
-			"vmIOandFlowOperations/loopsConditionals.json", // DELEGATECALL
-			"vmIOandFlowOperations/msize.json", // DELEGATECALL
-			"vmIOandFlowOperations/pop.json", // DELEGATECALL
-			"vmIOandFlowOperations/return.json", // DELEGATECALL
-			"vmIOandFlowOperations/gas.json", // DELEGATECALL
-			"vmIOandFlowOperations/pc.json", // DELEGATECALL
-			"vmIOandFlowOperations/mstore.json", // DELEGATECALL
+			"vmIOandFlowOperations/jump.json", // ?
+			"vmIOandFlowOperations/mload.json", // ?
+			"vmIOandFlowOperations/return.json", // ?
+			"vmIOandFlowOperations/gas.json", // ?
 			"vmIOandFlowOperations/jumpToPush.json", // #200
-			"vmIOandFlowOperations/jumpi.json", // DELEGATECALL
-			"vmIOandFlowOperations/sstore_sload.json", // #200
+			"vmIOandFlowOperations/jumpi.json", // ?
 			"dummy"
 	);
 
