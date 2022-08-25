@@ -264,4 +264,47 @@ abstract module MemoryVerif_01 {
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }
   }
+
+  //  REVERT gas cost 
+  method REVERT_02_Proofs(vm: OKState)
+    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.MemSize() <= MAX_U256
+    requires vm.Gas() >= Gas.G_VERYLOW;
+  {
+    var address := vm.Peek(0) as nat;
+    var len := vm.Peek(1) as nat;
+
+    //  address is in range, no expansion
+    if address + len < vm.MemSize() {
+      var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
+      assert r.Gas() == vm.Gas() - Gas.G_ZERO;
+    }
+
+    // memory is empty, address required is 0 and length 2, Expansion should be 32 bytes
+    if address == 0 && len == 2 && vm.MemSize() == 0 && vm.Gas() >= 200 {
+        assert address + len >= vm.MemSize();
+        //  compute expanded size
+        var ex := Memory.SmallestLarg32(address + len);
+        //  expansion is 32 bytes
+        assert ex == 32;
+        var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
+        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32; 
+
+        var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
+        assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
+    }
+
+    //  memory is 32 bytes, address is 16, length is 17. Expansion to 64 bytes.
+    if address == 16 && len == 17 && vm.MemSize() == 32 && vm.Gas() >= 200 {
+        assert address + 31 >= vm.MemSize();
+        //  compute expanded size
+        var ex := Memory.SmallestLarg32(address + len);
+        //  expansion is 64 bytes
+        assert ex == 64;
+        var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
+        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32); 
+        var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
+        assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
+    }
+  }
 }
