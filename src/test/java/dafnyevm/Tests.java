@@ -1792,6 +1792,26 @@ public class Tests {
 		assertArrayEquals(new byte[0], output);
 	}
 
+	@Test
+	public void test_selfdestruct_01() {
+		byte[] output = call(new int[] { PUSH1, 0x00, SELFDESTRUCT });
+		assertArrayEquals(new byte[0], output);
+	}
+
+	@Test
+	public void test_selfdstruct_02() {
+		// Absolutely minimal contract call which does nothing, and the caller then
+		// returns the (successful) exit code.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(PUSH1, 0x00, SELFDESTRUCT)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff
+				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Write exit code to memory and return.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(1), output);
+	}
+
 	// ========================================================================
 	// Misc
 	// ========================================================================
