@@ -27,11 +27,13 @@ abstract module MemoryVerif_01 {
 
   /**
    *  Check MSTORE.
-   *  Starting from an OKState with 2 elements on the stack.
+   *  Starting from an OKState with 2 elements on the stack, check expansion
+   *  sizes.
    */
   method MSTORE_01_Proofs(vm: OKState)
     requires Stack.Size(vm.GetStack()) >= 2
   {
+    //  Compute new state
     var r := Bytecode.MStore(vm);
     var address := vm.Peek(0) as nat;
     //  address + 31 bytes fit in memory.
