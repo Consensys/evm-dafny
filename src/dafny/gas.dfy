@@ -112,7 +112,7 @@ module Gas {
      */
     function method ExpansionSize(mem: Memory.T, address: nat, len: nat) : nat 
     {   
-        if address + len - 1 < |mem.contents| then 
+        if len == 0 || address + len - 1 < |mem.contents| then 
             0
         else
             var before := |mem.contents| / 32;
@@ -122,11 +122,11 @@ module Gas {
             QuadraticCost(after) - QuadraticCost(before)
     }
 
-    /* Compute the gas cost of memory expansion. 
+    /* Compute the gas cost of memory expansion for Memory store/load.
      *  
-     *  @param  st  A non failure state.
-     *  @param  len The number of bytes to read.
-     *  @returns    The cost of an `MSTORE` operation.
+     *  @param  st      A non failure state.
+     *  @param  bytes   The number of bytes to read.
+     *  @returns        The cost of an `MSTORE` operation.
      *
      *  @note       This function computes the cost, in gas, of accessing
      *              the address at the top of the stack. It does not 
@@ -141,6 +141,26 @@ module Gas {
             ExpansionSize(st.evm.memory, st.Peek(0) as nat, nbytes) + G_VERYLOW
         else
             G_VERYLOW
+    }
+
+    /* Compute the gas cost of return/revert.
+     *  
+     *  @param  st  A non failure state.
+     *  @returns    The cost of a `REVERT` or `RETURN` operation.
+     *
+     *  @note       This function computes the cost, in gas, of accessing
+     *              the address at the top of the stack offset by the second top-most element. 
+     *              It does not impact the status of the state. 
+     */
+    function method GasCostRevertReturn(st: State): nat
+        requires !st.IsFailure()
+    {
+        /* A stack underflow costs the minimum gas fee. */
+        if st.Operands() >= 2
+        then
+            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(1) as nat) + G_ZERO
+        else
+            G_ZERO
     }
 
     /** The Berlin gas cost function.
@@ -292,11 +312,11 @@ module Gas {
             // CREATE => s.UseGas(1)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
             case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
-            case RETURN => s.UseGas(G_ZERO)
+            case RETURN => s.UseGas(GasCostRevertReturn(s))
             // DELEGATECALL => s.UseGas(1)
             // CREATE2 => s.UseGas(1)
             // STATICCALL => s.UseGas(1)
-            case REVERT => s.UseGas(G_ZERO)
+            case REVERT => s.UseGas(GasCostRevertReturn(s))
             case SELFDESTRUCT => s.UseGas(1)
             case _ => State.INVALID(INVALID_OPCODE)
     }
