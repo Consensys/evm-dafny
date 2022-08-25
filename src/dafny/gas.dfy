@@ -172,7 +172,7 @@ module Gas {
      *              the address at the top of the stack offset by the third top-most element.
      *              It does not impact the status of the state.
      */
-    function method GasCostCODECOPY(st: State): nat
+    function method GasCostDATACOPYING(st: State): nat
         requires !st.IsFailure()
     {
         /* A stack underflow costs the minimum gas fee. */
@@ -229,7 +229,7 @@ module Gas {
             case CALLDATASIZE => s.UseGas(G_BASE)
             case CALLDATACOPY => s.UseGas(G_COPY)
             case CODESIZE => s.UseGas(G_BASE)
-            case CODECOPY => s.UseGas(GasCostCODECOPY(s))
+            case CODECOPY => s.UseGas(GasCostDATACOPYING(s))
             case GASPRICE => s.UseGas(G_BASE)
             // EXTCODESIZE => s.UseGas(1)
             // EXTCODECOPY => s.UseGas(1)
