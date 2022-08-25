@@ -26,9 +26,9 @@ module Bytecode {
     // =====================================================================
 
     /**
-    * Evaluate the STOP bytecode.  This halts the machine without
-    * return output data.
-    */
+     * Evaluate the STOP bytecode.  This halts the machine without
+     * return output data.
+     */
     function method Stop(st: State) : State
     requires !st.IsFailure() {
         State.RETURNS(gas:=st.Gas(),data:=[])
@@ -1123,6 +1123,22 @@ module Bytecode {
                 State.REVERTS(gas:=st.evm.gas,data:=data)
             else
                 State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Evaluate the STOP bytecode.  This halts the machine without
+     * return output data.
+     */
+    function method SelfDestruct(st: State) : State
+    requires !st.IsFailure() {
+         //
+        if st.Operands() >= 1
+        then
+            // Determine account to send remaining any remaining funds.
+            var acct := (st.Peek(0) as nat) % TWO_160;
+            State.RETURNS(gas:=st.Gas(),data:=[])
         else
             State.INVALID(STACK_UNDERFLOW)
     }

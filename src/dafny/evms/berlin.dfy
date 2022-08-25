@@ -207,7 +207,7 @@ module EvmBerlin refines EVM {
                         // CREATE2 => Bytecode.evalCREATE2(s),
                         // STATICCALL => Bytecode.evalSTATICCALL(s),
                         case REVERT => Bytecode.Revert(s)
-                        // SELFDESTRUCT := Some((s:OKState) => Bytecode.evalSELFDESTRUCT(s),)
+                        case SELFDESTRUCT => Bytecode.SelfDestruct(s)
                         case _ => State.INVALID(INVALID_OPCODE)
                         )
             case _ => s
