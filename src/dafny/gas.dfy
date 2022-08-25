@@ -163,6 +163,26 @@ module Gas {
             G_ZERO
     }
 
+    /* Compute the gas cost of return/revert.
+     *
+     *  @param  st  A non failure state.
+     *  @returns    The cost of a `REVERT` or `RETURN` operation.
+     *
+     *  @note       This function computes the cost, in gas, of accessing
+     *              the address at the top of the stack offset by the third top-most element.
+     *              It does not impact the status of the state.
+     */
+    function method GasCostCODECOPY(st: State): nat
+        requires !st.IsFailure()
+    {
+        /* A stack underflow costs the minimum gas fee. */
+        if st.Operands() >= 3
+        then
+            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(2) as nat) + G_COPY
+        else
+            G_COPY
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -209,7 +229,7 @@ module Gas {
             case CALLDATASIZE => s.UseGas(G_BASE)
             case CALLDATACOPY => s.UseGas(G_COPY)
             case CODESIZE => s.UseGas(G_BASE)
-            case CODECOPY => s.UseGas(G_COPY)
+            case CODECOPY => s.UseGas(GasCostCODECOPY(s))
             case GASPRICE => s.UseGas(G_BASE)
             // EXTCODESIZE => s.UseGas(1)
             // EXTCODECOPY => s.UseGas(1)
