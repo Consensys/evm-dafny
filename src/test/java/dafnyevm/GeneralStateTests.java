@@ -111,64 +111,40 @@ public class GeneralStateTests {
 			"stCallCodes/callcallcallcode_001_SuicideEnd.json", // SELFDESTRUCT
 			"stCallCodes/callcallcallcode_001_SuicideMiddle.json",// SELFDESTRUCT
 			//
-			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Stack Overflow
-			//
-			"stCallCodes/callcallcallcode_001.json", // #203
-			"stCallCodes/callcallcallcode_001_OOGE.json", // #203
-			"stCallCodes/callcallcallcode_001_OOGMAfter.json", // #203
-			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcallcode_01.json", // #203
-			"stCallCodes/callcallcode_01_OOGE.json", // #203
-			"stCallCodes/callcallcode_01_SuicideEnd.json", // #203
-			"stCallCodes/callcallcodecall_010.json", // #203
-			"stCallCodes/callcallcodecall_010_OOGE.json", // #203
-			"stCallCodes/callcallcodecall_010_OOGMAfter.json", // #203
-			"stCallCodes/callcallcodecall_010_OOGMBefore.json", // #203
-			"stCallCodes/callcallcodecall_010_SuicideEnd.json", // #203
-			"stCallCodes/callcallcodecall_010_SuicideMiddle.json", // #203
-			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcallcodecallcode_011.json", // #203
-			"stCallCodes/callcallcodecallcode_011_OOGE.json", // #203
-			"stCallCodes/callcallcodecallcode_011_OOGMAfter.json", // #203
-			"stCallCodes/callcallcodecallcode_011_OOGMBefore.json", // #203
-			"stCallCodes/callcallcodecallcode_011_SuicideEnd.json", // #203
-			"stCallCodes/callcallcodecallcode_011_SuicideMiddle.json", // #203
-			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcodecall_10.json", // #203
-			"stCallCodes/callcodecall_10_OOGE.json", // #203
-			"stCallCodes/callcodecall_10_SuicideEnd.json", // #203
-			"stCallCodes/callcodecallcall_100.json", // #203
-			"stCallCodes/callcodecallcall_100_OOGE.json", // #203
-			"stCallCodes/callcodecallcall_100_OOGMAfter.json", // #203
-			"stCallCodes/callcodecallcall_100_OOGMBefore.json", // #203
-			"stCallCodes/callcodecallcall_100_SuicideEnd.json", // #203
-			"stCallCodes/callcodecallcall_100_SuicideMiddle.json", // #203
-			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcodecallcallcode_101.json", // #203
-			"stCallCodes/callcodecallcallcode_101_OOGE.json", // #203
-			"stCallCodes/callcodecallcallcode_101_OOGMAfter.json", // #203
-			"stCallCodes/callcodecallcallcode_101_OOGMBefore.json", // #203
-			"stCallCodes/callcodecallcallcode_101_SuicideEnd.json", // #203
-			"stCallCodes/callcodecallcallcode_101_SuicideMiddle.json", // #203
-			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcodecallcode_11.json", // #203
-			"stCallCodes/callcodecallcode_11_OOGE.json", // #203
-			"stCallCodes/callcodecallcode_11_SuicideEnd.json", // #203
-			"stCallCodes/callcodecallcodecall_110.json", // #203
-			"stCallCodes/callcodecallcodecall_110_OOGE.json", // #203
-			"stCallCodes/callcodecallcodecall_110_OOGMAfter.json", // #203
-			"stCallCodes/callcodecallcodecall_110_OOGMBefore.json", // #203
-			"stCallCodes/callcodecallcodecall_110_SuicideEnd.json", // #203
-			"stCallCodes/callcodecallcodecall_110_SuicideMiddle.json", // #203
-			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcodecallcodecallcode_111.json", // #203
-			"stCallCodes/callcodecallcodecallcode_111_OOGE.json", // #203
-			"stCallCodes/callcodecallcodecallcode_111_OOGMAfter.json", // #203
-			"stCallCodes/callcodecallcodecallcode_111_OOGMBefore.json", // #203
-			"stCallCodes/callcodecallcodecallcode_111_SuicideEnd.json", // #203
-			"stCallCodes/callcodecallcodecallcode_111_SuicideMiddle.json", // #203
-			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // #203
-			"stCallCodes/callcodeEmptycontract.json", // #203
+			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // #218
+			"stCallCodes/callcallcallcode_001.json", //
+			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // #218
+			"stCallCodes/callcallcode_01.json", // ?
+			"stCallCodes/callcallcode_01_SuicideEnd.json", // ?
+			"stCallCodes/callcallcodecall_010.json", // ?
+			"stCallCodes/callcallcodecall_010_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcallcodecall_010_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // #218
+			"stCallCodes/callcallcodecallcode_011.json", // ?
+			"stCallCodes/callcallcodecallcode_011_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcallcodecallcode_011_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // #218
+			"stCallCodes/callcodecall_10.json", // ?
+			"stCallCodes/callcodecall_10_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcall_100.json", // ?
+			"stCallCodes/callcodecallcall_100_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcall_100_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // ?
+			"stCallCodes/callcodecallcallcode_101.json", // ?
+			"stCallCodes/callcodecallcallcode_101_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcallcode_101_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // ?
+			"stCallCodes/callcodecallcode_11.json", // ?
+			"stCallCodes/callcodecallcode_11_SuicideEnd.json", // ?
+			"stCallCodes/callcodecallcodecall_110.json", // ?
+			"stCallCodes/callcodecallcodecall_110_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcodecall_110_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // ?
+			"stCallCodes/callcodecallcodecallcode_111.json", // ?
+			"stCallCodes/callcodecallcodecallcode_111_SuicideEnd.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcodecallcode_111_SuicideMiddle.json", // SELFDESTRUCT
+			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // ?
+			"stCallCodes/callcodeEmptycontract.json", // ?
 			//
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
 			"stCallCodes/callcodeDynamicCode.json",  // CREATE
