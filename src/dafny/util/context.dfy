@@ -23,12 +23,12 @@ module Context {
   // =============================================================================
 
   datatype Raw = Context(
+    // Address of account responsible for this execution.
+    sender: u160,
+    // Address of original transaction.
+    origin: u160,
     // Address of currently executing account.
     address: u160,
-    // Address of sender of original transaction.
-    origin: u160,
-    // Address of account responsible for this execution.
-    caller: u160,
     // Value deposited by instruction / transaction responsible for this execution.
     callValue: u256,
     // Input data associated with this call.
@@ -42,9 +42,9 @@ module Context {
     /**
      * Create an initial context from various components.
      */
-    function method Create(address:u160,origin:u160,callValue:u256,callData:seq<u8>,gasPrice:u256) : T
+    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,gasPrice:u256) : T
     requires |callData| <= MAX_U256 {
-        Context(address,origin,caller:=origin,callValue:=callValue,callData:=callData,gasPrice:=gasPrice)
+        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,gasPrice:=gasPrice)
     }
 
     /**

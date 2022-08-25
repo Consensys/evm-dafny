@@ -91,9 +91,6 @@ public class GeneralStateTests {
 			"stMemoryTest/calldatacopy_dejavu.json", // Should raise exception
 			"stMemoryTest/codecopy_dejavu.json", // Should raise exception
 			"stMemoryTest/memCopySelf.json", // #200
-			"stMemoryTest/mload_dejavu.json", // Should raise exception
-			"stMemoryTest/mstore_dejavu.json", // Should raise exception
-			"stMemoryTest/mstroe8_dejavu.json", // Should raise exception
 			"stMemoryTest/oog.json", // Various problems
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
@@ -105,44 +102,24 @@ public class GeneralStateTests {
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
-			"stCallCodes/callcall_00_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcallcall_000_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcallcall_000_SuicideMiddle.json", // SELFDESTRUCT
-			"stCallCodes/callcallcallcode_001_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcallcallcode_001_SuicideMiddle.json",// SELFDESTRUCT
-			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // #218
 			"stCallCodes/callcallcallcode_001.json", //
 			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // #218
 			"stCallCodes/callcallcode_01.json", // ?
 			"stCallCodes/callcallcode_01_SuicideEnd.json", // ?
 			"stCallCodes/callcallcodecall_010.json", // ?
-			"stCallCodes/callcallcodecall_010_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcallcodecall_010_SuicideMiddle.json", // SELFDESTRUCT
 			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // #218
 			"stCallCodes/callcallcodecallcode_011.json", // ?
-			"stCallCodes/callcallcodecallcode_011_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcallcodecallcode_011_SuicideMiddle.json", // SELFDESTRUCT
 			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // #218
 			"stCallCodes/callcodecall_10.json", // ?
-			"stCallCodes/callcodecall_10_SuicideEnd.json", // SELFDESTRUCT
 			"stCallCodes/callcodecallcall_100.json", // ?
-			"stCallCodes/callcodecallcall_100_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcodecallcall_100_SuicideMiddle.json", // SELFDESTRUCT
 			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // ?
 			"stCallCodes/callcodecallcallcode_101.json", // ?
-			"stCallCodes/callcodecallcallcode_101_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcodecallcallcode_101_SuicideMiddle.json", // SELFDESTRUCT
 			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // ?
 			"stCallCodes/callcodecallcode_11.json", // ?
-			"stCallCodes/callcodecallcode_11_SuicideEnd.json", // ?
 			"stCallCodes/callcodecallcodecall_110.json", // ?
-			"stCallCodes/callcodecallcodecall_110_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcodecallcodecall_110_SuicideMiddle.json", // SELFDESTRUCT
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // ?
 			"stCallCodes/callcodecallcodecallcode_111.json", // ?
-			"stCallCodes/callcodecallcodecallcode_111_SuicideEnd.json", // SELFDESTRUCT
-			"stCallCodes/callcodecallcodecallcode_111_SuicideMiddle.json", // SELFDESTRUCT
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // ?
 			"stCallCodes/callcodeEmptycontract.json", // ?
 			//
@@ -159,7 +136,6 @@ public class GeneralStateTests {
 			"vmTests/sha3.json", // SHA3?
 			"vmTests/calldatacopy.json", // CALLDATACOPY?
 			"vmTests/calldatasize.json", // CALLDATASIZE?
-			"vmTests/suicide.json", // SELFDESTRUCT
 			"vmTests/envInfo.json", // CODECOPY
 			"vmTests/blockInfo.json", // COINBASE
 			"vmLogTest/log0.json", // #206
@@ -167,20 +143,12 @@ public class GeneralStateTests {
 			"vmLogTest/log2.json", // #206
 			"vmLogTest/log3.json", // #206
 			"vmLogTest/log4.json", // #206
-			"vmIOandFlowOperations/jump.json", // DELEGATECALL
-			"vmIOandFlowOperations/mstore8.json", // DELEGATECALL
-			"vmIOandFlowOperations/mload.json", // DELEGATECALL
-			"vmIOandFlowOperations/codecopy.json", // DELEGATECALL
-			"vmIOandFlowOperations/loopsConditionals.json", // DELEGATECALL
-			"vmIOandFlowOperations/msize.json", // DELEGATECALL
-			"vmIOandFlowOperations/pop.json", // DELEGATECALL
-			"vmIOandFlowOperations/return.json", // DELEGATECALL
-			"vmIOandFlowOperations/gas.json", // DELEGATECALL
-			"vmIOandFlowOperations/pc.json", // DELEGATECALL
-			"vmIOandFlowOperations/mstore.json", // DELEGATECALL
+			"vmIOandFlowOperations/jump.json", // ?
+			"vmIOandFlowOperations/mload.json", // ?
+			"vmIOandFlowOperations/return.json", // ?
+			"vmIOandFlowOperations/gas.json", // ?
 			"vmIOandFlowOperations/jumpToPush.json", // #200
-			"vmIOandFlowOperations/jumpi.json", // DELEGATECALL
-			"vmIOandFlowOperations/sstore_sload.json", // #200
+			"vmIOandFlowOperations/jumpi.json", // ?
 			"dummy"
 	);
 
@@ -201,7 +169,7 @@ public class GeneralStateTests {
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
-			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(to).from(tx.sender)
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(to).sender(tx.sender)
 					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).putAll(ws);
 			// Run the transaction!
 			evm.call();

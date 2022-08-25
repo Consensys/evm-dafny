@@ -101,18 +101,18 @@ module Gas {
         }
     }
 
-    /*  Compute the cost of a memory expansion by an arbitrary number of words to cover 
+    /*  Compute the cost of a memory expansion by an arbitrary number of words to cover
      *  a given address and data of length len.
-     *  
+     *
      *  @param   mem         The current memory (also referred to as old memory).
      *  @param   address     The offset to start storing from.
      *  @param   len         The length of data to read or write in bytes.
-     *  @results             The number of chunks of 32bytes needed to add to `mem` to cover 
-     *                       address `address + len - 1`. 
+     *  @results             The number of chunks of 32bytes needed to add to `mem` to cover
+     *                       address `address + len - 1`.
      */
-    function method ExpansionSize(mem: Memory.T, address: nat, len: nat) : nat 
-    {   
-        if len == 0 || address + len - 1 < |mem.contents| then 
+    function method ExpansionSize(mem: Memory.T, address: nat, len: nat) : nat
+    {
+        if len == 0 || address + len - 1 < |mem.contents| then
             0
         else
             var before := |mem.contents| / 32;
@@ -123,14 +123,14 @@ module Gas {
     }
 
     /* Compute the gas cost of memory expansion for Memory store/load.
-     *  
+     *
      *  @param  st      A non failure state.
      *  @param  bytes   The number of bytes to read.
      *  @returns        The cost of an `MSTORE` operation.
      *
      *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack. It does not 
-     *              impact the status of the state. 
+     *              the address at the top of the stack. It does not
+     *              impact the status of the state.
      */
     function method GasCostMSTORELOAD(st: State, nbytes: nat): nat
         requires !st.IsFailure()
@@ -144,13 +144,13 @@ module Gas {
     }
 
     /* Compute the gas cost of return/revert.
-     *  
+     *
      *  @param  st  A non failure state.
      *  @returns    The cost of a `REVERT` or `RETURN` operation.
      *
      *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack offset by the second top-most element. 
-     *              It does not impact the status of the state. 
+     *              the address at the top of the stack offset by the second top-most element.
+     *              It does not impact the status of the state.
      */
     function method GasCostRevertReturn(st: State): nat
         requires !st.IsFailure()
@@ -313,11 +313,11 @@ module Gas {
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
             case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(GasCostRevertReturn(s))
-            // DELEGATECALL => s.UseGas(1)
+            case DELEGATECALL => s.UseGas(G_CALLSTIPEND) // for now
             // CREATE2 => s.UseGas(1)
             // STATICCALL => s.UseGas(1)
             case REVERT => s.UseGas(GasCostRevertReturn(s))
-            case SELFDESTRUCT => s.UseGas(1)
+            case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
             case _ => State.INVALID(INVALID_OPCODE)
     }
 }
