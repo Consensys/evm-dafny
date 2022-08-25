@@ -28,6 +28,8 @@ import static dafnyevm.DafnyEvm.DEFAULT_RECEIVER;
 import dafnyevm.DafnyEvm.Account;
 import dafnyevm.DafnyEvm.State;
 import dafnyevm.util.Hex;
+import evmtools.core.Trace;
+import evmtools.core.Trace.Exception.Error;
 
 import static dafnyevm.util.Bytecodes.*;
 
@@ -748,7 +750,7 @@ public class Tests {
 	@Test
 	public void test_pop_invalid_01() {
 		// Insufficient operands
-		invalidCall(new int[] { POP });
+		invalidCall(Error.STACK_UNDERFLOW, new int[] { POP });
 	}
 
 	@Test
@@ -879,13 +881,13 @@ public class Tests {
 	@Test
 	public void test_jump_invalid_01() {
 		// Invalid destination
-		invalidCall(new int[] { PUSH1, 0x3, JUMP });
+		invalidCall(Error.INVALID_JUMPDEST, new int[] { PUSH1, 0x3, JUMP });
 	}
 
 	@Test
 	public void test_jump_invalid_02() {
 		// JUMPDEST required
-		invalidCall(new int[] { PUSH1, 0x3, JUMP, STOP });
+		invalidCall(Error.INVALID_JUMPDEST, new int[] { PUSH1, 0x3, JUMP, STOP });
 	}
 
 	@Test
@@ -912,13 +914,13 @@ public class Tests {
 	@Test
 	public void test_jumpi_invalid_01() {
 		// Condition branch (taken) hits invalid
-		invalidCall(new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, INVALID, JUMPDEST, STOP });
+		invalidCall(Error.INVALID_OPCODE, new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, INVALID, JUMPDEST, STOP });
 	}
 
 	@Test
 	public void test_jumpi_invalid_02() {
 		// Condition branch (not taken) hits invalid
-		invalidCall(new int[] { PUSH1, 0x01, PUSH1, 0x6, JUMPI, STOP, JUMPDEST, INVALID });
+		invalidCall(Error.INVALID_OPCODE, new int[] { PUSH1, 0x01, PUSH1, 0x6, JUMPI, STOP, JUMPDEST, INVALID });
 	}
 
 	@Test
@@ -1583,6 +1585,31 @@ public class Tests {
 	}
 
 	@Test
+	public void test_recursive_call_01() {
+		// Recursive contract call
+		invalidCall(Error.INVALID_OPCODE, new int[] {
+				// Make recursive contract call to myself with gas 0xffff.
+				PUSH1, 0x00, DUP1, DUP1, DUP1, DUP1, ADDRESS, PUSH2, 0xff, 0xff, CALL,
+				// Succeed if call succeeded
+				PUSH1, 0xF, JUMPI, INVALID, JUMPDEST, STOP});
+	}
+
+	@Test
+	public void test_recursive_call_02() {
+		//  Recursive contract call
+		byte[] output = call(new int[] {
+				// Branch to STOP if calldata == 0xF.
+				PUSH1, 0x00, CALLDATALOAD, DUP1, PUSH1, 0xF, EQ, PUSH1, 0x21, JUMPI,
+				// Add one to value for next call
+				PUSH1, 0x1, ADD, PUSH1, 0x0, MSTORE,
+				// Make recursive contract call to myself with gas 0xffff.
+				PUSH1, 0x00, DUP1, PUSH1, 0x20, PUSH1, 0x00, DUP1, ADDRESS, PUSH2, 0xff, 0xff, CALL,
+				// Succeed if call succeeded
+				PUSH1, 0x21, JUMPI, INVALID, JUMPDEST, STOP});
+		assertArrayEquals(new byte[0], output);
+	}
+
+	@Test
 	public void test_callcode_01() {
 		// Absolutely minimal contract call which does nothing, and the caller then
 		// returns the (successful) exit code.
@@ -1755,7 +1782,7 @@ public class Tests {
 
 	@Test
 	public void test_invalid_01() {
-		invalidCall(new int[] { INVALID });
+		invalidCall(Error.INVALID_OPCODE, new int[] { INVALID });
 	}
 
 	@Test
@@ -1804,16 +1831,19 @@ public class Tests {
 	}
 
 	/**
-	 * Run a bytecode program expecting to reach an invalid bytecode.
+	 * Run a bytecode program expecting to reach an invalid bytecode with a given
+	 * error.
 	 *
 	 * @param code
 	 * @param bytes
 	 */
-	private void invalidCall(int[] words) {
+	private void invalidCall(Trace.Exception.Error err, int[] words) {
 		byte[] code = toBytes(words);
-		State r = new DafnyEvm().put(DEFAULT_RECEIVER,new Account(code)).from(DEFAULT_RECEIVER).call();
+		State<?> r = new DafnyEvm().put(DEFAULT_RECEIVER, new Account(code)).from(DEFAULT_RECEIVER).call();
 		// Check exception was thrown as expected.
 		assert r instanceof State.Invalid;
+		// FIXME: this is quite ugly
+		assert GeneralStateTests.toErrorCode(((State.Invalid) r).getErrorCode()).equals(err);
 	}
 
 	/**

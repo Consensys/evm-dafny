@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+import EvmState_Compile.Error_CALLDEPTH__EXCEEDED;
 import EvmState_Compile.State_CALLS;
 import EvmState_Compile.State_INVALID;
 import EvmState_Compile.State_OK;
@@ -309,30 +310,35 @@ public class DafnyEvm {
 		return call(1);
 	}
 	private DafnyEvm.State<?> call(int depth) {
-		Account acct = worldState.get(to);
-		// Determine code to be executed
-		byte[] code = this.code == null ? acct.code : this.code;
-		//
-		Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, value, DafnySequence.fromBytes(callData),
-				gasPrice);
-		// Create initial EVM state
-		EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(code));
-		// Execute initial code.
-		State<?> r = run(depth, tracer, st);
-		// Execute the EVM
-		while (r instanceof State.CallContinue) {
-			// Check whether has finished or not.
-			State.CallContinue cc = (State.CallContinue) r;
+		if (depth >= 1024) {
+			// The Yellow Paper specifies a maximum depth of 1024.
+			return State.from(depth, tracer, new EvmState_Compile.State_INVALID(new Error_CALLDEPTH__EXCEEDED()));
+		} else {
+			Account acct = worldState.get(to);
+			// Determine code to be executed
+			byte[] code = this.code == null ? acct.code : this.code;
 			//
-			Account src = worldState.get(cc.code());
-			// Make the recursive call.
-			State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).code(src.code).origin(origin)
-					.data(cc.callData()).call(depth + 1);
-			// FIXME: update worldstate upon success.
-			// Continue from where we left off.
-			r = cc.callReturn(nr);
+			Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, value, DafnySequence.fromBytes(callData),
+					gasPrice);
+			// Create initial EVM state
+			EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(code));
+			// Execute initial code.
+			State<?> r = run(depth, tracer, st);
+			// Execute the EVM
+			while (r instanceof State.CallContinue) {
+				// Check whether has finished or not.
+				State.CallContinue cc = (State.CallContinue) r;
+				//
+				Account src = worldState.get(cc.code());
+				// Make the recursive call.
+				State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).code(src.code).origin(origin)
+						.data(cc.callData()).call(depth + 1);
+				// FIXME: update worldstate upon success.
+				// Continue from where we left off.
+				r = cc.callReturn(nr);
+			}
+			return r;
 		}
-		return r;
 	}
 
 	/**

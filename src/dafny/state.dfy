@@ -84,6 +84,7 @@ module EvmState {
         | STACK_OVERFLOW
         | MEMORY_OVERFLOW
         | INVALID_JUMPDEST
+        | CALLDEPTH_EXCEEDED
 
     /**
      * Captures the possible state of the machine.  Normal execution is
