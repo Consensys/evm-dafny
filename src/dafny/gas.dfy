@@ -333,7 +333,7 @@ module Gas {
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
             case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(GasCostRevertReturn(s))
-            // DELEGATECALL => s.UseGas(1)
+            case DELEGATECALL => s.UseGas(G_CALLSTIPEND) // for now
             // CREATE2 => s.UseGas(1)
             // STATICCALL => s.UseGas(1)
             case REVERT => s.UseGas(GasCostRevertReturn(s))

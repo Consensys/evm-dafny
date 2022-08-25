@@ -537,7 +537,7 @@ module Bytecode {
     requires !st.IsFailure() {
         if st.Capacity() >= 1
         then
-            st.Push(st.evm.context.caller as u256).Next()
+            st.Push(st.evm.context.sender as u256).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -586,8 +586,20 @@ module Bytecode {
     }
 
     /**
-    * Get size of input data in current environment.
-    */
+     *  Copy a slice of the context calldata into memory.
+     *  
+     *  @param  st  A non-failure state.
+     *  @returns    Three values on top of the stack are used to perform this operation:
+     *              - peek(0): `m`, the start address to copy to in memory.
+     *              - peek(1): `c`, the start address to copy from in calldata.
+     *              - peek(2): `len`, the number of bytes to copy.
+     *              If `|calldata| < c + len`, then it is right padded with zeros to obtain
+     *              `calldata' == calldata + Padding(c + len) - |calldata|)`.
+     *              Then the slice `calldata'[c..c + len]` is copied into memory starting at 
+     *              address `m`.
+     *              If the memory size is too small, some expansion may occur.
+     *              The 3 top-most values of the stack are popped, and pc is incremented by 1.
+     */
     function method CallDataCopy(st: State) : State
     requires !st.IsFailure() {
         //
@@ -1032,16 +1044,18 @@ module Bytecode {
             var inSize := st.Peek(4) as nat;
             var inOffset := st.Peek(3) as nat;
             var value := st.Peek(2);
-            var to := (st.Peek(1) as int) % TWO_160;
+            var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
                 var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                // Extract address of this account
+                var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm,to as u160, to as u160, gas, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, to, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1061,18 +1075,18 @@ module Bytecode {
             var inSize := st.Peek(4) as nat;
             var inOffset := st.Peek(3) as nat;
             var value := st.Peek(2);
-            var to := (st.Peek(1) as int) % TWO_160;
+            var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
                 var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
                 // Extract address of this account
-                var address := st.evm.context.address as u160;
+                var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm,address, to as u160, gas, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, address, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1097,6 +1111,41 @@ module Bytecode {
                 var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
                 State.RETURNS(gas:=st.evm.gas,data:=data)
+            else
+                State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Message-call into this account with an alternative account's code, but
+     * persisting the current values for sender and value.
+     */
+    function method DelegateCall(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 6
+        then
+            var outSize := st.Peek(5) as nat;
+            var outOffset := st.Peek(4) as nat;
+            var inSize := st.Peek(3) as nat;
+            var inOffset := st.Peek(2) as nat;
+            var to := ((st.Peek(1) as int) % TWO_160) as u160;
+            var gas := st.Peek(0) as nat;
+             // Sanity check bounds
+            if (inOffset + inSize) < MAX_U256
+            then
+                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                // Extract call value from enclosing context.
+                var callValue := st.evm.context.callValue;
+                // Extract sender of this account
+                var sender := st.evm.context.sender;
+                // Extract address of this account
+                var address := st.evm.context.address;
+                // Compute the continuation (i.e. following) state.
+                var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                // Pass back continuation.
+                State.CALLS(nst.evm, sender, address, to, gas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1138,6 +1187,7 @@ module Bytecode {
         then
             // Determine account to send remaining any remaining funds.
             var acct := (st.Peek(0) as nat) % TWO_160;
+            // FIXME: actually refund the account!
             State.RETURNS(gas:=st.Gas(),data:=[])
         else
             State.INVALID(STACK_UNDERFLOW)
