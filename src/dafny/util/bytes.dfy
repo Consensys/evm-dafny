@@ -88,7 +88,9 @@ module Bytes {
      * If the requested subsequence overflows available memory,
      * it is padded out with zeros.
      */
-    function method Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8> {
+    function method Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8> 
+      ensures |Slice(mem, address, len)| == len
+    {
       var n := address + len;
       // Sanity check for overflow
       if n <= |mem| then mem[address..n]

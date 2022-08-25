@@ -586,8 +586,20 @@ module Bytecode {
     }
 
     /**
-    * Get size of input data in current environment.
-    */
+     *  Copy a slice of the context calldata into memory.
+     *  
+     *  @param  st  A non-failure state.
+     *  @returns    Three values on top of the stack are used to perform this operation:
+     *              - peek(0): `m`, the start address to copy to in memory.
+     *              - peek(1): `c`, the start address to copy from in calldata.
+     *              - peek(2): `len`, the number of bytes to copy.
+     *              If `|calldata| < c + len`, then it is right padded with zeros to obtain
+     *              `calldata' == calldata + Padding(c + len) - |calldata|)`.
+     *              Then the slice `calldata'[c..c + len]` is copied into memory starting at 
+     *              address `m`.
+     *              If the memory size is too small, some expansion may occur.
+     *              The 3 top-most values of the stack are popped, and pc is incremented by 1.
+     */
     function method CallDataCopy(st: State) : State
     requires !st.IsFailure() {
         //
