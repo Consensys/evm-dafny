@@ -101,183 +101,66 @@ module Gas {
         }
     }
 
-    /*  Compute the cost of a memory expansion by an arbitrary number of words to cover a given address and data of length len.
+    /*  Compute the cost of a memory expansion by an arbitrary number of words to cover 
+     *  a given address and data of length len.
      *  
-     *  @param   mem         the current memory (also referred to as old memory)
-     *  @param   address     the offs to start storing from
-     *  @param   len         the length of data to read or write in bytes 
-     *
-     * @note                this implements the gas cost encountered upon memory expansion
-     *                      if no expansion was necessary, no expansion cost would apply
+     *  @param   mem         The current memory (also referred to as old memory).
+     *  @param   address     The offset to start storing from.
+     *  @param   len         The length of data to read or write in bytes.
+     *  @results             The number of chunks of 32bytes needed to add to `mem` to cover 
+     *                       address `address + len - 1`. 
      */
-    function method ComputeDynGas(mem: Memory.T, address: nat, len: nat) : nat 
+    function method ExpansionSize(mem: Memory.T, address: nat, len: nat) : nat 
     {   
-        if address + len - 1 < |mem.contents| then 
+        if len == 0 || address + len - 1 < |mem.contents| then 
             0
-        else 
+        else
             var before := |mem.contents| / 32;
             var after := Memory.SmallestLarg32(address + len - 1) / 32;
             QuadraticCostIsMonotonic(after, before);
             assert QuadraticCost(after) >= QuadraticCost(before);
             QuadraticCost(after) - QuadraticCost(before)
-    } 
+    }
 
-    /*  Compute the cost of a memory expansion by one word to cover a given address.
+    /* Compute the gas cost of memory expansion for Memory store/load.
      *  
-     *  @param   mem         the current memory (also referred to as old memory)
-     *  @param   address     the offs to start storing from
+     *  @param  st      A non failure state.
+     *  @param  bytes   The number of bytes to read.
+     *  @returns        The cost of an `MSTORE` operation.
      *
-     * @note                this implements the gas cost encountered upon memory expansion
-     *                      in which case no expansion cost is encountered
+     *  @note       This function computes the cost, in gas, of accessing
+     *              the address at the top of the stack. It does not 
+     *              impact the status of the state. 
      */
-    function method ComputeDynGasMSTORE(mem: Memory.T, address: nat) : nat
-    {
-        if address + 31 < |mem.contents| then
-            0
-        else
-            var before := |mem.contents| / 32;
-            var after := Memory.SmallestLarg32(address + 31) / 32;
-            QuadraticCostIsMonotonic(after, before);
-            assert QuadraticCost(after) >= QuadraticCost(before);
-            QuadraticCost(after) - QuadraticCost(before)
-    }
-
-    /* compute the gas cost of memory expansion. Consider corner cases where exceptions
-     * may have happened due to accessing maximum allowed memory, or underflowing the stack
-     */
-    function method GasCostMSTORE(st: State) : State
+    function method GasCostMSTORELOAD(st: State, nbytes: nat): nat
         requires !st.IsFailure()
     {
-        /* check for the stack underflow */
+        /* A stack underflow costs te minimum gas fee. */
         if st.Operands() >= 1
         then
-            /* get the address which is the starting memory slot for storing the value in the memory*/
-            var loc := st.Peek(0) as nat;
-            /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
-             * memory size */
-            if (loc + 31) < MAX_U256
-                then
-                /* compute if memory expansion is needed, and return the cost of the potential expansion */
-                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 32);
-                /* check if there is enough gas available to cover the expansion costs */
-                if costMemExpansion + G_VERYLOW <= st.Gas() 
-                    then 
-                        st.UseGas(costMemExpansion + G_VERYLOW)
-                /* return an invalid state if there was not enough gas to pay for the memory expansion */
-                else State.INVALID(INSUFFICIENT_GAS)
-            else
-                if G_VERYLOW <= st.Gas()
-                    then
-                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
-                        st.UseGas(G_VERYLOW)
-                else    
-                    State.INVALID(INSUFFICIENT_GAS)
+            ExpansionSize(st.evm.memory, st.Peek(0) as nat, nbytes) + G_VERYLOW
         else
-            State.INVALID(STACK_UNDERFLOW)
+            G_VERYLOW
     }
 
-    function method GasCostMLOAD(st: State) : State
+    /* Compute the gas cost of return/revert.
+     *  
+     *  @param  st  A non failure state.
+     *  @returns    The cost of a `REVERT` or `RETURN` operation.
+     *
+     *  @note       This function computes the cost, in gas, of accessing
+     *              the address at the top of the stack offset by the second top-most element. 
+     *              It does not impact the status of the state. 
+     */
+    function method GasCostRevertReturn(st: State): nat
         requires !st.IsFailure()
-        ensures
-            (Stack.Size(st.GetStack()) >= 1 && st.Peek(0) as nat + 31 < MAX_U256)
-                <==>
-            !MLoad(st).IsFailure()
-        ensures st.IsFailure() ==> MLoad(st).IsFailure()
     {
-        //
-        if st.Operands() >= 1
-        then
-            var loc := st.Peek(0) as nat;
-            // NOTE: This condition is not specified in the yellow paper.
-            // It is not clear whether that was intended or not.  However, it is
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if loc + 31 < MAX_U256
-            then
-                /* compute if memory expansion is needed, and return the cost of the potential expansion */
-                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 32);
-                /* check if there is enough gas available to cover the expansion costs */
-                if costMemExpansion + G_VERYLOW <= st.Gas()
-                    then
-                        st.UseGas(costMemExpansion + G_VERYLOW)
-                /* return an invalid state if there was not enough gas to pay for the memory expansion */
-                else State.INVALID(INSUFFICIENT_GAS)
-            else
-                if G_VERYLOW <= st.Gas()
-                    then
-                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
-                        st.UseGas(G_VERYLOW)
-                else
-                    State.INVALID(INSUFFICIENT_GAS)
-        else
-            State.INVALID(STACK_UNDERFLOW)
-    }
-
-    function method gasCostReturnRevert(st: State) : State
-    requires !st.IsFailure() {
-        //
+        /* A stack underflow costs the minimum gas fee. */
         if st.Operands() >= 2
         then
-            // Determine amount of data to return.
-            var len := st.Peek(1) as nat;
-            var start := st.Peek(0) as nat;
-            // Sanity check bounds
-            if (start+len) < MAX_U256
-            then
-                // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start, len);
-                assert |data| == len;
-                /* if the  length of data to read and return is zero, no gas charges apply 
-                 * note that we do not need caring if the starting slot of reading data exceeds the maximum memory used
-                 */
-                if len == 0
-                    then st.UseGas(G_ZERO)
-                else
-                /* if the length of data is greater than zero, check for possible expansions needed and apply the charges */
-                var costMemExpansion := ComputeDynGas(st.evm.memory, start, len);
-                if costMemExpansion <= st.Gas()
-                    then
-                        st.UseGas(G_ZERO + costMemExpansion)
-                else
-                    State.INVALID(INSUFFICIENT_GAS)
-            else
-                st.UseGas(G_ZERO)
+            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(1) as nat) + G_ZERO
         else
-            State.INVALID(STACK_UNDERFLOW)
-    }
-    
-    /* compute the gas cost of memory expansion. Consider corner cases where exceptions
-     * may have happened due to accessing maximum allowed memory, or underflowing the stack
-     */
-    function method GasCostMSTORE8(st: State) : State
-        requires !st.IsFailure()
-    {
-        /* check for the stack underflow */
-        if st.Operands() >= 1
-        then
-            /* get the address which is the starting memory slot for storing the value in the memory*/
-            var loc := st.Peek(0) as nat;
-            /* check if storing a word in the memory, starting from the offset loc, exceeds the maximum accessible
-             * memory size */
-            if loc < MAX_U256
-                then
-                /* compute if memory expansion is needed, and return the cost of the potential expansion */
-                var costMemExpansion := ComputeDynGas(st.evm.memory, loc as nat, 1);
-                /* check if there is enough gas available to cover the expansion costs */
-                if costMemExpansion + G_VERYLOW <= st.Gas() 
-                    then 
-                        st.UseGas(costMemExpansion + G_VERYLOW)
-                /* return an invalid state if there was not enough gas to pay for the memory expansion */
-                else State.INVALID(INSUFFICIENT_GAS)
-            else
-                if G_VERYLOW <= st.Gas()
-                    then
-                        /* charge the constant gas amount, even if maximum accessible memory was encountered */
-                        st.UseGas(G_VERYLOW)
-                else    
-                    State.INVALID(INSUFFICIENT_GAS)
-        else
-            State.INVALID(STACK_UNDERFLOW)
+            G_ZERO
     }
 
     /** The Berlin gas cost function.
@@ -344,9 +227,9 @@ module Gas {
             //  SELFBALANCE => s.UseGas(1)
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
-            case MLOAD => GasCostMLOAD(s)
-            case MSTORE => GasCostMSTORE(s)
-            case MSTORE8 => GasCostMSTORE8(s)
+            case MLOAD => s.UseGas(GasCostMSTORELOAD(s, nbytes := 32))
+            case MSTORE => s.UseGas(GasCostMSTORELOAD(s, nbytes := 32))
+            case MSTORE8 => s.UseGas(GasCostMSTORELOAD(s, nbytes := 1))
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
             case JUMP => s.UseGas(G_MID)
@@ -428,12 +311,12 @@ module Gas {
             // 0xf0
             // CREATE => s.UseGas(1)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
-            // CALLCODE => s.UseGas(1)
-            case RETURN => gasCostReturnRevert(s)
+            case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
+            case RETURN => s.UseGas(GasCostRevertReturn(s))
             // DELEGATECALL => s.UseGas(1)
             // CREATE2 => s.UseGas(1)
             // STATICCALL => s.UseGas(1)
-            case REVERT => gasCostReturnRevert(s)
+            case REVERT => s.UseGas(GasCostRevertReturn(s))
             case SELFDESTRUCT => s.UseGas(1)
             case _ => State.INVALID(INVALID_OPCODE)
     }
