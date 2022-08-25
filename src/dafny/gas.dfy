@@ -227,7 +227,7 @@ module Gas {
             case CALLVALUE => s.UseGas(G_BASE)
             case CALLDATALOAD => s.UseGas(G_VERYLOW)
             case CALLDATASIZE => s.UseGas(G_BASE)
-            case CALLDATACOPY => s.UseGas(G_COPY)
+            case CALLDATACOPY => s.UseGas(GasCostDATACOPYING(s))
             case CODESIZE => s.UseGas(G_BASE)
             case CODECOPY => s.UseGas(GasCostDATACOPYING(s))
             case GASPRICE => s.UseGas(G_BASE)
