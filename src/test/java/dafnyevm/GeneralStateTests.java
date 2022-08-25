@@ -177,7 +177,7 @@ public class GeneralStateTests {
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
-			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(to).from(tx.sender)
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(to).sender(tx.sender)
 					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).putAll(ws);
 			// Run the transaction!
 			evm.call();

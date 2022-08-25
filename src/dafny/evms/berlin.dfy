@@ -29,7 +29,7 @@ module EvmBerlin refines EVM {
         requires |code| <= Code.MAX_CODE_SIZE
         ensures !InitEmpty(gas, code).IsFailure()
     {
-        var tx := Context.Create(0x0,0,0,[],0);
+        var tx := Context.Create(0,0,0,0,[],0);
         Create(tx, map[], gas, code)
     }
 
@@ -203,7 +203,7 @@ module EvmBerlin refines EVM {
                         case CALL => Bytecode.Call(s)
                         case CALLCODE => Bytecode.CallCode(s)
                         case RETURN => Bytecode.Return(s)
-                        // DELEGATECALL => Bytecode.evalDELEGATECALL(s),
+                        case DELEGATECALL => Bytecode.DelegateCall(s)
                         // CREATE2 => Bytecode.evalCREATE2(s),
                         // STATICCALL => Bytecode.evalSTATICCALL(s),
                         case REVERT => Bytecode.Revert(s)

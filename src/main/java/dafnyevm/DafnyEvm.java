@@ -79,12 +79,12 @@ public class DafnyEvm {
 	 * Initiator of this call, which could be an end-user account or a contract
 	 * account.
 	 */
-	private BigInteger from = DEFAULT_ORIGIN;
+	private BigInteger sender = DEFAULT_ORIGIN;
 	/**
 	 * Receiver of this call, which again could be an end-user account or a contract
 	 * account.
 	 */
-	private BigInteger to = DEFAULT_RECEIVER;
+	private BigInteger recipient = DEFAULT_RECEIVER;
 	/**
 	 * End-user account which initiated the outermost call.
 	 */
@@ -158,8 +158,8 @@ public class DafnyEvm {
 	 *
 	 * @return
 	 */
-	public BigInteger from() {
-		return this.from;
+	public BigInteger sender() {
+		return this.sender;
 	}
 
 	/**
@@ -168,8 +168,8 @@ public class DafnyEvm {
 	 * @param from
 	 * @return
 	 */
-	public DafnyEvm from(long from) {
-		return from(BigInteger.valueOf(from));
+	public DafnyEvm sender(long sender) {
+		return sender(BigInteger.valueOf(sender));
 	}
 
 	/**
@@ -178,8 +178,8 @@ public class DafnyEvm {
 	 * @param from
 	 * @return
 	 */
-	public DafnyEvm from(BigInteger from) {
-		this.from = from;
+	public DafnyEvm sender(BigInteger sender) {
+		this.sender = sender;
 		return this;
 	}
 
@@ -200,7 +200,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public DafnyEvm to(BigInteger to) {
-		this.to = to;
+		this.recipient = to;
 		return this;
 	}
 
@@ -314,11 +314,11 @@ public class DafnyEvm {
 			// The Yellow Paper specifies a maximum depth of 1024.
 			return State.from(depth, tracer, new EvmState_Compile.State_INVALID(new Error_CALLDEPTH__EXCEEDED()));
 		} else {
-			Account acct = worldState.get(to);
+			Account acct = worldState.get(recipient);
 			// Determine code to be executed
 			byte[] code = this.code == null ? acct.code : this.code;
 			//
-			Context_Compile.Raw ctx = Context_Compile.__default.Create(to, from, value, DafnySequence.fromBytes(callData),
+			Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value, DafnySequence.fromBytes(callData),
 					gasPrice);
 			// Create initial EVM state
 			EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(code));
@@ -331,7 +331,7 @@ public class DafnyEvm {
 				//
 				Account src = worldState.get(cc.code());
 				// Make the recursive call.
-				State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).from(to).to(cc.receiver()).code(src.code).origin(origin)
+				State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to()).code(src.code).origin(origin).value(cc.delegateValue())
 						.data(cc.callData()).call(depth + 1);
 				// FIXME: update worldstate upon success.
 				// Continue from where we left off.
@@ -555,8 +555,17 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
-			public BigInteger receiver() {
-				return state.to;
+			public BigInteger to() {
+				return state.recipient;
+			}
+
+			/**
+			 * Identify the sender of this call.
+			 *
+			 * @return
+			 */
+			public BigInteger sender() {
+				return state.sender;
 			}
 
 			/**
@@ -568,6 +577,25 @@ public class DafnyEvm {
 			 */
 			public BigInteger code() {
 				return state.code;
+			}
+
+			/**
+			 * Get the value to be transferred to the recipient by this call.
+			 *
+			 * @return
+			 */
+			public BigInteger callValue() {
+				return state.callValue;
+			}
+
+			/**
+			 * Get the call value that should appear in the code as this call is executed.
+			 * That will differ from the actual call value if this is a delegate call.
+			 *
+			 * @return
+			 */
+			public BigInteger delegateValue() {
+				return state.delegateValue;
 			}
 
 			/**
