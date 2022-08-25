@@ -63,7 +63,7 @@ module EvmState {
     type OKState = s:State | !s.IsFailure()
       witness OK(
         EVM(
-            Context.Create(0,0xabcd,0,[],0),
+            Context.Create(0,0,0,0,[],0),
             Storage.Create(map[]),
             Stack.Create(),
             Memory.Create(),
@@ -94,10 +94,19 @@ module EvmState {
      * accordingly (along with any gas returned).
      */
     datatype State = OK(evm:T)
-        | CALLS(evm:T, to:u160, code:u160, gas: nat, callValue: u256, callData:seq<u8>, outOffset: nat, outSize: nat)
+        | CALLS(evm:T,
+                sender: u160,        // sender
+                recipient:u160,      // recipient
+                code:u160,           // account whose code to be executed
+                gas: nat,            // available gas
+                callValue: u256,     // value to transfer
+                delegateValue: u256, // apparent value in execution context
+                callData:seq<u8>,    // input data for call
+                outOffset: nat,      // address to write return data
+                outSize: nat)        // bytes reserved for return data
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>)
-        | REVERTS(gas:nat,data:seq<u8>) {
+        | REVERTS(gas:nat,data:seq<u8>){
 
         /**
          * Check whether EVM has failed (e.g. due to an exception
@@ -128,7 +137,7 @@ module EvmState {
         requires !this.INVALID? {
             match this
                 case OK(evm) => evm.gas
-                case CALLS(evm, _, _, _, _, _, _, _) => evm.gas
+                case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
                 case RETURNS(g, _) => g
                 case REVERTS(g, _) => g
         }
@@ -358,7 +367,7 @@ module EvmState {
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
             // Construct new context
-            var ctx := Context.Create(to,origin,callValue,callData,gasPrice);
+            var ctx := Context.Create(sender,origin,recipient,callValue,callData,gasPrice);
             // Construct fresh EVM
             var stack := Stack.Create();
             var mem := Memory.Create();

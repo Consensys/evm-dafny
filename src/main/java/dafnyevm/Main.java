@@ -86,7 +86,7 @@ public class Main {
 		byte[] bytes = Hex.toBytes(args[0]);
 		// Construct EVM
 		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).gasPrice(gasPrice).put(receiver, new Account(bytes))
-				.to(receiver).from(sender).origin(sender).gas(gas).data(calldata).value(callValue);
+				.to(receiver).sender(sender).origin(sender).gas(gas).data(calldata).value(callValue);
 		// Execute the EVM
 		evm.call();
 	}
