@@ -96,31 +96,9 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
 			//
-			"stCallCodes/callcall_00.json", // #202
-			"stCallCodes/callcallcall_000.json", // #202
-			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
-			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // #218
-			"stCallCodes/callcallcallcode_001.json", //
-			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // #218
-			"stCallCodes/callcallcode_01.json", // ?
-			"stCallCodes/callcallcode_01_SuicideEnd.json", // ?
-			"stCallCodes/callcallcodecall_010.json", // ?
-			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // #218
-			"stCallCodes/callcallcodecallcode_011.json", // ?
-			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // #218
-			"stCallCodes/callcodecall_10.json", // ?
-			"stCallCodes/callcodecallcall_100.json", // ?
-			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // ?
-			"stCallCodes/callcodecallcallcode_101.json", // ?
-			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // ?
-			"stCallCodes/callcodecallcode_11.json", // ?
-			"stCallCodes/callcodecallcodecall_110.json", // ?
-			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // ?
-			"stCallCodes/callcodecallcodecallcode_111.json", // ?
-			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // ?
 			"stCallCodes/callcodeEmptycontract.json", // ?
 			//
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
@@ -131,6 +109,15 @@ public class GeneralStateTests {
 			"stCallCodes/callcodeInInitcodeToExistingContractWithValueTransfer.json", // CREATE
 			"stCallCodes/call_OOG_additionalGasCosts2.json", // Should raise exception
 			"stCallCodes/touchAndGo.json", // ?
+			//
+			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
+			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
 			"vmTests/random.json", // #200
 			"vmTests/sha3.json", // SHA3?
@@ -146,7 +133,7 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jump.json", // ?
 			"vmIOandFlowOperations/mload.json", // ?
 			"vmIOandFlowOperations/return.json", // ?
-			"vmIOandFlowOperations/gas.json", // ?
+			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #200
 			"vmIOandFlowOperations/jumpi.json", // ?
 			"dummy"

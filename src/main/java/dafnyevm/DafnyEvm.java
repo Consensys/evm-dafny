@@ -332,7 +332,7 @@ public class DafnyEvm {
 				Account src = worldState.get(cc.code());
 				// Make the recursive call.
 				State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to()).code(src.code).origin(origin).value(cc.delegateValue())
-						.data(cc.callData()).call(depth + 1);
+						.data(cc.callData()).gasPrice(gasPrice).call(depth + 1);
 				// FIXME: update worldstate upon success.
 				// Continue from where we left off.
 				r = cc.callReturn(nr);
