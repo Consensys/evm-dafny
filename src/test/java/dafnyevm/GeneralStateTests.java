@@ -88,7 +88,6 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
 			"VMTests/vmArithmeticTest/signextend.json", // #194
 			"stMemoryTest/bufferSrcOffset.json", // #199
-			"stMemoryTest/memCopySelf.json", // #200
 			"stMemoryTest/oog.json", // Various problems
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
@@ -96,8 +95,6 @@ public class GeneralStateTests {
 			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
-			//
-			"stCallCodes/callcodeEmptycontract.json", // ?
 			//
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
 			"stCallCodes/callcodeDynamicCode.json",  // CREATE
@@ -130,7 +127,8 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jumpi.json", // ?
 			"vmIOandFlowOperations/mload.json", // ?
 			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
-			"vmIOandFlowOperations/jumpToPush.json", // #200
+			"vmIOandFlowOperations/jumpToPush.json", // #241
+			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
 			"dummy"
 	);
 
