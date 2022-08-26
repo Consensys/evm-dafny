@@ -121,7 +121,7 @@ public class GeneralStateTests {
 			//
 			"vmTests/random.json", // #200
 			"vmTests/sha3.json", // SHA3?
-			"vmTests/calldatacopy.json", // CALLDATACOPY?
+//			"vmTests/calldatacopy.json", // CALLDATACOPY?
 			"vmTests/calldatasize.json", // CALLDATASIZE?
 			"vmTests/envInfo.json", // CODECOPY
 			"vmTests/blockInfo.json", // COINBASE

@@ -586,24 +586,12 @@ module Bytecode {
     }
 
     /**
-     *  Copy a slice of the context calldata into memory.
-     *  
-     *  @param  st  A non-failure state.
-     *  @returns    Three values on top of the stack are used to perform this operation:
-     *              - peek(0): `m`, the start address to copy to in memory.
-     *              - peek(1): `c`, the start address to copy from in calldata.
-     *              - peek(2): `len`, the number of bytes to copy.
-     *              If `|calldata| < c + len`, then it is right padded with zeros to obtain
-     *              `calldata' == calldata + Padding(c + len) - |calldata|)`.
-     *              Then the slice `calldata'[c..c + len]` is copied into memory starting at 
-     *              address `m`.
-     *              If the memory size is too small, some expansion may occur.
-     *              The 3 top-most values of the stack are popped, and pc is incremented by 1.
+     *  Copy input data in the current environment to memory.
      */
     function method CallDataCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3 && st.Peek(2) > 0
+        if st.Operands() >= 3
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
@@ -628,7 +616,7 @@ module Bytecode {
     }
 
     /**
-     * Get size of input data in current environment.
+     * Get size of code running in current environment.
      */
     function method CodeSize(st: State) : State
     requires !st.IsFailure() {
@@ -641,12 +629,12 @@ module Bytecode {
     }
 
     /**
-     * Get size of input data in current environment.
+     * Copy code running in current environment to memory.
      */
     function method CodeCopy(st: State) : State
     requires !st.IsFailure() {
         //
-        if st.Operands() >= 3 && st.Peek(2) > 0
+        if st.Operands() >= 3
         then
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
