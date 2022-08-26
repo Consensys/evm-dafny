@@ -384,7 +384,8 @@ module EvmState {
          */
         function method CallReturn(vm:State) : (nst:State)
         requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
-        requires this.CALLS? {
+        requires this.CALLS?
+        requires this.MemSize() >= (outOffset + outSize) {
             // copy over return data, etc.
             var st := OK(evm);
             if st.Capacity() >= 1
@@ -399,8 +400,8 @@ module EvmState {
                     var m := Min(|vm.data|,outSize);
                     // Slice out that data
                     var data := vm.data[0..m];
-                    //
-                    st.Expand(outOffset,outSize).Push(exitCode).Copy(outOffset,data)
+                    // NOTE: the follo
+                    st.Push(exitCode).Copy(outOffset,data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else

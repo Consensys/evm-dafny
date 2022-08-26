@@ -88,8 +88,6 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
 			"VMTests/vmArithmeticTest/signextend.json", // #194
 			"stMemoryTest/bufferSrcOffset.json", // #199
-			"stMemoryTest/calldatacopy_dejavu.json", // Should raise exception
-			"stMemoryTest/codecopy_dejavu.json", // Should raise exception
 			"stMemoryTest/memCopySelf.json", // #200
 			"stMemoryTest/oog.json", // Various problems
 			"stMemoryTest/stackLimitGas_1023.json", // #201
@@ -119,11 +117,9 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-			"vmTests/random.json", // #200
+			"vmTests/random.json", // #233
 			"vmTests/sha3.json", // SHA3?
-			"vmTests/calldatacopy.json", // CALLDATACOPY?
-			"vmTests/calldatasize.json", // CALLDATASIZE?
-			"vmTests/envInfo.json", // CODECOPY
+			"vmTests/calldatasize.json", // SHA3
 			"vmTests/blockInfo.json", // COINBASE
 			"vmLogTest/log0.json", // #206
 			"vmLogTest/log1.json", // #206
