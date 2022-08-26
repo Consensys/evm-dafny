@@ -253,11 +253,11 @@ module Gas {
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
             case JUMP => s.UseGas(G_MID)
-            case JUMPI => s.UseGas(1) // for now
+            case JUMPI => s.UseGas(G_HIGH) // for now
             case PC => s.UseGas(G_BASE)
             case MSIZE => s.UseGas(G_BASE)
             case GAS => s.UseGas(G_BASE)
-            case JUMPDEST => s.UseGas(G_HIGH)
+            case JUMPDEST => s.UseGas(G_JUMPDEST)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => s.UseGas(G_VERYLOW)
             case PUSH2 => s.UseGas(G_VERYLOW)
