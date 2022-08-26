@@ -128,7 +128,6 @@ public class GeneralStateTests {
 			"vmLogTest/log4.json", // #206
 			"vmIOandFlowOperations/jump.json", // ?
 			"vmIOandFlowOperations/mload.json", // ?
-			"vmIOandFlowOperations/return.json", // ?
 			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #200
 			"vmIOandFlowOperations/jumpi.json", // ?
