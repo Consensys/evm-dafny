@@ -1041,7 +1041,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, address, to, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
@@ -1072,7 +1072,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, address, address, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
@@ -1131,7 +1131,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, sender, address, to, gas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
             else
