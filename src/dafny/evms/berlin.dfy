@@ -216,12 +216,8 @@ module EvmBerlin refines EVM {
     // A little helper method
     function method Push(s: OKState, k: nat) : State
     requires k > 0 && k <= 32 {
-        if s.CodeOperands() >= k
-        then
-            var bytes := Code.Slice(s.evm.code, (s.evm.pc+1), k);
-            assert 0 < |bytes| && |bytes| <= 32;
-            Bytecode.Push(s,bytes)
-        else
-            State.INVALID(STACK_OVERFLOW)
+        var bytes := Code.Slice(s.evm.code, (s.evm.pc+1), k);
+        assert 0 < |bytes| && |bytes| <= 32;
+        Bytecode.Push(s,bytes)
     }
 }

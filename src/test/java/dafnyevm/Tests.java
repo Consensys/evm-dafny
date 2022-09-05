@@ -1178,9 +1178,21 @@ public class Tests {
 	}
 
 	@Test
+	public void test_push1_03() {
+		byte[] output = call(new int[] { PUSH1 });
+		assertArrayEquals(new byte[0], output);
+	}
+
+	@Test
 	public void test_push2_01() {
 		byte[] output = call(new int[] { PUSH2, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
+	}
+
+	@Test
+	public void test_push2_02() {
+		byte[] output = call(new int[] { PUSH2 });
+		assertArrayEquals(new byte[0], output);
 	}
 
 	@Test
