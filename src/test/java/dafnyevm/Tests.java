@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static dafnyevm.DafnyEvm.DEFAULT_ORIGIN;
 import static dafnyevm.DafnyEvm.DEFAULT_RECEIVER;
 import dafnyevm.DafnyEvm.Account;
+import dafnyevm.DafnyEvm.BlockInfo;
 import dafnyevm.DafnyEvm.State;
 import dafnyevm.util.Hex;
 import evmtools.core.Trace;
@@ -816,6 +817,52 @@ public class Tests {
 		// Check gas price == 1
 		byte[] output = call(new int[] { GASPRICE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(1), output);
+	}
+
+	// ========================================================================
+	// 40s: Block Information
+	// ========================================================================
+
+	@Test
+	public void test_coinbase_01() {
+		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().coinBase(0xcccc));
+		byte[] output = call(tx, new int[] { COINBASE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xcccc), output);
+	}
+
+	@Test
+	public void test_timestamp_01() {
+		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().timeStamp(0xcccc));
+		byte[] output = call(tx, new int[] { TIMESTAMP, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xcccc), output);
+	}
+
+	@Test
+	public void test_number_01() {
+		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().number(0xcccc));
+		byte[] output = call(tx, new int[] { NUMBER, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xcccc), output);
+	}
+
+	@Test
+	public void test_difficulty_01() {
+		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().difficulty(0xcccc));
+		byte[] output = call(tx, new int[] { DIFFICULTY, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xcccc), output);
+	}
+
+	@Test
+	public void test_gaslimit_01() {
+		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().gasLimit(0xcccc));
+		byte[] output = call(tx, new int[] { GASLIMIT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xcccc), output);
+	}
+
+	@Test
+	public void test_chainid_01() {
+		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().chainID(0xcccc));
+		byte[] output = call(tx, new int[] { CHAINID, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
 	// ========================================================================

@@ -37,6 +37,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import dafnyevm.DafnyEvm.State;
 import dafnyevm.DafnyEvm.State.CallContinue;
 import dafnyevm.util.Bytecodes;
+import evmtools.core.Environment;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
@@ -114,7 +115,7 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-			"vmTests/random.json", // #233
+			"vmTests/random.json", // #246
 			"vmTests/sha3.json", // SHA3?
 			"vmTests/calldatasize.json", // SHA3
 			"vmTests/blockInfo.json", // COINBASE
@@ -144,13 +145,18 @@ public class GeneralStateTests {
 			Transaction tx = instance.getTransaction();
 			// Figure out an appopriate receiver
 			BigInteger to = tx.to != null ? tx.to : DafnyEvm.DEFAULT_RECEIVER;
+			// Construct environment
+			DafnyEvm.BlockInfo env = buildEnvironment(instance.getEnvironment());
 			// Convert world state over.
 			Map<BigInteger,DafnyEvm.Account> ws = buildWorldState(tx,instance.getWorldState());
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
-			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).to(to).sender(tx.sender)
-					.origin(tx.sender).gas(tx.gasLimit).value(tx.value).data(tx.data).putAll(ws);
+			// FIXME: following contains a workaround for an issue with the trace output,
+			// whereby traces are used the _block's gas limit_ rather than the
+			// _transaction's gas limit_.  #245
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).blockInfo(env).to(to).sender(tx.sender)
+					.origin(tx.sender).gas(env.gasLimit).value(tx.value).data(tx.data).putAll(ws);
 			// Run the transaction!
 			evm.call();
 			//
@@ -158,6 +164,26 @@ public class GeneralStateTests {
 			// Finally check for equality.
 			assertEquals(instance.getTrace(),tr);
 		}
+	}
+
+	/**
+	 * Construct the necessary block environment from the test's environmental
+	 * parameters.
+	 *
+	 * @param env
+	 * @return
+	 */
+	public DafnyEvm.BlockInfo buildEnvironment(Environment env) {
+		DafnyEvm.BlockInfo info = new DafnyEvm.BlockInfo();
+		info = info.coinBase(env.currentCoinbase);
+		info = info.timeStamp(env.currentTimestamp);
+		// NOTE: following is commented out whilst trace data is generated using the
+		// "evm" tool directly, as this does not allow a block number other than zero.
+		//info = info.number(env.currentNumber);
+		info = info.number(0);
+		info = info.difficulty(env.currentDifficulty);
+		info = info.gasLimit(env.currentGasLimit);
+		return info;
 	}
 
 	/**

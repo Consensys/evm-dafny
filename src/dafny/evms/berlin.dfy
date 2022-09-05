@@ -29,7 +29,7 @@ module EvmBerlin refines EVM {
         requires |code| <= Code.MAX_CODE_SIZE
         ensures !InitEmpty(gas, code).IsFailure()
     {
-        var tx := Context.Create(0,0,0,0,[],0);
+        var tx := Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0));
         Create(tx, map[], gas, code)
     }
 
@@ -108,12 +108,12 @@ module EvmBerlin refines EVM {
                         //  EXTCODEHASH => Bytecode.evalEXTCODEHASH(s),
                         // 0x40s: Block Information
                         //  BLOCKHASH => Bytecode.evalBLOCKHASH(s),
-                        //  COINBASE => Bytecode.evalCOINBASE(s),
-                        //  TIMESTAMP => Bytecode.evalTIMESTAMP(s),
-                        //  NUMBER => Bytecode.evalNUMBER(s),
-                        //  DIFFICULTY => Bytecode.evalDIFFICULTY(s),
-                        //  GASLIMIT => Bytecode.evalGASLIMIT(s),
-                        //  CHAINID => Bytecode.evalCHAINID(s),
+                        case COINBASE => Bytecode.CoinBase(s)
+                        case TIMESTAMP => Bytecode.TimeStamp(s)
+                        case NUMBER => Bytecode.Number(s)
+                        case DIFFICULTY => Bytecode.Difficulty(s)
+                        case GASLIMIT => Bytecode.GasLimit(s)
+                        case CHAINID => Bytecode.ChainID(s)
                         //  SELFBALANCE => Bytecode.evalSELFBALANCE(s),
                         // 0x50s: Stack, Memory, Storage and Flow
                         case POP => Bytecode.Pop(s)

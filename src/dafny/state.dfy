@@ -63,7 +63,7 @@ module EvmState {
     type OKState = s:State | !s.IsFailure()
       witness OK(
         EVM(
-            Context.Create(0,0,0,0,[],0),
+            Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0)),
             Storage.Create(map[]),
             Stack.Create(),
             Memory.Create(),
@@ -366,8 +366,9 @@ module EvmState {
             var sender := evm.context.address;
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
+            var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,recipient,callValue,callData,gasPrice);
+            var ctx := Context.Create(sender,origin,recipient,callValue,callData,gasPrice,block);
             // Construct fresh EVM
             var stack := Stack.Create();
             var mem := Memory.Create();

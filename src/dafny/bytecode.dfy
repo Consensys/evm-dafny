@@ -674,6 +674,77 @@ module Bytecode {
     // 40s: Block Information
     // =====================================================================
 
+    /**
+     * Get the current block's beneficiay address.
+     */
+    function method CoinBase(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.block.coinBase).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get the current block's timestamp.
+     */
+    function method TimeStamp(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.block.timeStamp).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get the current block's number.
+     */
+    function method Number(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.block.number).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get the current block's difficulty.
+     */
+    function method Difficulty(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.block.difficulty).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get the current block's gaslimit.
+     */
+    function method GasLimit(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.block.gasLimit).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get the chain ID.
+     */
+    function method ChainID(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            st.Push(st.evm.context.block.chainID).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
 
     // =====================================================================
     // 50s: Stack, Memory Storage and Flow Operations

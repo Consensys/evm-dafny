@@ -15,58 +15,77 @@ include "int.dfy"
 include "bytes.dfy"
 
 module Context {
-  import opened Int
-  import Bytes
+    import opened Int
+    import Bytes
 
-  // =============================================================================
-  // Transaction Context
-  // =============================================================================
-
-  datatype Raw = Context(
-    // Address of account responsible for this execution.
-    sender: u160,
-    // Address of original transaction.
-    origin: u160,
-    // Address of currently executing account.
-    address: u160,
-    // Value deposited by instruction / transaction responsible for this execution.
-    callValue: u256,
-    // Input data associated with this call.
-    callData:seq<u8>,
-    // Price of gas in current environment.
-    gasPrice: u256
+    // =============================================================================
+    // Block Context
+    // =============================================================================
+    datatype Block = Info(
+        // Current block's beneficiary address.
+        coinBase: u256,
+        // Current block's timestamp.
+        timeStamp: u256,
+        // Current block's number.
+        number: u256,
+        // Current block's difficulty.
+        difficulty: u256,
+        // Current block's gas limit.
+        gasLimit: u256,
+        // Current chain ID.
+        chainID: u256
     )
 
-    type T = c:Raw | |c.callData| <= MAX_U256 witness Context(0,0,0,0,[],0)
+    // =============================================================================
+    // Transaction Context
+    // =============================================================================
+
+    datatype Raw = Context(
+        // Address of account responsible for this execution.
+        sender: u160,
+        // Address of original transaction.
+        origin: u160,
+        // Address of currently executing account.
+        address: u160,
+        // Value deposited by instruction / transaction responsible for this execution.
+        callValue: u256,
+        // Input data associated with this call.
+        callData:seq<u8>,
+        // Price of gas in current environment.
+        gasPrice: u256,
+        // Block information in current environment.
+        block: Block
+    )
+
+    type T = c:Raw | |c.callData| <= MAX_U256 witness Context(0,0,0,0,[],0,Info(0,0,0,0,0,0))
 
     /**
      * Create an initial context from various components.
      */
-    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,gasPrice:u256) : T
+    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,gasPrice:u256, block: Block) : T
     requires |callData| <= MAX_U256 {
-        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,gasPrice:=gasPrice)
+        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,gasPrice:=gasPrice,block:=block)
     }
 
     /**
      * Determine the size (in bytes) of the call data associated with this context.
      */
     function method DataSize(ctx: T) : u256 {
-      |ctx.callData| as u256
+        |ctx.callData| as u256
     }
 
     /**
      * Read a word from the call data associated with this context.
      */
     function method DataRead(ctx: T, loc: u256) : u256 {
-      Bytes.ReadUint256(ctx.callData,loc as nat)
+        Bytes.ReadUint256(ctx.callData,loc as nat)
     }
 
     /**
      * Slice a sequence of bytes from the call data associated with this context.
      */
-    function method DataSlice(ctx: T, loc: u256, len: nat) : seq<u8> 
-      ensures |DataSlice(ctx, loc, len)| == len 
-    {
-      Bytes.Slice(ctx.callData,loc as nat, len)
+    function method DataSlice(ctx: T, loc: u256, len: nat) : seq<u8>
+    ensures |DataSlice(ctx, loc, len)| == len {
+        Bytes.Slice(ctx.callData,loc as nat, len)
     }
 }
