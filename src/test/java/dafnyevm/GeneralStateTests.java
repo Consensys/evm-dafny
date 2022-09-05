@@ -114,7 +114,7 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-			"vmTests/random.json", // #233
+			//"vmTests/random.json", // #233
 			"vmTests/sha3.json", // SHA3?
 			"vmTests/calldatasize.json", // SHA3
 			"vmTests/blockInfo.json", // COINBASE

@@ -243,7 +243,7 @@ module Gas {
             case NUMBER => s.UseGas(G_BASE)
             case DIFFICULTY => s.UseGas(G_BASE)
             case GASLIMIT => s.UseGas(G_BASE)
-            //  CHAINID => s.UseGas(1)
+            case CHAINID => s.UseGas(G_BASE)
             //  SELFBALANCE => s.UseGas(1)
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)

@@ -69,10 +69,6 @@ public class DafnyEvm {
 	 */
 	private Tracer tracer = DEFAULT_TRACER;
 	/**
-	 * Gas price to use.
-	 */
-	private BigInteger gasPrice = BigInteger.ONE;
-	/**
 	 * World state to use for this call.
 	 */
 	private Map<BigInteger, Account> worldState = new HashMap<>();
@@ -103,20 +99,19 @@ public class DafnyEvm {
 	 */
 	private byte[] callData = DEFAULT_DATA;
 	/**
+	 * Gas price to use.
+	 */
+	private BigInteger gasPrice = BigInteger.ONE;
+	/**
+	 * Current block information.
+	 */
+	private BlockInfo blockInfo = new BlockInfo();
+
+	/**
 	 * Code to be executed as part of this call. If this is <code>null</code>, then
 	 * the receivers code is used by default.
 	 */
 	private byte[] code = null;
-	/**
-	 * Set the gas price to use when executing transactions.
-	 *
-	 * @param gasPrice
-	 * @return
-	 */
-	public DafnyEvm gasPrice(BigInteger gasPrice) {
-		this.gasPrice = gasPrice;
-		return this;
-	}
 
 	/**
 	 * Set the tracer to use during execution of this EVM. Tracers provide a
@@ -302,6 +297,28 @@ public class DafnyEvm {
 	}
 
 	/**
+	 * Set the gas price to use when executing transactions.
+	 *
+	 * @param gasPrice
+	 * @return
+	 */
+	public DafnyEvm gasPrice(BigInteger gasPrice) {
+		this.gasPrice = gasPrice;
+		return this;
+	}
+
+	/**
+	 * Set the block info to use when executing transactions.
+	 *
+	 * @param gasPrice
+	 * @return
+	 */
+	public DafnyEvm blockInfo(BlockInfo info) {
+		this.blockInfo = info;
+		return this;
+	}
+
+	/**
 	 * Get the account associated with a given address. Observe that if the account
 	 * doesn't exist, then we create an empty one (which is presumed to be an
 	 * end-user account).
@@ -358,7 +375,7 @@ public class DafnyEvm {
 			} else {
 				//
 				Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value, DafnySequence.fromBytes(callData),
-						gasPrice);
+						gasPrice, blockInfo.toDafny());
 				// Create initial EVM state
 				EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(code));
 				// Execute initial code.
@@ -370,8 +387,9 @@ public class DafnyEvm {
 					// Look up account data
 					Account src = getAccount(cc.code());
 					// Make the recursive call.
-					State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to()).code(src.code).origin(origin).value(cc.delegateValue())
-							.data(cc.callData()).gasPrice(gasPrice).call(depth + 1);
+					State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to())
+							.code(src.code).origin(origin).value(cc.delegateValue()).data(cc.callData())
+							.gasPrice(gasPrice).blockInfo(blockInfo).call(depth + 1);
 					// FIXME: update worldstate upon success.
 					// Continue from where we left off.
 					r = cc.callReturn(nr);
@@ -780,6 +798,150 @@ public class DafnyEvm {
 
 		public void deposit(BigInteger value) {
 			this.balance = this.balance.add(value);
+		}
+	}
+
+	/**
+	 * Information about currently block.
+	 *
+	 * @author David J. Pearce
+	 *
+	 */
+	public static class BlockInfo {
+		/**
+		 * Current block's beneficiary address.
+		 */
+		public final BigInteger coinBase;
+		/**
+		 * Current block's timestamp.
+		 */
+		public final BigInteger timeStamp;
+		/**
+		 * Current block number.
+		 */
+		public final BigInteger number;
+		/**
+		 * Current block's difficulty.
+		 */
+		public final BigInteger difficulty;
+		/**
+		 * Current block's gas limit.
+		 */
+		public final BigInteger gasLimit;
+		/**
+		 * Current chain ID (Ethereum mainnet == 1).
+		 */
+		public final BigInteger chainID;
+
+		public BlockInfo() {
+			this.coinBase = BigInteger.ONE;
+			this.timeStamp = BigInteger.ONE;
+			this.number = BigInteger.ONE;
+			this.difficulty = BigInteger.ONE;
+			this.gasLimit = BigInteger.ONE;
+			this.chainID = BigInteger.ONE;
+		}
+
+		private BlockInfo(BigInteger coinBase, BigInteger timeStamp, BigInteger number, BigInteger difficulty,
+				BigInteger gasLimit, BigInteger chainID) {
+			this.coinBase = coinBase;
+			this.timeStamp = timeStamp;
+			this.number = number;
+			this.difficulty = difficulty;
+			this.gasLimit = gasLimit;
+			this.chainID = chainID;
+		}
+
+		/**
+		 * Set block's beneficiary address.
+		 */
+		public BlockInfo coinBase(long v) {
+			return this.coinBase(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set block's beneficiary address.
+		 */
+		public BlockInfo coinBase(BigInteger v) {
+			return new BlockInfo(v, timeStamp, number, difficulty, gasLimit, chainID);
+		}
+
+		/**
+		 * Set block's timestamp.
+		 */
+		public BlockInfo timeStamp(long v) {
+			return this.timeStamp(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set block's timestamp.
+		 */
+		public BlockInfo timeStamp(BigInteger v) {
+			return new BlockInfo(coinBase, v, number, difficulty, gasLimit, chainID);
+		}
+
+		/**
+		 * Set block's number.
+		 */
+		public BlockInfo number(long v) {
+			return this.number(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set block's number.
+		 */
+		public BlockInfo number(BigInteger v) {
+			return new BlockInfo(coinBase, timeStamp, v, difficulty, gasLimit, chainID);
+		}
+
+		/**
+		 * Set block's difficulty.
+		 */
+		public BlockInfo difficulty(long v) {
+			return this.difficulty(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set block's difficulty.
+		 */
+		public BlockInfo difficulty(BigInteger v) {
+			return new BlockInfo(coinBase, timeStamp, number, v, gasLimit, chainID);
+		}
+
+		/**
+		 * Set block's gas limit.
+		 */
+		public BlockInfo gasLimit(long v) {
+			return this.gasLimit(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set block's gas limit.
+		 */
+		public BlockInfo gasLimit(BigInteger v) {
+			return new BlockInfo(coinBase, timeStamp, number, difficulty, v, chainID);
+		}
+
+		/**
+		 * Set chain ID.
+		 */
+		public BlockInfo chainID(long v) {
+			return this.chainID(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set chain ID.
+		 */
+		public BlockInfo chainID(BigInteger v) {
+			return new BlockInfo(coinBase, timeStamp, number, difficulty, gasLimit, v);
+		}
+
+		/**
+		 * Convert this object into a Dafny encoding.
+		 * @return
+		 */
+		public Context_Compile.Block toDafny() {
+			return new Context_Compile.Block(coinBase, timeStamp, number, difficulty, gasLimit, chainID);
 		}
 	}
 

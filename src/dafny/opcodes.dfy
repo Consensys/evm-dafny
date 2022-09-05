@@ -69,6 +69,7 @@ module Opcode {
 	const NUMBER : u8 := 0x43;
 	const DIFFICULTY : u8 := 0x44;
 	const GASLIMIT : u8 := 0x45;
+    const CHAINID : u8 := 0x46;
 	// 50s: Stack, Memory Storage and Flow Operations
 	const POP : u8 := 0x50;
 	const MLOAD : u8 := 0x51;
