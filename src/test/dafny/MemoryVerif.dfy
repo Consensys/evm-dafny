@@ -39,7 +39,7 @@ abstract module MemoryVerif_01 {
     var address := vm.Peek(0) as nat;
 
     //  address + 31 bytes fit in memory iff Store is successful.
-    assert address + 31 < MAX_U256 <==> 
+    assert address + 31 < MAX_U256 <==>
       !r.IsFailure() && ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1);
 
     //  address + 31 bytes are already in memory. New state should be OK.
@@ -50,10 +50,10 @@ abstract module MemoryVerif_01 {
       //  only chunk impacted is  r.evm.memory.contents[address..address + 31]
       assert r.evm.memory.contents[..address] == vm.evm.memory.contents[..address];
       assert r.evm.memory.contents[address + 32..] == vm.evm.memory.contents[address + 32..];
-      assert ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1); 
+      assert ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1);
     }
 
-    //  address + 31 bytes are above memory size, but fit in max memory size. 
+    //  address + 31 bytes are above memory size, but fit in max memory size.
     if vm.MemSize() <= address + 31 < MAX_U256 {
       assert r.MemSize() > vm.MemSize();
       //  Memory is expanded by 32 bytes
@@ -61,7 +61,7 @@ abstract module MemoryVerif_01 {
 
       assert |r.evm.memory.contents[address + 31..]| == |Bytes.Padding(r.MemSize() - address - 31 )|;
       assert r.evm.memory.contents[address + 32..] == Bytes.Padding(r.MemSize() - address - 32 );
-      assert ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1); 
+      assert ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1);
 
       if address < vm.MemSize() {
         //  the start address to store the word at is inside of memory
@@ -101,7 +101,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 32 bytes
         assert ex == 32;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address as nat, 32);
-        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32; 
+        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
         var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + (Gas.G_MEMORY * 32 + 2) / 32);
@@ -115,7 +115,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 64 bytes
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address as nat, 32);
-        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32); 
+        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
         var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
@@ -134,7 +134,7 @@ abstract module MemoryVerif_01 {
     var address := vm.Peek(0) as nat;
 
     //  address + 31 bytes fit in memory iff load is successful.
-    assert address + 31 < MAX_U256 <==> 
+    assert address + 31 < MAX_U256 <==>
       !r.IsFailure() && r.Peek(0) == ReadUint256(r.evm.memory.contents, address);
 
     //  address + 31 bytes are already in memory. New state should be OK.
@@ -146,7 +146,7 @@ abstract module MemoryVerif_01 {
       assert r.evm.memory.contents == vm.evm.memory.contents;
     }
 
-    //  address + 31 bytes are above memory size, but fit in max memory size. 
+    //  address + 31 bytes are above memory size, but fit in max memory size.
     if vm.MemSize() <= address + 31 < MAX_U256 {
       assert r.MemSize() > vm.MemSize();
       //  Memory is expanded by 32 bytes
@@ -161,7 +161,7 @@ abstract module MemoryVerif_01 {
    *  Check MLOAD.
    *  Starting from an OKState with 2 elements on the stack.
    */
- 
+
   /**
    *  Check gas consumption of MLOAD.
    *  Starting from an OKState with 2 elements on the stack.
@@ -187,7 +187,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 32 bytes
         assert ex == 32;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, 32);
-        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32; 
+        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
         var r := Bytecode.MLoad(Gas.GasBerlin(MLOAD, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + (Gas.G_MEMORY * 32 + 2) / 32);
@@ -201,7 +201,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 64 bytes
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, 32);
-        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32); 
+        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
         var r := Bytecode.MLoad(Gas.GasBerlin(MSTORE, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
@@ -215,14 +215,14 @@ abstract module MemoryVerif_01 {
         //  expansion is 64 bytes
         assert ex == 128;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, 32);
-        assert exCost == ((Gas.G_MEMORY * 128 + (128 * 128) / 512) / 32) - 
-          ((Gas.G_MEMORY * k + k * k / 512 ) / 32); 
+        assert exCost == ((Gas.G_MEMORY * 128 + (128 * 128) / 512) / 32) -
+          ((Gas.G_MEMORY * k + k * k / 512 ) / 32);
         var r := Bytecode.MLoad(Gas.GasBerlin(MLOAD, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
   }
 
-  //  RETURN gas cost 
+  //  RETURN gas cost
   method RETURN_02_Proofs(vm: OKState)
     requires Stack.Size(vm.GetStack()) >= 2
     requires vm.MemSize() <= MAX_U256
@@ -245,7 +245,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 32 bytes
         assert ex == 32;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
-        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32; 
+        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
         var r := Bytecode.Return(Gas.GasBerlin(RETURN, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
@@ -259,13 +259,13 @@ abstract module MemoryVerif_01 {
         //  expansion is 64 bytes
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
-        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32); 
+        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
         var r := Bytecode.Return(Gas.GasBerlin(RETURN, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }
   }
 
-  //  REVERT gas cost 
+  //  REVERT gas cost
   method REVERT_02_Proofs(vm: OKState)
     requires Stack.Size(vm.GetStack()) >= 2
     requires vm.MemSize() <= MAX_U256
@@ -288,7 +288,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 32 bytes
         assert ex == 32;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
-        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32; 
+        assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
         var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
@@ -302,7 +302,7 @@ abstract module MemoryVerif_01 {
         //  expansion is 64 bytes
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
-        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32); 
+        assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
         var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }

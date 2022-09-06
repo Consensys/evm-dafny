@@ -57,7 +57,59 @@ module Context {
         gasPrice: u256,
         // Block information in current environment.
         block: Block
-    )
+    ) {
+        /**
+         * Determine the size (in bytes) of the call data associated with this
+         * context.
+         */
+        function method CallDataSize() : u256
+        requires |this.callData| < TWO_256  {
+            |this.callData| as u256
+        }
+
+        /**
+         * Read a word from the call data associated with this context.
+         */
+        function method CallDataRead(loc: u256) : u256 {
+            Bytes.ReadUint256(this.callData,loc as nat)
+        }
+
+        /**
+         * Slice a sequence of bytes from the call data associated with this
+         * context.
+         */
+        function method CallDataSlice(loc: u256, len: nat) : (data:seq<u8>)
+        ensures |data| == len {
+            Bytes.Slice(this.callData,loc as nat, len)
+        }
+
+        /**
+         * Determine the size (in bytes) of the return data from the previous call
+         * associated with this context.
+         */
+        function method ReturnDataSize() : u256
+        requires |this.returnData| <= MAX_U256 {
+            |this.returnData| as u256
+        }
+
+        /**
+         * Slice a sequence of bytes from the return data from the previous call
+         * associated with this context.
+         */
+        function method ReturnDataSlice(loc: u256, len: nat) : (data:seq<u8>)
+        ensures |data| == len {
+            Bytes.Slice(this.returnData,loc as nat, len)
+        }
+
+        /**
+         * Update the return data associated with this state.
+         */
+        function method SetReturnData(data: seq<u8>) : Raw
+        requires |data| <= MAX_U256 {
+           this.(returnData:=data)
+        }
+
+    }
 
     type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
     witness Context(0,0,0,0,[],[],0,Info(0,0,0,0,0,0))
@@ -68,44 +120,5 @@ module Context {
     function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,gasPrice:u256, block: Block) : T
     requires |callData| <= MAX_U256 {
         Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],gasPrice:=gasPrice,block:=block)
-    }
-
-    /**
-     * Determine the size (in bytes) of the call data associated with this context.
-     */
-    function method CallDataSize(ctx: T) : u256 {
-        |ctx.callData| as u256
-    }
-
-    /**
-     * Read a word from the call data associated with this context.
-     */
-    function method CallDataRead(ctx: T, loc: u256) : u256 {
-        Bytes.ReadUint256(ctx.callData,loc as nat)
-    }
-
-    /**
-     * Slice a sequence of bytes from the call data associated with this context.
-     */
-    function method CallDataSlice(ctx: T, loc: u256, len: nat) : (data:seq<u8>)
-    ensures |data| == len {
-        Bytes.Slice(ctx.callData,loc as nat, len)
-    }
-
-    /**
-     * Determine the size (in bytes) of the return data from the previous call
-    * associated with this context.
-     */
-    function method ReturnDataSize(ctx: T) : u256 {
-        |ctx.returnData| as u256
-    }
-
-    /**
-     * Slice a sequence of bytes from the return data from the previous call
-     * associated with this context.
-     */
-    function method ReturnDataSlice(ctx: T, loc: u256, len: nat) : (data:seq<u8>)
-    ensures |data| == len {
-        Bytes.Slice(ctx.returnData,loc as nat, len)
     }
 }

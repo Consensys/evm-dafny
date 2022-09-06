@@ -564,8 +564,8 @@ module Bytecode {
         if st.Operands() >= 1
         then
             var loc := st.Peek(0);
-            var val := if loc >= Context.CallDataSize(st.evm.context) then 0
-                else Context.CallDataRead(st.evm.context,loc);
+            var val := if loc >= st.evm.context.CallDataSize() then 0
+                else st.evm.context.CallDataRead(loc);
             st.Pop().Push(val).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
@@ -579,7 +579,7 @@ module Bytecode {
         //
         if st.Capacity() >= 1
         then
-            var len := Context.CallDataSize(st.evm.context);
+            var len := st.evm.context.CallDataSize();
             st.Push(len).Next()
         else
             State.INVALID(STACK_OVERFLOW)
@@ -604,7 +604,7 @@ module Bytecode {
             if m_loc + len < MAX_U256
             then
                 // Slice bytes out of call data (with padding as needed)
-                var data := Context.CallDataSlice(st.evm.context,d_loc,len as nat);
+                var data := st.evm.context.CallDataSlice(d_loc,len as nat);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
@@ -678,7 +678,7 @@ module Bytecode {
     requires !st.IsFailure() {
         if st.Capacity() >= 1
         then
-            var len := Context.ReturnDataSize(st.evm.context);
+            var len := st.evm.context.ReturnDataSize();
             st.Push(len).Next()
         else
             State.INVALID(STACK_OVERFLOW)
@@ -703,7 +703,7 @@ module Bytecode {
             if m_loc + len < MAX_U256
             then
                 // Slice bytes out of return data (with padding as needed)
-                var data := Context.ReturnDataSlice(st.evm.context,d_loc,len as nat);
+                var data := st.evm.context.ReturnDataSlice(d_loc,len as nat);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory

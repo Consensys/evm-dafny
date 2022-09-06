@@ -356,6 +356,15 @@ module EvmState {
         }
 
         /**
+         * Update the return data associated with this state.
+         */
+        function method SetReturnData(data: seq<u8>) : State
+        requires !IsFailure()
+        requires |data| <= MAX_U256 {
+            OK(evm.(context:=evm.context.SetReturnData(data)))
+        }
+
+        /**
          * Begin a nested contract call.
          */
         function method CallEnter(storage: map<u256,u256>, code: seq<u8>) : State
@@ -395,14 +404,14 @@ module EvmState {
                 var exitCode := if vm.RETURNS? then 1 else 0;
                 // Extract return data (if applicable)
                 if vm.INVALID? then st.Push(0)
-                else if (outOffset + outSize) <= MAX_U256
+                else if (outOffset + outSize) <= MAX_U256 && |vm.data| <= MAX_U256
                 then
                     // Determine amount of data to actually return
                     var m := Min(|vm.data|,outSize);
                     // Slice out that data
                     var data := vm.data[0..m];
-                    // NOTE: the follo
-                    st.Push(exitCode).Copy(outOffset,data)
+                    //
+                    st.Push(exitCode).SetReturnData(vm.data).Copy(outOffset,data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else

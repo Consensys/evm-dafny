@@ -94,6 +94,7 @@ module SimpleTests {
         assert vm.Peek(0) == (x as u256) + (y as u256);
         vm := Bytecode.Push1(vm,0);
         vm := Bytecode.MStore(vm);
+        assert vm.Read(0) == (x as u256) + (y as u256);
         vm := Bytecode.Push1(vm,0x2);
         vm := Bytecode.Push1(vm,0x1E);
         vm := Bytecode.Return(vm);
