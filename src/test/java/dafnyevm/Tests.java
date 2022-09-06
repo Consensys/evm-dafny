@@ -819,6 +819,122 @@ public class Tests {
 		assertArrayEquals(UINT256(1), output);
 	}
 
+	@Test
+	public void test_returndatasize_01() {
+		DafnyEvm tx = new DafnyEvm().sender(0);
+		byte[] output = call(tx, new int[] { RETURNDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x0), output);
+	}
+
+	@Test
+	public void test_returndatasize_02() {
+		// Contract call which returns 20 bytes of data.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Write returndata size to memory
+				RETURNDATASIZE, PUSH1, 0x20, MSTORE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		//
+		assertArrayEquals(UINT256(0x20), output);
+	}
+
+	@Test
+	public void test_returndatasize_03() {
+		// Contract call which returns 20 bytes of data, despite being asked for none.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x00, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Write returndata size to memory
+				RETURNDATASIZE, PUSH1, 0x20, MSTORE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		//
+		assertArrayEquals(UINT256(0x20), output);
+	}
+
+	@Test
+	public void test_returndatasize_04() {
+		// Contract call which returns 20 bytes of data, despite being asked for none.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x10, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Write returndata size to memory
+				RETURNDATASIZE, PUSH1, 0x20, MSTORE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		//
+		assertArrayEquals(UINT256(0x20), output);
+	}
+
+	@Test
+	public void test_returndatasize_05() {
+		// Contract call which returns 20 bytes of data, despite being asked for none.
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x30, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Write returndata size to memory
+				RETURNDATASIZE, PUSH1, 0x20, MSTORE,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		//
+		assertArrayEquals(UINT256(0x20), output);
+	}
+
+	@Test
+	public void test_returndatacopy_01() {
+		DafnyEvm tx = new DafnyEvm().sender(0);
+		byte[] output = call(tx, new int[] { PUSH1, 0x20, PUSH1, 0x0, DUP1, RETURNDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x0), output);
+	}
+
+	@Test
+	public void test_returndatacopy_02() {
+		//
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Copy returndata  to memory
+				PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x20, RETURNDATACOPY,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		//
+		assertArrayEquals(UINT256(0x123), output);
+	}
+
+	@Test
+	public void test_returndatacopy_03() {
+		//
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+				new Account(toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		byte[] output = call(tx, new int[] {
+				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
+				// data at address 0.
+				PUSH1, 0x00, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Copy returndata to memory
+				PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x20, RETURNDATACOPY,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		//
+		assertArrayEquals(UINT256(0x123), output);
+	}
+
 	// ========================================================================
 	// 40s: Block Information
 	// ========================================================================
