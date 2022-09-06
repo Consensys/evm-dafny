@@ -31,7 +31,7 @@ module Bytecode {
      */
     function method Stop(st: State) : State
     requires !st.IsFailure() {
-        State.RETURNS(gas:=st.Gas(),data:=[])
+        State.RETURNS(gas:=st.Gas(),data:=[],log:=st.evm.log)
     }
 
     /**
@@ -1129,6 +1129,31 @@ module Bytecode {
     // a0s: Logging Operations
     // =====================================================================
 
+    /**
+     * Append log with N topics.
+     */
+    function method LogN(st: State, n:nat) : (nst: State)
+    requires !st.IsFailure()
+    requires n <= 4 {
+        if st.Operands() > n+2
+        then
+            var m_loc := st.Peek(0) as nat;
+            var len := st.Peek(1) as nat;
+            // NOTE: This condition is not specified in the yellow paper.
+            // Its not clear whether that was intended or not.  However, its
+            // impossible to trigger this in practice (due to the gas costs
+            // involved).
+            if m_loc + len < MAX_U256
+            then
+                // Construct log entry.
+                var entry := (st.PeekN(n),Memory.Slice(st.evm.memory, m_loc, len));
+                // Done
+                st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
+            else
+                State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
 
     // =====================================================================
     // f0s: System operations
@@ -1213,7 +1238,7 @@ module Bytecode {
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
-                State.RETURNS(gas:=st.evm.gas,data:=data)
+                State.RETURNS(gas:=st.evm.gas,data:=data,log:=st.evm.log)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1291,7 +1316,7 @@ module Bytecode {
             // Determine account to send remaining any remaining funds.
             var acct := (st.Peek(0) as nat) % TWO_160;
             // FIXME: actually refund the account!
-            State.RETURNS(gas:=st.Gas(),data:=[])
+            State.RETURNS(gas:=st.Gas(),data:=[],log:=st.evm.log)
         else
             State.INVALID(STACK_UNDERFLOW)
     }

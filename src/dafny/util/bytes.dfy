@@ -88,7 +88,7 @@ module Bytes {
      * If the requested subsequence overflows available memory,
      * it is padded out with zeros.
      */
-    function method Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8> 
+    function method Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8>
       ensures |Slice(mem, address, len)| == len
     {
       var n := address + len;
@@ -102,10 +102,10 @@ module Bytes {
   /**
    * Construct a sequence of an arbitrary sized padded out with zeros.
    */
-  function method Padding(n:nat) : seq<u8> 
-    ensures |Padding(n)| == n 
-  { 
-    seq(n, i => 0) 
+  function method Padding(n:nat) : seq<u8>
+    ensures |Padding(n)| == n
+  {
+    seq(n, i => 0)
   }
 
   /**

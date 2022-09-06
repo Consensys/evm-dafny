@@ -29,8 +29,8 @@ module Stack {
     // Get number of items currently on this Stack.
     function method Size(st:T) : nat { |st.contents| }
 
-    // Get remaining capacity of stack (i.e. number of items we could
-    // still push).
+    // Get remaining capacity of stack (i.e. number of items we could still
+    // push).
     function method Capacity(st:T) : nat {
       CAPACITY - |st.contents|
     }
@@ -39,27 +39,34 @@ module Stack {
     function method Create() : T { Stack(contents:=[]) }
 
     /** Make a stack with some initial contents.  */
-    function method Make(s: seq<u256>) : T 
+    function method Make(s: seq<u256>) : T
         requires |s| <= CAPACITY
-    { 
-        Stack(contents:=s) 
+    {
+        Stack(contents:=s)
     }
 
-    // Push word onto Stack.  This requires that there is sufficient
-    // space for that item.
+    // Push word onto Stack.  This requires that there is sufficient space for
+    // that item.
     function method Push(st:T, val:u256) : T
         // Sanity check enough space.
         requires Size(st) < CAPACITY {
             Stack(contents:=([val] + st.contents))
     }
 
-    // Peek nth word from top of Stack (where 0 is top item, 1 is next
-    // item, and so on).  This requires there are sufficiently many
-    // words.
+    // Peek nth word from top of Stack (where 0 is top item, 1 is next item, and
+    // so on).  This requires there are sufficiently many words.
     function method Peek(st:T, k:int) : u256
         // Sanity check enough items to pop!
         requires k >= 0 && k < Size(st) {
             st.contents[k]
+    }
+
+    // Peek top N words on the Stack.  This requires there are sufficiently many
+    // words.
+    function method PeekN(st:T, n:nat) : (r:seq<u256>)
+    requires Size(st) >= n
+    ensures |r| == n {
+            st.contents[0..n]
     }
 
     // Pop word off of this Stack.  This requires something to pop!
@@ -67,6 +74,13 @@ module Stack {
         // Sanity check something to pop.
         requires Size(st) > 0 {
             Stack(contents:=st.contents[1..])
+    }
+
+    // Pop N words off of this Stack.  This requires something to pop!
+    function method PopN(st:T, n:nat) : T
+        // Sanity check something to pop.
+        requires Size(st) >= n {
+            Stack(contents:=st.contents[n..])
     }
 
     // Swap top item and kth item
