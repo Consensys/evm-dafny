@@ -93,6 +93,9 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
+			"stMemoryTest/log1_dejavu.json", // Memory expansion for Log
+			"stMemoryTest/log3_dejavu.json", // Memory expansion for Log
+			"stMemoryTest/log4_dejavu.json", // Memory expansion for Log
 			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?

@@ -19,6 +19,9 @@ import static EvmBerlin_Compile.__default.Execute;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.Arrays;
 
 import EvmState_Compile.Error_CALLDEPTH__EXCEEDED;
@@ -27,8 +30,10 @@ import EvmState_Compile.State_INVALID;
 import EvmState_Compile.State_OK;
 import EvmState_Compile.State_RETURNS;
 import EvmState_Compile.State_REVERTS;
+import Log_Compile.Entry;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
+import dafny.Tuple2;
 import dafnyevm.util.Hex;
 
 /**
@@ -371,12 +376,12 @@ public class DafnyEvm {
 				// Must be an End-User Account.
 				acct.deposit(value);
 				return State.from(depth, tracer,
-						new EvmState_Compile.State_RETURNS(gas, DafnySequence.fromBytes(new byte[0])));
+						new EvmState_Compile.State_RETURNS(gas, DafnySequence.fromBytes(new byte[0]), DafnySequence.empty(Entry._typeDescriptor())));
 			} else {
 				//
 				Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value, DafnySequence.fromBytes(callData),
 						gasPrice, blockInfo.toDafny());
-				// Create initial EVM state
+				// Create EVM state
 				EvmState_Compile.State st = Create(ctx, new DafnyMap<>(acct.storage), gas, DafnySequence.fromBytes(code));
 				// Execute initial code.
 				State<?> r = run(depth, tracer, st);
@@ -461,6 +466,10 @@ public class DafnyEvm {
 		}
 
 		public byte[] getReturnData() { return null; }
+
+		public Pair<BigInteger[], byte[]>[] getLog() {
+			throw new IllegalArgumentException("log not available in state " + this.getClass().getName());
+		}
 
 		public int getDepth() { return depth; }
 
@@ -734,6 +743,25 @@ public class DafnyEvm {
 			public BigInteger getGasUsed() {
 				// TODO: fixme!
 				return BigInteger.ZERO;
+			}
+
+			/**
+			 * Get the log returned from this running the call.
+			 *
+			 * @return
+			 */
+			@Override
+			public Pair<BigInteger[], byte[]>[] getLog() {
+				DafnySequence<? extends Tuple2> dlog = state.log;
+				Pair<BigInteger[], byte[]>[] log = new Pair[dlog.length()];
+				for (int i = 0; i != log.length; ++i) {
+					Tuple2<DafnySequence<BigInteger>, DafnySequence<Byte>> ith = dlog.select(i);
+					BigInteger[] topics = (BigInteger[]) ith.dtor__0().toRawArray();
+					byte[] data = DafnySequence.toByteArray(ith.dtor__1());
+					log[i] = Pair.of(topics, data);
+				}
+				//
+				return log;
 			}
 		}
 

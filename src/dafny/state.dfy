@@ -17,6 +17,7 @@ include "util/storage.dfy"
 include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
+include "util/log.dfy"
 include "opcodes.dfy"
 include "util/ExtraTypes.dfy"
 
@@ -29,6 +30,7 @@ module EvmState {
     import Memory
     import Storage
     import Context
+    import Log
     import Code
     import Opcode
     import ExtraTypes
@@ -55,6 +57,7 @@ module EvmState {
         stack   : Stack.T,
         memory  : Memory.T,
         code: Code.T,
+        log: seq<Log.Entry>,
         gas: nat,
         pc : nat
     )
@@ -68,6 +71,7 @@ module EvmState {
             Stack.Create(),
             Memory.Create(),
             Code.Create([]),
+            [],
             0,
             0
         )
@@ -105,7 +109,7 @@ module EvmState {
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
         | INVALID(Error)
-        | RETURNS(gas:nat,data:seq<u8>)
+        | RETURNS(gas:nat,data:seq<u8>,log:seq<Log.Entry>)
         | REVERTS(gas:nat,data:seq<u8>){
 
         /**
@@ -138,7 +142,7 @@ module EvmState {
             match this
                 case OK(evm) => evm.gas
                 case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
-                case RETURNS(g, _) => g
+                case RETURNS(g, _, _) => g
                 case REVERTS(g, _) => g
         }
 
@@ -329,6 +333,17 @@ module EvmState {
         }
 
         /**
+         * Peek n words from the top of the stack.  This requires there are
+         * enough items on the stack.
+         */
+        function method PeekN(n:nat) : (r:seq<u256>)
+        requires !IsFailure()
+        // Sanity check enough items to peek
+        requires n <= Stack.Size(evm.stack) {
+            Stack.PeekN(evm.stack,n)
+        }
+
+        /**
          * Pop word from stack.
          */
         function method Pop() : State
@@ -339,12 +354,30 @@ module EvmState {
         }
 
         /**
+         * Pop n words from stack.
+         */
+        function method PopN(n:nat) : State
+        requires !IsFailure()
+        // Must be enough space!
+        requires Stack.Size(evm.stack) >= n {
+            OK(evm.(stack:=Stack.PopN(evm.stack,n)))
+        }
+
+        /**
          * Swap top item with kth item.
          */
         function method Swap(k:nat) : State
         requires !IsFailure()
         requires Operands() > k {
             OK(evm.(stack:=Stack.Swap(evm.stack,k)))
+        }
+
+        /**
+         * Append zero or more log entries.
+         */
+        function method Log(entries: seq<Log.Entry>) : State
+        requires !IsFailure() {
+            OK(evm.(log:=evm.log + entries))
         }
 
         /**
@@ -383,7 +416,7 @@ module EvmState {
             var mem := Memory.Create();
             var sto := Storage.Create(storage);
             var cod := Code.Create(code);
-            var evm := EVM(evm.context,sto,stack,mem,cod,gas,0);
+            var evm := EVM(evm.context,sto,stack,mem,cod,evm.log,gas,0);
             // Off we go!
             State.OK(evm)
         }
@@ -410,8 +443,10 @@ module EvmState {
                     var m := Min(|vm.data|,outSize);
                     // Slice out that data
                     var data := vm.data[0..m];
-                    //
-                    st.Push(exitCode).SetReturnData(vm.data).Copy(outOffset,data)
+                    // Append log (if applicable)
+                    var nst := if vm.RETURNS? then st.Log(vm.log) else st;
+                    // Done
+                    nst.Push(exitCode).SetReturnData(vm.data).Copy(outOffset,data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else

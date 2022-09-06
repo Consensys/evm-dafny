@@ -68,7 +68,7 @@ abstract module EVM {
       var mem := Memory.Create();
       var sto := Storage.Create(storage);
       var cod := Code.Create(code);
-      var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,gas:=gas,pc:=0);
+      var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,log:=[],gas:=gas,pc:=0);
       // Off we go!
       State.OK(evm)
   }

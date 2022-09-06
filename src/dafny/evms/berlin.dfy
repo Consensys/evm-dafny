@@ -196,8 +196,11 @@ module EvmBerlin refines EVM {
                         case SWAP15 => Bytecode.Swap(s, 15)
                         case SWAP16 => Bytecode.Swap(s, 16)
                         // 0xA0s: Log operations
-                        // else if LOG0 <=case opcode <= LOG4 =>  (s:OKState
-                        //   var k =>  case opcode - LOG0) as int; evalLOG(st,k)
+                        case LOG0 => Bytecode.LogN(s,0)
+                        case LOG1 => Bytecode.LogN(s,1)
+                        case LOG2 => Bytecode.LogN(s,2)
+                        case LOG3 => Bytecode.LogN(s,3)
+                        case LOG4 => Bytecode.LogN(s,4)
                         // 0xf0
                         //  CREATE => Bytecode.evalCREATE(s),
                         case CALL => Bytecode.Call(s)
