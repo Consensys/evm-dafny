@@ -103,8 +103,8 @@ module EvmBerlin refines EVM {
                         case GASPRICE => Bytecode.GasPrice(s)
                         //  EXTCODESIZE => Bytecode.evalEXTCODESIZE(s),
                         //  EXTCODECOPY => Bytecode.evalEXTCODECOPY(s),
-                        //  RETURNDATASIZE => Bytecode.evalRETURNDATASIZE(s),
-                        //  RETURNDATACOPY => Bytecode.evalRETURNDATACOPY(s),
+                        case RETURNDATASIZE => Bytecode.ReturnDataSize(s)
+                        case RETURNDATACOPY => Bytecode.ReturnDataCopy(s)
                         //  EXTCODEHASH => Bytecode.evalEXTCODEHASH(s),
                         // 0x40s: Block Information
                         //  BLOCKHASH => Bytecode.evalBLOCKHASH(s),

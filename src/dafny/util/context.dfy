@@ -51,41 +51,61 @@ module Context {
         callValue: u256,
         // Input data associated with this call.
         callData:seq<u8>,
+        // Return data from last contract call.
+        returnData: seq<u8>,
         // Price of gas in current environment.
         gasPrice: u256,
         // Block information in current environment.
         block: Block
     )
 
-    type T = c:Raw | |c.callData| <= MAX_U256 witness Context(0,0,0,0,[],0,Info(0,0,0,0,0,0))
+    type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
+    witness Context(0,0,0,0,[],[],0,Info(0,0,0,0,0,0))
 
     /**
      * Create an initial context from various components.
      */
     function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,gasPrice:u256, block: Block) : T
     requires |callData| <= MAX_U256 {
-        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,gasPrice:=gasPrice,block:=block)
+        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],gasPrice:=gasPrice,block:=block)
     }
 
     /**
      * Determine the size (in bytes) of the call data associated with this context.
      */
-    function method DataSize(ctx: T) : u256 {
+    function method CallDataSize(ctx: T) : u256 {
         |ctx.callData| as u256
     }
 
     /**
      * Read a word from the call data associated with this context.
      */
-    function method DataRead(ctx: T, loc: u256) : u256 {
+    function method CallDataRead(ctx: T, loc: u256) : u256 {
         Bytes.ReadUint256(ctx.callData,loc as nat)
     }
 
     /**
      * Slice a sequence of bytes from the call data associated with this context.
      */
-    function method DataSlice(ctx: T, loc: u256, len: nat) : seq<u8>
-    ensures |DataSlice(ctx, loc, len)| == len {
+    function method CallDataSlice(ctx: T, loc: u256, len: nat) : (data:seq<u8>)
+    ensures |data| == len {
         Bytes.Slice(ctx.callData,loc as nat, len)
+    }
+
+    /**
+     * Determine the size (in bytes) of the return data from the previous call
+    * associated with this context.
+     */
+    function method ReturnDataSize(ctx: T) : u256 {
+        |ctx.returnData| as u256
+    }
+
+    /**
+     * Slice a sequence of bytes from the return data from the previous call
+     * associated with this context.
+     */
+    function method ReturnDataSlice(ctx: T, loc: u256, len: nat) : (data:seq<u8>)
+    ensures |data| == len {
+        Bytes.Slice(ctx.returnData,loc as nat, len)
     }
 }
