@@ -1135,7 +1135,7 @@ module Bytecode {
     function method LogN(st: State, n:nat) : (nst: State)
     requires !st.IsFailure()
     requires n <= 4 {
-        if st.Operands() > n+2
+        if st.Operands() >= n+2
         then
             var m_loc := st.Peek(0) as nat;
             var len := st.Peek(1) as nat;
@@ -1146,7 +1146,7 @@ module Bytecode {
             if m_loc + len < MAX_U256
             then
                 // Construct log entry.
-                var entry := (st.PeekN(n),Memory.Slice(st.evm.memory, m_loc, len));
+                var entry := (st.PeekN(n+2)[2..],Memory.Slice(st.evm.memory, m_loc, len));
                 // Done
                 st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
             else

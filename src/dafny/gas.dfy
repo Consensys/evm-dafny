@@ -183,6 +183,24 @@ module Gas {
             G_COPY
     }
 
+    /*
+     * Compute gas cost for LogX bytecode.
+     * @param st    A non-failure state.
+     * @param n     The number of topics being logged.
+     */
+    function method GasCostLog(st: State, n: nat) : nat
+        requires !st.IsFailure()
+    {
+        if st.Operands() >= 2
+        then
+            // Determine how many bytes of log data
+            var len := st.Peek(1) as nat;
+            // Do the calculation!
+            G_LOG + (len * G_LOGDATA) + (n * G_LOGTOPIC)
+        else
+            G_ZERO
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -326,8 +344,11 @@ module Gas {
             case SWAP15 => s.UseGas(G_VERYLOW)
             case SWAP16 => s.UseGas(G_VERYLOW)
             // 0xA0s: Log operations
-            // else if LOG0 <=opcode <= LOG4 => Some((s:OKState))
-            //   var k => Some(opcode - LOG0) as int; evalLOG(st,k))
+            case LOG0 => s.UseGas(GasCostLog(s,0))
+            case LOG1 => s.UseGas(GasCostLog(s,1))
+            case LOG2 => s.UseGas(GasCostLog(s,2))
+            case LOG3 => s.UseGas(GasCostLog(s,3))
+            case LOG4 => s.UseGas(GasCostLog(s,4))
             // 0xf0
             // CREATE => s.UseGas(1)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now

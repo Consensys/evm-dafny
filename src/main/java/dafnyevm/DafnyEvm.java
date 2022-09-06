@@ -467,6 +467,10 @@ public class DafnyEvm {
 
 		public byte[] getReturnData() { return null; }
 
+		public Pair<BigInteger[], byte[]>[] getLog() {
+			throw new IllegalArgumentException("log not available in state " + this.getClass().getName());
+		}
+
 		public int getDepth() { return depth; }
 
 		/**
@@ -746,6 +750,7 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
+			@Override
 			public Pair<BigInteger[], byte[]>[] getLog() {
 				DafnySequence<? extends Tuple2> dlog = state.log;
 				Pair<BigInteger[], byte[]>[] log = new Pair[dlog.length()];
