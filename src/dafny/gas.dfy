@@ -201,6 +201,80 @@ module Gas {
             G_ZERO
     }
 
+    /*
+     * compute the cost of accessing a new account
+     * @param   value   this the third argument to the CALL opcode which is the value sent with the call
+     * @notes           the sepcification of this function is incomplete. We need to also check if the 
+                        account of the receiver of the call is not "DEAD".
+    */
+    function GasCostNewaccount(value: u256): nat
+    {
+        if value != 0
+            then G_NEWACCOUNT
+        else   
+            0
+    }
+    /*
+     * computes the cost of transferring a nonzero amount of value to another account.
+     * YP names this function as C_XFER
+     * @param   value   this the third argument to the CALL opcode which is the value sent with the call
+    */
+    function GasCostTransfer(value: u256): nat
+    {
+        if value != 0
+            then G_CALLVALUE
+        else 0
+    }
+
+    /* this is the function YP refers to as "C_EXTRA". The specification of this function is incomplete.
+     * To complete the specification we need to provide a complete specification of the functions
+     * GasCostNewaccount and GasCostTransfer. Also we need to specify a function for computing
+     * cold/warm access to an account (which YP refers to as C_aaccess)
+    */
+    function GasCostExtra(value: u256): nat
+    {
+        GasCostNewaccount(value) + GasCostTransfer(value)
+    }
+
+    /* YP refers to this function by the name "L" */
+    function AllButOneSixtyFourth(n: nat): nat
+    {
+        n - (n / 64) 
+    }
+
+    /* compute the "gas cap" for a message call. YP names this function "C_GASCAP". */
+    function CallGasCap(st: State): nat
+        requires !st.IsFailure()
+        requires st.Operands() >= 3
+    {
+        if st.Gas() >= GasCostExtra(st.Peek(2))
+            then Min(AllButOneSixtyFourth(st.Gas() - GasCostExtra(st.Peek(2))) as int, st.Peek(0) as int)
+        else st.Peek(0) as nat
+    }
+
+    /* compute the call gas. YP refers to this function as "C_CALLGAS" 
+     * @notes  the conditional check is on the value sent with the call.
+               the G_CALLSTIPEND is paied in case the fallback function 
+               of the receiver contract was activated 
+    */
+    function CallGas(st: State): nat
+        requires !st.IsFailure()
+        requires st.Operands() >= 3
+    {
+        if st.Peek(2) != 0
+            then CallGasCap(st) + G_CALLSTIPEND
+        else 
+            CallGasCap(st)
+    }
+
+    /* YP refers to this function as "C_CALL" */    
+    function GasCostCALL(st: State): nat
+        requires !st.IsFailure()
+        requires st.Operands() >= 3
+    {
+        CallGasCap(st) + GasCostExtra(st.Peek(2))
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
