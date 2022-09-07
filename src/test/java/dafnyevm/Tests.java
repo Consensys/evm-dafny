@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -1926,6 +1927,35 @@ public class Tests {
 
 	static {
 		assertFalse(CONTRACT_1.equals(DEFAULT_RECEIVER));
+	}
+
+	@Test
+	public void test_create_01() {
+		// Create an empty contract, and return exit code.
+		byte[] output = callWithReturn(new int[] {
+				// Create contact with no code and no endowment.
+				PUSH1, 0x00, DUP1, DUP1, CREATE,
+				// Return exit code.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
+			});
+		// Sanity check exit code is non-zero
+		assertNotEquals(UINT256(0),output);
+	}
+
+	@Test
+	public void test_create_02() {
+		// Create contract with initialisation code that raises an exception, and return
+		// exit code (which should be zero).
+		byte[] output = callWithReturn(new int[] {
+				// Construct initialisation code
+				PUSH1, 0xfe, PUSH1, 0x00, MSTORE8,
+				// Create contact with 1 byte of code.
+				PUSH1, 0x01, PUSH1, 0x00, DUP1, CREATE,
+				// Return exit code.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
+			});
+		// Sanity check exit code is non-zero
+		assertArrayEquals(UINT256(0),output);
 	}
 
 	@Test

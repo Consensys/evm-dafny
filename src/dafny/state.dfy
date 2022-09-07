@@ -108,6 +108,10 @@ module EvmState {
                 callData:seq<u8>,    // input data for call
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
+        | CREATES(evm:T,
+            endowment: nat,     // endowment
+            initcode: seq<u8>    // initialisation code
+        )
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>,log:seq<Log.Entry>)
         | REVERTS(gas:nat,data:seq<u8>){
@@ -142,6 +146,7 @@ module EvmState {
             match this
                 case OK(evm) => evm.gas
                 case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
+                case CREATES(evm, _, _) => evm.gas
                 case RETURNS(g, _, _) => g
                 case REVERTS(g, _) => g
         }
@@ -449,6 +454,32 @@ module EvmState {
                     nst.Push(exitCode).SetReturnData(vm.data).Copy(outOffset,data)
                 else
                     INVALID(MEMORY_OVERFLOW)
+            else
+                INVALID(STACK_UNDERFLOW)
+        }
+
+        /**
+         * Process a return from a nested contract creation.  This effectively
+         * just manages what happens in the parent state. Either the contract
+         * address is loaded onto the stack (if successful), or zero is loaded
+         * (otherwise).
+         */
+        function method CreateReturn(vm:State, address: u160) : (nst:State)
+        requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
+        requires this.CREATES? {
+            // copy over return data, etc.
+            var st := OK(evm);
+            if st.Capacity() >= 1
+            then
+                // Calculate the exitcode
+                var exitCode := if vm.RETURNS? then (address as u256) else 0;
+                // Extract return data (if applicable)
+                if vm.INVALID? then st.Push(0)
+                else
+                    // Append log (if applicable)
+                    var nst := if vm.RETURNS? then st.Log(vm.log) else st;
+                    // Done
+                    nst.Push(exitCode)
             else
                 INVALID(STACK_UNDERFLOW)
         }

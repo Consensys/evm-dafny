@@ -101,7 +101,7 @@ public class GeneralStateTests {
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
-			"stCallCodes/callcodeDynamicCode.json",  // CREATE
+			//"stCallCodes/callcodeDynamicCode.json",  // CREATE
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // CREATE
 			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // CREATE
 			"stCallCodes/callcodeInInitcodeToExistingContract.json", // CREATE

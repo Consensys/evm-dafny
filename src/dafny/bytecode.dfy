@@ -1160,6 +1160,27 @@ module Bytecode {
     // =====================================================================
 
     /**
+     * Create a new account with associated code.
+     */
+    function method Create(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        if st.Operands() >= 3
+        then
+            var endowment := st.Peek(0) as nat;
+            // Extract start of initialisation code in memory
+            var codeOffset := st.Peek(1) as nat;
+            // Extract length of initialisation code
+            var codeSize := st.Peek(2) as nat;
+            // Copy initialisation code from memory
+            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+            //
+            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
+            // Pass back continuation
+            State.CREATES(nst.evm,endowment,code)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+    /**
      * Message-call into an account.
      */
     function method Call(st: State) : (nst: State)
