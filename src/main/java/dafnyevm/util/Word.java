@@ -15,6 +15,7 @@ package dafnyevm.util;
 
 import org.web3j.crypto.Hash;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public abstract class Word {
 	private final byte[] bytes;
@@ -39,7 +40,13 @@ public abstract class Word {
 	}
 
 	protected Word(int n, byte[] bytes) {
+		// Trim off any leading zeros. This is necessary because BigInteger doesn't
+		// always maintain the exact number of bytes we want.
+		bytes = trim(n,bytes);
+		//
 		if (bytes.length > n) {
+			System.out.println("GOT: " + bytes.length);
+			System.out.println("BYTES: " + Arrays.toString(bytes));
 			throw new IllegalArgumentException("invalid byte array (too big)");
 		}
 		this.bytes = new byte[n];
@@ -129,6 +136,30 @@ public abstract class Word {
 
 		public Uint256(BigInteger v) {
 			super(32, v.toByteArray());
+		}
+	}
+
+	// =======================================================================
+	// Helpers
+	// =======================================================================
+	/**
+	 * Trim off any leading zeros when the byte array is longer than the expected
+	 * number of bytes. This may not succeed in producing a sufficiently short
+	 * array, but it will provided its only leading zeros causing the problem.
+	 *
+	 * @param n
+	 * @param bytes
+	 * @return
+	 */
+	private byte[] trim(int n, byte[] bytes) {
+		int i = 0;
+		while((bytes.length-i) > n && bytes[i] == 0) {
+			i = i + 1;
+		}
+		if(i != 0) {
+			return Arrays.copyOfRange(bytes, i, bytes.length);
+		} else {
+			return bytes;
 		}
 	}
 }

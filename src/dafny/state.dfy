@@ -479,7 +479,7 @@ module EvmState {
                     // Append log (if applicable)
                     var nst := if vm.RETURNS? then st.Log(vm.log) else st;
                     // Done
-                    nst.Push(exitCode)
+                    nst.Push(exitCode).SetReturnData([])
             else
                 INVALID(STACK_UNDERFLOW)
         }

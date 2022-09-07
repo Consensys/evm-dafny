@@ -359,6 +359,8 @@ public class DafnyEvm {
 		// Programatically calculate the new address, which is the has of the rlp
 		// encoding of the sender address and its nonce.
 		byte[] nonce = bytes2nonce(acct.nonce);
+		// FIXME: this should be happening somewhere
+		//acct.nonce = acct.nonce + 1;
 		// Calculate RLP encoding
 		byte[] rlp = RlpEncoder.encode(
 				new RlpList(
