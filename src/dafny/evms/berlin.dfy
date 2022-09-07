@@ -202,7 +202,7 @@ module EvmBerlin refines EVM {
                         case LOG3 => Bytecode.LogN(s,3)
                         case LOG4 => Bytecode.LogN(s,4)
                         // 0xf0
-                        //  CREATE => Bytecode.evalCREATE(s),
+                        case CREATE => Bytecode.Create(s)
                         case CALL => Bytecode.Call(s)
                         case CALLCODE => Bytecode.CallCode(s)
                         case RETURN => Bytecode.Return(s)

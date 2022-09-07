@@ -93,21 +93,19 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
-			"stMemoryTest/log1_dejavu.json", // Memory expansion for Log
-			"stMemoryTest/log3_dejavu.json", // Memory expansion for Log
-			"stMemoryTest/log4_dejavu.json", // Memory expansion for Log
+			"stMemoryTest/log1_dejavu.json", // OOG (memory expansion)
+			"stMemoryTest/log3_dejavu.json", // OOG (memory expansion)
+			"stMemoryTest/log4_dejavu.json", // OOG (memory expansion)
 			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
-			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
-			"stCallCodes/callcodeDynamicCode.json",  // CREATE
-			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // CREATE
-			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // CREATE
-			"stCallCodes/callcodeInInitcodeToExistingContract.json", // CREATE
-			"stCallCodes/callcodeInInitcodeToExistingContractWithValueTransfer.json", // CREATE
-			"stCallCodes/call_OOG_additionalGasCosts2.json", // Should raise exception
-			"stCallCodes/touchAndGo.json", // ?
+			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #258
+			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #258
+			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #258
+			"stCallCodes/callcodeDynamicCode.json",  // #259
+			"stCallCodes/callcodeInInitcodeToExistingContract.json", // #259
+			"stCallCodes/touchAndGo.json", // #260
 			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // Gas?
@@ -120,18 +118,71 @@ public class GeneralStateTests {
 			//
 			"vmTests/sha3.json", // SHA3?
 			"vmTests/calldatasize.json", // SHA3
-			"vmTests/blockInfo.json", // COINBASE
-			"vmLogTest/log0.json", // #206
-			"vmLogTest/log1.json", // #206
-			"vmLogTest/log2.json", // #206
-			"vmLogTest/log3.json", // #206
-			"vmLogTest/log4.json", // #206
 			"vmIOandFlowOperations/jump.json", // ?
 			"vmIOandFlowOperations/jumpi.json", // ?
 			"vmIOandFlowOperations/mload.json", // ?
 			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
+			//
+			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
+			"stReturnDataTest/create_callprecompile_returndatasize.json", // #257
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
+			"stReturnDataTest/returndatacopy_after_failing_callcode.json", // #254
+			"stReturnDataTest/returndatacopy_afterFailing_create.json", // #255
+			"stReturnDataTest/returndatacopy_following_create.json", // #254
+			"stReturnDataTest/returndatacopy_following_failing_call.json", // #254
+			"stReturnDataTest/returndatacopy_following_revert_in_create.json", // #255
+			"stReturnDataTest/returndatacopy_following_revert.json", // #255
+			"stReturnDataTest/returndatacopy_following_successful_create.json", // #254
+			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
+			"stReturnDataTest/returndatacopy_initial_big_sum.json",
+			"stReturnDataTest/returndatacopy_initial.json", // #254
+			"stReturnDataTest/returndatacopy_overrun.json", // #254
+			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
+			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
+			//
+			"stRevertTest/LoopCallsDepthThenRevert2.json",
+			"stRevertTest/LoopCallsDepthThenRevert3.json",
+			"stRevertTest/LoopCallsDepthThenRevert.json",
+			"stRevertTest/LoopCallsThenRevert.json",
+			"stRevertTest/LoopDelegateCallsDepthThenRevert.json",
+			"stRevertTest/NashatyrevSuicideRevert.json",
+			"stRevertTest/PythonRevertTestTue201814-1430.json",
+			"stRevertTest/RevertDepth2.json",
+			"stRevertTest/RevertDepthCreateAddressCollision.json",
+			"stRevertTest/RevertDepthCreateOOG.json",
+			"stRevertTest/RevertInCallCode.json",
+			"stRevertTest/RevertInDelegateCall.json",
+			"stRevertTest/RevertInStaticCall.json",
+			"stRevertTest/RevertOnEmptyStack.json",
+			"stRevertTest/RevertOpcodeCalls.json",
+			"stRevertTest/RevertOpcodeCreate.json",
+			"stRevertTest/RevertOpcodeDirectCall.json",
+			"stRevertTest/RevertOpcodeInCallsOnNonEmptyReturnData.json",
+			"stRevertTest/RevertOpcodeInCreateReturns.json",
+			"stRevertTest/RevertOpcode.json",
+			"stRevertTest/RevertOpcodeMultipleSubCalls.json",
+			"stRevertTest/RevertOpcodeReturn.json",
+			"stRevertTest/RevertPrecompiledTouchExactOOG.json",
+			"stRevertTest/RevertPrecompiledTouch.json",
+			"stRevertTest/RevertPrecompiledTouch_nonce.json",
+			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",
+			"stRevertTest/RevertPrecompiledTouch_storage.json",
+			"stRevertTest/RevertPrefoundCall.json",
+			"stRevertTest/RevertPrefoundCallOOG.json",
+			"stRevertTest/RevertPrefoundEmptyCall.json",
+			"stRevertTest/RevertPrefoundEmptyCallOOG.json",
+			"stRevertTest/RevertPrefoundEmpty.json",
+			"stRevertTest/RevertPrefoundEmptyOOG.json",
+			"stRevertTest/RevertPrefound.json",
+			"stRevertTest/RevertPrefoundOOG.json",
+			"stRevertTest/RevertRemoteSubCallStorageOOG.json",
+			"stRevertTest/RevertSubCallStorageOOG2.json",
+			"stRevertTest/RevertSubCallStorageOOG.json",
+			"stRevertTest/TouchToEmptyAccountRevert2.json",
+			"stRevertTest/TouchToEmptyAccountRevert3.json",
+			"stRevertTest/TouchToEmptyAccountRevert.json",
 			"dummy"
 	);
 
@@ -199,7 +250,8 @@ public class GeneralStateTests {
 		// Initialise world statew
 		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
 			evmtools.core.Account acct = e.getValue();
-			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,acct.storage));
+			// FIXME!
+			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,0,acct.storage));
 		}
 		// Finally, configure transaction receiver (if necessary).
 		if (tx.to == null) {
@@ -207,7 +259,7 @@ public class GeneralStateTests {
 			// means, but I believe we can imagine it as something like the contract
 			// creation account. Specifically, the code to execute is stored within the
 			// transaction data.
-			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>()));
+			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, tx.nonce.longValue(), new HashMap<>()));
 		}
 		return dws;
 	}

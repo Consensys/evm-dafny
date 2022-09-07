@@ -350,7 +350,7 @@ module Gas {
             case LOG3 => s.UseGas(GasCostLog(s,3))
             case LOG4 => s.UseGas(GasCostLog(s,4))
             // 0xf0
-            // CREATE => s.UseGas(1)
+            case CREATE => s.UseGas(G_CREATE)
             case CALL => s.UseGas(G_CALLSTIPEND) // for now
             case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(GasCostRevertReturn(s))
