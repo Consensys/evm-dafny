@@ -199,7 +199,8 @@ public class GeneralStateTests {
 		// Initialise world statew
 		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
 			evmtools.core.Account acct = e.getValue();
-			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,acct.storage));
+			// FIXME!
+			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,0,acct.storage));
 		}
 		// Finally, configure transaction receiver (if necessary).
 		if (tx.to == null) {
@@ -207,7 +208,7 @@ public class GeneralStateTests {
 			// means, but I believe we can imagine it as something like the contract
 			// creation account. Specifically, the code to execute is stored within the
 			// transaction data.
-			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>()));
+			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, tx.nonce.longValue(), new HashMap<>()));
 		}
 		return dws;
 	}

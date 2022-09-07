@@ -21,6 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.web3j.crypto.Hash;
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpString;
 
 import java.util.Arrays;
 
@@ -36,6 +40,9 @@ import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
 import dafnyevm.util.Hex;
+import dafnyevm.util.Word.Uint160;
+import dafnyevm.util.Word.Uint64;
+import dafnyevm.util.Word.Uint256;
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
@@ -347,15 +354,39 @@ public class DafnyEvm {
 	 * @param address
 	 * @return
 	 */
-	public BigInteger createAccount(BigInteger endowment, byte[] initCode) {
-		// FIXME: this is not the official way in which new contract addresses are
-		// calculated.
-		BigInteger address = BigInteger.valueOf(worldState.size());
-		if(worldState.containsKey(address)) {
-			throw new IllegalArgumentException("Contract address already taken!");
+	public BigInteger createAccount(BigInteger sender, BigInteger endowment, byte[] initCode) {
+		Account acct = worldState.get(sender);
+		// Programatically calculate the new address, which is the has of the rlp
+		// encoding of the sender address and its nonce.
+		byte[] nonce = bytes2nonce(acct.nonce);
+		// Calculate RLP encoding
+		byte[] rlp = RlpEncoder.encode(
+				new RlpList(
+						RlpString.create(new Uint160(sender).getBytes()),
+						RlpString.create(nonce)));
+		// Calculate hash.
+		byte[] hash = Hash.sha3(rlp);
+		// Finally reconstruct the address from the rightmost 160bits.
+		BigInteger address = new BigInteger(1, Arrays.copyOfRange(hash, 12, hash.length));
+		// Create the account.
+		worldState.put(address, new Account(initCode, endowment, 1));
+		return address;
+	}
+
+	/**
+	 * Convert a nonce to a byte array. The issue is that this depends on how big
+	 * the nonce is.
+	 *
+	 * @param nonce
+	 * @return
+	 */
+	private byte[] bytes2nonce(long nonce) {
+		if (nonce == 0) {
+			return new byte[0];
+		} else if (nonce < 256) {
+			return new byte[] { (byte) (nonce & 0xff) };
 		} else {
-			worldState.put(address, new Account(initCode, endowment));
-			return address;
+			throw new IllegalArgumentException("internal failure --- nonce too large (nonce)");
 		}
 	}
 
@@ -450,7 +481,7 @@ public class DafnyEvm {
 		// Determine sender
 		BigInteger sender = cc.getEVM().context.address;
 		// Construct new account
-		BigInteger address = createAccount(cc.endowment(), cc.initCode());
+		BigInteger address = createAccount(sender, cc.endowment(), cc.initCode());
 		// Make the contract call
 		State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).to(address).sender(sender).code(cc.initCode())
 				.origin(origin).gasPrice(gasPrice).blockInfo(blockInfo).call(depth + 1);
@@ -922,26 +953,35 @@ public class DafnyEvm {
 		 */
 		private BigInteger balance;
 		/**
+		 * Number of transactions this account has made.
+		 */
+		private long nonce;
+		/**
 		 * Current state of the contract storage.
 		 */
 		private final HashMap<BigInteger,BigInteger> storage;
 
 		public Account(byte[] code) {
-			this(code,BigInteger.ZERO);
+			this(code, BigInteger.ZERO, 1);
 		}
 
-		public Account(byte[] code, BigInteger balance) {
-			this(code,balance,new HashMap<>());
+		public Account(byte[] code, BigInteger balance, long nonce) {
+			this(code,balance,nonce,new HashMap<>());
 		}
 
-		public Account(byte[] code, BigInteger balance, Map<BigInteger,BigInteger> storage) {
+		public Account(byte[] code, BigInteger balance, long nonce, Map<BigInteger,BigInteger> storage) {
 			this.code = code;
 			this.balance = balance;
 			this.storage = new HashMap<>(storage);
+			this.nonce = nonce;
 		}
 
 		public void deposit(BigInteger value) {
 			this.balance = this.balance.add(value);
+		}
+
+		public long nonce() {
+			return this.nonce;
 		}
 
 		public void setCode(byte[] code) {
