@@ -679,7 +679,7 @@ module Bytecode {
         if st.Capacity() >= 1
         then
             var len := st.evm.context.ReturnDataSize();
-            st.Push(len).Next()
+            st.Push(len as u256).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -693,23 +693,18 @@ module Bytecode {
         if st.Operands() >= 3
         then
             var m_loc := st.Peek(0) as nat;
-            var d_loc := st.Peek(1);
+            var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
-
-            // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if m_loc + len < MAX_U256
+            if (d_loc + len) <= st.evm.context.ReturnDataSize()
             then
                 // Slice bytes out of return data (with padding as needed)
-                var data := st.evm.context.ReturnDataSlice(d_loc,len as nat);
+                var data := st.evm.context.ReturnDataSlice(d_loc,len);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
-                State.INVALID(MEMORY_OVERFLOW)
+                State.INVALID(RETURNDATA_OVERFLOW)
         else
             State.INVALID(STACK_UNDERFLOW)
     }

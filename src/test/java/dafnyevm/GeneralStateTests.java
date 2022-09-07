@@ -128,17 +128,17 @@ public class GeneralStateTests {
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #257
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
-			"stReturnDataTest/returndatacopy_after_failing_callcode.json", // #254
+//			"stReturnDataTest/returndatacopy_after_failing_callcode.json", // #254
 			"stReturnDataTest/returndatacopy_afterFailing_create.json", // #255
-			"stReturnDataTest/returndatacopy_following_create.json", // #254
-			"stReturnDataTest/returndatacopy_following_failing_call.json", // #254
+//			"stReturnDataTest/returndatacopy_following_create.json", // #254
+//			"stReturnDataTest/returndatacopy_following_failing_call.json", // #254
 			"stReturnDataTest/returndatacopy_following_revert_in_create.json", // #255
 			"stReturnDataTest/returndatacopy_following_revert.json", // #255
-			"stReturnDataTest/returndatacopy_following_successful_create.json", // #254
+//			"stReturnDataTest/returndatacopy_following_successful_create.json", // #254
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
 			"stReturnDataTest/returndatacopy_initial_big_sum.json",
-			"stReturnDataTest/returndatacopy_initial.json", // #254
-			"stReturnDataTest/returndatacopy_overrun.json", // #254
+//			"stReturnDataTest/returndatacopy_initial.json", // #254
+//			"stReturnDataTest/returndatacopy_overrun.json", // #254
 			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
 			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
 			//
@@ -427,6 +427,8 @@ public class GeneralStateTests {
 			return Trace.Exception.Error.STACK_UNDERFLOW;
 		} else if (err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
 			return Trace.Exception.Error.MEMORY_OVERFLOW;
+		} else if (err instanceof EvmState_Compile.Error_RETURNDATA__OVERFLOW) {
+			return Trace.Exception.Error.RETURNDATA_OVERFLOW;
 		} else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
 			return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
 		} else {
