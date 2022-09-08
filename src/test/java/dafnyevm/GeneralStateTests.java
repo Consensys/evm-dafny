@@ -88,7 +88,7 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
 			"VMTests/vmArithmeticTest/signextend.json", // #194
-			"stMemoryTest/bufferSrcOffset.json", // #199
+			"stMemoryTest/bufferSrcOffset.json", // EXT CODE COPY
 			"stMemoryTest/oog.json", // Various problems
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
@@ -128,19 +128,22 @@ public class GeneralStateTests {
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #257
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
-//			"stReturnDataTest/returndatacopy_after_failing_callcode.json", // #254
-			"stReturnDataTest/returndatacopy_afterFailing_create.json", // #255
-//			"stReturnDataTest/returndatacopy_following_create.json", // #254
-//			"stReturnDataTest/returndatacopy_following_failing_call.json", // #254
-			"stReturnDataTest/returndatacopy_following_revert_in_create.json", // #255
-			"stReturnDataTest/returndatacopy_following_revert.json", // #255
-//			"stReturnDataTest/returndatacopy_following_successful_create.json", // #254
+			"stReturnDataTest/returndatacopy_afterFailing_create.json", // #257
+			"stReturnDataTest/returndatacopy_following_revert_in_create.json", // #263
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
 			"stReturnDataTest/returndatacopy_initial_big_sum.json",
-//			"stReturnDataTest/returndatacopy_initial.json", // #254
-//			"stReturnDataTest/returndatacopy_overrun.json", // #254
 			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
 			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
+			//
+			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
+	        "stReturnDataTest/returndatacopy_after_failing_staticcall.json",
+	        "stReturnDataTest/returndatacopy_after_revert_in_staticcall.json",
+	        "stReturnDataTest/returndatacopy_after_successful_delegatecall.json",
+	        "stReturnDataTest/returndatacopy_after_successful_staticcall.json",
+	        "stReturnDataTest/returndatasize_after_failing_delegatecall.json",
+	        "stReturnDataTest/returndatasize_after_failing_staticcall.json",
+	        "stReturnDataTest/returndatasize_after_successful_delegatecall.json",
+	        "stReturnDataTest/returndatasize_after_successful_staticcall.json",
 			//
 			"stRevertTest/LoopCallsDepthThenRevert2.json",
 			"stRevertTest/LoopCallsDepthThenRevert3.json",
@@ -183,6 +186,9 @@ public class GeneralStateTests {
 			"stRevertTest/TouchToEmptyAccountRevert2.json",
 			"stRevertTest/TouchToEmptyAccountRevert3.json",
 			"stRevertTest/TouchToEmptyAccountRevert.json",
+			"stRevertTest/RevertInCreateInInit.json",
+		    "stRevertTest/RevertOpcodeInInit.json",
+		    "stRevertTest/RevertOpcodeWithBigOutputInInit.json",
 			"dummy"
 	);
 
@@ -390,6 +396,7 @@ public class GeneralStateTests {
 		@Override
 		public void end(State.Return state) {
 			if(state.depth == 1) {
+				// Unfortunately, Geth only reports RETURNS on the outermost contract call.
 				out.add(new Trace.Returns(state.getReturnData()));
 			}
 		}
@@ -397,15 +404,14 @@ public class GeneralStateTests {
 		@Override
 		public void revert(State.Revert state) {
 			if(state.depth == 1) {
+				// Unfortunately, Geth only reports REVERTS on the outermost contract call.
 				out.add(new Trace.Reverts(state.getReturnData()));
 			}
 		}
 
 		@Override
 		public void exception(State.Invalid state) {
-			if(state.depth == 1) {
-				out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
-			}
+			out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
 		}
 
 		@Override
