@@ -87,6 +87,7 @@ module EvmState {
         | STACK_UNDERFLOW
         | STACK_OVERFLOW
         | MEMORY_OVERFLOW
+        | RETURNDATA_OVERFLOW
         | INVALID_JUMPDEST
         | CALLDEPTH_EXCEEDED
 

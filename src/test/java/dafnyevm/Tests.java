@@ -899,9 +899,9 @@ public class Tests {
 
 	@Test
 	public void test_returndatacopy_01() {
-		DafnyEvm tx = new DafnyEvm().sender(0);
-		byte[] output = callWithReturn(tx, new int[] { PUSH1, 0x20, PUSH1, 0x0, DUP1, RETURNDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(UINT256(0x0), output);
+		// Copying return data can overflow!
+		invalidCall(Error.RETURNDATA_OVERFLOW,
+				new int[] { PUSH1, 0x20, PUSH1, 0x0, DUP1, RETURNDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 	}
 
 	@Test
