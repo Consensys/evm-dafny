@@ -45,7 +45,7 @@ module Opcode {
     const SHR : u8 := 0x1c;
     const SAR : u8 := 0x1d;
 	// 20s: SHA3
-	const SHA3 : u8 := 0x20;
+	const KECCAK256 : u8 := 0x20;
 	// 30s: Environment Information
 	const ADDRESS : u8 := 0x30;
 	const BALANCE : u8 := 0x31;

@@ -88,7 +88,7 @@ module EvmBerlin refines EVM {
                         case SHR =>  Bytecode.Shr(s)
                         case SAR => Bytecode.Sar(s)
                         // 0x20s
-                        //  KECCAK256 =>  Some((s:OKState) => Bytecode.evalKECCAK256(s),)
+                        case KECCAK256 =>  Bytecode.Keccak256(s)
                         // 0x30s: Environment Information
                         case ADDRESS => Bytecode.Address(s)
                         //  BALANCE => Bytecode.evalBALANCE(s),

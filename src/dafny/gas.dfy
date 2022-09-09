@@ -184,18 +184,33 @@ module Gas {
     }
 
     /*
-     * Compute gas cost for create2 bytecode.
+     * Compute gas cost for CREATE2 bytecode.
      * @param st    A non-failure state.
-     * @param n     The number of topics being logged.
      */
     function method GasCostCreate2(st: State) : nat
         requires !st.IsFailure()
     {
         if st.Operands() >= 4
         then
-            var codeSize := st.Peek(2) as nat;
-            var rhs := RoundUp(codeSize,32) / 32;
-            G_CREATE + (G_KECCAK256 * rhs)
+            var len := st.Peek(2) as nat;
+            var rhs := RoundUp(len,32) / 32;
+            G_CREATE + (G_KECCAK256WORD * rhs)
+        else
+            G_ZERO
+    }
+
+/*
+     * Compute gas cost for KECCAK256 bytecode.
+     * @param st    A non-failure state.
+     */
+    function method GasCostKeccak256(st: State) : nat
+        requires !st.IsFailure()
+    {
+        if st.Operands() >= 2
+        then
+            var len := st.Peek(1) as nat;
+            var rhs := RoundUp(len,32) / 32;
+            G_KECCAK256 + (G_KECCAK256WORD * rhs)
         else
             G_ZERO
     }
@@ -253,7 +268,7 @@ module Gas {
             case SHR => s.UseGas(G_VERYLOW)
             case SAR => s.UseGas(G_VERYLOW)
             // 0x20s
-            //  KECCAK256 => s.UseGas(1)
+            case KECCAK256 => s.UseGas(GasCostKeccak256(s))
             // 0x30s: Environment Information
             case ADDRESS => s.UseGas(G_BASE)
             case BALANCE => s.UseGas(G_BALANCE)

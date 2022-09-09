@@ -499,8 +499,25 @@ module Bytecode {
     }
 
     // =====================================================================
-    // 20s: SHA3
+    // 20s: Keccak256
     // =====================================================================
+
+    /**
+     * Computer Keccak256 hash.
+     */
+    function method Keccak256(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var loc := st.Peek(0) as nat;
+            var len := st.Peek(1) as nat;
+            var bytes := Memory.Slice(st.evm.memory, loc, len);
+            var hash := Bytes.sha3(bytes);
+            st.Expand(loc,len).Pop().Pop().Push(hash).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
 
     // =====================================================================
     // 30s: Environment Information
