@@ -126,24 +126,18 @@ public class GeneralStateTests {
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
 			//
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
-			"stReturnDataTest/create_callprecompile_returndatasize.json", // #257
+			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
-			"stReturnDataTest/returndatacopy_afterFailing_create.json", // #257
-			"stReturnDataTest/returndatacopy_following_revert_in_create.json", // #263
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
 			"stReturnDataTest/returndatacopy_initial_big_sum.json",
 			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
-			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
-			//
 			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
-	        "stReturnDataTest/returndatacopy_after_failing_staticcall.json",
-	        "stReturnDataTest/returndatacopy_after_revert_in_staticcall.json",
-	        "stReturnDataTest/returndatacopy_after_successful_delegatecall.json",
-	        "stReturnDataTest/returndatacopy_after_successful_staticcall.json",
-	        "stReturnDataTest/returndatasize_after_failing_delegatecall.json",
-	        "stReturnDataTest/returndatasize_after_failing_staticcall.json",
-	        "stReturnDataTest/returndatasize_after_successful_delegatecall.json",
-	        "stReturnDataTest/returndatasize_after_successful_staticcall.json",
+			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
+	        "stReturnDataTest/returndatacopy_after_failing_staticcall.json", // #256
+	        "stReturnDataTest/returndatacopy_after_revert_in_staticcall.json", // #256
+	        "stReturnDataTest/returndatacopy_after_successful_staticcall.json", // #256
+	        "stReturnDataTest/returndatasize_after_failing_staticcall.json", // #256
+	        "stReturnDataTest/returndatasize_after_successful_staticcall.json", // #256
 			//
 			"stRevertTest/LoopCallsDepthThenRevert2.json",
 			"stRevertTest/LoopCallsDepthThenRevert3.json",
@@ -155,31 +149,17 @@ public class GeneralStateTests {
 			"stRevertTest/RevertDepth2.json",
 			"stRevertTest/RevertDepthCreateAddressCollision.json",
 			"stRevertTest/RevertDepthCreateOOG.json",
-			"stRevertTest/RevertInCallCode.json",
-			"stRevertTest/RevertInDelegateCall.json",
 			"stRevertTest/RevertInStaticCall.json",
-			"stRevertTest/RevertOnEmptyStack.json",
-			"stRevertTest/RevertOpcodeCalls.json",
-			"stRevertTest/RevertOpcodeCreate.json",
-			"stRevertTest/RevertOpcodeDirectCall.json",
 			"stRevertTest/RevertOpcodeInCallsOnNonEmptyReturnData.json",
-			"stRevertTest/RevertOpcodeInCreateReturns.json",
-			"stRevertTest/RevertOpcode.json",
-			"stRevertTest/RevertOpcodeMultipleSubCalls.json",
-			"stRevertTest/RevertOpcodeReturn.json",
-			"stRevertTest/RevertPrecompiledTouchExactOOG.json",
-			"stRevertTest/RevertPrecompiledTouch.json",
-			"stRevertTest/RevertPrecompiledTouch_nonce.json",
-			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",
-			"stRevertTest/RevertPrecompiledTouch_storage.json",
+			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
 			"stRevertTest/RevertPrefoundCall.json",
 			"stRevertTest/RevertPrefoundCallOOG.json",
 			"stRevertTest/RevertPrefoundEmptyCall.json",
 			"stRevertTest/RevertPrefoundEmptyCallOOG.json",
-			"stRevertTest/RevertPrefoundEmpty.json",
-			"stRevertTest/RevertPrefoundEmptyOOG.json",
-			"stRevertTest/RevertPrefound.json",
-			"stRevertTest/RevertPrefoundOOG.json",
 			"stRevertTest/RevertRemoteSubCallStorageOOG.json",
 			"stRevertTest/RevertSubCallStorageOOG2.json",
 			"stRevertTest/RevertSubCallStorageOOG.json",
@@ -187,8 +167,6 @@ public class GeneralStateTests {
 			"stRevertTest/TouchToEmptyAccountRevert3.json",
 			"stRevertTest/TouchToEmptyAccountRevert.json",
 			"stRevertTest/RevertInCreateInInit.json",
-		    "stRevertTest/RevertOpcodeInInit.json",
-		    "stRevertTest/RevertOpcodeWithBigOutputInInit.json",
 			"dummy"
 	);
 

@@ -476,11 +476,16 @@ module EvmState {
                 var exitCode := if vm.RETURNS? then (address as u256) else 0;
                 // Extract return data (if applicable)
                 if vm.INVALID? then st.Push(0)
+                else if vm.RETURNS?
+                then
+                    st.Log(vm.log).Push(exitCode).SetReturnData([])
+                else if |vm.data| <= TWO_32
+                then
+                    // NOTE: in the event of a revert, the return data is
+                    // provided back.
+                    st.Push(exitCode).SetReturnData(vm.data)
                 else
-                    // Append log (if applicable)
-                    var nst := if vm.RETURNS? then st.Log(vm.log) else st;
-                    // Done
-                    nst.Push(exitCode).SetReturnData([])
+                    INVALID(MEMORY_OVERFLOW)
             else
                 INVALID(STACK_UNDERFLOW)
         }
