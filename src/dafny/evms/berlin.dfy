@@ -88,7 +88,7 @@ module EvmBerlin refines EVM {
                         case SHR =>  Bytecode.Shr(s)
                         case SAR => Bytecode.Sar(s)
                         // 0x20s
-                        //  KECCAK256 =>  Some((s:OKState) => Bytecode.evalKECCAK256(s),)
+                        case KECCAK256 =>  Bytecode.Keccak256(s)
                         // 0x30s: Environment Information
                         case ADDRESS => Bytecode.Address(s)
                         //  BALANCE => Bytecode.evalBALANCE(s),
@@ -107,7 +107,7 @@ module EvmBerlin refines EVM {
                         case RETURNDATACOPY => Bytecode.ReturnDataCopy(s)
                         //  EXTCODEHASH => Bytecode.evalEXTCODEHASH(s),
                         // 0x40s: Block Information
-                        //  BLOCKHASH => Bytecode.evalBLOCKHASH(s),
+                        case BLOCKHASH => Bytecode.BlockHash(s)
                         case COINBASE => Bytecode.CoinBase(s)
                         case TIMESTAMP => Bytecode.TimeStamp(s)
                         case NUMBER => Bytecode.Number(s)

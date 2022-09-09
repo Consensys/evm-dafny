@@ -18,6 +18,7 @@ include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 include "util/log.dfy"
+include "util/extern.dfy"
 include "opcodes.dfy"
 include "util/ExtraTypes.dfy"
 

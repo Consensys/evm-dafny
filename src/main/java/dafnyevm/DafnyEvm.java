@@ -440,7 +440,7 @@ public class DafnyEvm {
 		// Make the recursive call.
 		State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to())
 				.code(src.code).origin(origin).value(cc.delegateValue()).data(cc.callData())
-				.gasPrice(gasPrice).blockInfo(blockInfo).call(depth + 1);
+				.gasPrice(gasPrice).blockInfo(blockInfo).gas(cc.gas()).call(depth + 1);
 		// FIXME: update worldstate upon success.
 		// Continue from where we left off.
 		return cc.callReturn(nr);
@@ -784,6 +784,15 @@ public class DafnyEvm {
 			 */
 			public BigInteger delegateValue() {
 				return state.delegateValue;
+			}
+
+			/**
+			 * Get the gas provided for this call.
+			 *
+			 * @return
+			 */
+			public BigInteger gas() {
+				return state.gas;
 			}
 
 			/**
