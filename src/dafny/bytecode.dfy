@@ -523,6 +523,17 @@ module Bytecode {
     // 30s: Environment Information
     // =====================================================================
 
+    function method BlockHash(st: State) : State
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // FIXME: what to do here?
+            var n := st.Peek(0);
+            st.Pop().Push(0).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
     /**
      * Get address of currently executing account.
      */

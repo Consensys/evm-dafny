@@ -89,7 +89,7 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
 			"VMTests/vmArithmeticTest/signextend.json", // #194
 			"stMemoryTest/bufferSrcOffset.json", // EXT CODE COPY
-			"stMemoryTest/oog.json", // #237
+//			"stMemoryTest/oog.json", // #237
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
@@ -98,7 +98,6 @@ public class GeneralStateTests {
 			"stMemoryTest/log4_dejavu.json", // OOG (memory expansion)
 			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
-			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
@@ -114,21 +113,22 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-			"vmTests/sha3.json", // SHA3?
-			"vmTests/calldatasize.json", // SHA3
+//			"vmTests/sha3.json", // SHA3?
+//			"vmTests/calldatasize.json", // SHA3
 			"vmIOandFlowOperations/jump.json", // ?
 			"vmIOandFlowOperations/jumpi.json", // ?
 			"vmIOandFlowOperations/mload.json", // ?
 			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
+			"stMemoryTest/extcodecopy_dejavu.json", // EXTCODECOPY
 			//
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
 			"stReturnDataTest/returndatacopy_initial_big_sum.json",
-			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
+//			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
 			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
 			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
 	        "stReturnDataTest/returndatacopy_after_failing_staticcall.json", // #256
@@ -354,6 +354,8 @@ public class GeneralStateTests {
 		public void step(DafnyEvm.State.Ok state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
+//			long gas = state.getRemainingGas().longValueExact();
+			long gas = 0; // for now
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
 			// the invalid bytecode.
 			if(op != Bytecodes.INVALID) {
@@ -362,7 +364,7 @@ public class GeneralStateTests {
 				// FIXME: this is a hack until such time as Geth actually reports storage.
 				//Map<BigInteger, BigInteger> storage = state.getStorage();
 				Map<BigInteger, BigInteger> storage = new HashMap<>();
-				out.add(new Trace.Step(pc, op, stack, memory, storage));
+				out.add(new Trace.Step(pc, op, gas, stack, memory, storage));
 			} else {
 				System.out.println("SKIPPING");
 			}

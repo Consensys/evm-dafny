@@ -68,12 +68,6 @@ module Gas {
 	const G_BLOCKHASH: nat := 20;
 	const G_QUADDIVISOR: nat := 100;
 
-    /** The constant Gas cost for each  */
-    function method UseOneGas(op: u8, s: OKState): State
-    {
-        s.UseGas(1)
-    }
-
     /**
      *  Assign a cost as a function of the memory size.
      *
@@ -122,72 +116,57 @@ module Gas {
             QuadraticCost(after) - QuadraticCost(before)
     }
 
-    /* Compute the gas cost of memory expansion for Memory store/load.
+    /**
+     * Compute the memory expansion cost associated with a given memory address
+     * and length, where those values are currently stored on the stack.  If
+     * there are insufficient operands on the stack, this returns zero so that a
+     * stack underflow can be subsequently reported.
      *
-     *  @param  st      A non failure state.
-     *  @param  bytes   The number of bytes to read.
-     *  @returns        The cost of an `MSTORE` operation.
-     *
-     *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack. It does not
-     *              impact the status of the state.
+     * @param st Current state
+     * @param nOperands Total number of operands expected on the stack.
+     * @param locSlot Stack slot containing the location to be accessed.
+     * @param length  Number of bytes to read.
      */
-    function method GasCostMSTORELOAD(st: State, nbytes: nat): nat
-        requires !st.IsFailure()
-    {
-        /* A stack underflow costs te minimum gas fee. */
-        if st.Operands() >= 1
+    function method CostExpandBytes(st: State, nOperands: nat, locSlot: nat, length: nat) : nat
+    requires !st.IsFailure()
+    requires nOperands > locSlot {
+        if st.Operands() >= nOperands
         then
-            ExpansionSize(st.evm.memory, st.Peek(0) as nat, nbytes) + G_VERYLOW
-        else
-            G_VERYLOW
-    }
-
-    /* Compute the gas cost of return/revert.
-     *
-     *  @param  st  A non failure state.
-     *  @returns    The cost of a `REVERT` or `RETURN` operation.
-     *
-     *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack offset by the second top-most element.
-     *              It does not impact the status of the state.
-     */
-    function method GasCostRevertReturn(st: State): nat
-        requires !st.IsFailure()
-    {
-        /* A stack underflow costs the minimum gas fee. */
-        if st.Operands() >= 2
-        then
-            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(1) as nat) + G_ZERO
+            var loc := st.Peek(locSlot) as nat;
+            ExpansionSize(st.evm.memory,loc,length)
         else
             G_ZERO
     }
 
-    /* Compute the gas cost of return/revert.
+    /**
+     * Compute the memory expansion cost associated with a given memory range,
+     * as determined by an address.  The values of the range, however, are
+     * currently stored on the stack and therefore need to be peeked.   If
+     * there are insufficient operands on the stack, this returns zero so that a
+     * stack underflow can be subsequently reported.
      *
-     *  @param  st  A non failure state.
-     *  @returns    The cost of a `REVERT` or `RETURN` operation.
-     *
-     *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack offset by the third top-most element.
-     *              It does not impact the status of the state.
+     * @param st Current state
+     * @param nOperands Total number of operands expected on the stack.
+     * @param locSlot Stack slot containing the location to be accessed.
+     * @param lenSlot Stack slot containing the number of bytes to access.
      */
-    function method GasCostDATACOPYING(st: State): nat
-        requires !st.IsFailure()
-    {
-        /* A stack underflow costs the minimum gas fee. */
-        if st.Operands() >= 3
+    function method CostExpandRange(st: State, nOperands: nat, locSlot: nat, lenSlot: nat) : nat
+    requires !st.IsFailure()
+    requires nOperands > locSlot && nOperands > lenSlot {
+        if st.Operands() >= nOperands
         then
-            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(2) as nat) + G_COPY
+            var loc := st.Peek(locSlot) as nat;
+            var len := st.Peek(lenSlot) as nat;
+            ExpansionSize(st.evm.memory,loc,len)
         else
-            G_COPY
+            G_ZERO
     }
 
     /*
      * Compute gas cost for CREATE2 bytecode.
      * @param st    A non-failure state.
      */
-    function method GasCostCreate2(st: State) : nat
+    function method CostCreate2(st: State) : nat
         requires !st.IsFailure()
     {
         if st.Operands() >= 4
@@ -203,7 +182,7 @@ module Gas {
      * Compute gas cost for KECCAK256 bytecode.
      * @param st    A non-failure state.
      */
-    function method GasCostKeccak256(st: State) : nat
+    function method CostKeccak256(st: State) : nat
         requires !st.IsFailure()
     {
         if st.Operands() >= 2
@@ -220,12 +199,13 @@ module Gas {
      * @param st    A non-failure state.
      * @param n     The number of topics being logged.
      */
-    function method GasCostLog(st: State, n: nat) : nat
+    function method CostLog(st: State, n: nat) : nat
         requires !st.IsFailure()
     {
         if st.Operands() >= 2
         then
             // Determine how many bytes of log data
+            var loc := st.Peek(0) as nat;
             var len := st.Peek(1) as nat;
             // Do the calculation!
             G_LOG + (len * G_LOGDATA) + (n * G_LOGTOPIC)
@@ -268,7 +248,7 @@ module Gas {
             case SHR => s.UseGas(G_VERYLOW)
             case SAR => s.UseGas(G_VERYLOW)
             // 0x20s
-            case KECCAK256 => s.UseGas(GasCostKeccak256(s))
+            case KECCAK256 => s.UseGas(CostExpandRange(s,2,0,1) + CostKeccak256(s))
             // 0x30s: Environment Information
             case ADDRESS => s.UseGas(G_BASE)
             case BALANCE => s.UseGas(G_BALANCE)
@@ -277,17 +257,17 @@ module Gas {
             case CALLVALUE => s.UseGas(G_BASE)
             case CALLDATALOAD => s.UseGas(G_VERYLOW)
             case CALLDATASIZE => s.UseGas(G_BASE)
-            case CALLDATACOPY => s.UseGas(GasCostDATACOPYING(s))
+            case CALLDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_COPY)
             case CODESIZE => s.UseGas(G_BASE)
-            case CODECOPY => s.UseGas(GasCostDATACOPYING(s))
+            case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_COPY)
             case GASPRICE => s.UseGas(G_BASE)
             // EXTCODESIZE => s.UseGas(1)
             // EXTCODECOPY => s.UseGas(1)
             case RETURNDATASIZE => s.UseGas(G_BASE)
-            case RETURNDATACOPY => s.UseGas(G_COPY)
+            case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_COPY)
             //  EXTCODEHASH => s.UseGas(1)
             // 0x40s: Block Information
-            // BLOCKHASH => s.UseGas(1)
+            case BLOCKHASH => s.UseGas(G_BLOCKHASH)
             case COINBASE => s.UseGas(G_BASE)
             case TIMESTAMP => s.UseGas(G_BASE)
             case NUMBER => s.UseGas(G_BASE)
@@ -297,9 +277,9 @@ module Gas {
             //  SELFBALANCE => s.UseGas(1)
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
-            case MLOAD => s.UseGas(GasCostMSTORELOAD(s, nbytes := 32))
-            case MSTORE => s.UseGas(GasCostMSTORELOAD(s, nbytes := 32))
-            case MSTORE8 => s.UseGas(GasCostMSTORELOAD(s, nbytes := 1))
+            case MLOAD => s.UseGas(CostExpandBytes(s,1,0,32) + G_VERYLOW)
+            case MSTORE => s.UseGas(CostExpandBytes(s,2,0,32) + G_VERYLOW)
+            case MSTORE8 => s.UseGas(CostExpandBytes(s,2,0,1) + G_VERYLOW)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
             case JUMP => s.UseGas(G_MID)
@@ -376,21 +356,28 @@ module Gas {
             case SWAP15 => s.UseGas(G_VERYLOW)
             case SWAP16 => s.UseGas(G_VERYLOW)
             // 0xA0s: Log operations
-            case LOG0 => s.UseGas(GasCostLog(s,0))
-            case LOG1 => s.UseGas(GasCostLog(s,1))
-            case LOG2 => s.UseGas(GasCostLog(s,2))
-            case LOG3 => s.UseGas(GasCostLog(s,3))
-            case LOG4 => s.UseGas(GasCostLog(s,4))
+            case LOG0 => s.UseGas(CostExpandRange(s,2,0,1) + CostLog(s,0))
+            case LOG1 => s.UseGas(CostExpandRange(s,3,0,1) + CostLog(s,1))
+            case LOG2 => s.UseGas(CostExpandRange(s,4,0,1) + CostLog(s,2))
+            case LOG3 => s.UseGas(CostExpandRange(s,5,0,1) + CostLog(s,3))
+            case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
-            case CREATE => s.UseGas(G_CREATE)
-            case CALL => s.UseGas(G_CALLSTIPEND) // for now
-            case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
-            case RETURN => s.UseGas(GasCostRevertReturn(s))
-            case DELEGATECALL => s.UseGas(G_CALLSTIPEND) // for now
-            case CREATE2 => s.UseGas(GasCostCreate2(s))
+            case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
+            case CALL => s.UseGas(Max(CostExpandRange(s,7,3,4),CostExpandRange(s,7,5,6)) + G_CALLSTIPEND) // for now
+            case CALLCODE => s.UseGas(Max(CostExpandRange(s,7,3,4),CostExpandRange(s,7,5,6)) + G_CALLSTIPEND) // for now
+            case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
+            case DELEGATECALL => s.UseGas(Max(CostExpandRange(s,6,2,3),CostExpandRange(s,7,4,5)) + G_CALLSTIPEND) // for now
+            case CREATE2 => s.UseGas(CostCreate2(s))
             // STATICCALL => s.UseGas(1)
-            case REVERT => s.UseGas(GasCostRevertReturn(s))
+            case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
             case _ => State.INVALID(INVALID_OPCODE)
+    }
+
+    method test() {
+        var len := 0x2fffff;
+        var rhs := RoundUp(len,32) / 32;
+        var cost := G_KECCAK256 + (G_KECCAK256WORD * rhs);
+        assert cost == 0x9001e;
     }
 }
