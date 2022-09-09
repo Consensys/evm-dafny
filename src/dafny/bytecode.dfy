@@ -20,6 +20,7 @@ module Bytecode {
     import Word
     import Bytes
     import opened EvmState
+    import opened ExtraTypes
 
     // =====================================================================
     // 0s: Stop and Arithmetic Operations
@@ -1171,10 +1172,11 @@ module Bytecode {
             //
             var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
             // Pass back continuation
-            State.CREATES(nst.evm,endowment,code)
+            State.CREATES(nst.evm,endowment,code, None)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
+
     /**
      * Message-call into an account.
      */
@@ -1292,6 +1294,30 @@ module Bytecode {
                 State.CALLS(nst.evm, sender, address, to, gas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Create a new account with associated code.
+     */
+    function method Create2(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        if st.Operands() >= 4
+        then
+            var endowment := st.Peek(0) as nat;
+            // Extract start of initialisation code in memory
+            var codeOffset := st.Peek(1) as nat;
+            // Extract length of initialisation code
+            var codeSize := st.Peek(2) as nat;
+            // Extract the salt
+            var salt := st.Peek(3);
+            // Copy initialisation code from memory
+            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+            //
+            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+            // Pass back continuation
+            State.CREATES(nst.evm,endowment,code,Some(salt))
         else
             State.INVALID(STACK_UNDERFLOW)
     }

@@ -62,8 +62,8 @@ module Gas {
 	const G_LOG: nat := 375;
 	const G_LOGDATA: nat := 8;
 	const G_LOGTOPIC: nat := 375;
-	const G_SHA3: nat := 30;
-	const G_SHA3WORD: nat := 6;
+	const G_KECCAK256: nat := 30;
+	const G_KECCAK256WORD: nat := 6;
 	const G_COPY: nat := 3;
 	const G_BLOCKHASH: nat := 20;
 	const G_QUADDIVISOR: nat := 100;
@@ -181,6 +181,23 @@ module Gas {
             ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(2) as nat) + G_COPY
         else
             G_COPY
+    }
+
+    /*
+     * Compute gas cost for create2 bytecode.
+     * @param st    A non-failure state.
+     * @param n     The number of topics being logged.
+     */
+    function method GasCostCreate2(st: State) : nat
+        requires !st.IsFailure()
+    {
+        if st.Operands() >= 4
+        then
+            var codeSize := st.Peek(2) as nat;
+            var rhs := RoundUp(codeSize,32) / 32;
+            G_CREATE + (G_KECCAK256 * rhs)
+        else
+            G_ZERO
     }
 
     /*
@@ -355,7 +372,7 @@ module Gas {
             case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(GasCostRevertReturn(s))
             case DELEGATECALL => s.UseGas(G_CALLSTIPEND) // for now
-            // CREATE2 => s.UseGas(1)
+            case CREATE2 => s.UseGas(GasCostCreate2(s))
             // STATICCALL => s.UseGas(1)
             case REVERT => s.UseGas(GasCostRevertReturn(s))
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
