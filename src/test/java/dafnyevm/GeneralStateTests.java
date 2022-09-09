@@ -88,14 +88,11 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
 			"VMTests/vmArithmeticTest/signextend.json", // #194
-			"stMemoryTest/bufferSrcOffset.json", // EXT CODE COPY
-//			"stMemoryTest/oog.json", // #237
+			"stMemoryTest/bufferSrcOffset.json", // EXTCODECOPY
+			"stMemoryTest/oog.json", // EXTCODECOPY
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
-			"stMemoryTest/log1_dejavu.json", // OOG (memory expansion)
-			"stMemoryTest/log3_dejavu.json", // OOG (memory expansion)
-			"stMemoryTest/log4_dejavu.json", // OOG (memory expansion)
 			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			//
@@ -113,8 +110,6 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-//			"vmTests/sha3.json", // SHA3?
-//			"vmTests/calldatasize.json", // SHA3
 			"vmIOandFlowOperations/jump.json", // ?
 			"vmIOandFlowOperations/jumpi.json", // ?
 			"vmIOandFlowOperations/mload.json", // ?
@@ -127,8 +122,6 @@ public class GeneralStateTests {
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
-			"stReturnDataTest/returndatacopy_initial_big_sum.json",
-//			"stReturnDataTest/returndatasize_bug.json", // CALL OOG
 			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
 			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
 	        "stReturnDataTest/returndatacopy_after_failing_staticcall.json", // #256
@@ -159,8 +152,6 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrefoundEmptyCall.json",
 			"stRevertTest/RevertPrefoundEmptyCallOOG.json",
 			"stRevertTest/RevertRemoteSubCallStorageOOG.json",
-			"stRevertTest/RevertSubCallStorageOOG2.json",
-			"stRevertTest/RevertSubCallStorageOOG.json",
 			"stRevertTest/TouchToEmptyAccountRevert2.json",
 			"stRevertTest/TouchToEmptyAccountRevert.json",
 			"stRevertTest/RevertInCreateInInit.json",

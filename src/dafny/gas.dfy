@@ -19,7 +19,6 @@ include "util/memory.dfy"
 include "util/bytes.dfy"
 include "util/code.dfy"
 include "util/context.dfy"
-include "bytecode.dfy"
 
 module Gas {
 	import opened Opcode
@@ -30,7 +29,6 @@ module Gas {
     import opened Bytes
     import opened Code
     import opened Context
-    import opened Bytecode
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -212,6 +210,24 @@ module Gas {
         else
             G_ZERO
     }
+
+    /**
+     * Determine the amount of gas which is passed to the target contract in a
+     * CALL, CALLCODE, or DELEGATECALL.
+     * @param value The amount of value being passed to the target contract.
+     * @param gas The amount of gas being offered to execute target contract.
+     */
+    function method CallGas(st: State, value: nat, gas: nat) : nat
+    requires !st.IsFailure() && st.Operands() >= 3 {
+        // FIXME: this calculation is not right yet!
+        var gascap := Min(gas, st.Gas());
+        // Add stipend if non-zero value passed.
+        if value != 0 then
+            gascap + G_CALLSTIPEND
+        else
+            gascap
+    }
+
 
     /** The Berlin gas cost function.
      *

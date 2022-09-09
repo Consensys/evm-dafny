@@ -12,6 +12,7 @@
  * under the License.
  */
 include "state.dfy"
+include "gas.dfy"
 
 module Bytecode {
     import opened Int
@@ -19,6 +20,8 @@ module Bytecode {
     import I256
     import Word
     import Bytes
+    import External
+    import GasCalc = Gas
     import opened EvmState
     import opened ExtraTypes
 
@@ -513,7 +516,7 @@ module Bytecode {
             var loc := st.Peek(0) as nat;
             var len := st.Peek(1) as nat;
             var bytes := Memory.Slice(st.evm.memory, loc, len);
-            var hash := Bytes.sha3(bytes);
+            var hash := External.sha3(bytes);
             st.Expand(loc,len).Pop().Pop().Push(hash).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
@@ -1220,6 +1223,7 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
+            var callgas := GasCalc.CallGas(st,value as nat,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1229,7 +1233,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1251,6 +1255,7 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
+            var callgas := GasCalc.CallGas(st,value as nat,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1260,7 +1265,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, address, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else

@@ -119,11 +119,4 @@ module Bytes {
         // Append it!
         Padding(k) + bytes
     }
-
-    /**
-     * Compute the SHA3 (a.k.a KECCAK256) hash of a sequence of bytes
-     */
-    function method sha3(bytes:seq<u8>) : u256 {
-        0 // Default implementation for now.
-    }
 }
