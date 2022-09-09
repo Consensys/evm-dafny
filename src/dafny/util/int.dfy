@@ -88,6 +88,14 @@ module Int {
         if i1 < i2 then i1 else i2
     }
 
+    // Round up a given number (i) by a given multiple (r).
+    function method RoundUp(i: int, r: nat) : int
+    requires r > 0 {
+        if (i % r) == 0 then i
+        else
+        ((i/r)*r) + r
+    }
+
     // =========================================================
     // Conversion to/from byte sequences
     // =========================================================

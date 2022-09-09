@@ -33,7 +33,7 @@ module EvmState {
     import Log
     import Code
     import Opcode
-    import ExtraTypes
+    import opened ExtraTypes
 
     /**
      *  A normal state.
@@ -111,7 +111,8 @@ module EvmState {
                 outSize: nat)        // bytes reserved for return data
         | CREATES(evm:T,
             endowment: nat,     // endowment
-            initcode: seq<u8>    // initialisation code
+            initcode: seq<u8>,  // initialisation code
+            salt: Option<u256>  // optional salt
         )
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>,log:seq<Log.Entry>)
@@ -147,7 +148,7 @@ module EvmState {
             match this
                 case OK(evm) => evm.gas
                 case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
-                case CREATES(evm, _, _) => evm.gas
+                case CREATES(evm, _, _, _) => evm.gas
                 case RETURNS(g, _, _) => g
                 case REVERTS(g, _) => g
         }
@@ -279,10 +280,10 @@ module EvmState {
         /**
          * Decode next opcode from machine.
          */
-        function method OpDecode() : ExtraTypes.Option<u8>
+        function method OpDecode() : Option<u8>
         {
-            if this.IsFailure() then ExtraTypes.None
-            else ExtraTypes.Some(Code.DecodeUint8(evm.code,evm.pc as nat))
+            if this.IsFailure() then None
+            else Some(Code.DecodeUint8(evm.code,evm.pc as nat))
         }
 
         /**

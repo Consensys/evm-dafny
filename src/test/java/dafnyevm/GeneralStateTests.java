@@ -89,7 +89,7 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
 			"VMTests/vmArithmeticTest/signextend.json", // #194
 			"stMemoryTest/bufferSrcOffset.json", // EXT CODE COPY
-			"stMemoryTest/oog.json", // Various problems
+			"stMemoryTest/oog.json", // #237
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
@@ -100,11 +100,9 @@ public class GeneralStateTests {
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
 			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
-			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #258
-			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #258
-			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #258
-			"stCallCodes/callcodeDynamicCode.json",  // #259
-			"stCallCodes/callcodeInInitcodeToExistingContract.json", // #259
+			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
+			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
+			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #183
 			"stCallCodes/touchAndGo.json", // #260
 			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
@@ -164,7 +162,6 @@ public class GeneralStateTests {
 			"stRevertTest/RevertSubCallStorageOOG2.json",
 			"stRevertTest/RevertSubCallStorageOOG.json",
 			"stRevertTest/TouchToEmptyAccountRevert2.json",
-			"stRevertTest/TouchToEmptyAccountRevert3.json",
 			"stRevertTest/TouchToEmptyAccountRevert.json",
 			"stRevertTest/RevertInCreateInInit.json",
 			"dummy"
