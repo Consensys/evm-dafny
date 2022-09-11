@@ -345,6 +345,7 @@ public class GeneralStateTests {
 		public void step(DafnyEvm.State.Ok state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
+			int depth = state.getDepth();
 //			long gas = state.getRemainingGas().longValueExact();
 			long gas = 0; // for now
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
@@ -355,7 +356,7 @@ public class GeneralStateTests {
 				// FIXME: this is a hack until such time as Geth actually reports storage.
 				//Map<BigInteger, BigInteger> storage = state.getStorage();
 				Map<BigInteger, BigInteger> storage = new HashMap<>();
-				out.add(new Trace.Step(pc, op, gas, stack, memory, storage));
+				out.add(new Trace.Step(pc, op, depth, gas, stack, memory, storage));
 			} else {
 				System.out.println("SKIPPING");
 			}
