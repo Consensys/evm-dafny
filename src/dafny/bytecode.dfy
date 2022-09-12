@@ -1356,6 +1356,36 @@ module Bytecode {
     }
 
     /**
+     * Static Message-call into an account.
+     */
+    function method StaticCall(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 6
+        then
+            var outSize := st.Peek(5) as nat;
+            var outOffset := st.Peek(4) as nat;
+            var inSize := st.Peek(3) as nat;
+            var inOffset := st.Peek(2) as nat;
+            var to := ((st.Peek(1) as int) % TWO_160) as u160;
+            var gas := st.Peek(0) as nat;
+            var callgas := GasCalc.CallGas(st,0,gas);
+             // Sanity check bounds
+            if (inOffset + inSize) < MAX_U256
+            then
+                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                // Extract address of this account
+                var address := st.evm.context.address;
+                // Compute the continuation (i.e. following) state.
+                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                // Pass back continuation.
+                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata, outOffset:=outOffset, outSize:=outSize)
+            else
+                State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+    /**
     * Revert execution returning output data.
     */
     function method Revert(st: State) : State
