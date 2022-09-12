@@ -280,14 +280,14 @@ module Gas {
     }
 
     /**
-     * Determine the amount of gas which is passed to the target contract in a
+     * Determine the amount of gas which is the function C_CALL in YP
      * CALL, CALLCODE, or DELEGATECALL.
      * @param value The amount of value being passed to the target contract.
      * @param gas The amount of gas being offered to execute target contract.
      */
-    function method CallGas(st: State) : nat
+    function method CallCost(st: State) : nat
     requires !st.IsFailure() {
-        if st.Operands() >= 3
+        if st.Operands() >= 7
             then 
                 var value := st.Peek(2) as nat;
                 var gas := st.Peek(0) as nat;
@@ -308,6 +308,22 @@ module Gas {
             0
     }
 
+/**
+     * Determine the amount of gas which is passed to the target contract in a
+     * CALL, CALLCODE, or DELEGATECALL.
+     * @param value The amount of value being passed to the target contract.
+     * @param gas The amount of gas being offered to execute target contract.
+     */
+    function method CallGas(st: State, value: nat, gas: nat) : nat
+    requires !st.IsFailure() && st.Operands() >= 3 {
+        // FIXME: this calculation is not right yet!
+        var gascap := Min(gas, st.Gas());
+        // Add stipend if non-zero value passed.
+        if value != 0 then
+            gascap + G_CALLSTIPEND
+        else
+            gascap
+    }
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -458,7 +474,7 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallGas(s)) // for now
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
             case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
