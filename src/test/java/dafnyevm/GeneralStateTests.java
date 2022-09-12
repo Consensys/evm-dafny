@@ -87,27 +87,17 @@ public class GeneralStateTests {
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
-			"VMTests/vmArithmeticTest/signextend.json", // #194
-			"stMemoryTest/bufferSrcOffset.json", // #199
-			"stMemoryTest/oog.json", // Various problems
+			"stMemoryTest/bufferSrcOffset.json", // EXTCODECOPY
+			"stMemoryTest/oog.json", // EXTCODECOPY
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
-			"stMemoryTest/log1_dejavu.json", // Memory expansion for Log
-			"stMemoryTest/log3_dejavu.json", // Memory expansion for Log
-			"stMemoryTest/log4_dejavu.json", // Memory expansion for Log
 			//
 			"stCallCodes/callcall_00_OOGE.json", // OOG?
-			"stCallCodes/callcall_00_OOGE_valueTransfer.json", // OOG?
 			//
-			"stCallCodes/callcodeDynamicCode2SelfCall.json", // CREATE
-			"stCallCodes/callcodeDynamicCode.json",  // CREATE
-			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // CREATE
-			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // CREATE
-			"stCallCodes/callcodeInInitcodeToExistingContract.json", // CREATE
-			"stCallCodes/callcodeInInitcodeToExistingContractWithValueTransfer.json", // CREATE
-			"stCallCodes/call_OOG_additionalGasCosts2.json", // Should raise exception
-			"stCallCodes/touchAndGo.json", // ?
+			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
+			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
+			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #183
 			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // Gas?
@@ -118,20 +108,44 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-			"vmTests/sha3.json", // SHA3?
-			"vmTests/calldatasize.json", // SHA3
-			"vmTests/blockInfo.json", // COINBASE
-			"vmLogTest/log0.json", // #206
-			"vmLogTest/log1.json", // #206
-			"vmLogTest/log2.json", // #206
-			"vmLogTest/log3.json", // #206
-			"vmLogTest/log4.json", // #206
-			"vmIOandFlowOperations/jump.json", // ?
-			"vmIOandFlowOperations/jumpi.json", // ?
-			"vmIOandFlowOperations/mload.json", // ?
+			"vmIOandFlowOperations/jump.json", // Gas (call)
+			"vmIOandFlowOperations/jumpi.json", // Gas (call)
+			"vmIOandFlowOperations/mload.json", // Gas (call)
 			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
+			"stMemoryTest/extcodecopy_dejavu.json", // EXTCODECOPY
+			//
+			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
+			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266
+			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
+			//
+			"stRevertTest/LoopCallsDepthThenRevert2.json",
+			"stRevertTest/LoopCallsDepthThenRevert3.json",
+			"stRevertTest/LoopCallsDepthThenRevert.json",
+			"stRevertTest/LoopCallsThenRevert.json",
+			"stRevertTest/LoopDelegateCallsDepthThenRevert.json",
+			"stRevertTest/NashatyrevSuicideRevert.json",
+			"stRevertTest/PythonRevertTestTue201814-1430.json",
+			"stRevertTest/RevertDepth2.json",
+			"stRevertTest/RevertDepthCreateAddressCollision.json",
+			"stRevertTest/RevertDepthCreateOOG.json",
+			"stRevertTest/RevertInStaticCall.json",
+			"stRevertTest/RevertOpcodeInCallsOnNonEmptyReturnData.json",
+			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
+			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
+			"stRevertTest/RevertPrefoundCall.json",
+			"stRevertTest/RevertPrefoundCallOOG.json",
+			"stRevertTest/RevertPrefoundEmptyCall.json",
+			"stRevertTest/RevertPrefoundEmptyCallOOG.json",
+			"stRevertTest/RevertRemoteSubCallStorageOOG.json",
+			"stRevertTest/TouchToEmptyAccountRevert2.json",
+			"stRevertTest/TouchToEmptyAccountRevert.json",
+			"stRevertTest/RevertInCreateInInit.json",
 			"dummy"
 	);
 
@@ -199,7 +213,8 @@ public class GeneralStateTests {
 		// Initialise world statew
 		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
 			evmtools.core.Account acct = e.getValue();
-			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,acct.storage));
+			// FIXME!
+			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,0,acct.storage));
 		}
 		// Finally, configure transaction receiver (if necessary).
 		if (tx.to == null) {
@@ -207,7 +222,7 @@ public class GeneralStateTests {
 			// means, but I believe we can imagine it as something like the contract
 			// creation account. Specifically, the code to execute is stored within the
 			// transaction data.
-			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, new HashMap<>()));
+			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, tx.nonce.longValue(), new HashMap<>()));
 		}
 		return dws;
 	}
@@ -321,6 +336,9 @@ public class GeneralStateTests {
 		public void step(DafnyEvm.State.Ok state) {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
+			int depth = state.getDepth();
+//			long gas = state.getRemainingGas().longValueExact();
+			long gas = 0; // for now
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
 			// the invalid bytecode.
 			if(op != Bytecodes.INVALID) {
@@ -329,7 +347,7 @@ public class GeneralStateTests {
 				// FIXME: this is a hack until such time as Geth actually reports storage.
 				//Map<BigInteger, BigInteger> storage = state.getStorage();
 				Map<BigInteger, BigInteger> storage = new HashMap<>();
-				out.add(new Trace.Step(pc, op, stack, memory, storage));
+				out.add(new Trace.Step(pc, op, depth, gas, stack, memory, storage));
 			} else {
 				System.out.println("SKIPPING");
 			}
@@ -338,6 +356,7 @@ public class GeneralStateTests {
 		@Override
 		public void end(State.Return state) {
 			if(state.depth == 1) {
+				// Unfortunately, Geth only reports RETURNS on the outermost contract call.
 				out.add(new Trace.Returns(state.getReturnData()));
 			}
 		}
@@ -345,15 +364,14 @@ public class GeneralStateTests {
 		@Override
 		public void revert(State.Revert state) {
 			if(state.depth == 1) {
+				// Unfortunately, Geth only reports REVERTS on the outermost contract call.
 				out.add(new Trace.Reverts(state.getReturnData()));
 			}
 		}
 
 		@Override
 		public void exception(State.Invalid state) {
-			if(state.depth == 1) {
-				out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
-			}
+			out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
 		}
 
 		@Override
@@ -375,6 +393,8 @@ public class GeneralStateTests {
 			return Trace.Exception.Error.STACK_UNDERFLOW;
 		} else if (err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
 			return Trace.Exception.Error.MEMORY_OVERFLOW;
+		} else if (err instanceof EvmState_Compile.Error_RETURNDATA__OVERFLOW) {
+			return Trace.Exception.Error.RETURNDATA_OVERFLOW;
 		} else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
 			return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
 		} else {

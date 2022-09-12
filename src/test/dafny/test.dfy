@@ -58,7 +58,7 @@ module SimpleTests {
         assert vm.data == [x];
         var g := (5 * Gas.G_VERYLOW) + Gas.G_MEMORY;
         assert g == 0x12;
-        // FIXME: following should hold (I believe)
+        // Following should hold.
         assert vm.Gas() == INITGAS - g;
     }
 

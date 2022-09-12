@@ -3,6 +3,16 @@ include "utils.dfy"
 
 import opened Int
 
+// Various tests for roundup
+method {:test} RoundUpTests() {
+    Assert(() => RoundUp(2,16) == 16);
+    Assert(() => RoundUp(16,16) == 16);
+    Assert(() => RoundUp(17,16) == 32);
+    Assert(() => RoundUp(31,16) == 32);
+    Assert(() => RoundUp(32,16) == 32);
+    Assert(() => RoundUp(33,16) == 48);
+}
+
 // Various sanity tests for division.
 method {:test} DivTests() {
     // pos-pos
@@ -120,6 +130,26 @@ method {:test} NthUint8Tests() {
     Assert(()=> U256.NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,29) == 0x1D);
     Assert(()=> U256.NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,30) == 0x1E);
     Assert(()=> U256.NthUint8(0x000102030405060708090A0B0C0D0E0F_101112131415161718191A1B1C1D1E1F,31) == 0x1F);
+}
+
+method {:test} ToBytesTests() {
+    // U16
+    Assert(()=>U16.ToBytes(0) == [0x00,0x00]);
+    Assert(()=>U16.ToBytes(1) == [0x00,0x01]);
+    Assert(()=>U16.ToBytes(258) == [0x01,0x02]);
+    Assert(()=>U16.ToBytes(32769) == [0x80,0x01]);
+    // U32
+    Assert(()=>U32.ToBytes(0) == [0x00,0x00,0x00,0x00]);
+    Assert(()=>U32.ToBytes(1) == [0x00,0x00,0x00,0x01]);
+    Assert(()=>U32.ToBytes(258) == [0x00,0x00,0x01,0x02]);
+    Assert(()=>U32.ToBytes(33554437) == [0x02,0x00,0x00,0x05]);
+    // U64
+    Assert(()=>U64.ToBytes(0) == [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]);
+    Assert(()=>U64.ToBytes(1) == [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01]);
+    Assert(()=>U64.ToBytes(258) == [0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x02]);
+    Assert(()=>U64.ToBytes(33554437) == [0x00,0x00,0x00,0x00,0x02,0x00,0x00,0x05]);
+    Assert(()=>U64.ToBytes(65536 * 33554437) == [0x00,0x00,0x02,0x00,0x00,0x05,0x00,0x00]);
+
 }
 
 method {:test} WordTests() {

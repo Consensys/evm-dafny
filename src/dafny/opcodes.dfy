@@ -45,7 +45,7 @@ module Opcode {
     const SHR : u8 := 0x1c;
     const SAR : u8 := 0x1d;
 	// 20s: SHA3
-	const SHA3 : u8 := 0x20;
+	const KECCAK256 : u8 := 0x20;
 	// 30s: Environment Information
 	const ADDRESS : u8 := 0x30;
 	const BALANCE : u8 := 0x31;
@@ -162,6 +162,7 @@ module Opcode {
 	const CALLCODE : u8 := 0xf2;
 	const RETURN : u8 := 0xf3;
 	const DELEGATECALL : u8 := 0xf4;
+    const CREATE2 : u8 := 0xf5;
 	const STATICCALL : u8 := 0xfa;
 	const REVERT : u8 := 0xfd;
 	const INVALID : u8 := 0xfe;

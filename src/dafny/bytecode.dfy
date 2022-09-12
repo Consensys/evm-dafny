@@ -12,6 +12,7 @@
  * under the License.
  */
 include "state.dfy"
+include "gas.dfy"
 
 module Bytecode {
     import opened Int
@@ -19,7 +20,10 @@ module Bytecode {
     import I256
     import Word
     import Bytes
+    import External
+    import GasCalc = Gas
     import opened EvmState
+    import opened ExtraTypes
 
     // =====================================================================
     // 0s: Stop and Arithmetic Operations
@@ -249,6 +253,22 @@ module Bytecode {
             var power := st.Peek(1) as int;
             var res := Int.Pow(base,power) % TWO_256;
             st.Pop().Pop().Push(res as u256).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Extend length of two's complement signed integer.
+     */
+    function method SignExtend(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var width := st.Peek(0);
+            var item := st.Peek(1);
+            var res := U256.SignExtend(item,width as nat);
+            st.Pop().Pop().Push(res).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -498,12 +518,40 @@ module Bytecode {
     }
 
     // =====================================================================
-    // 20s: SHA3
+    // 20s: Keccak256
     // =====================================================================
+
+    /**
+     * Computer Keccak256 hash.
+     */
+    function method Keccak256(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var loc := st.Peek(0) as nat;
+            var len := st.Peek(1) as nat;
+            var bytes := Memory.Slice(st.evm.memory, loc, len);
+            var hash := External.sha3(bytes);
+            st.Expand(loc,len).Pop().Pop().Push(hash).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
 
     // =====================================================================
     // 30s: Environment Information
     // =====================================================================
+
+    function method BlockHash(st: State) : State
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // FIXME: what to do here?
+            var n := st.Peek(0);
+            st.Pop().Push(0).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
 
     /**
      * Get address of currently executing account.
@@ -679,7 +727,7 @@ module Bytecode {
         if st.Capacity() >= 1
         then
             var len := st.evm.context.ReturnDataSize();
-            st.Push(len).Next()
+            st.Push(len as u256).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -693,23 +741,18 @@ module Bytecode {
         if st.Operands() >= 3
         then
             var m_loc := st.Peek(0) as nat;
-            var d_loc := st.Peek(1);
+            var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
-
-            // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if m_loc + len < MAX_U256
+            if (d_loc + len) <= st.evm.context.ReturnDataSize()
             then
                 // Slice bytes out of return data (with padding as needed)
-                var data := st.evm.context.ReturnDataSlice(d_loc,len as nat);
+                var data := st.evm.context.ReturnDataSlice(d_loc,len);
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
             else
-                State.INVALID(MEMORY_OVERFLOW)
+                State.INVALID(RETURNDATA_OVERFLOW)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1160,6 +1203,28 @@ module Bytecode {
     // =====================================================================
 
     /**
+     * Create a new account with associated code.
+     */
+    function method Create(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        if st.Operands() >= 3
+        then
+            var endowment := st.Peek(0) as nat;
+            // Extract start of initialisation code in memory
+            var codeOffset := st.Peek(1) as nat;
+            // Extract length of initialisation code
+            var codeSize := st.Peek(2) as nat;
+            // Copy initialisation code from memory
+            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+            //
+            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
+            // Pass back continuation
+            State.CREATES(nst.evm,endowment,code, None)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
      * Message-call into an account.
      */
     function method Call(st: State) : (nst: State)
@@ -1174,6 +1239,7 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
+            var callgas := GasCalc.CallGas(st,value as nat,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1183,7 +1249,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1205,6 +1271,7 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
+            var callgas := GasCalc.CallGas(st,value as nat,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1214,7 +1281,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, address, to, gas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1280,6 +1347,60 @@ module Bytecode {
             State.INVALID(STACK_UNDERFLOW)
     }
 
+    /**
+     * Create a new account with associated code.
+     */
+    function method Create2(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        if st.Operands() >= 4
+        then
+            var endowment := st.Peek(0) as nat;
+            // Extract start of initialisation code in memory
+            var codeOffset := st.Peek(1) as nat;
+            // Extract length of initialisation code
+            var codeSize := st.Peek(2) as nat;
+            // Extract the salt
+            var salt := st.Peek(3);
+            // Copy initialisation code from memory
+            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+            //
+            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+            // Pass back continuation
+            State.CREATES(nst.evm,endowment,code,Some(salt))
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Static Message-call into an account.
+     */
+    function method StaticCall(st: State) : (nst: State)
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 6
+        then
+            var outSize := st.Peek(5) as nat;
+            var outOffset := st.Peek(4) as nat;
+            var inSize := st.Peek(3) as nat;
+            var inOffset := st.Peek(2) as nat;
+            var to := ((st.Peek(1) as int) % TWO_160) as u160;
+            var gas := st.Peek(0) as nat;
+            var callgas := GasCalc.CallGas(st,0,gas);
+             // Sanity check bounds
+            if (inOffset + inSize) < MAX_U256
+            then
+                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                // Extract address of this account
+                var address := st.evm.context.address;
+                // Compute the continuation (i.e. following) state.
+                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                // Pass back continuation.
+                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata, outOffset:=outOffset, outSize:=outSize)
+            else
+                State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
     /**
     * Revert execution returning output data.
     */

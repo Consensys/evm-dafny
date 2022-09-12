@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -270,6 +271,71 @@ public class Tests {
 		byte[] output = callWithReturn(
 				new int[] { PUSH1, 0x3, PUSH1, 0x4, EXP, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x40), output);
+	}
+
+	@Test
+	public void test_signextend_01() {
+		// extend 0x1 00001010 => 1111 ... 1111111100001010
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x0a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xa), output);
+	}
+
+	@Test
+	public void test_signextend_02() {
+		// extend 0x1 00001010 => 1111 ... 1111111100001010
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x8a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(toBytes(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x8a), output);
+	}
+
+	@Test
+	public void test_signextend_03() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH3, 0x12,0x2f,0x6a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x6a), output);
+	}
+
+	@Test
+	public void test_signextend_04() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x8a), output);
+	}
+
+	@Test
+	public void test_signextend_05() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x0f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xf8a), output);
+	}
+
+	@Test
+	public void test_signextend_06() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x1f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x1f8a), output);
+	}
+
+	@Test
+	public void test_signextend_07() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x2f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x2f8a), output);
+	}
+
+	@Test
+	public void test_signextend_08() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x4f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x4f8a), output);
+	}
+
+	@Test
+	public void test_signextend_09() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x8f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(toBytes(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x8f,0x8a), output);
 	}
 
 	// ========================================================================
@@ -898,9 +964,9 @@ public class Tests {
 
 	@Test
 	public void test_returndatacopy_01() {
-		DafnyEvm tx = new DafnyEvm().sender(0);
-		byte[] output = callWithReturn(tx, new int[] { PUSH1, 0x20, PUSH1, 0x0, DUP1, RETURNDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(UINT256(0x0), output);
+		// Copying return data can overflow!
+		invalidCall(Error.RETURNDATA_OVERFLOW,
+				new int[] { PUSH1, 0x20, PUSH1, 0x0, DUP1, RETURNDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 	}
 
 	@Test
@@ -1926,6 +1992,35 @@ public class Tests {
 
 	static {
 		assertFalse(CONTRACT_1.equals(DEFAULT_RECEIVER));
+	}
+
+	@Test
+	public void test_create_01() {
+		// Create an empty contract, and return exit code.
+		byte[] output = callWithReturn(new int[] {
+				// Create contact with no code and no endowment.
+				PUSH1, 0x00, DUP1, DUP1, CREATE,
+				// Return exit code.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
+			});
+		// Sanity check exit code is non-zero
+		assertNotEquals(UINT256(0),output);
+	}
+
+	@Test
+	public void test_create_02() {
+		// Create contract with initialisation code that raises an exception, and return
+		// exit code (which should be zero).
+		byte[] output = callWithReturn(new int[] {
+				// Construct initialisation code
+				PUSH1, 0xfe, PUSH1, 0x00, MSTORE8,
+				// Create contact with 1 byte of code.
+				PUSH1, 0x01, PUSH1, 0x00, DUP1, CREATE,
+				// Return exit code.
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
+			});
+		// Sanity check exit code is non-zero
+		assertArrayEquals(UINT256(0),output);
 	}
 
 	@Test

@@ -19,7 +19,6 @@ include "util/memory.dfy"
 include "util/bytes.dfy"
 include "util/code.dfy"
 include "util/context.dfy"
-include "bytecode.dfy"
 
 module Gas {
 	import opened Opcode
@@ -30,7 +29,6 @@ module Gas {
     import opened Bytes
     import opened Code
     import opened Context
-    import opened Bytecode
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -62,17 +60,11 @@ module Gas {
 	const G_LOG: nat := 375;
 	const G_LOGDATA: nat := 8;
 	const G_LOGTOPIC: nat := 375;
-	const G_SHA3: nat := 30;
-	const G_SHA3WORD: nat := 6;
+	const G_KECCAK256: nat := 30;
+	const G_KECCAK256WORD: nat := 6;
 	const G_COPY: nat := 3;
 	const G_BLOCKHASH: nat := 20;
 	const G_QUADDIVISOR: nat := 100;
-
-    /** The constant Gas cost for each  */
-    function method UseOneGas(op: u8, s: OKState): State
-    {
-        s.UseGas(1)
-    }
 
     /**
      *  Assign a cost as a function of the memory size.
@@ -122,65 +114,129 @@ module Gas {
             QuadraticCost(after) - QuadraticCost(before)
     }
 
-    /* Compute the gas cost of memory expansion for Memory store/load.
+    /**
+     * Compute the memory expansion cost associated with a given memory address
+     * and length, where those values are currently stored on the stack.  If
+     * there are insufficient operands on the stack, this returns zero so that a
+     * stack underflow can be subsequently reported.
      *
-     *  @param  st      A non failure state.
-     *  @param  bytes   The number of bytes to read.
-     *  @returns        The cost of an `MSTORE` operation.
-     *
-     *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack. It does not
-     *              impact the status of the state.
+     * @param st Current state
+     * @param nOperands Total number of operands expected on the stack.
+     * @param locSlot Stack slot containing the location to be accessed.
+     * @param length  Number of bytes to read.
      */
-    function method GasCostMSTORELOAD(st: State, nbytes: nat): nat
-        requires !st.IsFailure()
-    {
-        /* A stack underflow costs te minimum gas fee. */
-        if st.Operands() >= 1
+    function method CostExpandBytes(st: State, nOperands: nat, locSlot: nat, length: nat) : nat
+    requires !st.IsFailure()
+    requires nOperands > locSlot {
+        if st.Operands() >= nOperands
         then
-            ExpansionSize(st.evm.memory, st.Peek(0) as nat, nbytes) + G_VERYLOW
-        else
-            G_VERYLOW
-    }
-
-    /* Compute the gas cost of return/revert.
-     *
-     *  @param  st  A non failure state.
-     *  @returns    The cost of a `REVERT` or `RETURN` operation.
-     *
-     *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack offset by the second top-most element.
-     *              It does not impact the status of the state.
-     */
-    function method GasCostRevertReturn(st: State): nat
-        requires !st.IsFailure()
-    {
-        /* A stack underflow costs the minimum gas fee. */
-        if st.Operands() >= 2
-        then
-            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(1) as nat) + G_ZERO
+            var loc := st.Peek(locSlot) as nat;
+            ExpansionSize(st.evm.memory,loc,length)
         else
             G_ZERO
     }
 
-    /* Compute the gas cost of return/revert.
+    /**
+     * Compute the memory expansion cost associated with a given memory range,
+     * as determined by an address.  The values of the range, however, are
+     * currently stored on the stack and therefore need to be peeked.   If
+     * there are insufficient operands on the stack, this returns zero so that a
+     * stack underflow can be subsequently reported.
      *
-     *  @param  st  A non failure state.
-     *  @returns    The cost of a `REVERT` or `RETURN` operation.
-     *
-     *  @note       This function computes the cost, in gas, of accessing
-     *              the address at the top of the stack offset by the third top-most element.
-     *              It does not impact the status of the state.
+     * @param st Current state
+     * @param nOperands Total number of operands expected on the stack.
+     * @param locSlot Stack slot containing the location to be accessed.
+     * @param lenSlot Stack slot containing the number of bytes to access.
      */
-    function method GasCostDATACOPYING(st: State): nat
+    function method CostExpandRange(st: State, nOperands: nat, locSlot: nat, lenSlot: nat) : nat
+    requires !st.IsFailure()
+    requires nOperands > locSlot && nOperands > lenSlot {
+        if st.Operands() >= nOperands
+        then
+            var loc := st.Peek(locSlot) as nat;
+            var len := st.Peek(lenSlot) as nat;
+            ExpansionSize(st.evm.memory,loc,len)
+        else
+            G_ZERO
+    }
+
+    /**
+     * Compute the memory expansion cost associated with two memory ranges
+     * (a+b), as determined by their respective addresses and lengths.  The
+     * values of both ranges, however, are currently stored on the stack and
+     * therefore need to be peeked.   If there are insufficient operands on the
+     * stack, this returns zero so that a stack underflow can be subsequently
+     * reported.
+     *
+     * @param st Current state
+     * @param nOperands Total number of operands expected on the stack.
+     * @param aLocSlot Stack slot containing location to be accessed (for first range).
+     * @param aLenSlot Stack slot containing the number of bytes to access (for first range).
+     * @param bLocSlot Stack slot containing location to be accessed (for second range).
+     * @param bLenSlot Stack slot containing the number of bytes to access (for second range).
+     */
+    function method CostExpandDoubleRange(st: State, nOperands: nat, aLocSlot: nat, aLenSlot: nat, bLocSlot: nat, bLenSlot: nat) : nat
+    requires !st.IsFailure()
+    requires nOperands > aLocSlot && nOperands > aLenSlot
+    requires nOperands > bLocSlot && nOperands > bLenSlot {
+        if st.Operands() >= nOperands
+        then
+            // Determine which range is higher in the address space (hence will
+            // determine gas requred).
+            if (aLocSlot + aLenSlot) > (bLocSlot + bLenSlot)
+            then
+                CostExpandRange(st,nOperands,aLocSlot,aLenSlot)
+            else
+                CostExpandRange(st,nOperands,bLocSlot,bLenSlot)
+        else
+            G_ZERO
+    }
+
+    /**
+     * Compute gas cost for copying bytecodes (e.g. CALLDATACOPY)
+     */
+    function method CostCopy(st: State) : nat
         requires !st.IsFailure()
     {
-        /* A stack underflow costs the minimum gas fee. */
         if st.Operands() >= 3
         then
-            ExpansionSize(st.evm.memory, st.Peek(0) as nat, st.Peek(2) as nat) + G_COPY
+            var len := st.Peek(2) as nat;
+            var n := RoundUp(len,32) / 32;
+            G_VERYLOW + (G_COPY * n)
         else
-            G_COPY
+            G_ZERO
+    }
+
+    /*
+     * Compute gas cost for CREATE2 bytecode.
+     * @param st    A non-failure state.
+     */
+    function method CostCreate2(st: State) : nat
+        requires !st.IsFailure()
+    {
+        if st.Operands() >= 4
+        then
+            var len := st.Peek(2) as nat;
+            var rhs := RoundUp(len,32) / 32;
+            G_CREATE + (G_KECCAK256WORD * rhs)
+        else
+            G_ZERO
+    }
+
+/*
+     * Compute gas cost for KECCAK256 bytecode.
+     * @param st    A non-failure state.
+     */
+    function method CostKeccak256(st: State) : nat
+        requires !st.IsFailure()
+    {
+        if st.Operands() >= 2
+        then
+            var len := st.Peek(1) as nat;
+            var rhs := RoundUp(len,32) / 32;
+            G_KECCAK256 + (G_KECCAK256WORD * rhs)
+        else
+            G_ZERO
     }
 
     /*
@@ -188,12 +244,13 @@ module Gas {
      * @param st    A non-failure state.
      * @param n     The number of topics being logged.
      */
-    function method GasCostLog(st: State, n: nat) : nat
+    function method CostLog(st: State, n: nat) : nat
         requires !st.IsFailure()
     {
         if st.Operands() >= 2
         then
             // Determine how many bytes of log data
+            var loc := st.Peek(0) as nat;
             var len := st.Peek(1) as nat;
             // Do the calculation!
             G_LOG + (len * G_LOGDATA) + (n * G_LOGTOPIC)
@@ -201,78 +258,48 @@ module Gas {
             G_ZERO
     }
 
-    /*
-     * compute the cost of accessing a new account
-     * @param   value   this the third argument to the CALL opcode which is the value sent with the call
-     * @notes           the sepcification of this function is incomplete. We need to also check if the 
-                        account of the receiver of the call is not "DEAD".
-    */
-    function GasCostNewaccount(value: u256): nat
-    {
-        if value != 0
-            then G_NEWACCOUNT
-        else   
-            0
-    }
-    /*
-     * computes the cost of transferring a nonzero amount of value to another account.
-     * YP names this function as C_XFER
-     * @param   value   this the third argument to the CALL opcode which is the value sent with the call
-    */
-    function GasCostTransfer(value: u256): nat
-    {
-        if value != 0
-            then G_CALLVALUE
-        else 0
-    }
-
-    /* this is the function YP refers to as "C_EXTRA". The specification of this function is incomplete.
-     * To complete the specification we need to provide a complete specification of the functions
-     * GasCostNewaccount and GasCostTransfer. Also we need to specify a function for computing
-     * cold/warm access to an account (which YP refers to as C_aaccess)
-    */
-    function GasCostExtra(value: u256): nat
-    {
-        GasCostNewaccount(value) + GasCostTransfer(value)
-    }
-
     /* YP refers to this function by the name "L" */
-    function AllButOneSixtyFourth(n: nat): nat
+    function method AllButOneSixtyFourth(n: nat): nat
     {
         n - (n / 64) 
     }
 
-    /* compute the "gas cap" for a message call. YP names this function "C_GASCAP". */
-    function CallGasCap(st: State): nat
-        requires !st.IsFailure()
-        requires st.Operands() >= 3
-    {
-        if st.Gas() >= GasCostExtra(st.Peek(2))
-            then Min(AllButOneSixtyFourth(st.Gas() - GasCostExtra(st.Peek(2))) as int, st.Peek(0) as int)
-        else st.Peek(0) as nat
-    }
-
-    /* compute the call gas. YP refers to this function as "C_CALLGAS" 
-     * @notes  the conditional check is on the value sent with the call.
-               the G_CALLSTIPEND is paied in case the fallback function 
-               of the receiver contract was activated 
-    */
-    function CallGas(st: State): nat
-        requires !st.IsFailure()
-        requires st.Operands() >= 3
-    {
-        if st.Peek(2) != 0
-            then CallGasCap(st) + G_CALLSTIPEND
-        else 
-            CallGasCap(st)
-    }
-
     /* YP refers to this function as "C_CALL" */    
-    function GasCostCALL(st: State): nat
+    function GasCostCALL(st: State, value: nat, gas: nat): nat
         requires !st.IsFailure()
         requires st.Operands() >= 3
     {
-        CallGasCap(st) + GasCostExtra(st.Peek(2))
+        var gasCostExtra := if value != 0
+                                then G_NEWACCOUNT + G_CALLVALUE
+                            else
+                                0;
+        var gascap := if st.Gas() >= gasCostExtra
+                        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
+                      else gas;
+        gasCostExtra + gascap
+    }
+
+    /**
+     * Determine the amount of gas which is passed to the target contract in a
+     * CALL, CALLCODE, or DELEGATECALL.
+     * @param value The amount of value being passed to the target contract.
+     * @param gas The amount of gas being offered to execute target contract.
+     */
+    function method CallGas(st: State, value: nat, gas: nat) : nat
+    requires !st.IsFailure() && st.Operands() >= 3 {
+        // FIXME: this calculation is not right yet!
+        var gasCostExtra := if value != 0
+                                then G_NEWACCOUNT + G_CALLVALUE
+                            else
+                                0;
+        var gascap := if st.Gas() >= gasCostExtra
+                        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
+                      else gas;
+        // Add stipend if non-zero value passed.
+        if value != 0 then
+            gascap + G_CALLSTIPEND
+        else
+            gascap
     }
 
     /** The Berlin gas cost function.
@@ -310,7 +337,7 @@ module Gas {
             case SHR => s.UseGas(G_VERYLOW)
             case SAR => s.UseGas(G_VERYLOW)
             // 0x20s
-            //  KECCAK256 => s.UseGas(1)
+            case KECCAK256 => s.UseGas(CostExpandRange(s,2,0,1) + CostKeccak256(s))
             // 0x30s: Environment Information
             case ADDRESS => s.UseGas(G_BASE)
             case BALANCE => s.UseGas(G_BALANCE)
@@ -319,17 +346,17 @@ module Gas {
             case CALLVALUE => s.UseGas(G_BASE)
             case CALLDATALOAD => s.UseGas(G_VERYLOW)
             case CALLDATASIZE => s.UseGas(G_BASE)
-            case CALLDATACOPY => s.UseGas(GasCostDATACOPYING(s))
+            case CALLDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             case CODESIZE => s.UseGas(G_BASE)
-            case CODECOPY => s.UseGas(GasCostDATACOPYING(s))
+            case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             case GASPRICE => s.UseGas(G_BASE)
             // EXTCODESIZE => s.UseGas(1)
             // EXTCODECOPY => s.UseGas(1)
             case RETURNDATASIZE => s.UseGas(G_BASE)
-            case RETURNDATACOPY => s.UseGas(G_COPY)
+            case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             //  EXTCODEHASH => s.UseGas(1)
             // 0x40s: Block Information
-            // BLOCKHASH => s.UseGas(1)
+            case BLOCKHASH => s.UseGas(G_BLOCKHASH)
             case COINBASE => s.UseGas(G_BASE)
             case TIMESTAMP => s.UseGas(G_BASE)
             case NUMBER => s.UseGas(G_BASE)
@@ -339,9 +366,9 @@ module Gas {
             //  SELFBALANCE => s.UseGas(1)
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
-            case MLOAD => s.UseGas(GasCostMSTORELOAD(s, nbytes := 32))
-            case MSTORE => s.UseGas(GasCostMSTORELOAD(s, nbytes := 32))
-            case MSTORE8 => s.UseGas(GasCostMSTORELOAD(s, nbytes := 1))
+            case MLOAD => s.UseGas(CostExpandBytes(s,1,0,32) + G_VERYLOW)
+            case MSTORE => s.UseGas(CostExpandBytes(s,2,0,32) + G_VERYLOW)
+            case MSTORE8 => s.UseGas(CostExpandBytes(s,2,0,1) + G_VERYLOW)
             case SLOAD => s.UseGas(G_HIGH) // for now
             case SSTORE => s.UseGas(G_HIGH) // for now
             case JUMP => s.UseGas(G_MID)
@@ -418,21 +445,28 @@ module Gas {
             case SWAP15 => s.UseGas(G_VERYLOW)
             case SWAP16 => s.UseGas(G_VERYLOW)
             // 0xA0s: Log operations
-            case LOG0 => s.UseGas(GasCostLog(s,0))
-            case LOG1 => s.UseGas(GasCostLog(s,1))
-            case LOG2 => s.UseGas(GasCostLog(s,2))
-            case LOG3 => s.UseGas(GasCostLog(s,3))
-            case LOG4 => s.UseGas(GasCostLog(s,4))
+            case LOG0 => s.UseGas(CostExpandRange(s,2,0,1) + CostLog(s,0))
+            case LOG1 => s.UseGas(CostExpandRange(s,3,0,1) + CostLog(s,1))
+            case LOG2 => s.UseGas(CostExpandRange(s,4,0,1) + CostLog(s,2))
+            case LOG3 => s.UseGas(CostExpandRange(s,5,0,1) + CostLog(s,3))
+            case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
-            // CREATE => s.UseGas(1)
-            case CALL => s.UseGas(G_CALLSTIPEND) // for now
-            case CALLCODE => s.UseGas(G_CALLSTIPEND) // for now
-            case RETURN => s.UseGas(GasCostRevertReturn(s))
-            case DELEGATECALL => s.UseGas(G_CALLSTIPEND) // for now
-            // CREATE2 => s.UseGas(1)
-            // STATICCALL => s.UseGas(1)
-            case REVERT => s.UseGas(GasCostRevertReturn(s))
+            case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
+            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
+            case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
+            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
+            case CREATE2 => s.UseGas(CostCreate2(s))
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
+            case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
             case _ => State.INVALID(INVALID_OPCODE)
+    }
+
+    method test() {
+        var len := 0x2fffff;
+        var rhs := RoundUp(len,32) / 32;
+        var cost := G_KECCAK256 + (G_KECCAK256WORD * rhs);
+        assert cost == 0x9001e;
     }
 }

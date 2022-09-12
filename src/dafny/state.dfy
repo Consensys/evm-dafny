@@ -18,6 +18,7 @@ include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 include "util/log.dfy"
+include "util/extern.dfy"
 include "opcodes.dfy"
 include "util/ExtraTypes.dfy"
 
@@ -33,7 +34,7 @@ module EvmState {
     import Log
     import Code
     import Opcode
-    import ExtraTypes
+    import opened ExtraTypes
 
     /**
      *  A normal state.
@@ -87,6 +88,7 @@ module EvmState {
         | STACK_UNDERFLOW
         | STACK_OVERFLOW
         | MEMORY_OVERFLOW
+        | RETURNDATA_OVERFLOW
         | INVALID_JUMPDEST
         | CALLDEPTH_EXCEEDED
 
@@ -108,6 +110,11 @@ module EvmState {
                 callData:seq<u8>,    // input data for call
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
+        | CREATES(evm:T,
+            endowment: nat,     // endowment
+            initcode: seq<u8>,  // initialisation code
+            salt: Option<u256>  // optional salt
+        )
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>,log:seq<Log.Entry>)
         | REVERTS(gas:nat,data:seq<u8>){
@@ -142,6 +149,7 @@ module EvmState {
             match this
                 case OK(evm) => evm.gas
                 case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
+                case CREATES(evm, _, _, _) => evm.gas
                 case RETURNS(g, _, _) => g
                 case REVERTS(g, _) => g
         }
@@ -273,10 +281,10 @@ module EvmState {
         /**
          * Decode next opcode from machine.
          */
-        function method OpDecode() : ExtraTypes.Option<u8>
+        function method OpDecode() : Option<u8>
         {
-            if this.IsFailure() then ExtraTypes.None
-            else ExtraTypes.Some(Code.DecodeUint8(evm.code,evm.pc as nat))
+            if this.IsFailure() then None
+            else Some(Code.DecodeUint8(evm.code,evm.pc as nat))
         }
 
         /**
@@ -447,6 +455,37 @@ module EvmState {
                     var nst := if vm.RETURNS? then st.Log(vm.log) else st;
                     // Done
                     nst.Push(exitCode).SetReturnData(vm.data).Copy(outOffset,data)
+                else
+                    INVALID(MEMORY_OVERFLOW)
+            else
+                INVALID(STACK_UNDERFLOW)
+        }
+
+        /**
+         * Process a return from a nested contract creation.  This effectively
+         * just manages what happens in the parent state. Either the contract
+         * address is loaded onto the stack (if successful), or zero is loaded
+         * (otherwise).
+         */
+        function method CreateReturn(vm:State, address: u160) : (nst:State)
+        requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
+        requires this.CREATES? {
+            // copy over return data, etc.
+            var st := OK(evm);
+            if st.Capacity() >= 1
+            then
+                // Calculate the exitcode
+                var exitCode := if vm.RETURNS? then (address as u256) else 0;
+                // Extract return data (if applicable)
+                if vm.INVALID? then st.Push(0)
+                else if vm.RETURNS?
+                then
+                    st.Log(vm.log).Push(exitCode).SetReturnData([])
+                else if |vm.data| <= TWO_32
+                then
+                    // NOTE: in the event of a revert, the return data is
+                    // provided back.
+                    st.Push(exitCode).SetReturnData(vm.data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else

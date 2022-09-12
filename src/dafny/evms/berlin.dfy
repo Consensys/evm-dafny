@@ -71,7 +71,7 @@ module EvmBerlin refines EVM {
                         case ADDMOD =>  Bytecode.AddMod(s)
                         case MULMOD =>  Bytecode.MulMod(s)
                         case EXP =>  Bytecode.Exp(s)
-                        //  SIGNEXTEND =>  Bytecode.evalSIGNEXTEND(s),
+                        case SIGNEXTEND =>  Bytecode.SignExtend(s)
                         // 0x10s: Comparison & Bitwise Logic
                         case LT =>  Bytecode.Lt(s)
                         case GT =>  Bytecode.Gt(s)
@@ -88,7 +88,7 @@ module EvmBerlin refines EVM {
                         case SHR =>  Bytecode.Shr(s)
                         case SAR => Bytecode.Sar(s)
                         // 0x20s
-                        //  KECCAK256 =>  Some((s:OKState) => Bytecode.evalKECCAK256(s),)
+                        case KECCAK256 =>  Bytecode.Keccak256(s)
                         // 0x30s: Environment Information
                         case ADDRESS => Bytecode.Address(s)
                         //  BALANCE => Bytecode.evalBALANCE(s),
@@ -107,7 +107,7 @@ module EvmBerlin refines EVM {
                         case RETURNDATACOPY => Bytecode.ReturnDataCopy(s)
                         //  EXTCODEHASH => Bytecode.evalEXTCODEHASH(s),
                         // 0x40s: Block Information
-                        //  BLOCKHASH => Bytecode.evalBLOCKHASH(s),
+                        case BLOCKHASH => Bytecode.BlockHash(s)
                         case COINBASE => Bytecode.CoinBase(s)
                         case TIMESTAMP => Bytecode.TimeStamp(s)
                         case NUMBER => Bytecode.Number(s)
@@ -202,13 +202,13 @@ module EvmBerlin refines EVM {
                         case LOG3 => Bytecode.LogN(s,3)
                         case LOG4 => Bytecode.LogN(s,4)
                         // 0xf0
-                        //  CREATE => Bytecode.evalCREATE(s),
+                        case CREATE => Bytecode.Create(s)
                         case CALL => Bytecode.Call(s)
                         case CALLCODE => Bytecode.CallCode(s)
                         case RETURN => Bytecode.Return(s)
                         case DELEGATECALL => Bytecode.DelegateCall(s)
-                        // CREATE2 => Bytecode.evalCREATE2(s),
-                        // STATICCALL => Bytecode.evalSTATICCALL(s),
+                        case CREATE2 => Bytecode.Create2(s)
+                        case STATICCALL => Bytecode.StaticCall(s)
                         case REVERT => Bytecode.Revert(s)
                         case SELFDESTRUCT => Bytecode.SelfDestruct(s)
                         case _ => State.INVALID(INVALID_OPCODE)

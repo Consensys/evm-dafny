@@ -87,18 +87,20 @@ module Context {
          * Determine the size (in bytes) of the return data from the previous call
          * associated with this context.
          */
-        function method ReturnDataSize() : u256
+        function method ReturnDataSize() : nat
         requires |this.returnData| <= MAX_U256 {
-            |this.returnData| as u256
+            |this.returnData|
         }
 
         /**
          * Slice a sequence of bytes from the return data from the previous call
          * associated with this context.
          */
-        function method ReturnDataSlice(loc: u256, len: nat) : (data:seq<u8>)
+        function method ReturnDataSlice(loc: nat, len: nat) : (data:seq<u8>)
+        // Return data cannot overflow.
+        requires (loc + len) <= |this.returnData|
         ensures |data| == len {
-            Bytes.Slice(this.returnData,loc as nat, len)
+            Bytes.Slice(this.returnData,loc, len)
         }
 
         /**
