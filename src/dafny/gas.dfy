@@ -474,7 +474,7 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s)) // for now
             case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
