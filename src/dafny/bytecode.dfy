@@ -257,6 +257,22 @@ module Bytecode {
             State.INVALID(STACK_UNDERFLOW)
     }
 
+    /**
+     * Extend length of two's complement signed integer.
+     */
+    function method SignExtend(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 2
+        then
+            var width := st.Peek(0);
+            var item := st.Peek(1);
+            var res := U256.SignExtend(item,width as nat);
+            st.Pop().Pop().Push(res).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
     // =====================================================================
     // 10s: Comparison & Bitwise Logic Operations
     // =====================================================================

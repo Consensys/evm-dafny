@@ -273,6 +273,71 @@ public class Tests {
 		assertArrayEquals(UINT256(0x40), output);
 	}
 
+	@Test
+	public void test_signextend_01() {
+		// extend 0x1 00001010 => 1111 ... 1111111100001010
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x0a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xa), output);
+	}
+
+	@Test
+	public void test_signextend_02() {
+		// extend 0x1 00001010 => 1111 ... 1111111100001010
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x8a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(toBytes(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x8a), output);
+	}
+
+	@Test
+	public void test_signextend_03() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH3, 0x12,0x2f,0x6a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x6a), output);
+	}
+
+	@Test
+	public void test_signextend_04() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x8a), output);
+	}
+
+	@Test
+	public void test_signextend_05() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x0f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0xf8a), output);
+	}
+
+	@Test
+	public void test_signextend_06() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x1f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x1f8a), output);
+	}
+
+	@Test
+	public void test_signextend_07() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x2f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x2f8a), output);
+	}
+
+	@Test
+	public void test_signextend_08() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x4f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x4f8a), output);
+	}
+
+	@Test
+	public void test_signextend_09() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x8f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(toBytes(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x8f,0x8a), output);
+	}
+
 	// ========================================================================
 	// 10s: Comparison & Bitwise Logic
 	// ========================================================================

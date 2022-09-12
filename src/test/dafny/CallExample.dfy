@@ -94,7 +94,7 @@ module CallExamples {
     // Returns exactly 32 bytes of data
     ensures vm'.RETURNS? && |vm'.data| == 32
     // Returns exactly 0x123
-    ensures Int.ReadUint256(vm'.data,0) == 0x123 {
+    ensures U256.Read(vm'.data,0) == 0x123 {
         vm' := vm;
         vm' := Push2(vm',0x123);
         vm' := Push1(vm',0x00);

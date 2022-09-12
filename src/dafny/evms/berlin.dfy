@@ -71,7 +71,7 @@ module EvmBerlin refines EVM {
                         case ADDMOD =>  Bytecode.AddMod(s)
                         case MULMOD =>  Bytecode.MulMod(s)
                         case EXP =>  Bytecode.Exp(s)
-                        //  SIGNEXTEND =>  Bytecode.evalSIGNEXTEND(s),
+                        case SIGNEXTEND =>  Bytecode.SignExtend(s)
                         // 0x10s: Comparison & Bitwise Logic
                         case LT =>  Bytecode.Lt(s)
                         case GT =>  Bytecode.Gt(s)

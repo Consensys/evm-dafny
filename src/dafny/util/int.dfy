@@ -97,50 +97,6 @@ module Int {
     }
 
     // =========================================================
-    // Conversion to/from byte sequences
-    // =========================================================
-
-    function method ReadUint8(bytes: seq<u8>, address:nat) : u8
-    requires address < |bytes| {
-        bytes[address]
-    }
-
-    function method ReadUint16(bytes: seq<u8>, address:nat) : u16
-    requires (address+1) < |bytes| {
-        var b1 := bytes[address] as u16;
-        var b2 := bytes[address+1] as u16;
-        (b1 * (TWO_8 as u16)) + b2
-    }
-
-    function method ReadUint32(bytes: seq<u8>, address:nat) : u32
-    requires (address+3) < |bytes| {
-        var b1 := ReadUint16(bytes, address) as u32;
-        var b2 := ReadUint16(bytes, address+2) as u32;
-        (b1 * (TWO_16 as u32)) + b2
-    }
-
-    function method ReadUint64(bytes: seq<u8>, address:nat) : u64
-    requires (address+7) < |bytes| {
-        var b1 := ReadUint32(bytes, address) as u64;
-        var b2 := ReadUint32(bytes, address+4) as u64;
-        (b1 * (TWO_32 as u64)) + b2
-    }
-
-    function method ReadUint128(bytes: seq<u8>, address:nat) : u128
-    requires (address+15) < |bytes| {
-        var b1 := ReadUint64(bytes, address) as u128;
-        var b2 := ReadUint64(bytes, address+8) as u128;
-        (b1 * (TWO_64 as u128)) + b2
-    }
-
-    function method ReadUint256(bytes: seq<u8>, address:nat) : u256
-    requires (address+31) < |bytes| {
-        var b1 := ReadUint128(bytes, address) as u256;
-        var b2 := ReadUint128(bytes, address+16) as u256;
-        (b1 * (TWO_128 as u256)) + b2
-    }
-
-    // =========================================================
     // Exponent
     // =========================================================
 
@@ -214,12 +170,30 @@ module U16 {
         else
             (v % (TWO_8 as u16)) as u8
     }
+
+    /**
+     * Convert a u16 into a sequence of 2 bytes (in big endian representation).
+     */
+    function method ToBytes(v:u16) : (r:seq<u8>)
+    ensures |r| == 2 {
+        var low := (v % (TWO_8 as u16)) as u8;
+        var high := (v / (TWO_8 as u16)) as u8;
+        [high,low]
+    }
+
+    function method Read(bytes: seq<u8>, address:nat) : u16
+    requires (address+1) < |bytes| {
+        var b1 := bytes[address] as u16;
+        var b2 := bytes[address+1] as u16;
+        (b1 * (TWO_8 as u16)) + b2
+    }
 }
 
 /**
  * Various helper methods related to unsigned 32bit integers.
  */
 module U32 {
+    import U16
     import opened Int
 
     // Read nth 16bit word out of this u32, where 0 identifies the most
@@ -232,12 +206,30 @@ module U32 {
         else
             (v % (TWO_16 as u32)) as u16
     }
+
+    /**
+     * Convert a u32 into a sequence of 4 bytes (in big endian representation).
+     */
+    function method ToBytes(v:u32) : (r:seq<u8>)
+    ensures |r| == 4 {
+        var low := (v % (TWO_16 as u32)) as u16;
+        var high := (v / (TWO_16 as u32)) as u16;
+        U16.ToBytes(high) + U16.ToBytes(low)
+    }
+
+    function method Read(bytes: seq<u8>, address:nat) : u32
+    requires (address+3) < |bytes| {
+        var b1 := U16.Read(bytes, address) as u32;
+        var b2 := U16.Read(bytes, address+2) as u32;
+        (b1 * (TWO_16 as u32)) + b2
+    }
 }
 
 /**
  * Various helper methods related to unsigned 64bit integers.
  */
 module U64 {
+    import U32
     import opened Int
 
     // Read nth 32bit word out of this u64, where 0 identifies the most
@@ -250,12 +242,30 @@ module U64 {
         else
             (v % (TWO_32 as u64)) as u32
     }
+
+    /**
+     * Convert a u64 into a sequence of 8bytes (in big endian representation).
+     */
+    function method ToBytes(v:u64) : (r:seq<u8>)
+    ensures |r| == 8 {
+        var low := (v % (TWO_32 as u64)) as u32;
+        var high := (v / (TWO_32 as u64)) as u32;
+        U32.ToBytes(high) + U32.ToBytes(low)
+    }
+
+    function method Read(bytes: seq<u8>, address:nat) : u64
+    requires (address+7) < |bytes| {
+        var b1 := U32.Read(bytes, address) as u64;
+        var b2 := U32.Read(bytes, address+4) as u64;
+        (b1 * (TWO_32 as u64)) + b2
+    }
 }
 
 /**
  * Various helper methods related to unsigned 128bit integers.
  */
 module U128 {
+    import U64
     import opened Int
 
     // Read nth 64bit word out of this u128, where 0 identifies the most
@@ -267,6 +277,23 @@ module U128 {
             then (v / (TWO_64 as u128)) as u64
         else
             (v % (TWO_64 as u128)) as u64
+    }
+
+    /**
+     * Convert a u128 into a sequence of 16bytes (in big endian representation).
+     */
+    function method ToBytes(v:u128) : (r:seq<u8>)
+    ensures |r| == 16 {
+        var low := (v % (TWO_64 as u128)) as u64;
+        var high := (v / (TWO_64 as u128)) as u64;
+        U64.ToBytes(high) + U64.ToBytes(low)
+    }
+
+    function method Read(bytes: seq<u8>, address:nat) : u128
+    requires (address+15) < |bytes| {
+        var b1 := U64.Read(bytes, address) as u128;
+        var b2 := U64.Read(bytes, address+8) as u128;
+        (b1 * (TWO_64 as u128)) + b2
     }
 }
 
@@ -310,8 +337,8 @@ module U256 {
     // Read nth byte out of this u256, where 0 identifies the most
     // significant byte.
     function method NthUint8(v:u256, k: nat) : u8
-        // Cannot read more than 32bytes!
-        requires k < 32 {
+    // Cannot read more than 32bytes!
+    requires k < 32 {
         // This is perhaps a tad ugly.  Happy to take suggestions on
         // a better approach :)
         var w128 := NthUint128(v,k / 16);
@@ -319,6 +346,46 @@ module U256 {
         var w32 :=  U64.NthUint32(w64,(k % 8) / 4);
         var w16 :=  U32.NthUint16(w32,(k % 4) / 2);
         U16.NthUint8(w16,k%2)
+    }
+
+    function method Read(bytes: seq<u8>, address:nat) : u256
+    requires (address+31) < |bytes| {
+        var b1 := U128.Read(bytes, address) as u256;
+        var b2 := U128.Read(bytes, address+16) as u256;
+        (b1 * (TWO_128 as u256)) + b2
+    }
+
+    /**
+     * Convert a u256 into a sequence of 32bytes in big endian representation.
+     */
+    function method ToBytes(v:u256) : (r:seq<u8>)
+    ensures |r| == 32 {
+        var low := (v % (TWO_128 as u256)) as u128;
+        var high := (v / (TWO_128 as u256)) as u128;
+        U128.ToBytes(high) + U128.ToBytes(low)
+    }
+
+    /**
+     *
+     */
+    function method SignExtend(v: u256, k: nat) : u256 {
+        if k >= 31 then v
+        else
+            // Reinterpret k as big endian
+            var ith := 31 - k;
+            // Extract byte containing sign bit
+            var byte := NthUint8(v,ith);
+            // Extract sign bit
+            var signbit := ((byte as bv8) & 0x80) == 0x80;
+            // Replicate sign bit.
+            var signs := if signbit then seq(31-k, i => 0xff)
+                else seq(31-k, i => 0);
+            // Extract unchanged bytes
+            var bytes := ToBytes(v)[ith..];
+            // Sanity check
+            assert |signs + bytes| == 32;
+            // Done
+            Read(signs + bytes,0)
     }
 }
 

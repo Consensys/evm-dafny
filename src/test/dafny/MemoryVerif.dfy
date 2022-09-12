@@ -19,7 +19,7 @@ include "../../dafny/gas.dfy"
  *  Provide some verification for properties of Memory opcodes.
  */
 abstract module MemoryVerif_01 {
-
+  import U256
   import opened Int
   import opened Opcode
   import Bytecode
@@ -40,7 +40,7 @@ abstract module MemoryVerif_01 {
 
     //  address + 31 bytes fit in memory iff Store is successful.
     assert address + 31 < MAX_U256 <==>
-      !r.IsFailure() && ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1);
+      !r.IsFailure() && U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
 
     //  address + 31 bytes are already in memory. New state should be OK.
     if address + 31 < vm.MemSize() <= MAX_U256 {
@@ -50,7 +50,7 @@ abstract module MemoryVerif_01 {
       //  only chunk impacted is  r.evm.memory.contents[address..address + 31]
       assert r.evm.memory.contents[..address] == vm.evm.memory.contents[..address];
       assert r.evm.memory.contents[address + 32..] == vm.evm.memory.contents[address + 32..];
-      assert ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1);
+      assert U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
     }
 
     //  address + 31 bytes are above memory size, but fit in max memory size.
@@ -61,7 +61,7 @@ abstract module MemoryVerif_01 {
 
       assert |r.evm.memory.contents[address + 31..]| == |Bytes.Padding(r.MemSize() - address - 31 )|;
       assert r.evm.memory.contents[address + 32..] == Bytes.Padding(r.MemSize() - address - 32 );
-      assert ReadUint256(r.evm.memory.contents, address) ==  vm.Peek(1);
+      assert U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
 
       if address < vm.MemSize() {
         //  the start address to store the word at is inside of memory
@@ -135,7 +135,7 @@ abstract module MemoryVerif_01 {
 
     //  address + 31 bytes fit in memory iff load is successful.
     assert address + 31 < MAX_U256 <==>
-      !r.IsFailure() && r.Peek(0) == ReadUint256(r.evm.memory.contents, address);
+      !r.IsFailure() && r.Peek(0) == U256.Read(r.evm.memory.contents, address);
 
     //  address + 31 bytes are already in memory. New state should be OK.
     if address + 31 < vm.MemSize() <= MAX_U256 {
