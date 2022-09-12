@@ -98,7 +98,6 @@ public class GeneralStateTests {
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
 			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #183
-			"stCallCodes/touchAndGo.json", // #260
 			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // Gas?
@@ -121,7 +120,6 @@ public class GeneralStateTests {
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
-			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
 			//
 			"stRevertTest/LoopCallsDepthThenRevert2.json",
 			"stRevertTest/LoopCallsDepthThenRevert3.json",

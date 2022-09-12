@@ -398,11 +398,14 @@ public class DafnyEvm {
 			// Determine code to be executed
 			byte[] code = this.code;
 			//
-			if(code == null) {
+			if(code == null || code.length == 0) {
 				// Must be an End-User Account.
 				acct.deposit(value);
-				return State.from(depth, tracer,
-						new EvmState_Compile.State_RETURNS(gas, DafnySequence.fromBytes(new byte[0]), DafnySequence.empty(Entry._typeDescriptor())));
+				EvmState_Compile.State r = new EvmState_Compile.State_RETURNS(gas, DafnySequence.fromBytes(new byte[0]),
+						DafnySequence.empty(Entry._typeDescriptor()));
+				tracer.step(depth, r);
+				//
+				return State.from(depth, tracer,r);
 			} else {
 				//
 				Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value, DafnySequence.fromBytes(callData),
