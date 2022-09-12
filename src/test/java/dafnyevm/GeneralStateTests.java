@@ -87,6 +87,7 @@ public class GeneralStateTests {
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
+			"VMTests/vmTests/sha3.json", // #280
 			"stMemoryTest/bufferSrcOffset.json", // EXTCODECOPY
 			"stMemoryTest/oog.json", // EXTCODECOPY
 			"stMemoryTest/stackLimitGas_1023.json", // #201
