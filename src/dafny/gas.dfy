@@ -192,6 +192,21 @@ module Gas {
             G_ZERO
     }
 
+    /**
+     * Compute gas cost for copying bytecodes (e.g. CALLDATACOPY)
+     */
+    function method CostCopy(st: State) : nat
+        requires !st.IsFailure()
+    {
+        if st.Operands() >= 3
+        then
+            var len := st.Peek(2) as nat;
+            var n := RoundUp(len,32) / 32;
+            G_VERYLOW + (G_COPY * n)
+        else
+            G_ZERO
+    }
+
     /*
      * Compute gas cost for CREATE2 bytecode.
      * @param st    A non-failure state.
@@ -305,14 +320,14 @@ module Gas {
             case CALLVALUE => s.UseGas(G_BASE)
             case CALLDATALOAD => s.UseGas(G_VERYLOW)
             case CALLDATASIZE => s.UseGas(G_BASE)
-            case CALLDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_COPY)
+            case CALLDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             case CODESIZE => s.UseGas(G_BASE)
-            case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_COPY)
+            case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             case GASPRICE => s.UseGas(G_BASE)
             // EXTCODESIZE => s.UseGas(1)
             // EXTCODECOPY => s.UseGas(1)
             case RETURNDATASIZE => s.UseGas(G_BASE)
-            case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_COPY)
+            case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             //  EXTCODEHASH => s.UseGas(1)
             // 0x40s: Block Information
             case BLOCKHASH => s.UseGas(G_BLOCKHASH)
