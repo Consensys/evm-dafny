@@ -36,6 +36,10 @@ module Gas {
 	const G_LOW: nat := 5;
 	const G_MID: nat := 8;
 	const G_HIGH: nat := 10;
+    // cost of a warm account or storage access
+    const G_WARMACCESS: nat := 100;
+    // cost of a cold account access.
+    const G_COLDACCOUNTACCESS: nat := 2600;
 	const G_EXTCODE: nat := 700;
 	const G_BALANCE: nat := 400;
 	const G_SLOAD: nat := 200;
@@ -223,7 +227,7 @@ module Gas {
             G_ZERO
     }
 
-/*
+    /*
      * Compute gas cost for KECCAK256 bytecode.
      * @param st    A non-failure state.
      */
@@ -261,22 +265,7 @@ module Gas {
     /* YP refers to this function by the name "L" */
     function method AllButOneSixtyFourth(n: nat): nat
     {
-        n - (n / 64) 
-    }
-
-    /* YP refers to this function as "C_CALL" */    
-    function GasCostCALL(st: State, value: nat, gas: nat): nat
-        requires !st.IsFailure()
-        requires st.Operands() >= 3
-    {
-        var gasCostExtra := if value != 0
-                                then G_NEWACCOUNT + G_CALLVALUE
-                            else
-                                0;
-        var gascap := if st.Gas() >= gasCostExtra
-                        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
-                      else gas;
-        gasCostExtra + gascap
+        n - (n / 64)
     }
 
     /**
@@ -285,48 +274,81 @@ module Gas {
      * @param value The amount of value being passed to the target contract.
      * @param gas The amount of gas being offered to execute target contract.
      */
-    function method CallCost(st: State) : nat
+    function method CallCost(st: State, nOperands: nat) : nat
+    requires nOperands >= 3
     requires !st.IsFailure() {
-        if st.Operands() >= 7
-            then 
+        if st.Operands() >= nOperands
+            then
                 var value := st.Peek(2) as nat;
+                var to := ((st.Peek(1) as int) % TWO_160) as u160;
                 var gas := st.Peek(0) as nat;
-                // FIXME: this calculation is not right yet!
-                var gasCostExtra := if value != 0
-                                        then G_NEWACCOUNT + G_CALLVALUE
-                                    else
-                                        0;
-                var gascap := if st.Gas() >= gasCostExtra
-                                then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
-                              else gas;
-                // Add stipend if non-zero value passed
-                    gascap + gasCostExtra
-        else    
+                CallGasCap(st,to,value,gas) + CostCallExtra(st,to,value)
+        else
             0
     }
 
-/**
+    /**
      * Determine the amount of gas which is passed to the target contract in a
      * CALL, CALLCODE, or DELEGATECALL.
      * @param value The amount of value being passed to the target contract.
      * @param gas The amount of gas being offered to execute target contract.
      */
-    function method CallGas(st: State, value: nat, gas: nat) : nat
+    function method CallGas(st: State, to: u160, value: nat, gas: nat) : nat
     requires !st.IsFailure() && st.Operands() >= 3 {
-        // FIXME: this calculation is not right yet!
-        var gasCostExtra := if value != 0
-                                then G_NEWACCOUNT + G_CALLVALUE
-                            else
-                                0;
-        var gascap := if st.Gas() >= gasCostExtra
-                        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
-                      else gas;
+        // Apply gas cap
+        var gascap := CallGasCap(st,to,value,gas);
         // Add stipend if non-zero value passed
         if value != 0
             then gascap + G_CALLSTIPEND
-        else 
+        else
             gascap
     }
+
+    /**
+     * Apply a cap on the amount of gas which can be passed into a contract call.
+     */
+    function method CallGasCap(st: State, to: u160, value: nat, gas: nat) : nat
+    requires !st.IsFailure() {
+        var gasCostExtra := CostCallExtra(st, to, value);
+        if st.Gas() >= gasCostExtra
+        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
+        else gas
+    }
+
+    /**
+     * Determine any additional costs that apply (this is C_extra in the yellow
+     * paper)
+     */
+    function method CostCallExtra(st: State, to: u160, value: nat) : nat {
+        CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to)
+    }
+
+    /**
+     * Determine cost for transfering a given amount of value (this is C_xfer in
+     * the Yellow paper).
+     */
+    function method CostCallXfer(value: nat) : nat {
+        if value != 0 then G_CALLVALUE else 0
+    }
+
+    /**
+     * Determine cost for creating an account if applicable (this is C_new in
+     * the yellow paper).
+     */
+    function method CostCallNew(st: State, to: u160) : nat {
+        // FIXME: this is not correct yet!
+        0
+    }
+
+    /**
+     * Determine cost for accessing a given contract address (this is C_access
+     * in the yellow paper).
+     */
+    function method CostAccess(st: State, x: u160) : nat {
+        // FIXME: this is not correct yet!
+        G_WARMACCESS
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -477,12 +499,12 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s)) // for now
-            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7)) // for now
+            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7)) // for now
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
-            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
+            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6)) // for now
             case CREATE2 => s.UseGas(CostCreate2(s))
-            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6)) // for now
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
             case _ => State.INVALID(INVALID_OPCODE)

@@ -1239,7 +1239,7 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
-            var callgas := GasCalc.CallGas(st);
+            var callgas := GasCalc.CallGas(st,to,value as nat,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1271,7 +1271,7 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
-            var callgas := GasCalc.CallGas(st);
+            var callgas := GasCalc.CallGas(st,to,value as nat,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1385,7 +1385,7 @@ module Bytecode {
             var inOffset := st.Peek(2) as nat;
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
-            var callgas := GasCalc.CallGas(st);
+            var callgas := GasCalc.CallGas(st,to,0,gas);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then

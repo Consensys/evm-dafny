@@ -98,6 +98,14 @@ public class GeneralStateTests {
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
 			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #183
+			"stCallCodes/callcodecallcodecallcode_111_SuicideEnd.json",
+			"stCallCodes/callcodecallcallcode_101_SuicideEnd.json",
+			"stCallCodes/callcallcodecallcode_011_SuicideEnd.json",
+			"stCallCodes/callcallcodecall_010_SuicideEnd.json",
+			"stCallCodes/callcodecallcodecall_110_SuicideEnd.json",
+			"stCallCodes/callcodecallcall_100_SuicideEnd.json",
+			"stCallCodes/callcallcallcode_001_SuicideEnd.json",
+			"stCallCodes/callcallcall_000_SuicideEnd.json",
 			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // Gas?
