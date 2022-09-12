@@ -299,11 +299,8 @@ module Gas {
                 var gascap := if st.Gas() >= gasCostExtra
                                 then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
                               else gas;
-                // Add stipend if non-zero value passed.
-                if value != 0 then
-                    gascap + G_CALLSTIPEND
-                else
-                    gascap
+                // Add stipend if non-zero value passed
+                    gascap + gasCostExtra
         else    
             0
     }
@@ -317,11 +314,17 @@ module Gas {
     function method CallGas(st: State, value: nat, gas: nat) : nat
     requires !st.IsFailure() && st.Operands() >= 3 {
         // FIXME: this calculation is not right yet!
-        var gascap := Min(gas, st.Gas());
-        // Add stipend if non-zero value passed.
-        if value != 0 then
-            gascap + G_CALLSTIPEND
-        else
+        var gasCostExtra := if value != 0
+                                then G_NEWACCOUNT + G_CALLVALUE
+                            else
+                                0;
+        var gascap := if st.Gas() >= gasCostExtra
+                        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
+                      else gas;
+        // Add stipend if non-zero value passed
+        if value != 0
+            then gascap + G_CALLSTIPEND
+        else 
             gascap
     }
     /** The Berlin gas cost function.
