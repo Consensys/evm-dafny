@@ -208,7 +208,7 @@ module EvmBerlin refines EVM {
                         case RETURN => Bytecode.Return(s)
                         case DELEGATECALL => Bytecode.DelegateCall(s)
                         case CREATE2 => Bytecode.Create2(s)
-                        // STATICCALL => Bytecode.evalSTATICCALL(s),
+                        case STATICCALL => Bytecode.StaticCall(s)
                         case REVERT => Bytecode.Revert(s)
                         case SELFDESTRUCT => Bytecode.SelfDestruct(s)
                         case _ => State.INVALID(INVALID_OPCODE)

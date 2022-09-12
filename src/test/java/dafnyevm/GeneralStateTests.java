@@ -110,9 +110,9 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // Gas?
 			//
-			"vmIOandFlowOperations/jump.json", // ?
-			"vmIOandFlowOperations/jumpi.json", // ?
-			"vmIOandFlowOperations/mload.json", // ?
+			"vmIOandFlowOperations/jump.json", // Gas (call)
+			"vmIOandFlowOperations/jumpi.json", // Gas (call)
+			"vmIOandFlowOperations/mload.json", // Gas (call)
 			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
@@ -123,12 +123,6 @@ public class GeneralStateTests {
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
 			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
-			"stReturnDataTest/subcallReturnMoreThenExpected.json", // #256
-	        "stReturnDataTest/returndatacopy_after_failing_staticcall.json", // #256
-	        "stReturnDataTest/returndatacopy_after_revert_in_staticcall.json", // #256
-	        "stReturnDataTest/returndatacopy_after_successful_staticcall.json", // #256
-	        "stReturnDataTest/returndatasize_after_failing_staticcall.json", // #256
-	        "stReturnDataTest/returndatasize_after_successful_staticcall.json", // #256
 			//
 			"stRevertTest/LoopCallsDepthThenRevert2.json",
 			"stRevertTest/LoopCallsDepthThenRevert3.json",

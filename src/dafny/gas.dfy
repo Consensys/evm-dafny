@@ -160,6 +160,38 @@ module Gas {
             G_ZERO
     }
 
+    /**
+     * Compute the memory expansion cost associated with two memory ranges
+     * (a+b), as determined by their respective addresses and lengths.  The
+     * values of both ranges, however, are currently stored on the stack and
+     * therefore need to be peeked.   If there are insufficient operands on the
+     * stack, this returns zero so that a stack underflow can be subsequently
+     * reported.
+     *
+     * @param st Current state
+     * @param nOperands Total number of operands expected on the stack.
+     * @param aLocSlot Stack slot containing location to be accessed (for first range).
+     * @param aLenSlot Stack slot containing the number of bytes to access (for first range).
+     * @param bLocSlot Stack slot containing location to be accessed (for second range).
+     * @param bLenSlot Stack slot containing the number of bytes to access (for second range).
+     */
+    function method CostExpandDoubleRange(st: State, nOperands: nat, aLocSlot: nat, aLenSlot: nat, bLocSlot: nat, bLenSlot: nat) : nat
+    requires !st.IsFailure()
+    requires nOperands > aLocSlot && nOperands > aLenSlot
+    requires nOperands > bLocSlot && nOperands > bLenSlot {
+        if st.Operands() >= nOperands
+        then
+            // Determine which range is higher in the address space (hence will
+            // determine gas requred).
+            if (aLocSlot + aLenSlot) > (bLocSlot + bLenSlot)
+            then
+                CostExpandRange(st,nOperands,aLocSlot,aLenSlot)
+            else
+                CostExpandRange(st,nOperands,bLocSlot,bLenSlot)
+        else
+            G_ZERO
+    }
+
     /*
      * Compute gas cost for CREATE2 bytecode.
      * @param st    A non-failure state.
@@ -379,12 +411,12 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(Max(CostExpandRange(s,7,3,4),CostExpandRange(s,7,5,6)) + G_CALLSTIPEND) // for now
-            case CALLCODE => s.UseGas(Max(CostExpandRange(s,7,3,4),CostExpandRange(s,7,5,6)) + G_CALLSTIPEND) // for now
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
+            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + G_CALLSTIPEND) // for now
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
-            case DELEGATECALL => s.UseGas(Max(CostExpandRange(s,6,2,3),CostExpandRange(s,7,4,5)) + G_CALLSTIPEND) // for now
+            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
             case CREATE2 => s.UseGas(CostCreate2(s))
-            // STATICCALL => s.UseGas(1)
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + G_CALLSTIPEND) // for now
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
             case _ => State.INVALID(INVALID_OPCODE)
