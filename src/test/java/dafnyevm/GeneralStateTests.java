@@ -119,7 +119,7 @@ public class GeneralStateTests {
 			//
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
-			"stReturnDataTest/modexp_modsize0_returndatasize.json", // Incorrect gas calc
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266
 			"stReturnDataTest/returndatacopy_following_too_big_transfer.json", // #183
 			"stReturnDataTest/returndatacopy_after_failing_delegatecall.json", // #260
 			//
