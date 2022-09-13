@@ -93,8 +93,6 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
 			//
-			"stCallCodes/callcall_00_OOGE.json", // OOG?
-			//
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
 			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #183
@@ -110,8 +108,6 @@ public class GeneralStateTests {
 			//
 			"vmIOandFlowOperations/jump.json", // Gas (call)
 			"vmIOandFlowOperations/jumpi.json", // Gas (call)
-			"vmIOandFlowOperations/mload.json", // Gas (call)
-			"vmIOandFlowOperations/gas.json", // Incorrect Gas calc
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
 			"stMemoryTest/extcodecopy_dejavu.json", // EXTCODECOPY
@@ -130,15 +126,12 @@ public class GeneralStateTests {
 			"stRevertTest/PythonRevertTestTue201814-1430.json",
 			"stRevertTest/RevertDepth2.json",
 			"stRevertTest/RevertDepthCreateAddressCollision.json",
-			"stRevertTest/RevertDepthCreateOOG.json",
 			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
-			"stRevertTest/RevertRemoteSubCallStorageOOG.json",
-			"stRevertTest/TouchToEmptyAccountRevert2.json",
-			"stRevertTest/TouchToEmptyAccountRevert.json",
+			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // EXTCODESIZE
 			"stRevertTest/RevertInCreateInInit.json",
 			"dummy"
 	);

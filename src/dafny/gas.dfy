@@ -36,13 +36,14 @@ module Gas {
 	const G_LOW: nat := 5;
 	const G_MID: nat := 8;
 	const G_HIGH: nat := 10;
-    // cost of a warm account or storage access
+    // Cost of a warm account or storage access
     const G_WARMACCESS: nat := 100;
-    // cost of a cold account access.
+    // Cost of a cold account access.
     const G_COLDACCOUNTACCESS: nat := 2600;
+    // Cost of cold storage access
+    const G_COLDSLOAD: nat := 2100;
 	const G_EXTCODE: nat := 700;
 	const G_BALANCE: nat := 400;
-	const G_SLOAD: nat := 200;
 	const G_JUMPDEST: nat := 1;
 	const G_SSET: nat := 20000;
 	const G_SRESET: nat := 5000;
@@ -339,7 +340,7 @@ module Gas {
      */
     function method CostAccess(st: State, x: u160) : nat {
         // FIXME: this is not correct yet!
-        G_WARMACCESS
+        G_COLDACCOUNTACCESS
     }
 
     /** The Berlin gas cost function.
@@ -409,8 +410,8 @@ module Gas {
             case MLOAD => s.UseGas(CostExpandBytes(s,1,0,32) + G_VERYLOW)
             case MSTORE => s.UseGas(CostExpandBytes(s,2,0,32) + G_VERYLOW)
             case MSTORE8 => s.UseGas(CostExpandBytes(s,2,0,1) + G_VERYLOW)
-            case SLOAD => s.UseGas(G_HIGH) // for now
-            case SSTORE => s.UseGas(G_HIGH) // for now
+            case SLOAD => s.UseGas(G_COLDSLOAD) // for now
+            case SSTORE => s.UseGas(G_COLDSLOAD + G_SSET) // for now
             case JUMP => s.UseGas(G_MID)
             case JUMPI => s.UseGas(G_HIGH) // for now
             case PC => s.UseGas(G_BASE)
