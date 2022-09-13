@@ -87,6 +87,7 @@ public class GeneralStateTests {
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
+			"VMTests/vmTests/sha3.json", // #280
 			"stMemoryTest/bufferSrcOffset.json", // EXTCODECOPY
 			"stMemoryTest/oog.json", // EXTCODECOPY
 			"stMemoryTest/stackLimitGas_1023.json", // #201
@@ -98,6 +99,14 @@ public class GeneralStateTests {
 			"stCallCodes/callcodeDynamicCode2SelfCall.json", // #183
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #183
 			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json", // #183
+			"stCallCodes/callcodecallcodecallcode_111_SuicideEnd.json",
+			"stCallCodes/callcodecallcallcode_101_SuicideEnd.json",
+			"stCallCodes/callcallcodecallcode_011_SuicideEnd.json",
+			"stCallCodes/callcallcodecall_010_SuicideEnd.json",
+			"stCallCodes/callcodecallcodecall_110_SuicideEnd.json",
+			"stCallCodes/callcodecallcall_100_SuicideEnd.json",
+			"stCallCodes/callcallcallcode_001_SuicideEnd.json",
+			"stCallCodes/callcallcall_000_SuicideEnd.json",
 			//
 			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // Gas?
 			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // Gas?
