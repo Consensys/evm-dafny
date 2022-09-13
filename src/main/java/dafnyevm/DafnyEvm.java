@@ -390,7 +390,6 @@ public class DafnyEvm {
 	 * @return
 	 */
 	private DafnyEvm.State<?> call(int depth) {
-		System.out.println("DEPTH: " + depth + ", " + Hex.toHexString(gas));
 		if (depth >= 1024) {
 			// The Yellow Paper specifies a maximum depth of 1024.
 			return State.from(depth, tracer, new EvmState_Compile.State_INVALID(new Error_CALLDEPTH__EXCEEDED()));
@@ -422,8 +421,6 @@ public class DafnyEvm {
 					} else {
 						r = createContinue((State.CreateContinue)r, depth);
 					}
-					System.out.println(">>> " + r);
-
 				}
 				return r;
 			}
