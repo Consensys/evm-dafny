@@ -1239,7 +1239,8 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
-            var callgas := GasCalc.CallGas(st,to,value as nat,gas);
+            var gascap := GasCalc.CallGasCap(st,gas);
+            var callgas := GasCalc.CallGas(st,gas,value);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1247,7 +1248,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
@@ -1271,7 +1272,8 @@ module Bytecode {
             var value := st.Peek(2);
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
-            var callgas := GasCalc.CallGas(st,to,value as nat,gas);
+            var gascap := GasCalc.CallGasCap(st,gas);
+            var callgas := GasCalc.CallGas(st,gas,value);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1279,7 +1281,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
             else
@@ -1327,6 +1329,8 @@ module Bytecode {
             var inOffset := st.Peek(2) as nat;
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
+            var gascap := GasCalc.CallGasCap(st,gas);
+            var callgas := GasCalc.CallGas(st,gas,0);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1338,9 +1342,9 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, sender, address, to, gas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1385,7 +1389,8 @@ module Bytecode {
             var inOffset := st.Peek(2) as nat;
             var to := ((st.Peek(1) as int) % TWO_160) as u160;
             var gas := st.Peek(0) as nat;
-            var callgas := GasCalc.CallGas(st,to,0,gas);
+            var gascap := GasCalc.CallGasCap(st,gas);
+            var callgas := GasCalc.CallGas(st,gas,0);
              // Sanity check bounds
             if (inOffset + inSize) < MAX_U256
             then
@@ -1393,7 +1398,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata, outOffset:=outOffset, outSize:=outSize)
             else

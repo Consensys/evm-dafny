@@ -262,12 +262,6 @@ module Gas {
             G_ZERO
     }
 
-    /* YP refers to this function by the name "L" */
-    function method AllButOneSixtyFourth(n: nat): nat
-    {
-        n - (n / 64)
-    }
-
     /**
      * Determine the amount of gas which is the function C_CALL in YP
      * CALL, CALLCODE, or DELEGATECALL.  Note that GasCap is not included here,
@@ -288,33 +282,31 @@ module Gas {
     }
 
     /**
-     * Determine the amount of gas which is passed to the target contract in a
-     * CALL, CALLCODE, or DELEGATECALL.
-     * @param value The amount of value being passed to the target contract.
-     * @param gas The amount of gas being offered to execute target contract.
+     * Determine amount of gas which can be supplied to the caller.  Observe
+     * that this cannot exceed the amount of available gas!
      */
-    function method CallGas(st: State, to: u160, value: nat, gas: nat) : (r:nat)
-    requires !st.IsFailure() && st.Operands() >= 3 {
-        // Apply gas cap
-        var gascap := CallGasCap(st,to,value,gas);
-        // Add stipend if non-zero value passed
-        if value != 0
-            then gascap + G_CALLSTIPEND
-        else
-            gascap
+    function method CallGasCap(st: State, gas: nat) : (r:nat)
+    requires !st.IsFailure() {
+        Min(st.Gas(),gas)
     }
 
     /**
-     * Apply a cap on the amount of gas which can be passed into a contract call.
+     * Determine amount of gas which should be supplied to the caller.
      */
-    function method CallGasCap(st: State, to: u160, value: nat, gas: nat) : (r:nat)
-    requires !st.IsFailure()
-    ensures st.Gas() >= r {
-        var gasCostExtra := CostCallExtra(st, to, value);
-        if st.Gas() >= gasCostExtra
-        then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
-        else gas
+    function method CallGas(st: State, gas: nat, value: u256) : (r:nat)
+    requires !st.IsFailure() {
+        CallGasCap(st,gas) + CallStipend(value)
     }
+
+    /**
+     * Determine whether a stipend should be offered (or not).
+     */
+    function method CallStipend(value: u256) : (r:nat) {
+        if value != 0 then G_CALLSTIPEND else 0
+    }
+
+    /* YP refers to this function by the name "L" */
+    function method L(n: nat): nat { n - (n / 64) }
 
     /**
      * Determine any additional costs that apply (this is C_extra in the yellow
