@@ -390,6 +390,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	private DafnyEvm.State<?> call(int depth) {
+		System.out.println("DEPTH: " + depth + ", " + Hex.toHexString(gas));
 		if (depth >= 1024) {
 			// The Yellow Paper specifies a maximum depth of 1024.
 			return State.from(depth, tracer, new EvmState_Compile.State_INVALID(new Error_CALLDEPTH__EXCEEDED()));
@@ -421,6 +422,7 @@ public class DafnyEvm {
 					} else {
 						r = createContinue((State.CreateContinue)r, depth);
 					}
+					System.out.println(">>> " + r);
 
 				}
 				return r;
@@ -961,6 +963,11 @@ public class DafnyEvm {
 				//
 				return log;
 			}
+
+			@Override
+			public String toString() {
+				return "RETURN(gas=" + getGasUsed() + "," + Hex.toHexString(getReturnData()) + ")";
+			}
 		}
 
 		/**
@@ -987,6 +994,11 @@ public class DafnyEvm {
 			public BigInteger getGasUsed() {
 				// TODO: fixme!
 				return BigInteger.ZERO;
+			}
+
+			@Override
+			public String toString() {
+				return "Invalid(" + state._a0.getClass().getSimpleName() + ")";
 			}
 		}
 	}

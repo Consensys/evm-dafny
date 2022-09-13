@@ -100,24 +100,24 @@ public class Tests {
 	@Test
 	public void test_sdiv_02() {
 		// -6 / 2 => -3
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(not(UINT256(0x2)), output);
 	}
 
 	@Test
 	public void test_sdiv_03() {
 		// -6 / -2 => 3
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV,
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3), output);
 	}
 
 	@Test
 	public void test_sdiv_04() {
 		// -6 / 4 => -1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x6, PUSH1, 0x0, SUB, SDIV, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(not(UINT256(0x0)), output);
 	}
 
@@ -156,64 +156,64 @@ public class Tests {
 	@Test
 	public void test_smod_03() {
 		// -6 % 2 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_smod_04() {
 		// -6 % 4 => -2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(not(UINT256(0x01)), output);
 	}
 
 	@Test
 	public void test_smod_05() {
 		// -6 % -2 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD,
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_smod_06() {
 		// -6 % -4 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x6, PUSH1, 0x0, SUB, SMOD,
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_addmod_01() {
 		// (2 + 1) % 8 => 3
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x8, PUSH1, 0x1, PUSH1, 0x2, ADDMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x8, PUSH1, 0x1, PUSH1, 0x2, ADDMOD, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3), output);
 	}
 
 	@Test
 	public void test_addmod_02() {
 		// (5 + 1) % 4 => 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x1, PUSH1, 0x5, ADDMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x1, PUSH1, 0x5, ADDMOD, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x2), output);
 	}
 
 	@Test
 	public void test_mulmod_01() {
 		// (2 * 3) % 8 => 6
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x8, PUSH1, 0x3, PUSH1, 0x2, MULMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x8, PUSH1, 0x3, PUSH1, 0x2, MULMOD, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x6), output);
 	}
 
 	@Test
 	public void test_mulmod_02() {
 		// (2 * 3) % 4 => 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x3, PUSH1, 0x2, MULMOD, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x4, PUSH1, 0x3, PUSH1, 0x2, MULMOD, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x2), output);
 	}
 
@@ -276,66 +276,72 @@ public class Tests {
 	@Test
 	public void test_signextend_01() {
 		// extend 0x1 00001010 => 1111 ... 1111111100001010
-		byte[] output = callWithReturn(
-				new int[] { PUSH1, 0x0a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x0a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xa), output);
 	}
 
 	@Test
 	public void test_signextend_02() {
 		// extend 0x1 00001010 => 1111 ... 1111111100001010
-		byte[] output = callWithReturn(
-				new int[] { PUSH1, 0x8a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(toBytes(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x8a), output);
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x8a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(
+				toBytes(0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+						0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x8a),
+				output);
 	}
 
 	@Test
 	public void test_signextend_03() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH3, 0x12,0x2f,0x6a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH3, 0x12, 0x2f, 0x6a, PUSH1, 0x0, SIGNEXTEND, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x6a), output);
 	}
 
 	@Test
 	public void test_signextend_04() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH1, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x8a), output);
 	}
 
 	@Test
 	public void test_signextend_05() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH2, 0x0f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x0f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xf8a), output);
 	}
 
 	@Test
 	public void test_signextend_06() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH2, 0x1f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x1f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1f8a), output);
 	}
 
 	@Test
 	public void test_signextend_07() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH2, 0x2f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x2f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x2f8a), output);
 	}
 
 	@Test
 	public void test_signextend_08() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH2, 0x4f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x4f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x4f8a), output);
 	}
 
 	@Test
 	public void test_signextend_09() {
-		byte[] output = callWithReturn(
-				new int[] { PUSH2, 0x8f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(toBytes(0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x8f,0x8a), output);
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x8f, 0x8a, PUSH1, 0x1, SIGNEXTEND, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(
+				toBytes(0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+						0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x8f, 0x8a),
+				output);
 	}
 
 	// ========================================================================
@@ -393,64 +399,64 @@ public class Tests {
 	@Test
 	public void test_slt_01() {
 		// -2 < 1 => 1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x2, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x2, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_slt_02() {
 		// 1 < -2 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SLT, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SLT, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_slt_03() {
 		// -2 < -1 => 1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, SUB, PUSH1, 0x2, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, SUB, PUSH1, 0x2, PUSH1, 0x0, SUB, SLT, PUSH1,
+				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_slt_04() {
 		// -1 < -2 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, PUSH1, 0x0, SUB, SLT, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, PUSH1, 0x0, SUB, SLT, PUSH1,
+				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_sgt_01() {
 		// -2 > 1 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x2, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x2, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_sgt_02() {
 		// 1 > -2 => 1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SGT, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SGT, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_sgt_03() {
 		// -2 > -1 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, SUB, PUSH1, 0x2, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, SUB, PUSH1, 0x2, PUSH1, 0x0, SUB, SGT, PUSH1,
+				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_sgt_04() {
 		// -1 > -2 => 1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, PUSH1, 0x0, SUB, SGT, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, PUSH1, 0x0, SUB, SGT, PUSH1,
+				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
@@ -473,14 +479,16 @@ public class Tests {
 	@Test
 	public void test_iszero_01() {
 		// 2 = 0 => 0
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x2, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_iszero_02() {
 		// 0 = 0 => 1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x0, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x0, ISZERO, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
@@ -559,30 +567,32 @@ public class Tests {
 	@Test
 	public void test_not_01() {
 		// ~0b00000101 => 0b11111010
-		byte[] output = callWithReturn(new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x1F, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x1F, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0b11111010), output);
 	}
 
 	@Test
 	public void test_not_02() {
 		// ~0b00000101 => 0b11111010
-		byte[] output = callWithReturn(new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0b0101, NOT, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(not(UINT256(0b00000101)), output);
 	}
 
 	@Test
 	public void test_byte_01() {
 		// Read byte 31 (0x1f) from 0x0102.
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1F, BYTE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1F, BYTE, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x02), output);
 	}
 
 	@Test
 	public void test_byte_02() {
 		// Read byte 30 (0x1e) from 0x0102.
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1E, BYTE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x01, 0x02, PUSH1, 0x1E, BYTE, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x01), output);
 	}
 
@@ -637,8 +647,8 @@ public class Tests {
 	@Test
 	public void test_sar_01() {
 		// (0 - 0x2) >> 1 = -0x1
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x2, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(INT256(-0x1), output);
 	}
 
@@ -653,24 +663,24 @@ public class Tests {
 	@Test
 	public void test_sar_03() {
 		// (0 - 0x1FC) >> 1 = -0xFE
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x1, 0xFC, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x1, 0xFC, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00,
+				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(INT256(-0xFE), output);
 	}
 
 	@Test
 	public void test_sar_04() {
 		// (0 - 0x3F8) >> 2 = -0xFE
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x3, 0xF8, PUSH1, 0x0, SUB, PUSH1, 0x2, SAR, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x3, 0xF8, PUSH1, 0x0, SUB, PUSH1, 0x2, SAR, PUSH1, 0x00,
+				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(INT256(-0xFE), output);
 	}
 
 	@Test
 	public void test_sar_05() {
 		// (0 - 0x7F0) >> 3 = -0xFE
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x7, 0xF0, PUSH1, 0x0, SUB, PUSH1, 0x3, SAR, PUSH1, 0x00, MSTORE, PUSH1,
-				0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x7, 0xF0, PUSH1, 0x0, SUB, PUSH1, 0x3, SAR, PUSH1, 0x00,
+				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(INT256(-0xFE), output);
 	}
 
@@ -681,21 +691,24 @@ public class Tests {
 	@Test
 	public void test_calldatasize_01() {
 		DafnyEvm tx = new DafnyEvm().sender(0);
-		byte[] output = callWithReturn(tx, new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_calldatasize_02() {
 		DafnyEvm tx = new DafnyEvm().sender(0).data(new byte[1]);
-		byte[] output = callWithReturn(tx, new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_calldatasize_03() {
 		DafnyEvm tx = new DafnyEvm().sender(0).data(new byte[7]);
-		byte[] output = callWithReturn(tx, new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { CALLDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x7), output);
 	}
 
@@ -740,8 +753,8 @@ public class Tests {
 	public void test_calldataload_05() {
 		// Load multiple items from calldata
 		DafnyEvm tx = new DafnyEvm().sender(0).data(append(UINT256(0xab4f7b), UINT256(0x7c4ead)));
-		byte[] output = callWithReturn(tx, new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x20, CALLDATALOAD, ADD, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx, new int[] { PUSH1, 0, CALLDATALOAD, PUSH1, 0x20, CALLDATALOAD, ADD, PUSH1,
+				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(output, UINT256(0xab4f7b + 0x7c4ead));
 	}
 
@@ -831,7 +844,8 @@ public class Tests {
 	public void test_callvalue_02() {
 		// Check callvalue == suplied value
 		DafnyEvm tx = new DafnyEvm().value(BigInteger.TEN);
-		byte[] output = callWithReturn(tx, new int[] { CALLVALUE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { CALLVALUE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(10), output);
 	}
 
@@ -890,15 +904,15 @@ public class Tests {
 	@Test
 	public void test_returndatasize_01() {
 		DafnyEvm tx = new DafnyEvm().sender(0);
-		byte[] output = callWithReturn(tx, new int[] { RETURNDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { RETURNDATASIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x0), output);
 	}
 
 	@Test
 	public void test_returndatasize_02() {
 		// Contract call which returns 20 bytes of data.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
-				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -914,8 +928,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_03() {
 		// Contract call which returns 20 bytes of data, despite being asked for none.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
-				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -931,8 +944,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_04() {
 		// Contract call which returns 20 bytes of data, despite being asked for none.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
-				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -948,8 +960,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_05() {
 		// Contract call which returns 20 bytes of data, despite being asked for none.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
-				new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
+		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, new Account(toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN)));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -978,7 +989,7 @@ public class Tests {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
 				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
-				// Copy returndata  to memory
+				// Copy returndata to memory
 				PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x20, RETURNDATACOPY,
 				// Return memory and return.
 				PUSH1, 0x20, PUSH1, 0x20, RETURN });
@@ -1010,14 +1021,16 @@ public class Tests {
 	@Test
 	public void test_coinbase_01() {
 		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().coinBase(0xcccc));
-		byte[] output = callWithReturn(tx, new int[] { COINBASE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { COINBASE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
 	@Test
 	public void test_timestamp_01() {
 		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().timeStamp(0xcccc));
-		byte[] output = callWithReturn(tx, new int[] { TIMESTAMP, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { TIMESTAMP, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
@@ -1031,21 +1044,24 @@ public class Tests {
 	@Test
 	public void test_difficulty_01() {
 		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().difficulty(0xcccc));
-		byte[] output = callWithReturn(tx, new int[] { DIFFICULTY, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { DIFFICULTY, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
 	@Test
 	public void test_gaslimit_01() {
 		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().gasLimit(0xcccc));
-		byte[] output = callWithReturn(tx, new int[] { GASLIMIT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { GASLIMIT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
 	@Test
 	public void test_chainid_01() {
 		DafnyEvm tx = new DafnyEvm().blockInfo(new BlockInfo().chainID(0xcccc));
-		byte[] output = callWithReturn(tx, new int[] { CHAINID, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(tx,
+				new int[] { CHAINID, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
@@ -1075,54 +1091,56 @@ public class Tests {
 	@Test
 	public void test_mstore_02() {
 		// Check can return data from memory.
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x7b), output);
 	}
 
 	@Test
 	public void test_mstore_03() {
 		// Check can return data from memory.
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x4d7b), output);
 	}
 
 	@Test
 	public void test_mstore_04() {
 		// Check memory expansion from mstore
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x15, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x0, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x15, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x40), output);
 	}
 
 	@Test
 	public void test_mstore_05() {
 		// Check memory expansion from mstore
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x7F, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x0, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x7F, PUSH1, 31, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x40), output);
 	}
 
 	@Test
 	public void test_mstore_06() {
 		// Check memory expansion from mstore
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x7F, PUSH1, 32, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x0, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x7F, PUSH1, 32, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x40), output);
 	}
 
 	@Test
 	public void test_mstore_07() {
 		// Check memory expansion from mstore
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x7F, PUSH1, 33, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x0, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x7F, PUSH1, 33, MSTORE, MSIZE, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x0, RETURN });
 		assertArrayEquals(UINT256(0x60), output);
 	}
 
 	@Test
 	public void test_mload_01() {
 		// Check can read and write data to memory
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x00, MLOAD, PUSH1, 0x20,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE, PUSH1, 0x00, MLOAD, PUSH1,
+				0x20, MSTORE, PUSH1, 0x20, PUSH1, 0x20, RETURN });
 		assertArrayEquals(UINT256(0x4d7b), output);
 	}
 
@@ -1161,21 +1179,24 @@ public class Tests {
 	@Test
 	public void test_mstore8_01() {
 		// Check words stored in big endian format.
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x1, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x1, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0x7b }, output);
 	}
 
 	@Test
 	public void test_mstore8_02() {
 		// Check can return data from memory.
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(shl(UINT256(0x7b), 31), output);
 	}
 
 	@Test
 	public void test_mstore8_03() {
 		// Check can return data from memory.
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, MSTORE8, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(shl(UINT256(0x7b), 31), output);
 	}
 
@@ -1188,8 +1209,8 @@ public class Tests {
 
 	@Test
 	public void test_sstore_02() {
-		byte[] output = callWithReturn(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, SSTORE, PUSH1, 0x00, SLOAD, PUSH1, 0x00,
-				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH2, 0x4d, 0x7b, PUSH1, 0x00, SSTORE, PUSH1, 0x00, SLOAD, PUSH1,
+				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x4d7b), output);
 	}
 
@@ -1255,14 +1276,16 @@ public class Tests {
 	@Test
 	public void test_pc_02() {
 		// PC = 1
-		byte[] output = callWithReturn(new int[] { JUMPDEST, PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { JUMPDEST, PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_pc_03() {
 		// PC = 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x1, PC, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x2), output);
 	}
 
@@ -1282,7 +1305,8 @@ public class Tests {
 
 	@Test
 	public void test_gas_02() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x00, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x00, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 5), output);
 	}
 
@@ -1295,16 +1319,16 @@ public class Tests {
 
 	@Test
 	public void test_gas_04() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x0, MSTORE, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x0, MSTORE, GAS, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 14), output);
 	}
 
 	@Test
 	public void test_gas_05() {
 		// 3 + 3 + 3 + (3 * 3) + 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x40, MSTORE, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x40, MSTORE, GAS, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 20), output);
 	}
 
@@ -1314,23 +1338,23 @@ public class Tests {
 		// (513 * 513) / 512 = 514
 		// -------------------------------
 		// 3 + 3 + 3 + (3 * 513 + 514) + 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH2, 0x40, 0x00, MSTORE, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH2, 0x40, 0x00, MSTORE, GAS, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 2064), output);
 	}
 
 	@Test
 	public void test_gas_07() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x0, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x0, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 14), output);
 	}
 
 	@Test
 	public void test_gas_08() {
 		// 3 + 3 + 3 + (3 * 3) + 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x40, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH1, 0x40, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1,
+				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 20), output);
 	}
 
@@ -1340,8 +1364,8 @@ public class Tests {
 		// (513 * 513) / 512 = 514
 		// -------------------------------
 		// 3 + 3 + 3 + (3 * 513 + 514) + 2
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH2, 0x40, 0x00, MLOAD, GAS, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x01, PUSH2, 0x40, 0x00, MLOAD, GAS, PUSH1, 0x00, MSTORE,
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(DafnyEvm.DEFAULT_GAS.longValueExact() - 2064), output);
 	}
 
@@ -1405,13 +1429,15 @@ public class Tests {
 
 	@Test
 	public void test_push7_01() {
-		byte[] output = callWithReturn(new int[] { PUSH7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
 	public void test_push8_01() {
-		byte[] output = callWithReturn(new int[] { PUSH8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
@@ -1431,106 +1457,108 @@ public class Tests {
 
 	@Test
 	public void test_push11_01() {
-		byte[] output = callWithReturn(new int[] { PUSH11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-				PUSH1, 0x00, RETURN });
-		assertArrayEquals(new byte[] { 0, 0 }, output);
-	}
-
-	@Test
-	public void test_push12_01() {
-		byte[] output = callWithReturn(new int[] { PUSH12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-				PUSH1, 0x00, RETURN });
-		assertArrayEquals(new byte[] { 0, 0 }, output);
-	}
-
-	@Test
-	public void test_push13_01() {
-		byte[] output = callWithReturn(new int[] { PUSH13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		byte[] output = callWithReturn(new int[] { PUSH11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push14_01() {
-		byte[] output = callWithReturn(new int[] { PUSH14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push12_01() {
+		byte[] output = callWithReturn(new int[] { PUSH12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push15_01() {
-		byte[] output = callWithReturn(new int[] { PUSH15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push13_01() {
+		byte[] output = callWithReturn(new int[] { PUSH13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push16_01() {
-		byte[] output = callWithReturn(new int[] { PUSH16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push14_01() {
+		byte[] output = callWithReturn(new int[] { PUSH14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push17_01() {
-		byte[] output = callWithReturn(new int[] { PUSH17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push15_01() {
+		byte[] output = callWithReturn(new int[] { PUSH15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push18_01() {
-		byte[] output = callWithReturn(new int[] { PUSH18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push16_01() {
+		byte[] output = callWithReturn(new int[] { PUSH16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push19_01() {
-		byte[] output = callWithReturn(new int[] { PUSH19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push17_01() {
+		byte[] output = callWithReturn(new int[] { PUSH17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push20_01() {
-		byte[] output = callWithReturn(new int[] { PUSH20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push18_01() {
+		byte[] output = callWithReturn(new int[] { PUSH18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push21_01() {
-		byte[] output = callWithReturn(new int[] { PUSH21, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push19_01() {
+		byte[] output = callWithReturn(new int[] { PUSH19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push22_01() {
-		byte[] output = callWithReturn(new int[] { PUSH22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push20_01() {
+		byte[] output = callWithReturn(new int[] { PUSH20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push23_01() {
-		byte[] output = callWithReturn(new int[] { PUSH23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push21_01() {
+		byte[] output = callWithReturn(new int[] { PUSH21, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push24_01() {
-		byte[] output = callWithReturn(new int[] { PUSH24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push22_01() {
+		byte[] output = callWithReturn(new int[] { PUSH22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push25_01() {
-		byte[] output = callWithReturn(new int[] { PUSH25, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push23_01() {
+		byte[] output = callWithReturn(new int[] { PUSH23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
+		assertArrayEquals(new byte[] { 0, 0 }, output);
+	}
+
+	@Test
+	public void test_push24_01() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
+		assertArrayEquals(new byte[] { 0, 0 }, output);
+	}
+
+	@Test
+	public void test_push25_01() {
+		byte[] output = callWithReturn(
+				new int[] { PUSH25, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
@@ -1544,49 +1572,49 @@ public class Tests {
 
 	@Test
 	public void test_push27_01() {
-		byte[] output = callWithReturn(new int[] { PUSH27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00,
-				RETURN });
-		assertArrayEquals(new byte[] { 0, 0 }, output);
-	}
-
-	@Test
-	public void test_push28_01() {
-		byte[] output = callWithReturn(new int[] { PUSH28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, PUSH1,
-				0x00, RETURN });
-		assertArrayEquals(new byte[] { 0, 0 }, output);
-	}
-
-	@Test
-	public void test_push29_01() {
-		byte[] output = callWithReturn(new int[] { PUSH29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		byte[] output = callWithReturn(new int[] { PUSH27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 				PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push30_01() {
-		byte[] output = callWithReturn(new int[] { PUSH30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push28_01() {
+		byte[] output = callWithReturn(new int[] { PUSH28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push31_01() {
-		byte[] output = callWithReturn(new int[] { PUSH31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push29_01() {
+		byte[] output = callWithReturn(new int[] { PUSH29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
 	@Test
-	public void test_push32_01() {
-		byte[] output = callWithReturn(new int[] { PUSH32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	public void test_push30_01() {
+		byte[] output = callWithReturn(new int[] { PUSH30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
+		assertArrayEquals(new byte[] { 0, 0 }, output);
+	}
+
+	@Test
+	public void test_push31_01() {
+		byte[] output = callWithReturn(new int[] { PUSH31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
+		assertArrayEquals(new byte[] { 0, 0 }, output);
+	}
+
+	@Test
+	public void test_push32_01() {
+		byte[] output = callWithReturn(new int[] { PUSH32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x02, PUSH1, 0x00, RETURN });
 		assertArrayEquals(new byte[] { 0, 0 }, output);
 	}
 
@@ -1596,7 +1624,8 @@ public class Tests {
 
 	@Test
 	public void test_dup1_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, DUP1, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x3d, DUP1, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
@@ -1609,50 +1638,50 @@ public class Tests {
 
 	@Test
 	public void test_dup3_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, DUP3, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
-		assertArrayEquals(UINT256(0x3d), output);
-	}
-
-	@Test
-	public void test_dup4_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP4, PUSH1, 0x00, MSTORE,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, DUP3, PUSH1, 0x00, MSTORE,
 				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
-	public void test_dup5_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP5, PUSH1, 0x00,
+	public void test_dup4_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP4, PUSH1, 0x00,
 				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
-	public void test_dup6_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP6,
+	public void test_dup5_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP5,
 				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
+	public void test_dup6_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, DUP6, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x3d), output);
+	}
+
+	@Test
 	public void test_dup7_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, DUP7, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, DUP7, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
 	public void test_dup8_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, DUP8, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, DUP8, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
 	public void test_dup9_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, DUP9, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP9, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
@@ -1666,49 +1695,49 @@ public class Tests {
 
 	@Test
 	public void test_dup11_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP11, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
-		assertArrayEquals(UINT256(0x3d), output);
-	}
-
-	@Test
-	public void test_dup12_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP12, PUSH1, 0x00, MSTORE, PUSH1,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP11, PUSH1, 0x00, MSTORE, PUSH1,
 				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
-	public void test_dup13_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP13, PUSH1, 0x00, MSTORE,
+	public void test_dup12_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP12, PUSH1, 0x00, MSTORE,
 				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
-	public void test_dup14_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP14, PUSH1,
+	public void test_dup13_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, DUP13, PUSH1,
 				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
-	public void test_dup15_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+	public void test_dup14_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
 				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0,
-				DUP15, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+				DUP14, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x3d), output);
+	}
+
+	@Test
+	public void test_dup15_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0,
+				PUSH1, 0x0, DUP15, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
 	@Test
 	public void test_dup16_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x3d, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
 				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0,
-				PUSH1, 0x0, DUP16, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+				PUSH1, 0x0, PUSH1, 0x0, DUP16, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x3d), output);
 	}
 
@@ -1725,50 +1754,51 @@ public class Tests {
 
 	@Test
 	public void test_swap2_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x2, SWAP2, PUSH1, 0x00, MSTORE, PUSH1, 0x20,
-				PUSH1, 0x00, RETURN });
-		assertArrayEquals(UINT256(0x1), output);
-	}
-
-	@Test
-	public void test_swap3_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP3, PUSH1, 0x00, MSTORE,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x2, SWAP2, PUSH1, 0x00, MSTORE,
 				PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
-	public void test_swap4_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP4, PUSH1, 0x00,
+	public void test_swap3_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP3, PUSH1, 0x00,
 				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
-	public void test_swap5_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP5,
+	public void test_swap4_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP4,
 				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
+	public void test_swap5_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x2, SWAP5, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x1), output);
+	}
+
+	@Test
 	public void test_swap6_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x2, SWAP6, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x2, SWAP6, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_swap7_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x2, SWAP7, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP7, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_swap8_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP8, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+						0x0, PUSH1, 0x2, SWAP8, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
@@ -1782,57 +1812,57 @@ public class Tests {
 
 	@Test
 	public void test_swap10_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP10, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1,
-				0x00, RETURN });
-		assertArrayEquals(UINT256(0x1), output);
-	}
-
-	@Test
-	public void test_swap11_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP11, PUSH1, 0x00, MSTORE, PUSH1,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP10, PUSH1, 0x00, MSTORE, PUSH1,
 				0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
-	public void test_swap12_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP12, PUSH1, 0x00,
+	public void test_swap11_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP11, PUSH1, 0x00,
 				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
-	public void test_swap13_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
-				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP13, PUSH1,
+	public void test_swap12_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP12, PUSH1,
 				0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
-	public void test_swap14_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+	public void test_swap13_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
 				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2,
-				SWAP14, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+				SWAP13, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0x1), output);
+	}
+
+	@Test
+	public void test_swap14_01() {
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0,
+				PUSH1, 0x2, SWAP14, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_swap15_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
 				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0,
-				PUSH1, 0x2, SWAP15, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+				PUSH1, 0x0, PUSH1, 0x2, SWAP15, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
 	@Test
 	public void test_swap16_01() {
-		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x1, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1,
 				0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x0,
-				PUSH1, 0x0, PUSH1, 0x2, SWAP16, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+				PUSH1, 0x0, PUSH1, 0x0, PUSH1, 0x2, SWAP16, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0x1), output);
 	}
 
@@ -1843,74 +1873,79 @@ public class Tests {
 	@Test
 	public void test_log_01() {
 		// Log 1 byte of data.
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH1, 0x1, PUSH1, 0x0, LOG0 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(0,log[0].getLeft().length); // no topics
+		Pair<BigInteger[], byte[]>[] log = call(new int[] { PUSH1, 0x1, PUSH1, 0x0, LOG0 }).getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(0, log[0].getLeft().length); // no topics
 		assertArrayEquals(new byte[] { 0 }, log[0].getRight());
 	}
 
 	@Test
 	public void test_log_02() {
 		// Log 32 bytes of data matching 0x123.
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(0,log[0].getLeft().length); // no topics
+		Pair<BigInteger[], byte[]>[] log = call(
+				new int[] { PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0 }).getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(0, log[0].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x123), log[0].getRight());
 	}
 
 	@Test
 	public void test_log_03() {
 		// Log 32 bytes of data matching 0x123 from a different position.
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH2, 0x1, 0x23, PUSH1, 0x10, MSTORE, PUSH1, 0x20, PUSH1, 0x11, LOG0 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(0,log[0].getLeft().length); // no topics
+		Pair<BigInteger[], byte[]>[] log = call(
+				new int[] { PUSH2, 0x1, 0x23, PUSH1, 0x10, MSTORE, PUSH1, 0x20, PUSH1, 0x11, LOG0 }).getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(0, log[0].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x12300), log[0].getRight());
 	}
 
 	@Test
 	public void test_log_04() {
 		// Log no data, but 1 topic (0xa0).
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH1, 0xa0, PUSH1, 0x0, PUSH1, 0x0, LOG1 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(1,log[0].getLeft().length); // one topic
-		assertEquals(0,log[0].getRight().length); // no data
-		assertEquals(0xa0,log[0].getLeft()[0].intValue());
+		Pair<BigInteger[], byte[]>[] log = call(new int[] { PUSH1, 0xa0, PUSH1, 0x0, PUSH1, 0x0, LOG1 }).getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(1, log[0].getLeft().length); // one topic
+		assertEquals(0, log[0].getRight().length); // no data
+		assertEquals(0xa0, log[0].getLeft()[0].intValue());
 	}
 
 	@Test
 	public void test_log_05() {
 		// Log no data, but 2 topics (0xa, 0xb).
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH1, 0xa, PUSH1, 0xb, PUSH1, 0x0, PUSH1, 0x0, LOG2 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(2,log[0].getLeft().length); // two topics
-		assertEquals(0,log[0].getRight().length); // no data
-		assertEquals(0xb,log[0].getLeft()[0].intValue());
-		assertEquals(0xa,log[0].getLeft()[1].intValue());
+		Pair<BigInteger[], byte[]>[] log = call(new int[] { PUSH1, 0xa, PUSH1, 0xb, PUSH1, 0x0, PUSH1, 0x0, LOG2 })
+				.getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(2, log[0].getLeft().length); // two topics
+		assertEquals(0, log[0].getRight().length); // no data
+		assertEquals(0xb, log[0].getLeft()[0].intValue());
+		assertEquals(0xa, log[0].getLeft()[1].intValue());
 	}
 
 	@Test
 	public void test_log_06() {
 		// Log no data, but 3 topics (0xa, 0xb, 0xc).
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH1, 0xa, PUSH1, 0xb,  PUSH1, 0xc, PUSH1, 0x0, PUSH1, 0x0, LOG3 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(3,log[0].getLeft().length); // three topics
-		assertEquals(0,log[0].getRight().length); // no data
-		assertEquals(0xc,log[0].getLeft()[0].intValue());
-		assertEquals(0xb,log[0].getLeft()[1].intValue());
-		assertEquals(0xa,log[0].getLeft()[2].intValue());
+		Pair<BigInteger[], byte[]>[] log = call(
+				new int[] { PUSH1, 0xa, PUSH1, 0xb, PUSH1, 0xc, PUSH1, 0x0, PUSH1, 0x0, LOG3 }).getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(3, log[0].getLeft().length); // three topics
+		assertEquals(0, log[0].getRight().length); // no data
+		assertEquals(0xc, log[0].getLeft()[0].intValue());
+		assertEquals(0xb, log[0].getLeft()[1].intValue());
+		assertEquals(0xa, log[0].getLeft()[2].intValue());
 	}
 
 	@Test
 	public void test_log_07() {
 		// Log no data, but 4 topics (0xa, 0xb, 0xc, 0xd).
-		Pair<BigInteger[],byte[]>[] log = call(new int[] { PUSH1, 0xa, PUSH1, 0xb,  PUSH1, 0xc, PUSH1, 0xd, PUSH1, 0x0, PUSH1, 0x0, LOG4 }).getLog();
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(4,log[0].getLeft().length); // three topics
-		assertEquals(0,log[0].getRight().length); // no data
-		assertEquals(0xd,log[0].getLeft()[0].intValue());
-		assertEquals(0xc,log[0].getLeft()[1].intValue());
-		assertEquals(0xb,log[0].getLeft()[2].intValue());
-		assertEquals(0xa,log[0].getLeft()[3].intValue());
+		Pair<BigInteger[], byte[]>[] log = call(
+				new int[] { PUSH1, 0xa, PUSH1, 0xb, PUSH1, 0xc, PUSH1, 0xd, PUSH1, 0x0, PUSH1, 0x0, LOG4 }).getLog();
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(4, log[0].getLeft().length); // three topics
+		assertEquals(0, log[0].getRight().length); // no data
+		assertEquals(0xd, log[0].getLeft()[0].intValue());
+		assertEquals(0xc, log[0].getLeft()[1].intValue());
+		assertEquals(0xb, log[0].getLeft()[2].intValue());
+		assertEquals(0xa, log[0].getLeft()[3].intValue());
 	}
 
 	@Test
@@ -1918,23 +1953,26 @@ public class Tests {
 		// Log 32 bytes of data matching 0x123 from within contract call.
 		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
 				new Account(toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0)));
-		Pair<BigInteger[],byte[]>[] log = call(tx, new int[] {
-				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL }).getLog();
+		Pair<BigInteger[], byte[]>[] log = call(tx,
+				new int[] { PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL })
+						.getLog();
 		//
-		assertEquals(1,log.length); // excactly one entry
-		assertEquals(0,log[0].getLeft().length); // no topics
+		assertEquals(1, log.length); // excactly one entry
+		assertEquals(0, log[0].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x123), log[0].getRight());
 	}
 
 	@Test
 	public void test_log_09() {
-		// Log 32 bytes of data matching 0x123 from within contract call which then fails (hence no log produced).
+		// Log 32 bytes of data matching 0x123 from within contract call which then
+		// fails (hence no log produced).
 		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
 				new Account(toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0, INVALID)));
-		Pair<BigInteger[],byte[]>[] log = call(tx, new int[] {
-				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL }).getLog();
+		Pair<BigInteger[], byte[]>[] log = call(tx,
+				new int[] { PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL })
+						.getLog();
 		//
-		assertEquals(0,log.length); // no log
+		assertEquals(0, log.length); // no log
 	}
 
 	@Test
@@ -1943,19 +1981,18 @@ public class Tests {
 		// another 32 bytes matching 0x456 afterwards.
 		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
 				new Account(toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0)));
-		Pair<BigInteger[],byte[]>[] log = call(tx, new int[] {
+		Pair<BigInteger[], byte[]>[] log = call(tx, new int[] {
 				// Make the contract call to 0xccc
 				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
 				// Log 32 bytes matching 0x456
-				PUSH2, 0x4, 0x56, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0
-				}).getLog();
+				PUSH2, 0x4, 0x56, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0 }).getLog();
 		//
-		assertEquals(2,log.length); // excactly two entries
+		assertEquals(2, log.length); // excactly two entries
 		// first
-		assertEquals(0,log[0].getLeft().length); // no topics
+		assertEquals(0, log[0].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x123), log[0].getRight());
 		// second
-		assertEquals(0,log[1].getLeft().length); // no topics
+		assertEquals(0, log[1].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x456), log[1].getRight());
 	}
 
@@ -1965,19 +2002,18 @@ public class Tests {
 		// from within contract call.
 		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
 				new Account(toBytes(PUSH2, 0x4, 0x56, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0)));
-		Pair<BigInteger[],byte[]>[] log = call(tx, new int[] {
+		Pair<BigInteger[], byte[]>[] log = call(tx, new int[] {
 				// Log 32 bytes matching 0x123
 				PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0,
 				// Make the contract call to 0xccc
-				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL
-				}).getLog();
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL }).getLog();
 		//
-		assertEquals(2,log.length); // excactly two entries
+		assertEquals(2, log.length); // excactly two entries
 		// first
-		assertEquals(0,log[0].getLeft().length); // no topics
+		assertEquals(0, log[0].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x123), log[0].getRight());
 		// second
-		assertEquals(0,log[1].getLeft().length); // no topics
+		assertEquals(0, log[1].getLeft().length); // no topics
 		assertArrayEquals(UINT256(0x456), log[1].getRight());
 	}
 
@@ -2001,10 +2037,9 @@ public class Tests {
 				// Create contact with no code and no endowment.
 				PUSH1, 0x00, DUP1, DUP1, CREATE,
 				// Return exit code.
-				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
-			});
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		// Sanity check exit code is non-zero
-		assertNotEquals(UINT256(0),output);
+		assertNotEquals(UINT256(0), output);
 	}
 
 	@Test
@@ -2017,10 +2052,9 @@ public class Tests {
 				// Create contact with 1 byte of code.
 				PUSH1, 0x01, PUSH1, 0x00, DUP1, CREATE,
 				// Return exit code.
-				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN
-			});
+				PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		// Sanity check exit code is non-zero
-		assertArrayEquals(UINT256(0),output);
+		assertArrayEquals(UINT256(0), output);
 	}
 
 	@Test
@@ -2189,15 +2223,14 @@ public class Tests {
 
 //	@Test
 //	public void test_recursive_call_02() {
-//		DafnyEvm tx = new DafnyEvm().gas(0xffffffffffffffffL);
 //		// Recursive contract call
-//		byte[] output = callWithReturn(tx, new int[] {
+//		byte[] output = callWithReturn(new int[] {
 //				// Branch to STOP if calldata == 0xF.
 //				PUSH1, 0x00, CALLDATALOAD, DUP1, PUSH1, 0xF, EQ, PUSH1, 0x21, JUMPI,
 //				// Add one to value for next call
 //				PUSH1, 0x1, ADD, PUSH1, 0x0, MSTORE,
 //				// Make recursive contract call to myself with all remaining gas
-//				PUSH1, 0x00, DUP1, PUSH1, 0x20, PUSH1, 0x00, DUP1, ADDRESS, GAS, CALL,
+//				PUSH1, 0x00, DUP1, PUSH1, 0x20, PUSH1, 0x00, DUP1, ADDRESS, PUSH2, 0xff, 0xff, CALL,
 //				// Succeed if call succeeded
 //				PUSH1, 0x21, JUMPI, INVALID, JUMPDEST, STOP });
 //		assertArrayEquals(new byte[0], output);
@@ -2470,19 +2503,20 @@ public class Tests {
 	}
 
 	private byte[] callWithReturn(DafnyEvm context, int[] words) {
-		return call(context,words).getReturnData();
+		return call(context, words).getReturnData();
 	}
 
 	private DafnyEvm.State<?> call(int[] words) {
-		return call(new DafnyEvm(),words);
+		return call(new DafnyEvm(), words);
 	}
 
 	private DafnyEvm.State<?> call(DafnyEvm context, int[] words) {
 		byte[] code = toBytes(words);
-//		System.out.println(Hex.toHexString(code));
-		return context.put(DEFAULT_RECEIVER, new Account(code)).call();
+		System.out.println(Hex.toHexString(code));
+		DafnyEvm.State<?> st = context.put(DEFAULT_RECEIVER, new Account(code)).call();
+		System.out.println("STATE: " + st);
+		return st;
 	}
-
 
 	/**
 	 * Run a given sequence of bytecodes, expecting things to go OK and to produce
