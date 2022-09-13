@@ -13,12 +13,13 @@
  */
 include "util/int.dfy"
 include "util/memory.dfy"
-include "util/storage.dfy"
-include "util/stack.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
-include "util/log.dfy"
 include "util/extern.dfy"
+include "util/log.dfy"
+include "util/storage.dfy"
+include "util/stack.dfy"
+include "util/worldstate.dfy"
 include "opcodes.dfy"
 include "util/ExtraTypes.dfy"
 
@@ -30,6 +31,7 @@ module EvmState {
     import Stack
     import Memory
     import Storage
+    import WorldState
     import Context
     import Log
     import Code
@@ -52,9 +54,9 @@ module EvmState {
      *                      some constrainst on the value of `pc`.
      *  @note               Previous remark applies to `gas`.
      */
-    datatype T = EVM(
+    datatype Raw = EVM(
         context: Context.T,
-        storage : Storage.T,
+        world : WorldState.T,
         stack   : Stack.T,
         memory  : Memory.T,
         code: Code.T,
@@ -63,12 +65,25 @@ module EvmState {
         pc : nat
     )
 
+    // A valud EVM state must have an entry in the world state for the account
+    // being executed.
+    type T = c:Raw | c.context.address in c.world.accounts
+    // Create simple witness of htis
+    witness EVM(Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0)),
+            WorldState.Create(map[0:=WorldState.DefaultAccount()]),
+            Stack.Create(),
+            Memory.Create(),
+            Code.Create([]),
+            [],
+            0,
+            0)
+
     /** The type for non failure states. */
     type OKState = s:State | !s.IsFailure()
       witness OK(
         EVM(
             Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0)),
-            Storage.Create(map[]),
+            WorldState.Create(map[0:=WorldState.DefaultAccount()]),
             Stack.Create(),
             Memory.Create(),
             Code.Create([]),
@@ -270,7 +285,8 @@ module EvmState {
          */
         function method Store(address:u256, val: u256) : State
         requires !IsFailure() {
-            OK(evm.(storage:=Storage.Write(evm.storage,address,val)))
+            var account := evm.context.address;
+            OK(evm.(world:=evm.world.Write(account,address,val)))
         }
 
         /**
@@ -278,7 +294,8 @@ module EvmState {
          */
         function method Load(address:u256) : u256
         requires !IsFailure() {
-            Storage.Read(evm.storage,address)
+            var account := evm.context.address;
+            evm.world.Read(account,address)
         }
 
         /**
@@ -415,12 +432,38 @@ module EvmState {
         }
 
         /**
+         * Ensure an account exists at a given address in the world state.  If
+           it doesn't, then a default one is created.
+         */
+        function method EnsureAccount(address: u160) : State
+        requires !IsFailure() {
+            if evm.world.Exists(address) then this
+            else
+                // Create default account
+                var data := WorldState.DefaultAccount();
+                // Put it in
+                OK(evm.(world:=evm.world.Put(address,data)))
+        }
+
+        /**
+         * Deposit a certain amount of Wei into a given account.
+         */
+        function method Deposit(address: u160, value: nat) : State
+        requires !IsFailure()
+        // The account must exist
+        requires evm.world.Exists(address) {
+            OK(evm.(world:=evm.world.Deposit(address,value)))
+        }
+
+        /**
          * Begin a nested contract call.
          */
-        function method CallEnter(storage: map<u256,u256>, code: seq<u8>) : State
+        function method CallEnter(world: map<u160,WorldState.Account>, code: seq<u8>) : State
         requires this.CALLS?
         requires |callData| <= MAX_U256
-        requires |code| <= Code.MAX_CODE_SIZE {
+        requires |code| <= Code.MAX_CODE_SIZE
+        // World state must contain this account
+        requires evm.context.address in world {
             // Extract what is needed from context
             var sender := evm.context.address;
             var origin := evm.context.origin;
@@ -431,11 +474,39 @@ module EvmState {
             // Construct fresh EVM
             var stack := Stack.Create();
             var mem := Memory.Create();
-            var sto := Storage.Create(storage);
+            var wld := WorldState.Create(world);
             var cod := Code.Create(code);
-            var evm := EVM(evm.context,sto,stack,mem,cod,evm.log,gas,0);
+            var evm := EVM(evm.context,wld,stack,mem,cod,evm.log,gas,0);
             // Off we go!
             State.OK(evm)
+        }
+
+        /**
+         * Perform initial call into this EVM, assuming a given depth.
+         */
+        method Call(depth: nat) returns (nst:State)
+        requires !IsFailure() {
+            // Check call depth
+            if depth >= 1024 {
+                return State.INVALID(CALLDEPTH_EXCEEDED);
+            } else {
+                // Extract recipient address
+                var address:= evm.context.address;
+                // Create default account (if none exists)
+                var st := EnsureAccount(address);
+                // Deposit amount
+                st := st.Deposit(address, st.evm.context.callValue as nat);
+                // Check for end-user account
+                if st.evm.world.isEndUser(address) {
+                    // Yes, this is an end user account.
+                    return State.RETURNS(st.evm.gas, [], st.evm.log);
+                } else {
+                    // Get account data
+                    var account := evm.world.Get(address).Unwrap();
+                    //
+                    return State.INVALID(CALLDEPTH_EXCEEDED);
+                }
+            }
         }
 
         /**

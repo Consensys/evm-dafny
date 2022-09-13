@@ -30,7 +30,7 @@ module EvmBerlin refines EVM {
         ensures !InitEmpty(gas, code).IsFailure()
     {
         var tx := Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0));
-        Create(tx, map[], gas, code)
+        Create(tx, map[0:=WorldState.DefaultAccount()], gas, code)
     }
 
     /** The gas cost semantics of an opcode.

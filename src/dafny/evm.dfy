@@ -43,6 +43,24 @@ abstract module EVM {
     function method OpGas(op: u8, s: State): State
 
     /**
+     * Create a fresh EVM to execute a given sequence of bytecode instructions.
+     * The EVM is initialised with an empty stack and empty local memory.
+     */
+    function method Create(context: Context.T, world: map<u160,WorldState.Account>, gas: nat, code: seq<u8>) : State
+    // Code to executed cannot exceed maximum limit.
+    requires |code| <= Code.MAX_CODE_SIZE
+    // Account under which EVM is executing must exist!
+    requires context.address in world {
+        var stck := Stack.Create();
+        var mem := Memory.Create();
+        var wld := WorldState.Create(world);
+        var cod := Code.Create(code);
+        var evm := EVM(stack:=stck,memory:=mem,world:=wld,context:=context,code:=cod,log:=[],gas:=gas,pc:=0);
+        // Off we go!
+        State.OK(evm)
+    }
+
+    /**
      *  Execute the next instruction.
      *
      *  @param  st  A state.
@@ -57,19 +75,4 @@ abstract module EVM {
           case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
           case None => State.INVALID(INVALID_OPCODE)
     }
-
-  /**
-    * Create a fresh EVM to execute a given sequence of bytecode instructions.
-    * The EVM is initialised with an empty stack and empty local memory.
-    */
-  function method Create(context: Context.T, storage: map<u256,u256>, gas: nat, code: seq<u8>) : State
-  requires |code| <= Code.MAX_CODE_SIZE {
-      var stck := Stack.Create();
-      var mem := Memory.Create();
-      var sto := Storage.Create(storage);
-      var cod := Code.Create(code);
-      var evm := EVM(stack:=stck,memory:=mem,storage:=sto,context:=context,code:=cod,log:=[],gas:=gas,pc:=0);
-      // Off we go!
-      State.OK(evm)
-  }
 }
