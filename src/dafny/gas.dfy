@@ -270,7 +270,8 @@ module Gas {
 
     /**
      * Determine the amount of gas which is the function C_CALL in YP
-     * CALL, CALLCODE, or DELEGATECALL.
+     * CALL, CALLCODE, or DELEGATECALL.  Note that GasCap is not included here,
+     * as this is accounted for separately.
      * @param value The amount of value being passed to the target contract.
      * @param gas The amount of gas being offered to execute target contract.
      */
@@ -281,8 +282,7 @@ module Gas {
             then
                 var value := st.Peek(2) as nat;
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
-                var gas := st.Peek(0) as nat;
-                CallGasCap(st,to,value,gas) + CostCallExtra(st,to,value)
+                CostCallExtra(st,to,value)
         else
             0
     }
@@ -293,7 +293,7 @@ module Gas {
      * @param value The amount of value being passed to the target contract.
      * @param gas The amount of gas being offered to execute target contract.
      */
-    function method CallGas(st: State, to: u160, value: nat, gas: nat) : nat
+    function method CallGas(st: State, to: u160, value: nat, gas: nat) : (r:nat)
     requires !st.IsFailure() && st.Operands() >= 3 {
         // Apply gas cap
         var gascap := CallGasCap(st,to,value,gas);
@@ -307,8 +307,9 @@ module Gas {
     /**
      * Apply a cap on the amount of gas which can be passed into a contract call.
      */
-    function method CallGasCap(st: State, to: u160, value: nat, gas: nat) : nat
-    requires !st.IsFailure() {
+    function method CallGasCap(st: State, to: u160, value: nat, gas: nat) : (r:nat)
+    requires !st.IsFailure()
+    ensures st.Gas() >= r {
         var gasCostExtra := CostCallExtra(st, to, value);
         if st.Gas() >= gasCostExtra
         then Min(AllButOneSixtyFourth(st.Gas() - gasCostExtra), gas)
