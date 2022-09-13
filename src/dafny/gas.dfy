@@ -282,15 +282,6 @@ module Gas {
     }
 
     /**
-     * Determine amount of gas which can be supplied to the caller.  Observe
-     * that this cannot exceed the amount of available gas!
-     */
-    function method CallGasCap(st: State, gas: nat) : (r:nat)
-    requires !st.IsFailure() {
-        Min(st.Gas(),gas)
-    }
-
-    /**
      * Determine amount of gas which should be supplied to the caller.
      */
     function method CallGas(st: State, gas: nat, value: u256) : (r:nat)
@@ -303,6 +294,15 @@ module Gas {
      */
     function method CallStipend(value: u256) : (r:nat) {
         if value != 0 then G_CALLSTIPEND else 0
+    }
+
+    /**
+     * Determine amount of gas which can be supplied to the caller.  Observe
+     * that this cannot exceed the amount of available gas!
+     */
+    function method CallGasCap(st: State, gas: nat) : (r:nat)
+    requires !st.IsFailure() {
+        Min(L(st.Gas()),gas)
     }
 
     /* YP refers to this function by the name "L" */
@@ -492,12 +492,12 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7)) // for now
-            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7)) // for now
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
+            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
-            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6)) // for now
+            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case CREATE2 => s.UseGas(CostCreate2(s))
-            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6)) // for now
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
             case _ => State.INVALID(INVALID_OPCODE)

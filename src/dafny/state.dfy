@@ -165,6 +165,15 @@ module EvmState {
         }
 
         /**
+         * Refund gas (e.g. after a call)
+         */
+        function method Refund(k: nat): State
+            requires !IsFailure()
+        {
+            OK(evm.(gas := this.Gas() + k as nat))
+        }
+
+        /**
          * Determine current PC value.
          */
         function method PC(): nat
@@ -453,8 +462,10 @@ module EvmState {
                     var data := vm.data[0..m];
                     // Append log (if applicable)
                     var nst := if vm.RETURNS? then st.Log(vm.log) else st;
+                    // Compute the refund (if any)
+                    var refund := if vm.RETURNS?||vm.REVERTS? then vm.gas else 0;
                     // Done
-                    nst.Push(exitCode).SetReturnData(vm.data).Copy(outOffset,data)
+                    nst.Push(exitCode).Refund(refund).SetReturnData(vm.data).Copy(outOffset,data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else
