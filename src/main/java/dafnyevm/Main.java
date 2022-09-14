@@ -16,10 +16,9 @@ package dafnyevm;
 import org.apache.commons.cli.*;
 import org.json.JSONException;
 
+import evmtools.util.Hex;
 import dafnyevm.util.Tracers;
-import dafnyevm.DafnyEvm.Account;
 import dafnyevm.DafnyEvm.Tracer;
-import dafnyevm.util.Hex;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -85,7 +84,7 @@ public class Main {
 		// Parse input string
 		byte[] bytes = Hex.toBytes(args[0]);
 		// Construct EVM
-		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).gasPrice(gasPrice).put(receiver, new Account(bytes))
+		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).gasPrice(gasPrice).create(receiver, bytes)
 				.to(receiver).sender(sender).origin(sender).gas(gas).data(calldata).value(callValue);
 		// Execute the EVM
 		evm.call();

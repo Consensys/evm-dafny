@@ -22,7 +22,7 @@ module Code {
   // Code Segment
   // =============================================================================
 
-  const MAX_CODE_SIZE := 42_000_000
+  const MAX_CODE_SIZE := 24576
 
   /**
    * A code segment is just a sequence of words which form the

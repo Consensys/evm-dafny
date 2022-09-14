@@ -28,7 +28,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter(map[],[]);
+            var vm2 := vm1.CallEnter([STOP]);
             vm2 := Stop(vm2);
             vm1 := vm1.CallReturn(vm2);
         }
@@ -52,7 +52,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter(map[],[]);
+            var vm2 := vm1.CallEnter([STOP]);
             vm2 := Pop(vm2); // force exception
             vm1 := vm1.CallReturn(vm2);
         }
@@ -75,7 +75,7 @@ module CallExamples {
         vm1 := Push1(vm1,0xFF);   // Gas
         vm1 := Call(vm1);
         { // >>> Contract call starts here
-            var vm2 := vm1.CallEnter(map[],[]);
+            var vm2 := vm1.CallEnter([STOP]);
             vm2 := contractReturns123(vm2);
             vm1 := vm1.CallReturn(vm2);
         } // <<< Contract call ends here
@@ -93,6 +93,8 @@ module CallExamples {
     requires vm.Capacity() > 3 && vm.MemSize() == 0
     // Returns exactly 32 bytes of data
     ensures vm'.RETURNS? && |vm'.data| == 32
+    // World state is unchanged.
+    ensures vm.evm.world == vm'.world
     // Returns exactly 0x123
     ensures U256.Read(vm'.data,0) == 0x123 {
         vm' := vm;

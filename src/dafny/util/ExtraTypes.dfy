@@ -13,6 +13,14 @@
  */
 
 module ExtraTypes {
-    
-    datatype Option<T> = Some(v: T) | None
+
+    datatype Option<T> = Some(v: T) | None {
+        /**
+         * Extract the value contained within this option.
+         */
+        function method Unwrap() : T
+        requires this.Some? {
+            this.v
+        }
+    }
 }
