@@ -120,10 +120,8 @@ public class GeneralStateTests {
 			"stRevertTest/LoopCallsDepthThenRevert2.json",
 			"stRevertTest/LoopCallsDepthThenRevert3.json",
 			"stRevertTest/LoopCallsDepthThenRevert.json",
-			"stRevertTest/LoopCallsThenRevert.json",
 			"stRevertTest/LoopDelegateCallsDepthThenRevert.json",
 			"stRevertTest/NashatyrevSuicideRevert.json",
-			"stRevertTest/PythonRevertTestTue201814-1430.json",
 			"stRevertTest/RevertDepth2.json",
 			"stRevertTest/RevertDepthCreateAddressCollision.json",
 			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266

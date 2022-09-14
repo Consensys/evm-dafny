@@ -676,7 +676,7 @@ public class DafnyEvm {
 
 			@Override
 			public String toString() {
-				String ws = toString(getWorldState());
+				String ws = toWorldStateString(getWorldState());
 				// FIXME: might want to add more stuff here at some point!
 				return "OK(" + ws + ")";
 			}
@@ -923,7 +923,7 @@ public class DafnyEvm {
 
 			@Override
 			public String toString() {
-				String ws = toString(getWorldState());
+				String ws = toWorldStateString(getWorldState());
 				return "RETURN(gas=" + getGasUsed() + "," + Hex.toHexString(getReturnData()) + "," + ws + ")";
 			}
 		}
@@ -975,7 +975,7 @@ public class DafnyEvm {
 			return ws;
 		}
 
-		private static String toString(Map<BigInteger, evmtools.core.Account> world) {
+		private static String toWorldStateString(Map<BigInteger, evmtools.core.Account> world) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("{");
 			boolean firstTime=true;
