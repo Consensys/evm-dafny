@@ -432,38 +432,14 @@ module EvmState {
         }
 
         /**
-         * Ensure an account exists at a given address in the world state.  If
-           it doesn't, then a default one is created.
-         */
-        function method EnsureAccount(address: u160) : State
-        requires !IsFailure() {
-            if evm.world.Exists(address) then this
-            else
-                // Create default account
-                var data := WorldState.DefaultAccount();
-                // Put it in
-                OK(evm.(world:=evm.world.Put(address,data)))
-        }
-
-        /**
-         * Deposit a certain amount of Wei into a given account.
-         */
-        function method Deposit(address: u160, value: nat) : State
-        requires !IsFailure()
-        // The account must exist
-        requires evm.world.Exists(address) {
-            OK(evm.(world:=evm.world.Deposit(address,value)))
-        }
-
-        /**
          * Begin a nested contract call.
          */
-        function method CallEnter(world: map<u160,WorldState.Account>, code: seq<u8>) : State
+        function method CallEnter(code: seq<u8>) : State
         requires this.CALLS?
         requires |callData| <= MAX_U256
         requires |code| <= Code.MAX_CODE_SIZE
         // World state must contain this account
-        requires evm.context.address in world {
+        requires evm.world.Exists(evm.context.address) {
             // Extract what is needed from context
             var sender := evm.context.address;
             var origin := evm.context.origin;
@@ -474,39 +450,10 @@ module EvmState {
             // Construct fresh EVM
             var stack := Stack.Create();
             var mem := Memory.Create();
-            var wld := WorldState.Create(world);
             var cod := Code.Create(code);
-            var evm := EVM(evm.context,wld,stack,mem,cod,evm.log,gas,0);
+            var evm := EVM(evm.context,evm.world,stack,mem,cod,evm.log,gas,0);
             // Off we go!
             State.OK(evm)
-        }
-
-        /**
-         * Perform initial call into this EVM, assuming a given depth.
-         */
-        method Call(depth: nat) returns (nst:State)
-        requires !IsFailure() {
-            // Check call depth
-            if depth >= 1024 {
-                return State.INVALID(CALLDEPTH_EXCEEDED);
-            } else {
-                // Extract recipient address
-                var address:= evm.context.address;
-                // Create default account (if none exists)
-                var st := EnsureAccount(address);
-                // Deposit amount
-                st := st.Deposit(address, st.evm.context.callValue as nat);
-                // Check for end-user account
-                if st.evm.world.isEndUser(address) {
-                    // Yes, this is an end user account.
-                    return State.RETURNS(st.evm.gas, [], st.evm.log);
-                } else {
-                    // Get account data
-                    var account := evm.world.Get(address).Unwrap();
-                    //
-                    return State.INVALID(CALLDEPTH_EXCEEDED);
-                }
-            }
         }
 
         /**

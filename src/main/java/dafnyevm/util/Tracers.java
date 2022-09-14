@@ -22,7 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONStringer;
 import org.json.JSONWriter;
-
+import evmtools.util.Hex;
 import EvmState_Compile.State;
 import EvmState_Compile.State_OK;
 import EvmState_Compile.State_RETURNS;
@@ -43,10 +43,10 @@ public class Tracers {
 		@Override
 		public void step(DafnyEvm.State.Ok state) {
 			final String p = state.getPC().toString();
-			final String m = state.getMemory().toString();
+			final String m = Hex.toAbbreviatedHexString(state.getMemory());
 			final String s = state.getStorage().toString();
-			final String a = state.getStack().toString();
-			String st = String.format("pc=%s, storage=%s, memory=%s, stack=%s", p, s, m, a);
+			final String a = toStackString(state.getStack());
+			String st = String.format("pc=%s, stack=%s, memory=%s, storage=%s", p, a, m, s);
 			System.out.println(st);
 		}
 
@@ -69,6 +69,17 @@ public class Tracers {
 		@Override
 		public void callContinue(CallContinue state) {
 			System.out.println("call enter");
+		}
+
+		private String toStackString(BigInteger[] stack) {
+			StringBuilder s = new StringBuilder();
+			for(int i=0;i<stack.length;++i) {
+				if(i != 0) {
+					s.append(":");
+				}
+				s.append(Hex.toHexString(stack[i]));
+			}
+			return s.toString();
 		}
 	}
 

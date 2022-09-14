@@ -17,8 +17,6 @@ import static EvmBerlin_Compile.__default.Create;
 import static EvmBerlin_Compile.__default.Execute;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -28,6 +26,9 @@ import org.web3j.rlp.RlpList;
 import org.web3j.rlp.RlpString;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import EvmState_Compile.Error_CALLDEPTH__EXCEEDED;
 import EvmState_Compile.State_CALLS;
@@ -37,11 +38,11 @@ import EvmState_Compile.State_OK;
 import EvmState_Compile.State_RETURNS;
 import EvmState_Compile.State_REVERTS;
 import WorldState_Compile.Account;
-import Log_Compile.Entry;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
-import dafnyevm.util.Hex;
+import evmtools.util.Hex;
+import dafnyevm.util.Tracers;
 import dafnyevm.util.Word.Uint160;
 import dafnyevm.util.Word.Uint256;
 
@@ -122,12 +123,6 @@ public class DafnyEvm {
 	private BlockInfo blockInfo = new BlockInfo();
 
 	/**
-	 * Code to be executed as part of this call. If this is <code>null</code>, then
-	 * the receivers code is used by default.
-	 */
-	private byte[] code = null;
-
-	/**
 	 * Set the tracer to use during execution of this EVM. Tracers provide a
 	 * mechanism for profiling execution of the EVM, and looking at internal states
 	 * during the execution.
@@ -137,35 +132,6 @@ public class DafnyEvm {
 	 */
 	public DafnyEvm tracer(Tracer tracer) {
 		this.tracer = tracer;
-		return this;
-	}
-
-	/**
-	 * Assign a new account to a given address.
-	 *
-	 * @param address
-	 * @param account
-	 * @return
-	 */
-	public DafnyEvm put(BigInteger address, byte[] bytecode) {
-		// return this.put(address, code, BigInteger.ZERO, BigInteger.ZERO, new
-		// HashMap<>());
-		Storage_Compile.T storage = null;
-		Code_Compile.Raw code = new Code_Compile.Raw(DafnySequence.fromBytes(bytecode));
-		WorldState_Compile.Account acct = new WorldState_Compile.Account(BigInteger.ZERO, BigInteger.ZERO, storage,
-				code);
-		this.worldState = DafnyMap.update(worldState, address, acct);
-		return this;
-	}
-
-	/**
-	 * Assign zero or more addresses to given accounts.
-	 *
-	 * @param state
-	 * @return
-	 */
-	public DafnyEvm putAll(DafnyMap<BigInteger, Account> state) {
-		this.worldState = state;
 		return this;
 	}
 
@@ -306,17 +272,6 @@ public class DafnyEvm {
 	}
 
 	/**
-	 * Set the code to execute as part of this call.
-	 *
-	 * @param data
-	 * @return
-	 */
-	public DafnyEvm code(byte[] code) {
-		this.code = code;
-		return this;
-	}
-
-	/**
 	 * Set the gas price to use when executing transactions.
 	 *
 	 * @param gasPrice
@@ -338,23 +293,47 @@ public class DafnyEvm {
 		return this;
 	}
 
+
 	/**
-	 * Create a new account.
+	 * Create a new account at a given address.
 	 *
 	 * @param address
+	 * @param account
 	 * @return
 	 */
-	public BigInteger createAccount(BigInteger sender, BigInteger endowment, Optional<BigInteger> salt,
-			byte[] initCode) {
-		Account acct = worldState.get(sender);
-		// Programatically calculate the new address.
-		byte[] hash = addr(sender,acct.nonce,salt,initCode);
-		// Finally reconstruct the address from the rightmost 160bits.
-		BigInteger address = new BigInteger(1, hash);
-		// Create the account.
-//		worldState.put(address, new Account(initCode, endowment, 1));
-//		return address;
-		throw new IllegalArgumentException("FIX ME");
+	public DafnyEvm create(BigInteger address, byte[] bytecode) {
+		return create(address, BigInteger.ZERO, BigInteger.ZERO, Collections.emptyMap(), bytecode);
+	}
+
+	public DafnyEvm create(BigInteger address, BigInteger nonce, BigInteger endowment, Map<BigInteger, BigInteger> storage, byte[] bytecode) {
+		Storage_Compile.T store = Storage_Compile.T.create(new DafnyMap<BigInteger,BigInteger>(storage));
+		Code_Compile.Raw code = new Code_Compile.Raw(DafnySequence.fromBytes(bytecode));
+		WorldState_Compile.Account acct = new WorldState_Compile.Account(nonce, endowment, store,code);
+		this.worldState = DafnyMap.update(worldState, address, acct);
+		return this;
+	}
+
+	/**
+	 * Assign zero or more addresses to given accounts.
+	 *
+	 * @param state
+	 * @return
+	 */
+	public DafnyEvm putAll(DafnyMap<BigInteger, Account> state) {
+		this.worldState = state;
+		return this;
+	}
+
+	/**
+	 * Perform a call to either an end-user account, or a contract (to be executed
+	 * by the Dafny EVM).
+	 *
+	 * @return
+	 */
+	public  DafnyEvm.State<?> call() {
+		Account c = worldState.get(recipient);
+		byte[] bytecode = DafnySequence.toByteArray((DafnySequence) c.code.contents);
+		return call(1,bytecode);
 	}
 
 	/**
@@ -366,58 +345,29 @@ public class DafnyEvm {
 	 * @param depth
 	 * @return
 	 */
-	public DafnyEvm.State<?> call() {
-		WorldState_Compile.Account acct = worldState.get(recipient);
-		// Construct transaction context
+	public DafnyEvm.State<?> call(int depth, byte[] code) {
+		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
-		// Create EVM state
-		EvmState_Compile.State st = Create(ctx, worldState, gas, acct.code.contents);
+		// Construct world state
+		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState);
+		// Construct bytecode to execute
+		DafnySequence<Byte> bytecode = DafnySequence.fromBytes(code);
 		// Begin the call.
-		st = st.Call(BigInteger.ZERO);
+		EvmState_Compile.State st = EvmBerlin_Compile.__default.Call(ws, ctx, bytecode, gas, BigInteger.valueOf(depth));
+		// Execute bytecodes!
+		State<?> r = run(depth, tracer, st);
+		// Execute the EVM
+		while (r instanceof State.Running) {
+			if (r instanceof State.CallContinue) {
+				r = callContinue((State.CallContinue) r, depth);
+			} else {
+				r = createContinue((State.CreateContinue) r, depth);
+			}
+		}
 		//
-		State<?> nst = run(1, tracer, st);
-		//
-		return nst;
+		return r;
 	}
-
-//	private DafnyEvm.State<?> call(int depth) {
-//		if (depth >= 1024) {
-//			// The Yellow Paper specifies a maximum depth of 1024.
-//			return State.from(depth, tracer, new EvmState_Compile.State_INVALID(new Error_CALLDEPTH__EXCEEDED()));
-//		} else {
-//			 Account acct = worldState.get(recipient);
-//			// Determine code to be executed
-//			byte[] code = this.code;
-//			//
-//			if(code == null || code.length == 0) {
-//				// Must be an End-User Account.
-//				acct.deposit(value);
-//				EvmState_Compile.State r = new EvmState_Compile.State_RETURNS(gas, DafnySequence.fromBytes(new byte[0]),
-//						DafnySequence.empty(Entry._typeDescriptor()));
-//				tracer.step(depth, r);
-//				//
-//				return State.from(depth, tracer,r);
-//			} else {
-//				//
-//				Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value, DafnySequence.fromBytes(callData),
-//						gasPrice, blockInfo.toDafny());
-//				// Create EVM state
-//				EvmState_Compile.State st = Create(ctx, new DafnyMap<>(), gas, DafnySequence.fromBytes(code));
-//				// Execute initial code.
-//				State<?> r = run(depth, tracer, st);
-//				// Execute the EVM
-//				while (r instanceof State.Running) {
-//					if(r instanceof State.CallContinue) {
-//						r = callContinue((State.CallContinue)r, depth);
-//					} else {
-//						r = createContinue((State.CreateContinue)r, depth);
-//					}
-//				}
-//				return r;
-//			}
-//		}
-//	}
 
 	/**
 	 * Manage a nested contract call. This creates a child EVM to execute the
@@ -429,19 +379,19 @@ public class DafnyEvm {
 	 * @return
 	 */
 	private State<?> callContinue(State.CallContinue cc, int depth) {
-		// Look up account data
-		Account src = getAccount(cc.code());
+		// Identify account whose code to execute
+		Account c = worldState.get(cc.code());
+		byte[] bytecode = DafnySequence.toByteArray((DafnySequence) c.code.contents);
 		// Make the recursive call.
-		State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to())
-				.code(src.code).origin(origin).value(cc.delegateValue()).data(cc.callData())
-				.gasPrice(gasPrice).blockInfo(blockInfo).gas(cc.gas()).call(depth + 1);
-		// FIXME: update worldstate upon success.
+		State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).sender(cc.sender()).to(cc.to()).origin(origin)
+				.value(cc.delegateValue()).data(cc.callData()).gasPrice(gasPrice).blockInfo(blockInfo)
+				.gas(cc.gas()).call(depth + 1, bytecode);
 		// Continue from where we left off.
 		return cc.callReturn(nr);
 	}
 
 	/**
-	 * Manage a nested contract call.
+	 * Manage a nested contract creation.
 	 *
 	 * @param cc    The continuation state.
 	 * @param depth The current call depth.
@@ -451,17 +401,17 @@ public class DafnyEvm {
 		// Determine sender
 		BigInteger sender = cc.getEVM().context.address;
 		// Construct new account
-		BigInteger address = createAccount(sender, cc.endowment(), cc.salt(), cc.initCode());
+		//BigInteger address = createAccount(sender, cc.endowment(), cc.salt(), cc.initCode());
+		Account acct = worldState.get(sender);
+		// Programatically calculate the new address.
+		byte[] hash = addr(sender,acct.nonce,cc.salt(),cc.initCode());
+		// Finally reconstruct the address from the rightmost 160bits.
+		BigInteger address = new BigInteger(1, hash);
+		// Create the account.
+		this.create(address, BigInteger.ONE, cc.endowment(), Collections.emptyMap(), cc.initCode());
 		// Make the contract call
-		State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).to(address).sender(sender).code(cc.initCode())
-				.origin(origin).gasPrice(gasPrice).blockInfo(blockInfo).call(depth + 1);
-		// Check whether execution successful or not.
-		if (nr instanceof State.Return) {
-			// Create the account!
-			Account src = getAccount(address);
-			// Configure contract code.
-			src.setCode(nr.getReturnData());
-		}
+		State<?> nr = new DafnyEvm().tracer(tracer).putAll(worldState).to(address).sender(sender)
+				.origin(origin).gasPrice(gasPrice).blockInfo(blockInfo).call(depth + 1, cc.initCode());
 		// Continue from where we left off.
 		return cc.createReturn(nr, address);
 	}
@@ -645,18 +595,6 @@ public class DafnyEvm {
 			}
 
 			/**
-			 * Get the state of the storage when the machine halted.
-			 *
-			 * @return
-			 */
-			public Map<BigInteger,BigInteger> getStorage() {
-				DafnyMap<? extends BigInteger, ? extends BigInteger> m = getEVM().storage.contents;
-				HashMap<BigInteger,BigInteger> storage = new HashMap<>();
-				m.forEach((k,v) -> storage.put(k,v));
-				return storage;
-			}
-
-			/**
 			 * Get the state of memory at this point in time.
 			 *
 			 * @return
@@ -692,12 +630,29 @@ public class DafnyEvm {
 				}
 				return rStack;
 			}
+			/**
+			 * Get the state of the storage (for the executing account) when the machine halted.
+			 *
+			 * @return
+			 */
+			public Map<BigInteger,BigInteger> getStorage() {
+				HashMap<BigInteger,BigInteger> storage = new HashMap<>();
+				// Determine executing account address
+				BigInteger address = getEVM().context.address;
+				// Get account record
+				WorldState_Compile.Account a = getEVM().world.accounts.get(address);
+				// Extract storage
+				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.storage.contents;
+				// Copy over
+				m.forEach((k,v) -> storage.put(k,v));
+				return storage;
+			}
 
 			/**
 			 * Extract internal EVM state.
 			 * @return
 			 */
-			protected abstract EvmState_Compile.T getEVM();
+			protected abstract EvmState_Compile.Raw getEVM();
 		}
 
 		/**
@@ -712,7 +667,7 @@ public class DafnyEvm {
 			}
 
 			@Override
-			protected EvmState_Compile.T getEVM() {
+			protected EvmState_Compile.Raw getEVM() {
 				State_OK sok = (State_OK) state;
 				return sok.evm;
 			}
@@ -798,7 +753,7 @@ public class DafnyEvm {
 			}
 
 			@Override
-			protected EvmState_Compile.T getEVM() {
+			protected EvmState_Compile.Raw getEVM() {
 				return state.evm;
 			}
 
@@ -863,7 +818,7 @@ public class DafnyEvm {
 			}
 
 			@Override
-			protected EvmState_Compile.T getEVM() {
+			protected EvmState_Compile.Raw getEVM() {
 				return state.evm;
 			}
 

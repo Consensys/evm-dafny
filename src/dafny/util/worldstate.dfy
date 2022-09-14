@@ -90,6 +90,17 @@ module WorldState {
         }
 
         /**
+         * Ensure an account exists at a given address in the world state.  If
+           it doesn't, then a default one is created.
+         */
+        function method EnsureAccount(address: u160) :T {
+            if Exists(address) then this
+            else
+                // Configure default account
+                Put(address,DefaultAccount())
+        }
+
+        /**
          * Deposit a given amount of Wei into this account.
          */
         function method Deposit(account:u160, value: nat) : T

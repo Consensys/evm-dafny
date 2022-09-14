@@ -30,11 +30,10 @@ import static dafnyevm.DafnyEvm.DEFAULT_ORIGIN;
 import static dafnyevm.DafnyEvm.DEFAULT_RECEIVER;
 import dafnyevm.DafnyEvm.BlockInfo;
 import dafnyevm.DafnyEvm.State;
-import dafnyevm.util.Hex;
+import evmtools.util.Hex;
 import evmtools.core.Trace;
 import evmtools.core.Trace.Exception.Error;
-
-import static dafnyevm.util.Bytecodes.*;
+import static evmtools.util.Bytecodes.*;
 
 public class Tests {
 
@@ -911,7 +910,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_02() {
 		// Contract call which returns 20 bytes of data.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -927,7 +926,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_03() {
 		// Contract call which returns 20 bytes of data, despite being asked for none.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -943,7 +942,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_04() {
 		// Contract call which returns 20 bytes of data, despite being asked for none.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -959,7 +958,7 @@ public class Tests {
 	@Test
 	public void test_returndatasize_05() {
 		// Contract call which returns 20 bytes of data, despite being asked for none.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
 				// data at address 0.
@@ -982,7 +981,7 @@ public class Tests {
 	@Test
 	public void test_returndatacopy_02() {
 		//
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -999,7 +998,7 @@ public class Tests {
 	@Test
 	public void test_returndatacopy_03() {
 		//
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -1950,7 +1949,7 @@ public class Tests {
 	@Test
 	public void test_log_08() {
 		// Log 32 bytes of data matching 0x123 from within contract call.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0));
 		Pair<BigInteger[], byte[]>[] log = call(tx,
 				new int[] { PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL })
@@ -1965,7 +1964,7 @@ public class Tests {
 	public void test_log_09() {
 		// Log 32 bytes of data matching 0x123 from within contract call which then
 		// fails (hence no log produced).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0, INVALID));
 		Pair<BigInteger[], byte[]>[] log = call(tx,
 				new int[] { PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL })
@@ -1978,7 +1977,7 @@ public class Tests {
 	public void test_log_10() {
 		// Log 32 bytes of data matching 0x123 from within contract call, and then
 		// another 32 bytes matching 0x456 afterwards.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0));
 		Pair<BigInteger[], byte[]>[] log = call(tx, new int[] {
 				// Make the contract call to 0xccc
@@ -1999,7 +1998,7 @@ public class Tests {
 	public void test_log_11() {
 		// Log 32 bytes of data matching 0x123, and then another 32 bytes matching 0x456
 		// from within contract call.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x4, 0x56, PUSH1, 0x0, MSTORE, PUSH1, 0x20, PUSH1, 0x0, LOG0));
 		Pair<BigInteger[], byte[]>[] log = call(tx, new int[] {
 				// Log 32 bytes matching 0x123
@@ -2060,7 +2059,7 @@ public class Tests {
 	public void test_call_01() {
 		// Absolutely minimal contract call which does nothing, and the caller then
 		// returns the (successful) exit code.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(STOP));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(STOP));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
 				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
@@ -2074,7 +2073,7 @@ public class Tests {
 	public void test_call_02() {
 		// Contract call which raises an exception, and the subsequence exit code is
 		// then returned by the caller.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(INVALID));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(INVALID));
 		//
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
@@ -2089,7 +2088,7 @@ public class Tests {
 	public void test_call_03() {
 		// Contract call which reverts, and the subsequence exit code is then returned
 		// by the caller.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x00, DUP1, REVERT));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x00, DUP1, REVERT));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
 				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
@@ -2102,7 +2101,7 @@ public class Tests {
 	@Test
 	public void test_call_04() {
 		// Contract call which returns "0x123", which the caller then itself returns.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2118,7 +2117,7 @@ public class Tests {
 	public void test_call_05() {
 		// Contract call passing "0x123" as call data which is then returned, and
 		// subsequently the caller then itself returns that.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2138,7 +2137,7 @@ public class Tests {
 		// Contract call passing "0x123" as call data which is then returned. However,
 		// the caller only request 31 bytes of return data which it then subsequently
 		// returns (ending up in a truncated result).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2158,7 +2157,7 @@ public class Tests {
 		// Contract call passing "0x123" as call data which is then returned with the
 		// last byte truncated. Whilst the caller requested the full 32 bytes of return
 		// data, it will end up with a truncated result.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x1F, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2178,7 +2177,7 @@ public class Tests {
 		// Contract call passing "0x123" as call data which is then returned. However,
 		// the caller only sends 31 bytes of return data, but it then subsequently
 		// returns 32bytes (ending up in a truncated result).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2198,7 +2197,7 @@ public class Tests {
 	public void test_call_09() {
 		// Contract call which returns its address. This should return the callers
 		// address (i.e. since we're using a CALLCODE instruction).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(ADDRESS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2239,7 +2238,7 @@ public class Tests {
 	public void test_callcode_01() {
 		// Absolutely minimal contract call which does nothing, and the caller then
 		// returns the (successful) exit code.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(STOP));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(STOP));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
 				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
@@ -2253,7 +2252,7 @@ public class Tests {
 	public void test_callcode_02() {
 		// Contract call which raises an exception, and the subsequence exit code is
 		// then returned by the caller.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(INVALID));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(INVALID));
 		//
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
@@ -2268,7 +2267,7 @@ public class Tests {
 	public void test_callcode_03() {
 		// Contract call which reverts, and the subsequence exit code is then returned
 		// by the caller.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x00, DUP1, REVERT));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x00, DUP1, REVERT));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
 				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALLCODE,
@@ -2281,7 +2280,7 @@ public class Tests {
 	@Test
 	public void test_callcode_04() {
 		// Contract call which returns "0x123", which the caller then itself returns.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH2, 0x1, 0x23, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2297,7 +2296,7 @@ public class Tests {
 	public void test_callcode_05() {
 		// Contract call passing "0x123" as call data which is then returned, and
 		// subsequently the caller then itself returns that.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2317,7 +2316,7 @@ public class Tests {
 		// Contract call passing "0x123" as call data which is then returned. However,
 		// the caller only request 31 bytes of return data which it then subsequently
 		// returns (ending up in a truncated result).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2337,7 +2336,7 @@ public class Tests {
 		// Contract call passing "0x123" as call data which is then returned with the
 		// last byte truncated. Whilst the caller requested the full 32 bytes of return
 		// data, it will end up with a truncated result.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x1F, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2357,7 +2356,7 @@ public class Tests {
 		// Contract call passing "0x123" as call data which is then returned. However,
 		// the caller only sends 31 bytes of return data, but it then subsequently
 		// returns 32bytes (ending up in a truncated result).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(PUSH1, 0x00, CALLDATALOAD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 
 		byte[] output = callWithReturn(tx, new int[] {
@@ -2377,7 +2376,7 @@ public class Tests {
 	public void test_callcode_09() {
 		// Contract call which returns its address. This should return the callers
 		// address (i.e. since we're using a CALLCODE instruction).
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(ADDRESS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2393,7 +2392,7 @@ public class Tests {
 	public void test_delegatecall_01() {
 		// Contract call which returns sender value, which the caller then itself
 		// returns.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(CALLER, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make delegatecall to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2409,7 +2408,7 @@ public class Tests {
 	public void test_delegatecall_02() {
 		// Contract call which returns sender value, which the caller then itself
 		// returns.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(ORIGIN, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make delegatecall to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2425,7 +2424,7 @@ public class Tests {
 	public void test_delegatecall_03() {
 		// Contract call which returns sender value, which the caller then itself
 		// returns.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1,
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
 				toBytes(ADDRESS, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make delegatecall to 0xccc with gas 0xffff, providing 32bytes for the return
@@ -2477,7 +2476,7 @@ public class Tests {
 	public void test_selfdstruct_02() {
 		// Absolutely minimal contract call which does nothing, and the caller then
 		// returns the (successful) exit code.
-		DafnyEvm tx = new DafnyEvm().put(CONTRACT_1, toBytes(PUSH1, 0x00, SELFDESTRUCT));
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x00, SELFDESTRUCT));
 		byte[] output = callWithReturn(tx, new int[] {
 				// Make contract call to 0xccc with gas 0xffff
 				PUSH1, 0x0, DUP1, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
@@ -2512,7 +2511,7 @@ public class Tests {
 	private DafnyEvm.State<?> call(DafnyEvm context, int[] words) {
 		byte[] code = toBytes(words);
 		System.out.println(Hex.toHexString(code));
-		DafnyEvm.State<?> st = context.put(DEFAULT_RECEIVER, code).call();
+		DafnyEvm.State<?> st = context.create(DEFAULT_RECEIVER, code).call();
 		System.out.println("STATE: " + st);
 		return st;
 	}
@@ -2526,7 +2525,7 @@ public class Tests {
 	 */
 	private byte[] revertingCall(int[] words) {
 		byte[] code = toBytes(words);
-		State<?> r = new DafnyEvm().put(DEFAULT_RECEIVER, code).call();
+		State<?> r = new DafnyEvm().create(DEFAULT_RECEIVER, code).call();
 		// Check we have reverted as expected
 		assertTrue(r instanceof State.Revert);
 		// Check something was returned
@@ -2544,7 +2543,7 @@ public class Tests {
 	 */
 	private void invalidCall(Trace.Exception.Error err, int[] words) {
 		byte[] code = toBytes(words);
-		State<?> r = new DafnyEvm().put(DEFAULT_RECEIVER, code).sender(DEFAULT_RECEIVER).call();
+		State<?> r = new DafnyEvm().create(DEFAULT_RECEIVER, code).sender(DEFAULT_RECEIVER).call();
 		// Check exception was thrown as expected.
 		assert r instanceof State.Invalid;
 		// FIXME: this is quite ugly

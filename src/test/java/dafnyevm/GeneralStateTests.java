@@ -36,7 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import dafnyevm.DafnyEvm.State;
 import dafnyevm.DafnyEvm.State.CallContinue;
-import dafnyevm.util.Bytecodes;
+import evmtools.util.Bytecodes;
 import evmtools.core.Environment;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -150,8 +150,6 @@ public class GeneralStateTests {
 			BigInteger to = tx.to != null ? tx.to : DafnyEvm.DEFAULT_RECEIVER;
 			// Construct environment
 			DafnyEvm.BlockInfo env = buildEnvironment(instance.getEnvironment());
-			// Convert world state over.
-			Map<BigInteger,DafnyEvm.Account> ws = buildWorldState(tx,instance.getWorldState());
 			// Construct EVM
 			ArrayList<Trace.Element> elements = new ArrayList<>();
 			StructuredTracer tracer = new StructuredTracer(elements);
@@ -159,7 +157,9 @@ public class GeneralStateTests {
 			// whereby traces are used the _block's gas limit_ rather than the
 			// _transaction's gas limit_.  #245
 			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).blockInfo(env).to(to).sender(tx.sender)
-					.origin(tx.sender).gas(env.gasLimit).value(tx.value).data(tx.data).putAll(ws);
+					.origin(tx.sender).gas(env.gasLimit).value(tx.value).data(tx.data);
+			// Configure world state
+			configureWorldState(evm,tx,instance.getWorldState());
 			// Run the transaction!
 			evm.call();
 			//
@@ -195,13 +195,11 @@ public class GeneralStateTests {
 	 * @param evm
 	 * @return
 	 */
-	public Map<BigInteger,DafnyEvm.Account> buildWorldState(Transaction tx, WorldState ws) {
-		HashMap<BigInteger,DafnyEvm.Account> dws = new HashMap<>();
+	public void configureWorldState(DafnyEvm evm, Transaction tx, WorldState ws) {
 		// Initialise world statew
 		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
 			evmtools.core.Account acct = e.getValue();
-			// FIXME!
-			dws.put(e.getKey(),new DafnyEvm.Account(acct.code,acct.balance,0,acct.storage));
+			evm.create(e.getKey(), BigInteger.ZERO, acct.balance, acct.storage, acct.code);
 		}
 		// Finally, configure transaction receiver (if necessary).
 		if (tx.to == null) {
@@ -209,9 +207,8 @@ public class GeneralStateTests {
 			// means, but I believe we can imagine it as something like the contract
 			// creation account. Specifically, the code to execute is stored within the
 			// transaction data.
-			dws.put(DafnyEvm.DEFAULT_RECEIVER,new DafnyEvm.Account(tx.data, BigInteger.ZERO, tx.nonce.longValue(), new HashMap<>()));
+			evm.create(DafnyEvm.DEFAULT_RECEIVER, tx.nonce, BigInteger.ZERO, new HashMap<>(), tx.data);
 		}
-		return dws;
 	}
 
 	// Here we enumerate all available test cases.
