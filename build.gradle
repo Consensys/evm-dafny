@@ -108,7 +108,7 @@ dependencies {
     implementation("org.json:org.json:chargebee-1.0")
     implementation("org.web3j:utils:5.0.0")
     implementation("org.web3j:rlp:5.0.0")
-    implementation("org.whiley:evmtools:0.3.12")
+    implementation("org.whiley:evmtools:0.3.14")
     implementation files('evm-java/DafnyRuntime.jar')
     //
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")

@@ -2210,6 +2210,22 @@ public class Tests {
 	}
 
 	@Test
+	public void test_call_10() {
+		// Contract call which returns storage value, and then increments that value.  Thus, subsequent calls get increasing values.
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1,
+				toBytes(PUSH1, 0x00, SLOAD, DUP1, PUSH1, 0x00, MSTORE, PUSH1,0x1, ADD, PUSH1, 0x00, SSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		byte[] output = callWithReturn(tx, new int[] {
+				// Call contract
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Call contract (again).
+				PUSH1, 0x20, PUSH1, 0x00, DUP1, DUP1, DUP1, PUSH2, 0xc, 0xcc, PUSH2, 0xff, 0xff, CALL,
+				// Return memory and return.
+				PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		//
+		assertArrayEquals(UINT256(1), output);
+	}
+
+	@Test
 	public void test_recursive_call_01() {
 		// Recursive contract call
 		invalidCall(Error.INVALID_OPCODE, new int[] {
@@ -2510,10 +2526,8 @@ public class Tests {
 
 	private DafnyEvm.State<?> call(DafnyEvm context, int[] words) {
 		byte[] code = toBytes(words);
-		System.out.println(Hex.toHexString(code));
-		DafnyEvm.State<?> st = context.create(DEFAULT_RECEIVER, code).call();
-		System.out.println("STATE: " + st);
-		return st;
+//		System.out.println(Hex.toHexString(code));
+		return context.create(DEFAULT_RECEIVER, code).call();
 	}
 
 	/**

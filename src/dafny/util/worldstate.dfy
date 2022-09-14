@@ -115,6 +115,20 @@ module WorldState {
         }
 
         /**
+         * Set the code associated with a given contract account.
+         */
+        function method SetCode(account:u160, code: seq<u8>) : T
+        // Account must be valid!
+        requires account in this.accounts
+        // Code must be valid size.
+        requires |code| <= Code.MAX_CODE_SIZE {
+            // Extract account data
+            var entry := accounts[account];
+            // Write it back
+            WorldState(this.accounts[account:=entry.(code:=Code.Create(code))])
+        }
+
+        /**
          * Write into the storage of a given account.
          */
         function method Write(account:u160, address: u256, value: u256) : T

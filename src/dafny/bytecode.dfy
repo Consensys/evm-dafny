@@ -35,7 +35,7 @@ module Bytecode {
      */
     function method Stop(st: State) : State
     requires !st.IsFailure() {
-        State.RETURNS(gas:=st.Gas(),data:=[],log:=st.evm.log)
+        State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,log:=st.evm.log)
     }
 
     /**
@@ -1307,7 +1307,7 @@ module Bytecode {
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
-                State.RETURNS(gas:=st.evm.gas,data:=data,log:=st.evm.log)
+                State.RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,log:=st.evm.log)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1442,7 +1442,7 @@ module Bytecode {
             // Determine account to send remaining any remaining funds.
             var acct := (st.Peek(0) as nat) % TWO_160;
             // FIXME: actually refund the account!
-            State.RETURNS(gas:=st.Gas(),data:=[],log:=st.evm.log)
+            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,log:=st.evm.log)
         else
             State.INVALID(STACK_UNDERFLOW)
     }

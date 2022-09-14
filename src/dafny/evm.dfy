@@ -62,10 +62,7 @@ abstract module EVM {
 
     /**
      *  Execute the next instruction.
-     *
-     *  @param  st  A state.
-     *  @returns    The state reached after executing the instruction
-     *              pointed to by 'st.PC()'.
+     *return
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
@@ -74,39 +71,5 @@ abstract module EVM {
         match st.OpDecode()
           case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
           case None => State.INVALID(INVALID_OPCODE)
-    }
-
-    /**
-     * Perform initial call into this EVM, assuming a given depth.
-     *
-     * @param world The current state of all accounts.
-     * @param ctx The context for this call (where e.g. ctx.address is the recipient).
-     * @param code Bytecodes which should be executed.
-     * @param gas The available gas to use for the call.
-     * @param depth The current call depth.
-     */
-    method Call(world: WorldState.T, ctx: Context.T, code: seq<u8>, gas: nat, depth: nat) returns (nst:State)
-    requires |code| <= Code.MAX_CODE_SIZE
-    requires |ctx.callData| < MAX_U256 {
-        // Check call depth
-        if depth >= 1024 {
-            return State.INVALID(CALLDEPTH_EXCEEDED);
-        } else {
-            // Create default account (if none exists)
-            var w := world.EnsureAccount(ctx.address).Deposit(ctx.address,ctx.callValue as nat);
-            // Check for end-user account
-            if |code| == 0 {
-                // Yes, this is an end user account.
-                return State.RETURNS(gas, [], []);
-            } else {
-                // Construct fresh EVM
-                var stack := Stack.Create();
-                var mem := Memory.Create();
-                var cod := Code.Create(code);
-                var evm := EVM(ctx,w,stack,mem,cod,[],gas,0);
-                // Off we go!
-                return State.OK(evm);
-            }
-        }
     }
 }
