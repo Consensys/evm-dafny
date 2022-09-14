@@ -818,6 +818,36 @@ public class Tests {
 	}
 
 	@Test
+	public void test_selfbalance_01() {
+		// Transfer 10 Wei and check we can see it.
+		byte[] output = callWithReturn(new int[] { 0x47, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_selfbalance_02() {
+		// Transfer 10 Wei and check we can see it.
+		DafnyEvm tx = new DafnyEvm().value(BigInteger.TEN);
+		byte[] output = callWithReturn(tx, new int[] { 0x47, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(10), output);
+	}
+
+	@Test
+	public void test_balance_01() {
+		// Transfer 10 Wei and check we can see it.
+		byte[] output = callWithReturn(new int[] { ADDRESS, BALANCE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_balance_02() {
+		// Transfer 10 Wei and check we can see it.
+		DafnyEvm tx = new DafnyEvm().value(BigInteger.TEN);
+		byte[] output = callWithReturn(tx, new int[] { ADDRESS, BALANCE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(10), output);
+	}
+
+	@Test
 	public void test_origin_01() {
 		// Check origin == DEFAULT_ORIGIN
 		byte[] output = callWithReturn(new int[] { ORIGIN, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
