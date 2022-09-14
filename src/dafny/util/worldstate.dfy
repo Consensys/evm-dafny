@@ -41,7 +41,7 @@ module WorldState {
     /**
      * A mapping from contract addresses to accounts.
      */
-    datatype T = WorldState(accounts:map<u160,Account>) {
+    datatype T = WorldState(accounts:map<u160,Account>, accessed:set<(u160,u256)>, modified:set<(u160,u256)>) {
         /**
          * Determine whether or not a given account exists.
          */
@@ -86,7 +86,7 @@ module WorldState {
          * Put a given account into the world state at a given address.
          */
         function method Put(account:u160, data: Account) : T {
-            WorldState(this.accounts[account:=data])
+            this.(accounts:=this.accounts[account:=data])
         }
 
         /**
@@ -131,7 +131,7 @@ module WorldState {
             // Compute updated balance.
             var nBalance := entry.balance + value;
             // Write it back
-            WorldState(this.accounts[account:=entry.(balance:=nBalance)])
+            this.(accounts:=this.accounts[account:=entry.(balance:=nBalance)])
         }
 
         /**
@@ -145,7 +145,7 @@ module WorldState {
             // Extract account data
             var entry := accounts[account];
             // Write it back
-            WorldState(this.accounts[account:=entry.(code:=Code.Create(code))])
+            this.(accounts:=this.accounts[account:=entry.(code:=Code.Create(code))])
         }
 
         /**
@@ -156,10 +156,16 @@ module WorldState {
         requires account in this.accounts {
             // Extract account data
             var entry := accounts[account];
+            // Extract previous value
+            var pValue := Storage.Read(entry.storage,address);
             // Update account storage
             var nStorage := Storage.Write(entry.storage,address,value);
-            // Write it back
-            WorldState(this.accounts[account:=entry.(storage:=nStorage)])
+            // Update access record
+            var naccessed := accessed + {(account,address)};
+            // Update modification record (if applicable).
+            var nmodified := if value != pValue then modified + {(account,address)} else modified;
+            // Write it all back
+            WorldState(this.accounts[account:=entry.(storage:=nStorage)],naccessed,nmodified)
         }
 
         /**
@@ -173,12 +179,43 @@ module WorldState {
             // Read from account storage
             Storage.Read(entry.storage,address)
         }
+
+        /**
+         * Check whether a given storage location was previously accessed or not.
+         */
+        function method WasAccessed(account: u160, address: u256) : bool {
+            (account,address) in accessed
+        }
+
+        /**
+         * Mark a particular storage location as having been "accessed".
+         */
+        function method Accessed(account: u160, address: u256) : T {
+            var naccessed := accessed + {(account,address)};
+            this.(accessed := naccessed)
+        }
+
+        /**
+         * Check whether a given storage location was previously modified or not.
+         */
+        function method WasModified(account: u160, address: u256) : bool {
+            (account,address) in modified
+        }
+
+        /**
+         * Mark a particular storage location as having been "modified".
+         */
+        function method Modified(account: u160, address: u256) : T {
+            var nmodified := modified + {(account,address)};
+            this.(modified := nmodified)
+        }
     }
 
     /**
      * Create world state from an initial mapping of addresses to accounts.
      */
     function method Create(accounts:map<u160,Account>) : T {
-        WorldState(accounts)
+        // Initially all accessed / modified flags are cleared.
+        WorldState(accounts, {}, {})
     }
 }

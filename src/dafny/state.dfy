@@ -206,6 +206,10 @@ module EvmState {
             this.evm.stack
         }
 
+        // =======================================================================================
+        // Memory
+        // =======================================================================================
+
         /**
          *  Expand memory to include a given address.
          *
@@ -282,6 +286,10 @@ module EvmState {
             OK(evm.(memory:=Memory.Copy(evm.memory,address,data)))
         }
 
+        // =======================================================================================
+        // Storage
+        // =======================================================================================
+
         /**
          * Write word to storage
          */
@@ -289,6 +297,51 @@ module EvmState {
         requires !IsFailure() {
             var account := evm.context.address;
             OK(evm.(world:=evm.world.Write(account,address,val)))
+        }
+
+        /**
+         * Read word from storage
+         */
+        function method Load(address:u256) : u256
+        requires !IsFailure() {
+            var account := evm.context.address;
+            evm.world.Read(account,address)
+        }
+
+        /**
+         * Mark a given storage location within the currently executing account
+         * as having been "accessed" (i.e. read or written).
+         */
+        function method Accessed(address: u256) : State
+        requires !IsFailure() {
+            // Determine executing account
+            var account := evm.context.address;
+            // Mark address within this account as accessed
+            OK(evm.(world:=evm.world.Accessed(account,address)))
+        }
+
+        /**
+         * Check whether a given storage location in the currently executing
+         * account was previously accessed or not.
+         */
+        function method WasAccessed(address: u256) : bool
+        requires !IsFailure() {
+            // Determine executing account
+            var account := evm.context.address;
+            // Perform the check
+            evm.world.WasAccessed(account,address)
+        }
+
+        /**
+         * Check whether a given storage location in the currently executing
+         * account was previously modified or not.
+         */
+        function method WasModified(address: u256) : bool
+        requires !IsFailure() {
+            // Determine executing account
+            var account := evm.context.address;
+            // Perform the check
+            evm.world.WasModified(account,address)
         }
 
         /**
@@ -301,14 +354,9 @@ module EvmState {
             OK(evm.(world:=world))
         }
 
-        /**
-         * Read word from storage
-         */
-        function method Load(address:u256) : u256
-        requires !IsFailure() {
-            var account := evm.context.address;
-            evm.world.Read(account,address)
-        }
+        // =======================================================================================
+        // Control Flow
+        // =======================================================================================
 
         /**
          * Decode next opcode from machine.
@@ -349,6 +397,10 @@ module EvmState {
             var pc_k := (evm.pc as nat) + k;
             State.OK(evm.(pc := pc_k))
         }
+
+        // =======================================================================================
+        // Stack
+        // =======================================================================================
 
         /**
          * Check capacity remaining on stack.
@@ -417,6 +469,10 @@ module EvmState {
         requires Operands() > k {
             OK(evm.(stack:=Stack.Swap(evm.stack,k)))
         }
+
+        // =======================================================================================
+        // Other
+        // =======================================================================================
 
         /**
          * Append zero or more log entries.

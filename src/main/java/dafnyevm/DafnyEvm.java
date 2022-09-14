@@ -38,6 +38,7 @@ import EvmState_Compile.State_REVERTS;
 import WorldState_Compile.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
+import dafny.DafnySet;
 import dafny.Tuple2;
 import evmtools.util.Hex;
 import dafnyevm.util.Word.Uint160;
@@ -347,7 +348,7 @@ public class DafnyEvm {
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
 		// Construct world state
-		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState);
+		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>(), new DafnySet<>());
 		// Construct bytecode to execute
 		DafnySequence<Byte> bytecode = DafnySequence.fromBytes(code);
 		// Begin the call.
