@@ -104,6 +104,7 @@ module EvmState {
         | STACK_OVERFLOW
         | MEMORY_OVERFLOW
         | CODE_OVERFLOW
+        | BALANCE_OVERFLOW
         | RETURNDATA_OVERFLOW
         | INVALID_JUMPDEST
         | CALLDEPTH_EXCEEDED
@@ -564,16 +565,19 @@ module EvmState {
         if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
         else
             // Create default account (if none exists)
-            var w := world.EnsureAccount(ctx.address).Deposit(ctx.address,ctx.callValue as nat);
-            // Check for end-user account
-            if |code| == 0 then State.RETURNS(gas, [], world, [])
+            var w := world.EnsureAccount(ctx.address);
+            if !w.CanDeposit(ctx.address,ctx.callValue) then State.INVALID(BALANCE_OVERFLOW)
             else
-                // Construct fresh EVM
-                var stack := Stack.Create();
-                var mem := Memory.Create();
-                var cod := Code.Create(code);
-                var evm := EVM(ctx,w,stack,mem,cod,[],gas,0);
-                // Off we go!
-                State.OK(evm)
+                var nw := w.Deposit(ctx.address,ctx.callValue);
+                // Check for end-user account
+                if |code| == 0 then State.RETURNS(gas, [], nw, [])
+                else
+                    // Construct fresh EVM
+                    var stack := Stack.Create();
+                    var mem := Memory.Create();
+                    var cod := Code.Create(code);
+                    var evm := EVM(ctx,nw,stack,mem,cod,[],gas,0);
+                    // Off we go!
+                    State.OK(evm)
     }
 }

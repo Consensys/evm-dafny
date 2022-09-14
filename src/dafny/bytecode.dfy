@@ -566,6 +566,24 @@ module Bytecode {
     }
 
     /**
+     * Get balance of the given account.
+     */
+    function method Balance(st: State) : State
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // Determine account address
+            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            // Get balance (or zero if no account exists)
+            var balance := if st.evm.world.Exists(account)
+                then st.evm.world.Balance(account) else 0;
+            // Push balance!
+            st.Pop().Push(balance).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
      * Get execution origination address.  This is the sender of the original
      * transaction; it is never an account with non-empty associated code.
      */
@@ -829,6 +847,23 @@ module Bytecode {
         if st.Capacity() >= 1
         then
             st.Push(st.evm.context.block.chainID).Next()
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get balance of currently executing account.
+     */
+    function method SelfBalance(st: State) : State
+    requires !st.IsFailure() {
+        if st.Capacity() >= 1
+        then
+            // Get address of currently executing account
+            var address := st.evm.context.address;
+            // Get balance of said account
+            var balance := st.evm.world.Balance(address);
+            // Done
+            st.Push(balance).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }

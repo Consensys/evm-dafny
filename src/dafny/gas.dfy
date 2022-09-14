@@ -404,7 +404,7 @@ module Gas {
             case DIFFICULTY => s.UseGas(G_BASE)
             case GASLIMIT => s.UseGas(G_BASE)
             case CHAINID => s.UseGas(G_BASE)
-            //  SELFBALANCE => s.UseGas(1)
+            case SELFBALANCE => s.UseGas(G_LOW)
             // 0x50s: Stack, Memory, Storage and Flow
             case POP => s.UseGas(G_BASE)
             case MLOAD => s.UseGas(CostExpandBytes(s,1,0,32) + G_VERYLOW)

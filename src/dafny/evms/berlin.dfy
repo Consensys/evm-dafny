@@ -91,7 +91,7 @@ module EvmBerlin refines EVM {
                         case KECCAK256 =>  Bytecode.Keccak256(s)
                         // 0x30s: Environment Information
                         case ADDRESS => Bytecode.Address(s)
-                        //  BALANCE => Bytecode.evalBALANCE(s),
+                        case BALANCE => Bytecode.Balance(s)
                         case ORIGIN => Bytecode.Origin(s)
                         case CALLER => Bytecode.Caller(s)
                         case CALLVALUE => Bytecode.CallValue(s)
@@ -114,7 +114,7 @@ module EvmBerlin refines EVM {
                         case DIFFICULTY => Bytecode.Difficulty(s)
                         case GASLIMIT => Bytecode.GasLimit(s)
                         case CHAINID => Bytecode.ChainID(s)
-                        //  SELFBALANCE => Bytecode.evalSELFBALANCE(s),
+                        case SELFBALANCE => Bytecode.SelfBalance(s)
                         // 0x50s: Stack, Memory, Storage and Flow
                         case POP => Bytecode.Pop(s)
                         case MLOAD => Bytecode.MLoad(s)

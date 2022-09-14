@@ -29,7 +29,7 @@ module WorldState {
     /**
      * Account state associated with a given contract address.
      */
-    datatype Account = Account(nonce:nat, balance: nat, storage: Storage.T, code: Code.T)
+    datatype Account = Account(nonce:nat, balance: u256, storage: Storage.T, code: Code.T)
 
     /**
      * Create a default account.  This has zero balance, empty storage and no code.
@@ -101,11 +101,31 @@ module WorldState {
         }
 
         /**
-         * Deposit a given amount of Wei into this account.
+         * Determine balance of a given account.
          */
-        function method Deposit(account:u160, value: nat) : T
+        function method Balance(account:u160) : u256
         // Account must be valid!
         requires account in this.accounts {
+            accounts[account].balance
+        }
+
+        /**
+         * Check whether we can deposity without causing an overflow.
+         */
+        function method CanDeposit(account:u160, value: u256) : bool
+        // Account must be valid!
+        requires account in this.accounts {
+            (MAX_U256 as u256 - accounts[account].balance) >= value
+        }
+
+        /**
+         * Deposit a given amount of Wei into this account.
+         */
+        function method Deposit(account:u160, value: u256) : T
+        // Account must be valid!
+        requires account in this.accounts
+        // Ensure balance does not overflow!
+        requires CanDeposit(account,value) {
             // Extract account data
             var entry := accounts[account];
             // Compute updated balance.
