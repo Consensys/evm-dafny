@@ -1017,7 +1017,7 @@ module Bytecode {
             var loc := st.Peek(0);
             var val := st.Load(loc);
             // Push word
-            st.Pop().Push(val).Next()
+            st.Pop().Push(val).Accessed(loc).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }

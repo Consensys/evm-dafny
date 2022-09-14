@@ -343,6 +343,40 @@ module Gas {
         G_COLDACCOUNTACCESS
     }
 
+    /**
+     * Determine cost for load a given storage location in the currently
+     * executing account.
+     */
+    function method CostSLoad(st: State) : nat
+    requires !st.IsFailure()  {
+        if st.Operands() >= 1
+        then
+            var loc := st.Peek(0);
+            // Check whether previously accessed or not.
+            if st.WasAccessed(loc) then G_WARMACCESS else G_COLDSLOAD
+        else
+            G_ZERO
+    }
+
+    /**
+     * Determine cost for writing a given storage location in the currently
+     * executing account.
+     */
+    function method CostSStore(st: State) : nat
+    requires !st.IsFailure()  {
+        if st.Operands() >= 2
+        then
+            var loc := st.Peek(0);
+            // Check whether previously accessed or not.
+            var part_a := if st.WasAccessed(loc) then 0 else G_COLDSLOAD;
+            // FIXME: this is not right yet!
+            var part_b := G_SSET;
+            //
+            part_a + part_b
+        else
+            G_ZERO
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -410,8 +444,8 @@ module Gas {
             case MLOAD => s.UseGas(CostExpandBytes(s,1,0,32) + G_VERYLOW)
             case MSTORE => s.UseGas(CostExpandBytes(s,2,0,32) + G_VERYLOW)
             case MSTORE8 => s.UseGas(CostExpandBytes(s,2,0,1) + G_VERYLOW)
-            case SLOAD => s.UseGas(G_COLDSLOAD) // for now
-            case SSTORE => s.UseGas(G_COLDSLOAD + G_SSET) // for now
+            case SLOAD => s.UseGas(CostSLoad(s))
+            case SSTORE => s.UseGas(CostSStore(s)) // for now
             case JUMP => s.UseGas(G_MID)
             case JUMPI => s.UseGas(G_HIGH) // for now
             case PC => s.UseGas(G_BASE)
