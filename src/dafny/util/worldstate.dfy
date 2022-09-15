@@ -71,15 +71,14 @@ module WorldState {
 
         /**
          * Get the account associated with a given address.  If no such account
-         * exists, a default account is created.
+         * exists, a default (i.e. empty) account is returned.
          */
-        function method GetOrCreate(account:u160) : (Account,T) {
+        function method GetOrDefault(account:u160) : Account {
             if account in accounts
             then
-                (accounts[account],this)
+                accounts[account]
             else
-                var nAccount := DefaultAccount();
-                (nAccount,this.Put(account,nAccount))
+                DefaultAccount()
         }
 
         /**

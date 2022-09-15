@@ -198,16 +198,18 @@ module Gas {
     }
 
     /**
-     * Compute gas cost for copying bytecodes (e.g. CALLDATACOPY)
+     * Compute gas cost for copying bytecodes (e.g. CALLDATACOPY).  The stack
+     * slot containing the copy length is provided as an argument as this
+     * differs between bytecodes (e.g. EXTCODECOPY vs CODECOPY).
      */
-    function method CostCopy(st: State) : nat
+    function method CostCopy(st: State, lenSlot: nat) : nat
         requires !st.IsFailure()
     {
-        if st.Operands() >= 3
+        if st.Operands() > lenSlot
         then
-            var len := st.Peek(2) as nat;
+            var len := st.Peek(lenSlot) as nat;
             var n := RoundUp(len,32) / 32;
-            G_VERYLOW + (G_COPY * n)
+            (G_COPY * n)
         else
             G_ZERO
     }
@@ -437,14 +439,14 @@ module Gas {
             case CALLVALUE => s.UseGas(G_BASE)
             case CALLDATALOAD => s.UseGas(G_VERYLOW)
             case CALLDATASIZE => s.UseGas(G_BASE)
-            case CALLDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
+            case CALLDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_VERYLOW + CostCopy(s,2))
             case CODESIZE => s.UseGas(G_BASE)
-            case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
+            case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_VERYLOW + CostCopy(s,2))
             case GASPRICE => s.UseGas(G_BASE)
             case EXTCODESIZE => s.UseGas(CostExtAccount(s))
-            // EXTCODECOPY => s.UseGas(1)
+            case EXTCODECOPY => s.UseGas(CostExpandRange(s,4,1,3) + CostExtAccount(s) + CostCopy(s,3))
             case RETURNDATASIZE => s.UseGas(G_BASE)
-            case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
+            case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_VERYLOW + CostCopy(s,2))
             //  EXTCODEHASH => s.UseGas(1)
             // 0x40s: Block Information
             case BLOCKHASH => s.UseGas(G_BLOCKHASH)
