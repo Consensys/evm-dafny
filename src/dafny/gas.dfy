@@ -353,7 +353,7 @@ module Gas {
         then
             var loc := st.Peek(0);
             // Check whether previously accessed or not.
-            if st.WasAccessed(loc) then G_WARMACCESS else G_COLDSLOAD
+            if st.WasKeyAccessed(loc) then G_WARMACCESS else G_COLDSLOAD
         else
             G_ZERO
     }
@@ -368,7 +368,7 @@ module Gas {
         then
             var loc := st.Peek(0);
             // Check whether previously accessed or not.
-            var part_a := if st.WasAccessed(loc) then 0 else G_COLDSLOAD;
+            var part_a := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
             // FIXME: this is not right yet!
             var part_b := G_SSET;
             //

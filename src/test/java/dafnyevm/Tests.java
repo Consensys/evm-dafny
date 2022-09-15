@@ -30,6 +30,7 @@ import static dafnyevm.DafnyEvm.DEFAULT_ORIGIN;
 import static dafnyevm.DafnyEvm.DEFAULT_RECEIVER;
 import dafnyevm.DafnyEvm.BlockInfo;
 import dafnyevm.DafnyEvm.State;
+import dafnyevm.util.Tracers;
 import evmtools.util.Hex;
 import evmtools.core.Trace;
 import evmtools.core.Trace.Exception.Error;
@@ -2557,6 +2558,7 @@ public class Tests {
 	private DafnyEvm.State<?> call(DafnyEvm context, int[] words) {
 		byte[] code = toBytes(words);
 //		System.out.println(Hex.toHexString(code));
+		// context = context.tracer(new Tracers.Debug());
 		return context.create(DEFAULT_RECEIVER, code).call();
 	}
 

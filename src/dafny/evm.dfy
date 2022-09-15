@@ -55,7 +55,8 @@ abstract module EVM {
         var mem := Memory.Create();
         var wld := WorldState.Create(world);
         var cod := Code.Create(code);
-        var evm := EVM(stack:=stck,memory:=mem,world:=wld,context:=context,code:=cod,log:=[],gas:=gas,pc:=0);
+        var sub := SubState.Create();
+        var evm := EVM(stack:=stck,memory:=mem,world:=wld,context:=context,code:=cod,substate:=sub,gas:=gas,pc:=0);
         // Off we go!
         State.OK(evm)
     }

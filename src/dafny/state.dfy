@@ -16,9 +16,9 @@ include "util/memory.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 include "util/extern.dfy"
-include "util/log.dfy"
 include "util/storage.dfy"
 include "util/stack.dfy"
+include "util/substate.dfy"
 include "util/worldstate.dfy"
 include "opcodes.dfy"
 include "util/ExtraTypes.dfy"
@@ -33,7 +33,7 @@ module EvmState {
     import Storage
     import WorldState
     import Context
-    import Log
+    import SubState
     import Code
     import Opcode
     import opened ExtraTypes
@@ -60,7 +60,7 @@ module EvmState {
         stack   : Stack.T,
         memory  : Memory.T,
         code: Code.T,
-        log: seq<Log.Entry>,
+        substate: SubState.T,
         gas: nat,
         pc : nat
     )
@@ -74,7 +74,7 @@ module EvmState {
             Stack.Create(),
             Memory.Create(),
             Code.Create([]),
-            [],
+            SubState.Create(),
             0,
             0)
 
@@ -87,7 +87,7 @@ module EvmState {
             Stack.Create(),
             Memory.Create(),
             Code.Create([]),
-            [],
+            SubState.Create(),
             0,
             0
         )
@@ -128,12 +128,12 @@ module EvmState {
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
         | CREATES(evm:T,
-            endowment: nat,     // endowment
+            endowment: u256,     // endowment
             initcode: seq<u8>,  // initialisation code
             salt: Option<u256>  // optional salt
         )
         | INVALID(Error)
-        | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,log:seq<Log.Entry>)
+        | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,substate:SubState.T)
         | REVERTS(gas:nat,data:seq<u8>){
 
         /**
@@ -312,24 +312,24 @@ module EvmState {
          * Mark a given storage location within the currently executing account
          * as having been "accessed" (i.e. read or written).
          */
-        function method Accessed(address: u256) : State
+        function method KeyAccessed(address: u256) : State
         requires !IsFailure() {
             // Determine executing account
             var account := evm.context.address;
             // Mark address within this account as accessed
-            OK(evm.(world:=evm.world.Accessed(account,address)))
+            OK(evm.(substate:=evm.substate.KeyAccessed(account,address)))
         }
 
         /**
          * Check whether a given storage location in the currently executing
          * account was previously accessed or not.
          */
-        function method WasAccessed(address: u256) : bool
+        function method WasKeyAccessed(address: u256) : bool
         requires !IsFailure() {
             // Determine executing account
             var account := evm.context.address;
             // Perform the check
-            evm.world.WasAccessed(account,address)
+            evm.substate.WasKeyAccessed(account,address)
         }
 
         /**
@@ -345,13 +345,14 @@ module EvmState {
         }
 
         /**
-         * Update the world state
+         * Thread through world state and substate from a successful contract
+         * call.
          */
-        function method SetWorld(world: WorldState.T) : State
+        function method Merge(world: WorldState.T, substate: SubState.T) : State
         requires !IsFailure()
         // Contract address for this account must exist.
         requires world.Exists(evm.context.address) {
-            OK(evm.(world:=world))
+            OK(evm.(world:=world,substate:=substate))
         }
 
         // =======================================================================================
@@ -477,9 +478,9 @@ module EvmState {
         /**
          * Append zero or more log entries.
          */
-        function method Log(entries: seq<Log.Entry>) : State
+        function method Log(entries: seq<SubState.LogEntry>) : State
         requires !IsFailure() {
-            OK(evm.(log:=evm.log + entries))
+            OK(evm.(substate:=evm.substate.Append(entries)))
         }
 
         /**
@@ -502,21 +503,20 @@ module EvmState {
         /**
          * Begin a nested contract call.
          */
-        function method CallEnter(code: seq<u8>) : State
+        function method CallEnter(depth: nat, code: seq<u8>) : State
         requires this.CALLS?
         requires |callData| <= MAX_U256
         requires |code| <= Code.MAX_CODE_SIZE
         // World state must contain this account
         requires evm.world.Exists(evm.context.address) {
             // Extract what is needed from context
-            var sender := evm.context.address;
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,recipient,callValue,callData,gasPrice,block);
+            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,gasPrice,block);
             // Make the call!
-            Call(evm.world,ctx,code,gas,1)
+            Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1)
         }
 
         /**
@@ -543,8 +543,8 @@ module EvmState {
                     var m := Min(|vm.data|,outSize);
                     // Slice out that data
                     var data := vm.data[0..m];
-                    // Append log (if applicable) and thread through world state
-                    var nst := if vm.RETURNS? then st.SetWorld(vm.world).Log(vm.log) else st;
+                    // Thread through world state and substate
+                    var nst := if vm.RETURNS? then st.Merge(vm.world,vm.substate) else st;
                     // Compute the refund (if any)
                     var refund := if vm.RETURNS?||vm.REVERTS? then vm.gas else 0;
                     // Done
@@ -553,6 +553,25 @@ module EvmState {
                     INVALID(MEMORY_OVERFLOW)
             else
                 INVALID(STACK_UNDERFLOW)
+        }
+
+        /**
+         * Begin a nested contract creation.
+         */
+        function method CreateEnter(depth: nat, address: u160, initcode: seq<u8>) : State
+        requires this.CREATES?
+        requires |initcode| <= Code.MAX_CODE_SIZE
+        // World state must contain this account
+        requires evm.world.Exists(evm.context.address) {
+            // Extract what is needed from context
+            var sender := evm.context.address;
+            var origin := evm.context.origin;
+            var gasPrice := evm.context.gasPrice;
+            var block := evm.context.block;
+            // Construct new context
+            var ctx := Context.Create(sender,origin,address,endowment,[],gasPrice,block);
+            // Make the creation!
+            Create(evm.world,ctx,evm.substate,initcode,evm.gas,depth+1)
         }
 
         /**
@@ -584,7 +603,7 @@ module EvmState {
                         // Initialise contract code for new account
                         var nworld := vm.world.SetCode(address,vm.data);
                         // Thread world state through
-                        st.SetWorld(nworld).Log(vm.log).Push(exitCode).SetReturnData([])
+                        st.Merge(nworld,vm.substate).Push(exitCode).SetReturnData([])
                 else if |vm.data| <= TWO_32
                 then
                     // NOTE: in the event of a revert, the return data is
@@ -605,9 +624,8 @@ module EvmState {
         }
     }
 
-
     /**
-     * Perform initial call into this EVM, assuming a given depth.
+     * Begin contract call.
      *
      * @param world The current state of all accounts.
      * @param ctx The context for this call (where e.g. ctx.address is the recipient).
@@ -615,25 +633,56 @@ module EvmState {
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
      */
-    function method Call(world: WorldState.T, ctx: Context.T, code: seq<u8>, gas: nat, depth: nat) : State
+    function method Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, code: seq<u8>, value: u256, gas: nat, depth: nat) : State
     requires |code| <= Code.MAX_CODE_SIZE {
         // Check call depth
         if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(ctx.address);
-            if !w.CanDeposit(ctx.address,ctx.callValue) then State.INVALID(BALANCE_OVERFLOW)
+            if !w.CanDeposit(ctx.address,value) then State.INVALID(BALANCE_OVERFLOW)
             else
-                var nw := w.Deposit(ctx.address,ctx.callValue);
+                var nw := w.Deposit(ctx.address,value);
                 // Check for end-user account
-                if |code| == 0 then State.RETURNS(gas, [], nw, [])
+                if |code| == 0 then State.RETURNS(gas, [], nw, substate)
                 else
                     // Construct fresh EVM
                     var stack := Stack.Create();
                     var mem := Memory.Create();
                     var cod := Code.Create(code);
-                    var evm := EVM(ctx,nw,stack,mem,cod,[],gas,0);
+                    var evm := EVM(ctx,nw,stack,mem,cod,substate,gas,0);
                     // Off we go!
                     State.OK(evm)
+    }
+
+    /**
+     * Perform contract creation.
+     *
+     * @param world The current state of all accounts.
+     * @param ctx The context for this call (where e.g. ctx.address is the recipient).
+     * @param initcode Initialisation bytecode to execute.
+     * @param gas The available gas to use for the call.
+     * @param depth The current call depth.
+     */
+    function method Create(world: WorldState.T, ctx: Context.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
+    requires |initcode| <= Code.MAX_CODE_SIZE {
+        // Check call depth
+        if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
+        else
+            var endowment := ctx.callValue;
+            var storage := Storage.Create(map[]); // empty
+            var code := Code.Create(initcode);
+            var account := WorldState.Account(1,endowment,storage,code);
+            // Create initial account
+            var w := world.Put(ctx.address,account);
+            if |initcode| == 0 then State.RETURNS(gas, [], w, substate)
+            else
+                // Construct fresh EVM
+                var stack := Stack.Create();
+                var mem := Memory.Create();
+                var cod := Code.Create(initcode);
+                var evm := EVM(ctx,w,stack,mem,cod,substate,gas,0);
+                // Off we go!
+                State.OK(evm)
     }
 }

@@ -35,7 +35,7 @@ module Bytecode {
      */
     function method Stop(st: State) : State
     requires !st.IsFailure() {
-        State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,log:=st.evm.log)
+        State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=st.evm.substate)
     }
 
     /**
@@ -987,8 +987,8 @@ module Bytecode {
     }
 
     /**
-    * Save byte to memory.
-    */
+     * Save byte to memory.
+     */
     function method MStore8(st: State) : State
     requires !st.IsFailure() {
         //
@@ -1017,7 +1017,7 @@ module Bytecode {
             var loc := st.Peek(0);
             var val := st.Load(loc);
             // Push word
-            st.Pop().Push(val).Accessed(loc).Next()
+            st.Pop().Push(val).KeyAccessed(loc).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -1033,7 +1033,7 @@ module Bytecode {
             var loc := st.Peek(0);
             var val := st.Peek(1);
             // Store word
-            st.Pop().Pop().Store(loc,val).Next()
+            st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
         else
         State.INVALID(STACK_UNDERFLOW)
     }
@@ -1244,7 +1244,7 @@ module Bytecode {
     requires !st.IsFailure() {
         if st.Operands() >= 3
         then
-            var endowment := st.Peek(0) as nat;
+            var endowment := st.Peek(0);
             // Extract start of initialisation code in memory
             var codeOffset := st.Peek(1) as nat;
             // Extract length of initialisation code
@@ -1342,7 +1342,7 @@ module Bytecode {
                 // Read out that data.
                 var data := Memory.Slice(st.evm.memory, start, len);
                 // Done
-                State.RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,log:=st.evm.log)
+                State.RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,substate:=st.evm.substate)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1393,7 +1393,7 @@ module Bytecode {
     requires !st.IsFailure() {
         if st.Operands() >= 4
         then
-            var endowment := st.Peek(0) as nat;
+            var endowment := st.Peek(0);
             // Extract start of initialisation code in memory
             var codeOffset := st.Peek(1) as nat;
             // Extract length of initialisation code
@@ -1476,8 +1476,9 @@ module Bytecode {
         then
             // Determine account to send remaining any remaining funds.
             var acct := (st.Peek(0) as nat) % TWO_160;
+            // FIXME: record contract deletion in substate!
             // FIXME: actually refund the account!
-            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,log:=st.evm.log)
+            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=st.evm.substate)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
