@@ -51,6 +51,21 @@ module SubState {
         }
 
         /**
+         * Check whether a given account was previously accessed or not.
+         */
+        function method WasAccountAccessed(account: u160) : bool {
+            account in accessedAccounts
+        }
+
+        /**
+         * Mark a particular account as having been "accessed".
+         */
+        function method AccountAccessed(account: u160) : T {
+            var naccessed := accessedAccounts + {account};
+            this.(accessedAccounts := naccessed)
+        }
+
+        /**
          * Check whether a given storage location was previously accessed or not.
          */
         function method WasKeyAccessed(account: u160, address: u256) : bool {
@@ -68,7 +83,7 @@ module SubState {
     }
 
     /**
-     * Create an initially empty substate.
+     * Create an initially empty substate.  This is "A_0" in the yellow paper.
      */
     function method Create() : T {
         SubState({},[],{},0,{},{})

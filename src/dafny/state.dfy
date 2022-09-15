@@ -309,6 +309,24 @@ module EvmState {
         }
 
         /**
+         * Mark a given account as having been "accessed".
+         */
+        function method AccountAccessed(account: u160) : State
+        requires !IsFailure() {
+            // Mark address within this account as accessed
+            OK(evm.(substate:=evm.substate.AccountAccessed(account)))
+        }
+
+        /**
+         * Check whether a given account was previously accessed (or not).
+         */
+        function method WasAccountAccessed(account: u160) : bool
+        requires !IsFailure() {
+            // Perform the check
+            evm.substate.WasAccountAccessed(account)
+        }
+
+        /**
          * Mark a given storage location within the currently executing account
          * as having been "accessed" (i.e. read or written).
          */
@@ -675,6 +693,7 @@ module EvmState {
             var account := WorldState.Account(1,endowment,storage,code);
             // Create initial account
             var w := world.Put(ctx.address,account);
+            // When creating end-use account, return immediately.
             if |initcode| == 0 then State.RETURNS(gas, [], w, substate)
             else
                 // Construct fresh EVM

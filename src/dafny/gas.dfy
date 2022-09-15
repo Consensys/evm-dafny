@@ -313,7 +313,8 @@ module Gas {
      * Determine any additional costs that apply (this is C_extra in the yellow
      * paper)
      */
-    function method CostCallExtra(st: State, to: u160, value: nat) : nat {
+    function method CostCallExtra(st: State, to: u160, value: nat) : nat
+    requires !st.IsFailure() {
         CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to)
     }
 
@@ -338,9 +339,9 @@ module Gas {
      * Determine cost for accessing a given contract address (this is C_access
      * in the yellow paper).
      */
-    function method CostAccess(st: State, x: u160) : nat {
-        // FIXME: this is not correct yet!
-        G_COLDACCOUNTACCESS
+    function method CostAccess(st: State, x: u160) : nat
+    requires !st.IsFailure() {
+        if st.WasAccountAccessed(x) then G_WARMACCESS else G_COLDACCOUNTACCESS
     }
 
     /**
