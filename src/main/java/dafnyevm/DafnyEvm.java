@@ -318,20 +318,7 @@ public class DafnyEvm {
 	public  DafnyEvm.State<?> call() {
 		Account c = worldState.get(recipient);
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		byte[] bytecode = DafnySequence.toByteArray((DafnySequence) c.code.contents);
-		return call(1,bytecode);
-	}
-
-	/**
-	 * Internal call. This expects <code>code</code> to be set, otherwise it treats
-	 * it as a call to an <i>end-user account</i>. The reason for this is that it
-	 * needs to support different calling conventions, such as those arising from
-	 * regular calls, delegate calls, etc.
-	 *
-	 * @param depth
-	 * @return
-	 */
-	public DafnyEvm.State<?> call(int depth, byte[] code) {
+		byte[] code = DafnySequence.toByteArray((DafnySequence) c.code.contents);
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
@@ -342,11 +329,38 @@ public class DafnyEvm {
 		// Construct bytecode to execute
 		DafnySequence<Byte> bytecode = DafnySequence.fromBytes(code);
 		// Begin the call.
-		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, bytecode, value, gas, BigInteger.valueOf(depth));
+		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, bytecode, value, gas, BigInteger.ONE);
 		// Execute bytecodes!
-		st = run(depth, tracer, st);
+		st = run(1, tracer, st);
 		// Convert back into the Java API
-		return State.from(depth,tracer,st);
+		return State.from(1,tracer,st);
+	}
+
+	/**
+	 * Perform a contract creation.
+	 *
+	 * @return
+	 */
+	public DafnyEvm.State<?> create() {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		DafnySequence<Byte> code = DafnySequence.fromBytes(callData);
+		// Determine sender's nonce
+		BigInteger nonce = worldState.get(sender).nonce;
+		// Calculate contract address
+		BigInteger address = addr(sender,nonce);
+		// Construct the transaction context for the call.
+		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
+				code, gasPrice, blockInfo.toDafny());
+		// Construct world state
+		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>());
+		// Construct initial substate
+		SubState_Compile.T ss = SubState_Compile.__default.Create();
+		// Begin the call.
+		EvmState_Compile.State st = EvmState_Compile.__default.Create(ws, ctx, ss, code, gas, BigInteger.ONE);
+		// Execute bytecodes!
+		st = run(1, tracer, st);
+		// Convert back into the Java API
+		return State.from(1,tracer,st);
 	}
 
 	/**
@@ -423,6 +437,19 @@ public class DafnyEvm {
 
 	/**
 	 * Programmatically construct a contract addres from the various key
+	 * ingredients.
+	 *
+	 * @param sender   The sender address.
+	 * @param nonce    The sender's account nonce.
+	 * @return
+	 */
+	public static BigInteger addr(BigInteger sender, BigInteger nonce) {
+		byte[] hash = addr(sender,nonce,new ExtraTypes_Compile.Option_None<>(),null);
+		return new BigInteger(1,hash);
+	}
+
+	/**
+	 * Programmatically construct a contract addres from the various key
 	 * ingredients. This is the <code>ADDR</code> function defined in the yellow
 	 * paper.
 	 *
@@ -432,7 +459,7 @@ public class DafnyEvm {
 	 * @param initCode The initialisation code (only used with salt).
 	 * @return
 	 */
-	private static byte[] addr(BigInteger sender, BigInteger nonce, ExtraTypes_Compile.Option<BigInteger> salt,
+	public static byte[] addr(BigInteger sender, BigInteger nonce, ExtraTypes_Compile.Option<BigInteger> salt,
 			DafnySequence<? extends Byte> initCode) {
 		byte[] bytes;
 		//

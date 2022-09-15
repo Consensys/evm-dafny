@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import dafnyevm.DafnyEvm.State;
 import evmtools.util.Bytecodes;
+import evmtools.util.Hex;
 import evmtools.core.Environment;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
@@ -127,7 +128,6 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
 			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // Gas Calc
-			"stRevertTest/RevertInCreateInInit.json",
 			"dummy"
 	);
 
@@ -141,8 +141,6 @@ public class GeneralStateTests {
 			assumeTrue(false);
 		} else {
 			Transaction tx = instance.getTransaction();
-			// Figure out an appopriate receiver
-			BigInteger to = tx.to != null ? tx.to : DafnyEvm.DEFAULT_RECEIVER;
 			// Construct environment
 			DafnyEvm.BlockInfo env = buildEnvironment(instance.getEnvironment());
 			// Construct EVM
@@ -151,12 +149,16 @@ public class GeneralStateTests {
 			// FIXME: following contains a workaround for an issue with the trace output,
 			// whereby traces are used the _block's gas limit_ rather than the
 			// _transaction's gas limit_.  #245
-			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).blockInfo(env).to(to).sender(tx.sender)
+			DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).blockInfo(env).to(tx.to).sender(tx.sender)
 					.origin(tx.sender).gas(env.gasLimit).value(tx.value).data(tx.data);
 			// Configure world state
 			configureWorldState(evm,tx,instance.getWorldState());
-			// Run the transaction!
-			evm.call();
+			// Run the call or create
+			if(tx.to != null) {
+				evm.call();
+			} else {
+				evm.create();
+			}
 			//
 			Trace tr = new Trace(elements);
 			// Finally check for equality.
@@ -195,14 +197,6 @@ public class GeneralStateTests {
 		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
 			evmtools.core.Account acct = e.getValue();
 			evm.create(e.getKey(), BigInteger.ZERO, acct.balance, acct.storage, acct.code);
-		}
-		// Finally, configure transaction receiver (if necessary).
-		if (tx.to == null) {
-			// In this case, we have an empty "to" field. Its not clear exactly what this
-			// means, but I believe we can imagine it as something like the contract
-			// creation account. Specifically, the code to execute is stored within the
-			// transaction data.
-			evm.create(DafnyEvm.DEFAULT_RECEIVER, tx.nonce, BigInteger.ZERO, new HashMap<>(), tx.data);
 		}
 	}
 
