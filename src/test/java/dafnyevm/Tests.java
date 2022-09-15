@@ -931,6 +931,13 @@ public class Tests {
 	}
 
 	@Test
+	public void test_extcodesize_01() {
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		byte[] output = callWithReturn(tx, new int[] { PUSH2, 0xc, 0xcc, EXTCODESIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(5), output);
+	}
+
+	@Test
 	public void test_returndatasize_01() {
 		DafnyEvm tx = new DafnyEvm().sender(0);
 		byte[] output = callWithReturn(tx,

@@ -336,6 +336,21 @@ module Gas {
     }
 
     /**
+     * Determine cost for accessing a given contract address.
+     */
+    function method CostExtAccount(st: State) : nat
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // Extract contract account
+            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            // Cost it!
+            CostAccess(st,account)
+        else
+            G_ZERO
+    }
+
+    /**
      * Determine cost for accessing a given contract address (this is C_access
      * in the yellow paper).
      */
@@ -426,7 +441,7 @@ module Gas {
             case CODESIZE => s.UseGas(G_BASE)
             case CODECOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))
             case GASPRICE => s.UseGas(G_BASE)
-            // EXTCODESIZE => s.UseGas(1)
+            case EXTCODESIZE => s.UseGas(CostExtAccount(s))
             // EXTCODECOPY => s.UseGas(1)
             case RETURNDATASIZE => s.UseGas(G_BASE)
             case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + CostCopy(s))

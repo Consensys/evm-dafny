@@ -578,9 +578,9 @@ module Bytecode {
             var balance := if st.evm.world.Exists(account)
                 then st.evm.world.Balance(account) else 0;
             // Push balance!
-            st.Pop().Push(balance).Next()
+            st.AccountAccessed(account).Pop().Push(balance).Next()
         else
-            State.INVALID(STACK_OVERFLOW)
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -734,6 +734,27 @@ module Bytecode {
             st.Push(st.evm.context.gasPrice).Next()
         else
             State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get size of an account's code.
+     */
+    function method ExtCodeSize(st: State) : State
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // Extract contract account
+            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            // Lookup account
+            var r := st.evm.world.Get(account);
+            // Determine its code size
+            var size := match r
+                case None => 0
+                case Some(data) => |data.code.contents| as u256;
+            // Done
+            st.AccountAccessed(account).Pop().Push(size).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**

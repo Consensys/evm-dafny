@@ -101,7 +101,7 @@ module EvmBerlin refines EVM {
                         case CODESIZE => Bytecode.CodeSize(s)
                         case CODECOPY => Bytecode.CodeCopy(s)
                         case GASPRICE => Bytecode.GasPrice(s)
-                        //  EXTCODESIZE => Bytecode.evalEXTCODESIZE(s),
+                        case EXTCODESIZE => Bytecode.ExtCodeSize(s)
                         //  EXTCODECOPY => Bytecode.evalEXTCODECOPY(s),
                         case RETURNDATASIZE => Bytecode.ReturnDataSize(s)
                         case RETURNDATACOPY => Bytecode.ReturnDataCopy(s)
