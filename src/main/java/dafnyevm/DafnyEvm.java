@@ -16,7 +16,6 @@ package dafnyevm;
 import static EvmBerlin_Compile.__default.Execute;
 
 import java.math.BigInteger;
-import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.web3j.crypto.Hash;
@@ -291,7 +290,6 @@ public class DafnyEvm {
 		return this;
 	}
 
-
 	/**
 	 * Create a new account at a given address.
 	 *
@@ -312,17 +310,6 @@ public class DafnyEvm {
 	}
 
 	/**
-	 * Assign zero or more addresses to given accounts.
-	 *
-	 * @param state
-	 * @return
-	 */
-	public DafnyEvm putAll(DafnyMap<? extends BigInteger, ? extends Account> state) {
-		this.worldState = (DafnyMap) state;
-		return this;
-	}
-
-	/**
 	 * Perform a call to either an end-user account, or a contract (to be executed
 	 * by the Dafny EVM).
 	 *
@@ -330,6 +317,7 @@ public class DafnyEvm {
 	 */
 	public  DafnyEvm.State<?> call() {
 		Account c = worldState.get(recipient);
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		byte[] bytecode = DafnySequence.toByteArray((DafnySequence) c.code.contents);
 		return call(1,bytecode);
 	}
@@ -348,13 +336,17 @@ public class DafnyEvm {
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
 		// Construct world state
-		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>(), new DafnySet<>());
+		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>());
+		// Construct initial substate
+		SubState_Compile.T ss = SubState_Compile.__default.Create();
 		// Construct bytecode to execute
 		DafnySequence<Byte> bytecode = DafnySequence.fromBytes(code);
 		// Begin the call.
-		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, bytecode, gas, BigInteger.valueOf(depth));
+		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, bytecode, value, gas, BigInteger.valueOf(depth));
 		// Execute bytecodes!
-		return run(depth, tracer, st);
+		st = run(depth, tracer, st);
+		// Convert back into the Java API
+		return State.from(depth,tracer,st);
 	}
 
 	/**
@@ -365,26 +357,22 @@ public class DafnyEvm {
 	 * @param state   Current DafnyEvm state.
 	 * @return
 	 */
-	protected static State<?> run(int depth, Tracer tracer, EvmState_Compile.State rstate) {
+	protected static EvmState_Compile.State run(int depth, Tracer tracer, EvmState_Compile.State st) {
 		// Continue whilst the EVM is happy.
-		while (rstate instanceof State_OK) {
-			tracer.step(depth, rstate);
-			rstate = Execute(rstate);
-		}
-		// Final step
-		tracer.step(depth,rstate);
-		//
-		State<?> r = State.from(depth, tracer, rstate);
-		// Execute continuations.
-		while (r instanceof State.Running) {
-			if (r instanceof State.CallContinue) {
-				r = callContinue(depth, tracer, (State.CallContinue) r);
-			} else {
-				r = createContinue(depth, tracer, (State.CreateContinue) r);
+		while (st instanceof State_OK) {
+			tracer.step(depth, st);
+			st = Execute(st);
+			// Manage continuations
+			if (st instanceof State_CALLS) {
+				st = callContinue(depth, tracer, (State_CALLS) st);
+			} else if(st instanceof State_CREATES){
+				st = createContinue(depth, tracer, (State_CREATES) st);
 			}
 		}
-		// Done!
-		return r;
+		// Final step
+		tracer.step(depth, st);
+		//
+		return st;
 	}
 
 	/**
@@ -396,20 +384,17 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static State<?> callContinue(int depth, Tracer tracer, State.CallContinue cc) {
-		EvmState_Compile.Raw evm = cc.getEVM();
-		BigInteger origin = evm.context.origin;
-		BigInteger gasPrice = evm.context.gasPrice;
-		BlockInfo blk = new BlockInfo(evm.context.block);
+	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.State_CALLS cc) {
+		EvmState_Compile.Raw evm = cc.evm;
 		// Identify account whose code to execute
-		Account c = evm.world.accounts.get(cc.code());
-		byte[] bytecode = (c == null) ? new byte[0] : DafnySequence.toByteArray((DafnySequence) c.code.contents);
-		// Make the recursive call.
-		State<?> nr = new DafnyEvm().tracer(tracer).putAll(cc.getEVM().world.accounts).sender(cc.sender()).to(cc.to()).origin(origin)
-				.value(cc.delegateValue()).data(cc.callData()).gasPrice(gasPrice).blockInfo(blk)
-				.gas(cc.gas()).call(depth + 1, bytecode);
-		// Continue from where we left off.
-		return cc.callReturn(nr);
+		Account c = evm.world.accounts.get(cc.code);
+		DafnySequence<? extends Byte> code = (c != null) ? c.code.contents : DafnySequence.fromBytes(new byte[0]);
+		// Begin recursive call.
+		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth), code);
+		// Run code within recursive call.
+		st = run(depth + 1, tracer, st);
+		// Return from call.
+		return cc.CallReturn(st);
 	}
 
 	/**
@@ -419,25 +404,21 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static State<?> createContinue(int depth, Tracer tracer, State.CreateContinue cc) {
-		EvmState_Compile.Raw evm = cc.getEVM();
+	private static EvmState_Compile.State createContinue(int depth, Tracer tracer, EvmState_Compile.State_CREATES cc) {
 		// Determine sender
-		BigInteger sender = evm.context.address;
-		BigInteger origin = evm.context.origin;
-		BigInteger gasPrice = evm.context.gasPrice;
-		BlockInfo blk = new BlockInfo(evm.context.block);
+		BigInteger sender = cc.evm.context.address;
 		// Construct new account
-		Account acct = cc.getEVM().world.accounts.get(sender);
+		Account acct = cc.evm.world.accounts.get(sender);
 		// Programatically calculate the new address.
-		byte[] hash = addr(sender,acct.nonce,cc.salt(),cc.initCode());
+		byte[] hash = addr(sender, acct.nonce, cc.salt, cc.initcode);
 		// Finally reconstruct the address from the rightmost 160bits.
 		BigInteger address = new BigInteger(1, hash);
-		// Make the contract call
-		State<?> nr = new DafnyEvm().tracer(tracer).putAll(cc.getEVM().world.accounts)
-				.create(address, BigInteger.ONE, cc.endowment(), Collections.emptyMap(), cc.initCode()).to(address)
-				.sender(sender).origin(origin).gasPrice(gasPrice).blockInfo(blk).call(depth + 1, cc.initCode());
-		// Continue from where we left off.
-		return cc.createReturn(nr, address);
+		// Begin the recursive call.
+		EvmState_Compile.State st = cc.CreateEnter(BigInteger.valueOf(depth), address, cc.initcode);
+		// Run init code for recursive call.
+		st = run(depth + 1, tracer, st);
+		// Return from creation
+		return cc.CreateReturn(st, address);
 	}
 
 	/**
@@ -451,18 +432,22 @@ public class DafnyEvm {
 	 * @param initCode The initialisation code (only used with salt).
 	 * @return
 	 */
-	private static byte[] addr(BigInteger sender, BigInteger nonce, Optional<BigInteger> salt, byte[] initCode) {
+	private static byte[] addr(BigInteger sender, BigInteger nonce, ExtraTypes_Compile.Option<BigInteger> salt,
+			DafnySequence<? extends Byte> initCode) {
 		byte[] bytes;
 		//
-		if (salt.isEmpty()) {
+		if (salt instanceof ExtraTypes_Compile.Option_None) {
 			// Case for CREATE
 			bytes = RlpEncoder.encode(new RlpList(RlpString.create(sender), RlpString.create(nonce)));
 		} else {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			byte[] code = DafnySequence.toByteArray((DafnySequence) initCode);
+			ExtraTypes_Compile.Option_Some<BigInteger> s = (ExtraTypes_Compile.Option_Some<BigInteger>) salt;
 			// Case for CREATE2 (see EIP 1014).
 			byte ff = (byte) (0xff & 0xff);
 			byte[] senderBytes = new Uint160(sender).getBytes();
-			byte[] saltBytes = new Uint256(salt.get()).getBytes();
-			bytes = concat(new byte[] { ff }, senderBytes, saltBytes, Hash.sha3(initCode));
+			byte[] saltBytes = new Uint256(s.v).getBytes();
+			bytes = concat(new byte[] { ff }, senderBytes, saltBytes, Hash.sha3(code));
 		}
 		// Calculate hash.
 		byte[] hash = Hash.sha3(bytes);
@@ -551,10 +536,8 @@ public class DafnyEvm {
 				return new State.Revert(tracer, (State_REVERTS) state, depth);
 			} else if (state instanceof State_RETURNS) {
 				return new State.Return(tracer, (State_RETURNS) state, depth);
-			} else if (state instanceof State_CALLS) {
-				return new State.CallContinue(tracer, (State_CALLS) state, depth);
 			} else {
-				return new State.CreateContinue(tracer, (State_CREATES) state, depth);
+				throw new IllegalArgumentException("invalid state encountered (" + state.getClass().getName() + ")");
 			}
 		}
 
@@ -599,7 +582,9 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
+			@SuppressWarnings("unchecked")
 			public byte[] getMemory() {
+				@SuppressWarnings("rawtypes")
 				DafnySequence bytes = getEVM().memory.contents;
 				return DafnySequence.toByteArray(bytes);
 			}
@@ -684,168 +669,6 @@ public class DafnyEvm {
 		}
 
 		/**
-		 * Indicates a nested call (either to a contract or an end-user account) has
-		 * been initiated. The intention is that the environment manages that call, and
-		 * then execution of this state continues after that is finished (i.e. this is a
-		 * continuation).
-		 *
-		 * @author David J. Pearce
-		 *
-		 */
-		public static class CallContinue extends Running<State_CALLS> {
-			public CallContinue(Tracer tracer, State_CALLS state, int depth) {
-				super(tracer, state, depth);
-			}
-
-			/**
-			 * Identify the receiver associated with this call.
-			 *
-			 * @return
-			 */
-			public BigInteger to() {
-				return state.recipient;
-			}
-
-			/**
-			 * Identify the sender of this call.
-			 *
-			 * @return
-			 */
-			public BigInteger sender() {
-				return state.sender;
-			}
-
-			/**
-			 * Identify the contract whose code should be used for executing the call.
-			 * Observe that this is not necessarily the same as the receiver (e.g. for the
-			 * <code>CALLCODE</code> instruction).
-			 *
-			 * @return
-			 */
-			public BigInteger code() {
-				return state.code;
-			}
-
-			/**
-			 * Get the value to be transferred to the recipient by this call.
-			 *
-			 * @return
-			 */
-			public BigInteger callValue() {
-				return state.callValue;
-			}
-
-			/**
-			 * Get the call value that should appear in the code as this call is executed.
-			 * That will differ from the actual call value if this is a delegate call.
-			 *
-			 * @return
-			 */
-			public BigInteger delegateValue() {
-				return state.delegateValue;
-			}
-
-			/**
-			 * Get the gas provided for this call.
-			 *
-			 * @return
-			 */
-			public BigInteger gas() {
-				return state.gas;
-			}
-
-			/**
-			 * Get the call data associated with this call.
-			 * @return
-			 */
-			public byte[] callData() {
-				return DafnySequence.toByteArray((DafnySequence) state.callData);
-			}
-
-			@Override
-			protected EvmState_Compile.Raw getEVM() {
-				return state.evm;
-			}
-
-			/**
-			 * Continue this continuation.
-			 *
-			 * @return
-			 */
-			public State<?> callReturn(State<?> callee) {
-				// Convert into OK state
-				EvmState_Compile.State st = state.CallReturn(callee.state);
-				// Continue execution.
-				return run(depth, tracer, st);
-			}
-		}
-
-		/**
-		 * Indicates a nested contract creation call (either to a contract or an
-		 * end-user account) has been initiated. The intention is that the environment
-		 * manages that initialisation for that contract call, and then execution of
-		 * this state continues after that is finished (i.e. this is a continuation).
-		 *
-		 * @author David J. Pearce
-		 *
-		 */
-		public static class CreateContinue extends Running<State_CREATES> {
-			public CreateContinue(Tracer tracer, State_CREATES state, int depth) {
-				super(tracer, state, depth);
-			}
-
-			/**
-			 * Get the value to be transferred to created contract.
-			 *
-			 * @return
-			 */
-			public BigInteger endowment() {
-				return state.endowment;
-			}
-
-			/**
-			 * Get the (optional) salt associated with this contract creation.
-			 *
-			 * @return
-			 */
-			public Optional<BigInteger> salt() {
-				ExtraTypes_Compile.Option<BigInteger> salt = state.salt;
-				//
-				if(salt instanceof ExtraTypes_Compile.Option_Some) {
-					ExtraTypes_Compile.Option_Some<BigInteger> s = (ExtraTypes_Compile.Option_Some<BigInteger>) salt;
-					return Optional.of(s.v);
-				} else {
-					return Optional.empty();
-				}
-			}
-
-			/**
-			 * Get the call data associated with this call.
-			 * @return
-			 */
-			public byte[] initCode() {
-				return DafnySequence.toByteArray((DafnySequence) state.initcode);
-			}
-
-			@Override
-			protected EvmState_Compile.Raw getEVM() {
-				return state.evm;
-			}
-
-			/**
-			 * Continue this continuation.
-			 *
-			 * @return
-			 */
-			public State<?> createReturn(State<?> callee, BigInteger address) {
-				// Convert into OK state
-				EvmState_Compile.State st = state.CreateReturn(callee.state, address);
-				// Continue execution.
-				return run(depth, tracer, st);
-			}
-		}
-
-		/**
 		 * Indicates a <code>REVERT</code> occurred producing zero or more bytes of
 		 * return data.
 		 *
@@ -862,14 +685,16 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
+			@SuppressWarnings("unchecked")
 			@Override
 			public byte[] getReturnData() {
-				return DafnySequence.toByteArray(((DafnySequence) state.data));
+				@SuppressWarnings("rawtypes")
+				DafnySequence data = (DafnySequence) state.data;
+				return DafnySequence.toByteArray(data);
 			}
 
-			public BigInteger getGasUsed() {
-				// TODO: fixme!
-				return BigInteger.ZERO;
+			public BigInteger getGasRefunded() {
+				return state.gas;
 			}
 		}
 
@@ -889,14 +714,16 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
+			@SuppressWarnings("unchecked")
 			@Override
 			public byte[] getReturnData() {
-				return DafnySequence.toByteArray(((DafnySequence) state.data));
+				@SuppressWarnings("rawtypes")
+				DafnySequence data = (DafnySequence) state.data;
+				return DafnySequence.toByteArray(data);
 			}
 
-			public BigInteger getGasUsed() {
-				// TODO: fixme!
-				return BigInteger.ZERO;
+			public BigInteger getGasRefunded() {
+				return state.gas;
 			}
 
 			public Map<BigInteger,evmtools.core.Account> getWorldState() {
@@ -908,9 +735,10 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
+			@SuppressWarnings({ "rawtypes", "unchecked" })
 			@Override
 			public Pair<BigInteger[], byte[]>[] getLog() {
-				DafnySequence<? extends Tuple2> dlog = state.log;
+				DafnySequence<? extends Tuple2> dlog = state.substate.log;
 				Pair<BigInteger[], byte[]>[] log = new Pair[dlog.length()];
 				for (int i = 0; i != log.length; ++i) {
 					Tuple2<DafnySequence<BigInteger>, DafnySequence<Byte>> ith = dlog.select(i);
@@ -925,7 +753,7 @@ public class DafnyEvm {
 			@Override
 			public String toString() {
 				String ws = toWorldStateString(getWorldState());
-				return "RETURN(gas=" + getGasUsed() + "," + Hex.toHexString(getReturnData()) + "," + ws + ")";
+				return "RETURN(gas=" + getGasRefunded() + "," + Hex.toHexString(getReturnData()) + "," + ws + ")";
 			}
 		}
 
@@ -966,6 +794,7 @@ public class DafnyEvm {
 			HashMap<BigInteger, evmtools.core.Account> ws = new HashMap<>();
 			for (BigInteger account : accounts.keySet().Elements()) {
 				Account a = accounts.get(account);
+				@SuppressWarnings({ "rawtypes", "unchecked" })
 				byte[] bytecode = DafnySequence.toByteArray((DafnySequence) a.code.contents);
 				Map<BigInteger, BigInteger> store = new HashMap<>();
 				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.storage.contents;
@@ -1044,15 +873,6 @@ public class DafnyEvm {
 			this.difficulty = difficulty;
 			this.gasLimit = gasLimit;
 			this.chainID = chainID;
-		}
-
-		private BlockInfo(Context_Compile.Block blk) {
-			this.coinBase = blk.coinBase;
-			this.timeStamp = blk.timeStamp;
-			this.number = blk.number;
-			this.difficulty = blk.difficulty;
-			this.gasLimit = blk.gasLimit;
-			this.chainID = blk.chainID;
 		}
 
 		/**
@@ -1182,8 +1002,8 @@ public class DafnyEvm {
 				revert(new State.Revert(this, (State_REVERTS) st, depth));
 			} else if (st instanceof State_INVALID) {
 				exception(new State.Invalid(this, (State_INVALID) st, depth));
-			} else if (st instanceof State_CALLS) {
-				callContinue(new State.CallContinue(this, (State_CALLS) st, depth));
+			} else  {
+				throw new IllegalArgumentException("invalid state encountered (" + st.getClass().getName() + ")");
 			}
 		}
 
@@ -1194,8 +1014,6 @@ public class DafnyEvm {
 		public abstract void revert(State.Revert state);
 
 		public abstract void exception(State.Invalid state);
-
-		public abstract void callContinue(State.CallContinue state);
 	}
 
 }

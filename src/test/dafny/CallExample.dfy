@@ -28,7 +28,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter([STOP]);
+            var vm2 := vm1.CallEnter(1,[STOP]);
             vm2 := Stop(vm2);
             vm1 := vm1.CallReturn(vm2);
         }
@@ -52,7 +52,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter([STOP]);
+            var vm2 := vm1.CallEnter(1,[STOP]);
             vm2 := Pop(vm2); // force exception
             vm1 := vm1.CallReturn(vm2);
         }
@@ -75,7 +75,7 @@ module CallExamples {
         vm1 := Push1(vm1,0xFF);   // Gas
         vm1 := Call(vm1);
         { // >>> Contract call starts here
-            var vm2 := vm1.CallEnter([STOP]);
+            var vm2 := vm1.CallEnter(1,[STOP]);
             vm2 := contractReturns123(vm2);
             vm1 := vm1.CallReturn(vm2);
         } // <<< Contract call ends here

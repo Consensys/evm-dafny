@@ -35,7 +35,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import dafnyevm.DafnyEvm.State;
-import dafnyevm.DafnyEvm.State.CallContinue;
 import evmtools.util.Bytecodes;
 import evmtools.core.Environment;
 import evmtools.core.Trace;
@@ -354,11 +353,6 @@ public class GeneralStateTests {
 		@Override
 		public void exception(State.Invalid state) {
 			out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
-		}
-
-		@Override
-		public void callContinue(CallContinue state) {
-			// For now we do nothing.
 		}
 	}
 

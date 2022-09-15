@@ -13,24 +13,16 @@
  */
 package dafnyevm.util;
 
-import java.io.PrintStream;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONStringer;
 import org.json.JSONWriter;
+
+import evmtools.util.Bytecodes;
 import evmtools.util.Hex;
-import EvmState_Compile.State;
-import EvmState_Compile.State_OK;
-import EvmState_Compile.State_RETURNS;
-import EvmState_Compile.State_REVERTS;
-import dafny.DafnySequence;
 import dafnyevm.DafnyEvm;
-import dafnyevm.DafnyEvm.State.CallContinue;
-import dafnyevm.DafnyEvm.Tracer;
 
 public class Tracers {
 
@@ -43,10 +35,11 @@ public class Tracers {
 		@Override
 		public void step(DafnyEvm.State.Ok state) {
 			final String p = state.getPC().toString();
+			final String o = Bytecodes.toString(state.getOpcode());
 			final String m = Hex.toAbbreviatedHexString(state.getMemory());
 			final String s = state.getStorage().toString();
 			final String a = toStackString(state.getStack());
-			String st = String.format("pc=%s, stack=%s, memory=%s, storage=%s", p, a, m, s);
+			String st = String.format("pc=%s (%s), stack=%s, memory=%s, storage=%s", p, o, a, m, s);
 			System.out.println(st);
 		}
 
@@ -64,11 +57,6 @@ public class Tracers {
 		public void revert(DafnyEvm.State.Revert state) {
 			System.out.println(Hex.toHexString(state.getReturnData()));
 			System.out.println("error: execution reverted");
-		}
-
-		@Override
-		public void callContinue(CallContinue state) {
-			System.out.println("call enter");
 		}
 
 		private String toStackString(BigInteger[] stack) {
@@ -117,7 +105,7 @@ public class Tracers {
 			try {
 				JSONWriter obj = json.object();
 				obj.key("output").value(Hex.toHexString(state.getReturnData()));
-				obj.key("gasUsed").value(Hex.toHexString(state.getGasUsed()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGasRefunded()));
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
 				// In principle, this should never happen!
@@ -131,7 +119,7 @@ public class Tracers {
 			try {
 				JSONWriter obj = json.object();
 				obj.key("output").value(Hex.toHexString(state.getReturnData()));
-				obj.key("gasUsed").value(Hex.toHexString(state.getGasUsed()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGasRefunded()));
 				obj.key("error").value("execution reverted");
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
@@ -151,11 +139,6 @@ public class Tracers {
 				// In principle, this should never happen!
 				throw new RuntimeException(e);
 			}
-		}
-
-		@Override
-		public void callContinue(CallContinue state) {
-			// NOTE: EIP-3155 has nothing for this as far as I am aware.
 		}
 
 		/**

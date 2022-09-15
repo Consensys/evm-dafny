@@ -41,7 +41,7 @@ module WorldState {
     /**
      * A mapping from contract addresses to accounts.
      */
-    datatype T = WorldState(accounts:map<u160,Account>, accessed:set<(u160,u256)>, modified:set<(u160,u256)>) {
+    datatype T = WorldState(accounts:map<u160,Account>, modified:set<(u160,u256)>) {
         /**
          * Determine whether or not a given account exists.
          */
@@ -160,12 +160,10 @@ module WorldState {
             var pValue := Storage.Read(entry.storage,address);
             // Update account storage
             var nStorage := Storage.Write(entry.storage,address,value);
-            // Update access record
-            var naccessed := accessed + {(account,address)};
             // Update modification record (if applicable).
             var nmodified := if value != pValue then modified + {(account,address)} else modified;
             // Write it all back
-            WorldState(this.accounts[account:=entry.(storage:=nStorage)],naccessed,nmodified)
+            WorldState(this.accounts[account:=entry.(storage:=nStorage)],nmodified)
         }
 
         /**
@@ -178,21 +176,6 @@ module WorldState {
             var entry := accounts[account];
             // Read from account storage
             Storage.Read(entry.storage,address)
-        }
-
-        /**
-         * Check whether a given storage location was previously accessed or not.
-         */
-        function method WasAccessed(account: u160, address: u256) : bool {
-            (account,address) in accessed
-        }
-
-        /**
-         * Mark a particular storage location as having been "accessed".
-         */
-        function method Accessed(account: u160, address: u256) : T {
-            var naccessed := accessed + {(account,address)};
-            this.(accessed := naccessed)
         }
 
         /**
@@ -216,6 +199,6 @@ module WorldState {
      */
     function method Create(accounts:map<u160,Account>) : T {
         // Initially all accessed / modified flags are cleared.
-        WorldState(accounts, {}, {})
+        WorldState(accounts, {})
     }
 }

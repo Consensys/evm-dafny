@@ -313,7 +313,8 @@ module Gas {
      * Determine any additional costs that apply (this is C_extra in the yellow
      * paper)
      */
-    function method CostCallExtra(st: State, to: u160, value: nat) : nat {
+    function method CostCallExtra(st: State, to: u160, value: nat) : nat
+    requires !st.IsFailure() {
         CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to)
     }
 
@@ -338,9 +339,9 @@ module Gas {
      * Determine cost for accessing a given contract address (this is C_access
      * in the yellow paper).
      */
-    function method CostAccess(st: State, x: u160) : nat {
-        // FIXME: this is not correct yet!
-        G_COLDACCOUNTACCESS
+    function method CostAccess(st: State, x: u160) : nat
+    requires !st.IsFailure() {
+        if st.WasAccountAccessed(x) then G_WARMACCESS else G_COLDACCOUNTACCESS
     }
 
     /**
@@ -353,7 +354,7 @@ module Gas {
         then
             var loc := st.Peek(0);
             // Check whether previously accessed or not.
-            if st.WasAccessed(loc) then G_WARMACCESS else G_COLDSLOAD
+            if st.WasKeyAccessed(loc) then G_WARMACCESS else G_COLDSLOAD
         else
             G_ZERO
     }
@@ -368,7 +369,7 @@ module Gas {
         then
             var loc := st.Peek(0);
             // Check whether previously accessed or not.
-            var part_a := if st.WasAccessed(loc) then 0 else G_COLDSLOAD;
+            var part_a := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
             // FIXME: this is not right yet!
             var part_b := G_SSET;
             //
