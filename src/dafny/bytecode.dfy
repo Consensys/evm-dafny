@@ -578,9 +578,9 @@ module Bytecode {
             var balance := if st.evm.world.Exists(account)
                 then st.evm.world.Balance(account) else 0;
             // Push balance!
-            st.Pop().Push(balance).Next()
+            st.AccountAccessed(account).Pop().Push(balance).Next()
         else
-            State.INVALID(STACK_OVERFLOW)
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -734,6 +734,59 @@ module Bytecode {
             st.Push(st.evm.context.gasPrice).Next()
         else
             State.INVALID(STACK_OVERFLOW)
+    }
+
+    /**
+     * Get size of an account's code.
+     */
+    function method ExtCodeSize(st: State) : State
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // Extract contract account
+            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            // Lookup account
+            var data := st.evm.world.GetOrDefault(account);
+            // Determine its code size
+            var size := |data.code.contents| as u256;
+            // Done
+            st.AccountAccessed(account).Pop().Push(size).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Copy an account's code to memory.
+     */
+    function method ExtCodeCopy(st: State) : State
+    requires !st.IsFailure() {
+        //
+        if st.Operands() >= 4
+        then
+            // Extract contract account
+            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            var m_loc := st.Peek(1) as nat;
+            var d_loc := st.Peek(2) as nat;
+            var len := st.Peek(3) as nat;
+            var last := (m_loc as nat) + len;
+            // Lookup account data
+            var data := st.evm.world.GetOrDefault(account);
+            // NOTE: This condition is not specified in the yellow paper.
+            // Its not clear whether that was intended or not.  However, its
+            // impossible to trigger this in practice (due to the gas costs
+            // involved).
+            if last < MAX_U256
+            then
+                // Slice bytes out of code (with padding as needed)
+                var data := Code.Slice(data.code,d_loc,len);
+                // Sanity check
+                assert |data| == len;
+                // Copy slice into memory
+                st.AccountAccessed(account).Expand(m_loc as nat, len).Pop().Pop().Pop().Pop().Copy(m_loc,data).Next()
+            else
+                State.INVALID(MEMORY_OVERFLOW)
+        else
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**

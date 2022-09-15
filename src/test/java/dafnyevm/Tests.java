@@ -931,6 +931,47 @@ public class Tests {
 	}
 
 	@Test
+	public void test_extcodesize_01() {
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		byte[] output = callWithReturn(tx, new int[] { PUSH2, 0xc, 0xcc, EXTCODESIZE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(5), output);
+	}
+
+	@Test
+	public void test_extcodecopy_01() {
+		// Check can copy code from non-existant contract.
+		byte[] output = callWithReturn(
+				new int[] { PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x00, PUSH2, 0x0c, 0xcc, EXTCODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(UINT256(0), output);
+	}
+
+	@Test
+	public void test_extcodecopy_02() {
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		byte[] output = callWithReturn(tx,
+				new int[] { PUSH1, 0x05, PUSH1, 0x00, PUSH1, 0x00, PUSH2, 0x0c, 0xcc, EXTCODECOPY, PUSH1, 0x5, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x60206000f3"), output);
+	}
+
+	@Test
+	public void test_extcodecopy_03() {
+		// Test copy with padding
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		byte[] output = callWithReturn(tx,
+				new int[] { PUSH1, 0x05, PUSH1, 0x00, PUSH1, 0x00, PUSH2, 0x0c, 0xcc, EXTCODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x60206000f3000000000000000000000000000000000000000000000000000000"), output);
+	}
+
+	@Test
+	public void test_extcodecopy_04() {
+		// Test copy with padding
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN));
+		byte[] output = callWithReturn(tx,
+				new int[] { PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x00, PUSH2, 0x0c, 0xcc, EXTCODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hex.toBytes("0x60206000f3000000000000000000000000000000000000000000000000000000"), output);
+	}
+
+	@Test
 	public void test_returndatasize_01() {
 		DafnyEvm tx = new DafnyEvm().sender(0);
 		byte[] output = callWithReturn(tx,

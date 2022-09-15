@@ -86,8 +86,7 @@ public class GeneralStateTests {
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
-			"stMemoryTest/bufferSrcOffset.json", // EXTCODECOPY
-			"stMemoryTest/oog.json", // EXTCODECOPY
+			"stMemoryTest/oog.json", // #299
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
@@ -109,7 +108,6 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jumpi.json", // Gas (call)
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stMemoryTest/memCopySelf.json", // Incorrect Gas calc
-			"stMemoryTest/extcodecopy_dejavu.json", // EXTCODECOPY
 			//
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json", // #183
 			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
@@ -128,7 +126,7 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
-			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // EXTCODESIZE
+			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // Gas Calc
 			"stRevertTest/RevertInCreateInInit.json",
 			"dummy"
 	);
