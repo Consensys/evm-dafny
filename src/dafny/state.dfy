@@ -622,7 +622,7 @@ module EvmState {
                         var nworld := vm.world.SetCode(address,vm.data);
                         // Thread world state through
                         st.Merge(nworld,vm.substate).Push(exitCode).SetReturnData([])
-                else if |vm.data| <= TWO_32
+                else if |vm.data| <= MAX_U256
                 then
                     // NOTE: in the event of a revert, the return data is
                     // provided back.
@@ -683,7 +683,8 @@ module EvmState {
      * @param depth The current call depth.
      */
     function method Create(world: WorldState.T, ctx: Context.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
-    requires |initcode| <= Code.MAX_CODE_SIZE {
+    requires |initcode| <= Code.MAX_CODE_SIZE
+    requires world.Exists(ctx.sender) {
         // Check call depth
         if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
         else
@@ -692,7 +693,7 @@ module EvmState {
             var code := Code.Create(initcode);
             var account := WorldState.Account(1,endowment,storage,code);
             // Create initial account
-            var w := world.Put(ctx.address,account);
+            var w := world.Put(ctx.address,account).IncNonce(ctx.sender);
             // When creating end-use account, return immediately.
             if |initcode| == 0 then State.RETURNS(gas, [], w, substate)
             else

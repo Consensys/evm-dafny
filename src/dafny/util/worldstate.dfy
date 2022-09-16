@@ -148,6 +148,18 @@ module WorldState {
         }
 
         /**
+         * Increment the nonce associated with a given account.
+         */
+        function method IncNonce(account:u160) : T
+        // Account must be valid!
+        requires account in this.accounts {
+            // Extract account data
+            var entry := accounts[account];
+            // Increment the nonce
+            this.(accounts:=this.accounts[account:=entry.(nonce:=entry.nonce+1)])
+        }
+
+        /**
          * Write into the storage of a given account.
          */
         function method Write(account:u160, address: u256, value: u256) : T

@@ -346,7 +346,8 @@ public class DafnyEvm {
 		DafnySequence<Byte> code = DafnySequence.fromBytes(callData);
 		// Determine sender's nonce
 		BigInteger nonce = worldState.get(sender).nonce;
-		// Calculate contract address
+		// NOTE: we do not subtract one from the nonce here, as this address is being
+		// calculated *before* the sender's nonce is incremented.
 		BigInteger address = addr(sender,nonce);
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
@@ -423,7 +424,8 @@ public class DafnyEvm {
 		BigInteger sender = cc.evm.context.address;
 		// Construct new account
 		Account acct = cc.evm.world.accounts.get(sender);
-		// Programatically calculate the new address.
+		// NOTE: we do not subtract one from the nonce here, as this address is being
+		// calculated *before* the sender's nonce is incremented.
 		byte[] hash = addr(sender, acct.nonce, cc.salt, cc.initcode);
 		// Finally reconstruct the address from the rightmost 160bits.
 		BigInteger address = new BigInteger(1, hash);
@@ -465,7 +467,7 @@ public class DafnyEvm {
 		//
 		if (salt instanceof ExtraTypes_Compile.Option_None) {
 			// Case for CREATE
-			bytes = RlpEncoder.encode(new RlpList(RlpString.create(sender), RlpString.create(nonce)));
+			bytes = RlpEncoder.encode(new RlpList(RlpString.create(sender),RlpString.create(nonce)));
 		} else {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			byte[] code = DafnySequence.toByteArray((DafnySequence) initCode);

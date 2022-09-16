@@ -196,7 +196,7 @@ public class GeneralStateTests {
 		// Initialise world statew
 		for(Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
 			evmtools.core.Account acct = e.getValue();
-			evm.create(e.getKey(), BigInteger.ZERO, acct.balance, acct.storage, acct.code);
+			evm.create(e.getKey(), acct.nonce, acct.balance, acct.storage, acct.code);
 		}
 	}
 
