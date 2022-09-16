@@ -128,6 +128,92 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
 			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // Gas Calc
+			//
+			"stSelfBalance/selfBalanceUpdate.json",
+			"stSelfBalance/selfBalanceCallTypes.json",
+			//
+			"stCreateTest/CodeInConstructor.json",
+			"stCreateTest/CREATE_AcreateB_BSuicide_BStore.json",
+			"stCreateTest/CreateCollisionResults.json",
+			"stCreateTest/CreateCollisionToEmpty.json",
+			"stCreateTest/CREATE_ContractRETURNBigOffset.json",
+			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
+			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
+			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json",
+			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
+			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json",
+			"stCreateTest/CREATE_EmptyContractAndCallIt_0wei.json",
+			"stCreateTest/CREATE_EmptyContractAndCallIt_1wei.json",
+			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_0wei.json",
+			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_1wei.json",
+			"stCreateTest/CREATE_EmptyContractWithStorage.json",
+			"stCreateTest/CREATE_EOF1.json",
+			"stCreateTest/CREATE_FirstByte_loop.json",
+			"stCreateTest/CREATE_HighNonce.json",
+			"stCreateTest/CreateOOGafterInitCodeRevert2.json",
+			"stCreateTest/TransactionCollisionToEmptyButCode.json",
+			"stCreateTest/TransactionCollisionToEmptyButNonce.json",
+			"stCreateTest/TransactionCollisionToEmpty.json",
+			//
+			"stCreate2/create2callPrecompiles.json", // #266
+			"stCreate2/create2checkFieldsInInitcode.json",
+			"stCreate2/create2collisionCode2.json",
+			"stCreate2/create2collisionCode.json",
+			"stCreate2/create2collisionNonce.json",
+			"stCreate2/create2collisionSelfdestructed2.json",
+			"stCreate2/create2collisionSelfdestructed.json",
+			"stCreate2/create2collisionSelfdestructedOOG.json",
+			"stCreate2/create2collisionSelfdestructedRevert.json",
+			"stCreate2/CREATE2_Bounds3.json",
+			"stCreate2/CREATE2_EOF1.json",
+			"stCreate2/CREATE2_FirstByte_loop.json",
+			"stCreate2/CREATE2_HighNonceDelegatecall.json",
+			"stCreate2/CREATE2_HighNonce.json",
+			"stCreate2/CREATE2_Suicide.json",
+			"stCreate2/create2noCash.json",
+			"stCreate2/Create2OOGafterInitCodeRevert2.json",
+			"stCreate2/create2SmartInitCode.json",
+			//
+			"stExtCodeHash/callToNonExistent.json",
+			"stExtCodeHash/callToSuicideThenExtcodehash.json",
+			"stExtCodeHash/codeCopyZero.json",
+			"stExtCodeHash/dynamicAccountOverwriteEmpty.json",
+			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json",
+			"stExtCodeHash/extCodeHashDynamicArgument.json",
+			"stExtCodeHash/extcodehashEmpty.json",
+			"stExtCodeHash/extCodeHashNonExistingAccount.json",
+			"stExtCodeHash/extCodeHashPrecompiles.json", // #266
+			"stExtCodeHash/extCodeHashSelfInInit.json",
+			"stExtCodeHash/extCodeHashSubcallOOG.json",
+			//
+			"stSStoreTest/InitCollision.json", // #295
+			"stSStoreTest/InitCollisionNonZeroNonce.json", // #295
+			"stSStoreTest/sstore_0to0.json", // #295
+			"stSStoreTest/sstore_0to0to0.json", // #295
+			"stSStoreTest/sstore_0to0toX.json", // #295
+			"stSStoreTest/sstore_0toX.json", // #295
+			"stSStoreTest/sstore_0toXto0.json", // #295
+			"stSStoreTest/sstore_0toXto0toX.json", // #295
+			"stSStoreTest/sstore_0toXtoX.json", // #295
+			"stSStoreTest/sstore_0toXtoY.json", // #295
+			"stSStoreTest/SstoreCallToSelfSubRefundBelowZero.json", // #295
+			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #295
+			"stSStoreTest/sstoreGas.json", // #295
+			"stSStoreTest/sstore_gasLeft.json", // #295
+			"stSStoreTest/sstore_Xto0.json", // #295
+			"stSStoreTest/sstore_Xto0to0.json", // #295
+			"stSStoreTest/sstore_Xto0toX.json", // #295
+			"stSStoreTest/sstore_Xto0toXto0.json", // #295
+			"stSStoreTest/sstore_Xto0toY.json", // #295
+			"stSStoreTest/sstore_XtoX.json", // #295
+			"stSStoreTest/sstore_XtoXto0.json", // #295
+			"stSStoreTest/sstore_XtoXtoX.json", // #295
+			"stSStoreTest/sstore_XtoXtoY.json", // #295
+			"stSStoreTest/sstore_XtoY.json", // #295
+			"stSStoreTest/sstore_XtoYto0.json", // #295
+			"stSStoreTest/sstore_XtoYtoX.json", // #295
+			"stSStoreTest/sstore_XtoYtoY.json", // #295
+			"stSStoreTest/sstore_XtoYtoZ.json", // #295
 			"dummy"
 	);
 
