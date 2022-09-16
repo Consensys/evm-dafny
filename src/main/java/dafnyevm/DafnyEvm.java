@@ -304,7 +304,7 @@ public class DafnyEvm {
 	public DafnyEvm create(BigInteger address, BigInteger nonce, BigInteger endowment, Map<BigInteger, BigInteger> storage, byte[] bytecode) {
 		Storage_Compile.T store = Storage_Compile.T.create(new DafnyMap<BigInteger,BigInteger>(storage));
 		Code_Compile.Raw code = new Code_Compile.Raw(DafnySequence.fromBytes(bytecode));
-		WorldState_Compile.Account acct = new WorldState_Compile.Account(nonce, endowment, store,code);
+		WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store,code);
 		this.worldState = DafnyMap.update(worldState, address, acct);
 		return this;
 	}

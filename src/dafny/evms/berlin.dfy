@@ -105,7 +105,7 @@ module EvmBerlin refines EVM {
                         case EXTCODECOPY => Bytecode.ExtCodeCopy(s)
                         case RETURNDATASIZE => Bytecode.ReturnDataSize(s)
                         case RETURNDATACOPY => Bytecode.ReturnDataCopy(s)
-                        //  EXTCODEHASH => Bytecode.evalEXTCODEHASH(s),
+                        case EXTCODEHASH => Bytecode.ExtCodeHash(s)
                         // 0x40s: Block Information
                         case BLOCKHASH => Bytecode.BlockHash(s)
                         case COINBASE => Bytecode.CoinBase(s)

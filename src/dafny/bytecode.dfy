@@ -790,6 +790,23 @@ module Bytecode {
     }
 
     /**
+     * Get size of an account's code.
+     */
+    function method ExtCodeHash(st: State) : State
+    requires !st.IsFailure() {
+        if st.Operands() >= 1
+        then
+            // Extract contract account
+            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            // Lookup account
+            var data := st.evm.world.GetOrDefault(account);
+            // Done
+            st.AccountAccessed(account).Pop().Push(data.hash).Next()
+        else
+            State.INVALID(STACK_UNDERFLOW)
+    }
+
+    /**
      * Get size of return data from the previous call from the current
      * environment.
      */

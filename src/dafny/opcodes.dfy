@@ -62,6 +62,7 @@ module Opcode {
 	const EXTCODECOPY : u8 := 0x3c;
 	const RETURNDATASIZE : u8 := 0x3d;
 	const RETURNDATACOPY : u8 := 0x3e;
+    const EXTCODEHASH : u8 := 0x3f;
 	// 40s: Block Information
 	const BLOCKHASH : u8 := 0x40;
 	const COINBASE : u8 := 0x41;
