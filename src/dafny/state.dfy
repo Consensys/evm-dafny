@@ -309,6 +309,28 @@ module EvmState {
         }
 
         /**
+         * Check whether a given account exists.
+         */
+        function method Exists(account: u160) : bool
+        requires !IsFailure() {
+            // Perform the check
+            evm.world.Exists(account)
+        }
+
+        /**
+         * Get the account associated with a given address.  If no such account
+         * exists, none is returned.
+         */
+        function method GetAccount(account:u160) : Option<WorldState.Account> 
+        requires !IsFailure() {
+            if account in evm.world.accounts
+            then
+                Some(evm.world.accounts[account])
+            else
+                None
+        }
+
+        /**
          * Mark a given account as having been "accessed".
          */
         function method AccountAccessed(account: u160) : State

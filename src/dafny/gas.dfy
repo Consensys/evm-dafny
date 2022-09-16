@@ -19,6 +19,8 @@ include "util/memory.dfy"
 include "util/bytes.dfy"
 include "util/code.dfy"
 include "util/context.dfy"
+include "util/worldstate.dfy"
+include "util/substate.dfy"
 
 module Gas {
 	import opened Opcode
@@ -29,6 +31,8 @@ module Gas {
     import opened Bytes
     import opened Code
     import opened Context
+    import opened WorldState
+    import opened SubState
 
     const G_ZERO: nat := 0;
 	const G_BASE: nat := 2;
@@ -317,7 +321,7 @@ module Gas {
      */
     function method CostCallExtra(st: State, to: u160, value: nat) : nat
     requires !st.IsFailure() {
-        CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to)
+        CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to,value)
     }
 
     /**
@@ -332,9 +336,15 @@ module Gas {
      * Determine cost for creating an account if applicable (this is C_new in
      * the yellow paper).
      */
-    function method CostCallNew(st: State, to: u160) : nat {
-        // FIXME: this is not correct yet!
-        0
+    function method CostCallNew(st: State, to: u160, value: nat) : nat 
+    requires !st.IsFailure() {
+        // get the account under the address to
+        var account := st.GetAccount(to);
+        // if the account is DEAD (which is the default account) or does not exists, then charge G_newaccount amount of gas
+        if  (account == None || account == Some(DefaultAccount())) && (value != 0)
+            then G_NEWACCOUNT
+        else
+            0
     }
 
     /**
