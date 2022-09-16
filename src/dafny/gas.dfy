@@ -447,7 +447,7 @@ module Gas {
             case EXTCODECOPY => s.UseGas(CostExpandRange(s,4,1,3) + CostExtAccount(s) + CostCopy(s,3))
             case RETURNDATASIZE => s.UseGas(G_BASE)
             case RETURNDATACOPY => s.UseGas(CostExpandRange(s,3,0,2) + G_VERYLOW + CostCopy(s,2))
-            //  EXTCODEHASH => s.UseGas(1)
+            case EXTCODEHASH => s.UseGas(CostExtAccount(s))
             // 0x40s: Block Information
             case BLOCKHASH => s.UseGas(G_BLOCKHASH)
             case COINBASE => s.UseGas(G_BASE)

@@ -15,6 +15,7 @@ include "int.dfy"
 include "code.dfy"
 include "ExtraTypes.dfy"
 include "storage.dfy"
+include "extern.dfy"
 
 /**
  * World state provides a snapshot of all accounts on the blockchain at a given
@@ -25,17 +26,28 @@ module WorldState {
     import Code
     import opened ExtraTypes
     import Storage
+    import External
 
     /**
      * Account state associated with a given contract address.
      */
-    datatype Account = Account(nonce:nat, balance: u256, storage: Storage.T, code: Code.T)
+    datatype Account = Account(nonce:nat, balance: u256, storage: Storage.T, code: Code.T, hash: u256)
+
+    /**
+     * Create a new account.  This automatically constructs the appropriate code hash.
+     */
+    function method CreateAccount(nonce:nat, balance: u256, storage: Storage.T, code: Code.T) : Account {
+        // Generate code hash
+        var hash := External.sha3(code.contents);
+        // Done
+        Account(nonce,balance,storage,code,hash)
+    }
 
     /**
      * Create a default account.  This has zero balance, empty storage and no code.
      */
     function method DefaultAccount() : Account {
-        Account(nonce:=0,balance:=0,storage:=Storage.Create(map[]),code:=Code.Create([]))
+        CreateAccount(0,0,Storage.Create(map[]),Code.Create([]))
     }
 
     /**
@@ -143,8 +155,10 @@ module WorldState {
         requires |code| <= Code.MAX_CODE_SIZE {
             // Extract account data
             var entry := accounts[account];
+            // Generate code hash
+            var hash := External.sha3(code);
             // Write it back
-            this.(accounts:=this.accounts[account:=entry.(code:=Code.Create(code))])
+            this.(accounts:=this.accounts[account:=entry.(code:=Code.Create(code),hash:=hash)])
         }
 
         /**

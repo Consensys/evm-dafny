@@ -691,7 +691,7 @@ module EvmState {
             var endowment := ctx.callValue;
             var storage := Storage.Create(map[]); // empty
             var code := Code.Create(initcode);
-            var account := WorldState.Account(1,endowment,storage,code);
+            var account := WorldState.CreateAccount(1,endowment,storage,code);
             // Create initial account
             var w := world.Put(ctx.address,account).IncNonce(ctx.sender);
             // When creating end-use account, return immediately.

@@ -18,6 +18,7 @@ import java.util.Arrays;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
+import org.web3j.crypto.Hash;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -969,6 +970,14 @@ public class Tests {
 		byte[] output = callWithReturn(tx,
 				new int[] { PUSH1, 0x20, PUSH1, 0x00, PUSH1, 0x00, PUSH2, 0x0c, 0xcc, EXTCODECOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(Hex.toBytes("0x60206000f3000000000000000000000000000000000000000000000000000000"), output);
+	}
+
+	@Test
+	public void test_extcodehash_01() {
+		byte[] bytes = toBytes(PUSH1, 0x20, PUSH1, 0x00, RETURN);
+		DafnyEvm tx = new DafnyEvm().create(CONTRACT_1, bytes);
+		byte[] output = callWithReturn(tx, new int[] { PUSH2, 0xc, 0xcc, EXTCODEHASH, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(Hash.sha3(bytes), output);
 	}
 
 	@Test
