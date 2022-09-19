@@ -798,10 +798,11 @@ module Bytecode {
         then
             // Extract contract account
             var account := (st.Peek(0) as nat % TWO_160) as u160;
-            // Lookup account
-            var data := st.evm.world.GetOrDefault(account);
+            // Lookup account hash (or zero if doesn't exist)
+            var hash := if st.evm.world.IsDead(account) then 0
+                else st.evm.world.Get(account).Unwrap().hash;
             // Done
-            st.AccountAccessed(account).Pop().Push(data.hash).Next()
+            st.AccountAccessed(account).Pop().Push(hash).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }

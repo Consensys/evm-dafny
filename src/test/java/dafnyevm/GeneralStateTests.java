@@ -132,7 +132,6 @@ public class GeneralStateTests {
 			"stSelfBalance/selfBalanceUpdate.json",
 			"stSelfBalance/selfBalanceCallTypes.json",
 			//
-			"stCreateTest/CodeInConstructor.json",
 			"stCreateTest/CREATE_AcreateB_BSuicide_BStore.json",
 			"stCreateTest/CreateCollisionResults.json",
 			"stCreateTest/CreateCollisionToEmpty.json",
@@ -142,21 +141,21 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json",
 			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
 			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json",
-			"stCreateTest/CREATE_EmptyContractAndCallIt_0wei.json",
-			"stCreateTest/CREATE_EmptyContractAndCallIt_1wei.json",
-			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_0wei.json",
-			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_1wei.json",
-			"stCreateTest/CREATE_EmptyContractWithStorage.json",
+			"stCreateTest/CREATE_EmptyContractAndCallIt_0wei.json", // #295
+			"stCreateTest/CREATE_EmptyContractAndCallIt_1wei.json", // #295
+			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_0wei.json", // #295
+			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_1wei.json", // #295
+			"stCreateTest/CREATE_EmptyContractWithStorage.json", // #295
 			"stCreateTest/CREATE_EOF1.json",
 			"stCreateTest/CREATE_FirstByte_loop.json",
 			"stCreateTest/CREATE_HighNonce.json",
-			"stCreateTest/CreateOOGafterInitCodeRevert2.json",
+			"stCreateTest/CreateOOGafterInitCodeRevert2.json", // gas?
 			"stCreateTest/TransactionCollisionToEmptyButCode.json",
 			"stCreateTest/TransactionCollisionToEmptyButNonce.json",
-			"stCreateTest/TransactionCollisionToEmpty.json",
+			"stCreateTest/TransactionCollisionToEmpty.json", // #295
 			//
 			"stCreate2/create2callPrecompiles.json", // #266
-			"stCreate2/create2checkFieldsInInitcode.json",
+			"stCreate2/create2checkFieldsInInitcode.json", // gas?
 			"stCreate2/create2collisionCode2.json",
 			"stCreate2/create2collisionCode.json",
 			"stCreate2/create2collisionNonce.json",
@@ -171,20 +170,13 @@ public class GeneralStateTests {
 			"stCreate2/CREATE2_HighNonce.json",
 			"stCreate2/CREATE2_Suicide.json",
 			"stCreate2/create2noCash.json",
-			"stCreate2/Create2OOGafterInitCodeRevert2.json",
-			"stCreate2/create2SmartInitCode.json",
+			"stCreate2/Create2OOGafterInitCodeRevert2.json", // gas create?
+			"stCreate2/create2SmartInitCode.json", // gas create?
 			//
-			"stExtCodeHash/callToNonExistent.json",
 			"stExtCodeHash/callToSuicideThenExtcodehash.json",
-			"stExtCodeHash/codeCopyZero.json",
-			"stExtCodeHash/dynamicAccountOverwriteEmpty.json",
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json",
-			"stExtCodeHash/extCodeHashDynamicArgument.json",
-			"stExtCodeHash/extcodehashEmpty.json",
-			"stExtCodeHash/extCodeHashNonExistingAccount.json",
+			"stExtCodeHash/extcodehashEmpty.json", // gas
 			"stExtCodeHash/extCodeHashPrecompiles.json", // #266
-			"stExtCodeHash/extCodeHashSelfInInit.json",
-			"stExtCodeHash/extCodeHashSubcallOOG.json",
 			//
 			"stSStoreTest/InitCollision.json", // #295
 			"stSStoreTest/InitCollisionNonZeroNonce.json", // #295

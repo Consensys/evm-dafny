@@ -321,7 +321,7 @@ module EvmState {
          * Get the account associated with a given address.  If no such account
          * exists, none is returned.
          */
-        function method GetAccount(account:u160) : Option<WorldState.Account> 
+        function method GetAccount(account:u160) : Option<WorldState.Account>
         requires !IsFailure() {
             if account in evm.world.accounts
             then
@@ -712,8 +712,7 @@ module EvmState {
         else
             var endowment := ctx.callValue;
             var storage := Storage.Create(map[]); // empty
-            var code := Code.Create(initcode);
-            var account := WorldState.CreateAccount(1,endowment,storage,code);
+            var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]));
             // Create initial account
             var w := world.Put(ctx.address,account).IncNonce(ctx.sender);
             // When creating end-use account, return immediately.

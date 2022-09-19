@@ -22,5 +22,15 @@ module ExtraTypes {
         requires this.Some? {
             this.v
         }
+
+        /**
+         * Returns the contained value (if it exists) or the default value
+         * (otherwise).
+         */
+        function method UnwrapOr(default: T) : T {
+            match this
+            case Some(v) => v
+            case none => default
+        }
     }
 }
