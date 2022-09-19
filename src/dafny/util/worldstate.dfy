@@ -70,6 +70,22 @@ module WorldState {
         }
 
         /**
+         * Determine whether or not an account is considered to be "empty".
+         */
+        function method IsEmpty(account:u160) : bool
+        requires account in accounts {
+            var data := accounts[account];
+            Code.Size(data.code) == 0 && data.nonce == 0 && data.balance == 0
+        }
+
+        /**
+         * An account is dead when its account state is non-existent or empty.
+         */
+        function method IsDead(account:u160) : bool {
+            !(account in accounts) || IsEmpty(account)
+        }
+
+        /**
          * Get the account associated with a given address.  If no such account
          * exists, none is returned.
          */
