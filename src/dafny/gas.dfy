@@ -311,6 +311,14 @@ module Gas {
         Min(L(st.Gas()),gas)
     }
 
+    /**
+     * Determine amount of gas which should be provide for a create.
+     */
+    function method CreateGasCap(st: State) : (r:nat)
+    requires !st.IsFailure() {
+        L(st.Gas())
+    }
+
     /* YP refers to this function by the name "L" */
     function method L(n: nat): nat { n - (n / 64) }
 
@@ -556,7 +564,7 @@ module Gas {
             case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
-            case CREATE2 => s.UseGas(CostCreate2(s))
+            case CREATE2 => s.UseGas(CostExpandRange(s,4,1,2) + CostCreate2(s))
             case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)

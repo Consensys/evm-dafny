@@ -101,24 +101,21 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
 			"stCreate2/create2callPrecompiles.json", // #266
-			"stCreateTest/CREATE_HighNonce.json",// #318
-			"stCreateTest/CREATE_FirstByte_loop.json", // #318
-			"stCreate2/create2collisionCode.json", // #318
-			"stCreate2/create2collisionCode2.json", // #318
-			"stCreate2/create2collisionSelfdestructed2.json", // #318
-			"stCreate2/create2collisionNonce.json", // #318
-			"stCreate2/create2collisionSelfdestructedOOG.json",  // #318
-			"stCreate2/create2collisionSelfdestructed.json", // #318
-			"stCreate2/create2collisionSelfdestructedRevert.json", // #318
-			"stCreate2/CREATE2_FirstByte_loop.json", // #318
-			"stCreate2/CREATE2_HighNonce.json", // #318
-			"stCreate2/CREATE2_EOF1.json", // #318
-			"stCreate2/create2SmartInitCode.json", // #318
-			"stCreate2/Create2OOGafterInitCodeRevert2.json", // #318
+//			"stCreateTest/CREATE_FirstByte_loop.json", // #318
+//			"stCreate2/CREATE2_FirstByte_loop.json", // #318
+//			"stCreate2/CREATE2_EOF1.json", // #318
+//			"stCreate2/Create2OOGafterInitCodeRevert2.json", // #318
 			"stCreate2/CREATE2_Bounds3.json", // # 319
+			"stCreate2/create2collisionSelfdestructedOOG.json",  // #320
+			"stCreate2/create2collisionSelfdestructed.json", // #320
+			"stCreate2/create2collisionSelfdestructedRevert.json", // #320
+			"stCreate2/create2collisionSelfdestructed2.json", // #320
+			"stCreate2/create2SmartInitCode.json", // #320
 			"stCreate2/CREATE2_Suicide.json", // #320
 			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #320
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #320
+			"stCreateTest/CREATE_HighNonce.json", // #329
+			"stCreate2/CREATE2_HighNonce.json", // #329
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
@@ -617,7 +614,24 @@ public class GeneralStateTests {
 
 		@Override
 		public void exception(State.Invalid state) {
-			out.add(new Trace.Exception(toErrorCode(state.getErrorCode())));
+			Trace.Exception.Error code = toErrorCode(state.getErrorCode());
+			if(!ignored(code)) {
+				out.add(new Trace.Exception(code));
+			}
+		}
+
+		/**
+		 * Several exception types are, for whatever reason, not reported by Geth.
+		 * @param code
+		 * @return
+		 */
+		private static boolean ignored(Trace.Exception.Error code) {
+			switch(code) {
+			case ACCOUNT_COLLISION:
+				return true;
+			default:
+				return false;
+			}
 		}
 	}
 
@@ -636,6 +650,12 @@ public class GeneralStateTests {
 			return Trace.Exception.Error.MEMORY_OVERFLOW;
 		} else if (err instanceof EvmState_Compile.Error_RETURNDATA__OVERFLOW) {
 			return Trace.Exception.Error.RETURNDATA_OVERFLOW;
+		} else if (err instanceof EvmState_Compile.Error_INSUFFICIENT__FUNDS) {
+			return Trace.Exception.Error.INSUFFICIENT_FUNDS;
+		} else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
+			return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
+		} else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
+			return Trace.Exception.Error.ACCOUNT_COLLISION;
 		} else {
 			return Trace.Exception.Error.UNKNOWN;
 		}

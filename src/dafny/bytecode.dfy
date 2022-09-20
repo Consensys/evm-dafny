@@ -1321,10 +1321,12 @@ module Bytecode {
             var codeSize := st.Peek(2) as nat;
             // Copy initialisation code from memory
             var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+            // Calculate available gas
+            var gascap := GasCalc.CreateGasCap(st);
             //
-            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
+            var nst := st.UseGas(gascap).Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
             // Pass back continuation
-            State.CREATES(nst.evm,endowment,code, None)
+            State.CREATES(nst.evm,gascap,endowment,code, None)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1472,10 +1474,12 @@ module Bytecode {
             var salt := st.Peek(3);
             // Copy initialisation code from memory
             var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+            // Calculate available gas
+            var gascap := GasCalc.CreateGasCap(st);
             //
-            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+            var nst := st.UseGas(gascap).Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
             // Pass back continuation
-            State.CREATES(nst.evm,endowment,code,Some(salt))
+            State.CREATES(nst.evm,gascap,endowment,code,Some(salt))
         else
             State.INVALID(STACK_UNDERFLOW)
     }

@@ -39,6 +39,12 @@ module EvmState {
     import opened ExtraTypes
 
     /**
+     * Following included from gas.dfy to avoid circular definition.  However,
+     * this is far from ideal.  See #327.
+     */
+    const G_CODEDEPOSIT: nat := 200;
+
+    /**
      *  A normal state.
      *
      *  @param  context     An execution context (initiator, etc)
@@ -99,6 +105,7 @@ module EvmState {
      * Yellow Paper), but it does provide useful debugging information.
      */
     datatype Error = INSUFFICIENT_GAS
+        | INSUFFICIENT_FUNDS
         | INVALID_OPCODE
         | STACK_UNDERFLOW
         | STACK_OVERFLOW
@@ -107,6 +114,8 @@ module EvmState {
         | BALANCE_OVERFLOW
         | RETURNDATA_OVERFLOW
         | INVALID_JUMPDEST
+        | CALLDEPTH_EXCEEDED
+        | ACCOUNT_COLLISION
 
     /**
      * Captures the possible state of the machine.  Normal execution is
@@ -120,13 +129,14 @@ module EvmState {
                 sender: u160,        // sender
                 recipient:u160,      // recipient
                 code:u160,           // account whose code to be executed
-                gas: nat,            // available gas
+                gas: nat,            // available gas for call
                 callValue: u256,     // value to transfer
                 delegateValue: u256, // apparent value in execution context
                 callData:seq<u8>,    // input data for call
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
         | CREATES(evm:T,
+            gas: nat,            // available gas for creation
             endowment: u256,     // endowment
             initcode: seq<u8>,  // initialisation code
             salt: Option<u256>  // optional salt
@@ -165,7 +175,7 @@ module EvmState {
             match this
                 case OK(evm) => evm.gas
                 case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
-                case CREATES(evm, _, _, _) => evm.gas
+                case CREATES(evm, _, _, _, _) => evm.gas
                 case RETURNS(g, _, _, _) => g
                 case REVERTS(g, _) => g
         }
@@ -312,7 +322,7 @@ module EvmState {
          */
         function method IsEmpty(account:u160) : bool
         requires !IsFailure()
-        requires account in evm.world.accounts 
+        requires account in evm.world.accounts
         {
             var data := evm.world.accounts[account];
             Code.Size(data.code) == 0 && data.nonce == 0 && data.balance == 0
@@ -321,7 +331,7 @@ module EvmState {
         /**
          * An account is dead when its account state is non-existent or empty.
          */
-        function method IsDead(account:u160) : bool 
+        function method IsDead(account:u160) : bool
         requires !IsFailure(){
             !(account in evm.world.accounts) || IsEmpty(account)
         }
@@ -603,7 +613,7 @@ module EvmState {
                     var data := vm.data[0..m];
                     // Thread through world state and substate
                     var nst := if vm.RETURNS? then st.Merge(vm.world,vm.substate) else st;
-                    // Compute the refund (if any)
+                    // Compute the gas refund (if any)
                     var refund := if vm.RETURNS?||vm.REVERTS? then vm.gas else 0;
                     // Done
                     nst.Push(exitCode).Refund(refund).SetReturnData(vm.data).Copy(outOffset,data)
@@ -629,7 +639,7 @@ module EvmState {
             // Construct new context
             var ctx := Context.Create(sender,origin,address,endowment,[],gasPrice,block);
             // Make the creation!
-            Create(evm.world,ctx,evm.substate,initcode,evm.gas,depth+1)
+            Create(evm.world,ctx,evm.substate,initcode,gas,depth+1)
         }
 
         /**
@@ -655,18 +665,22 @@ module EvmState {
                 if vm.INVALID? then st.Push(0)
                 else if vm.RETURNS?
                 then
-                    if |vm.data| > Code.MAX_CODE_SIZE
-                    then INVALID(CODE_OVERFLOW)
+                    // Calculate the deposit cost
+                    var depositcost := G_CODEDEPOSIT * |vm.data|;
+                    // Check code within permitted bounds
+                    if |vm.data| > Code.MAX_CODE_SIZE then INVALID(CODE_OVERFLOW)
+                    // Check sufficient gas for deposit
+                    else if vm.gas < depositcost then INVALID(INSUFFICIENT_GAS)
                     else
                         // Initialise contract code for new account
                         var nworld := vm.world.SetCode(address,vm.data);
                         // Thread world state through
-                        st.Merge(nworld,vm.substate).Push(exitCode).SetReturnData([])
+                        st.Refund(vm.gas - depositcost).Merge(nworld,vm.substate).Push(exitCode).SetReturnData([])
                 else if |vm.data| <= MAX_U256
                 then
                     // NOTE: in the event of a revert, the return data is
                     // provided back.
-                    st.Push(exitCode).SetReturnData(vm.data)
+                    st.Refund(vm.gas).Push(exitCode).SetReturnData(vm.data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else
@@ -733,7 +747,10 @@ module EvmState {
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
         // Check call depth & available balance
-        if depth >= 1024 || !world.CanWithdraw(ctx.sender,endowment) then State.REVERTS(gas, [])
+        if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
+        else if !world.CanWithdraw(ctx.sender,endowment) then State.INVALID(INSUFFICIENT_FUNDS)
+        // Sanity checks for existing account
+        else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then State.INVALID(ACCOUNT_COLLISION)
         else
             var storage := Storage.Create(map[]); // empty
             var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]));
