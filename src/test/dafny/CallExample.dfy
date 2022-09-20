@@ -85,6 +85,7 @@ module CallExamples {
         vm1 := Push1(vm1,0x00);
         vm1 := MLoad(vm1);
         // Check return data.
+        assert vm1.OK?;
         assert vm1.Peek(0) == 0x123;
     }
 
