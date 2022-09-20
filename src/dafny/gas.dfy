@@ -47,7 +47,6 @@ module Gas {
     // Cost of cold storage access
     const G_COLDSLOAD: nat := 2100;
 	const G_EXTCODE: nat := 700;
-	const G_BALANCE: nat := 400;
 	const G_JUMPDEST: nat := 1;
 	const G_SSET: nat := 20000;
 	const G_SRESET: nat := 5000;
@@ -336,7 +335,7 @@ module Gas {
      * Determine cost for creating an account if applicable (this is C_new in
      * the yellow paper).
      */
-    function method CostCallNew(st: State, to: u160, value: nat) : nat 
+    function method CostCallNew(st: State, to: u160, value: nat) : nat
     requires !st.IsFailure() {
         // if the account is DEAD (which is the default account) or does not exists, then charge G_newaccount amount of gas
         if  st.IsDead(to) && (value != 0)
@@ -441,7 +440,7 @@ module Gas {
             case KECCAK256 => s.UseGas(CostExpandRange(s,2,0,1) + CostKeccak256(s))
             // 0x30s: Environment Information
             case ADDRESS => s.UseGas(G_BASE)
-            case BALANCE => s.UseGas(G_BALANCE)
+            case BALANCE => s.UseGas(CostExtAccount(s))
             case ORIGIN => s.UseGas(G_BASE)
             case CALLER => s.UseGas(G_BASE)
             case CALLVALUE => s.UseGas(G_BASE)
