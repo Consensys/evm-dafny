@@ -309,6 +309,25 @@ module EvmState {
         }
 
         /**
+         * Determine whether or not an account is considered to be "empty".
+         */
+        function method IsEmpty(account:u160) : bool
+        requires !IsFailure()
+        requires account in evm.world.accounts 
+        {
+            var data := evm.world.accounts[account];
+            Code.Size(data.code) == 0 && data.nonce == 0 && data.balance == 0
+        }
+
+        /**
+         * An account is dead when its account state is non-existent or empty.
+         */
+        function method IsDead(account:u160) : bool 
+        requires !IsFailure(){
+            !(account in evm.world.accounts) || IsEmpty(account)
+        }
+
+        /**
          * Check whether a given account exists.
          */
         function method Exists(account: u160) : bool
