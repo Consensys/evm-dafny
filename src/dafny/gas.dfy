@@ -338,10 +338,8 @@ module Gas {
      */
     function method CostCallNew(st: State, to: u160, value: nat) : nat 
     requires !st.IsFailure() {
-        // get the account under the address to
-        var account := st.GetAccount(to);
         // if the account is DEAD (which is the default account) or does not exists, then charge G_newaccount amount of gas
-        if  (account == None || account == Some(DefaultAccount())) && (value != 0)
+        if  st.IsDead(to) && (value != 0)
             then G_NEWACCOUNT
         else
             0
