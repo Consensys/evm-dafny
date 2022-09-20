@@ -31,14 +31,12 @@ import static dafnyevm.DafnyEvm.DEFAULT_ORIGIN;
 import static dafnyevm.DafnyEvm.DEFAULT_RECEIVER;
 import dafnyevm.DafnyEvm.BlockInfo;
 import dafnyevm.DafnyEvm.State;
-import dafnyevm.util.Tracers;
 import evmtools.util.Hex;
 import evmtools.core.Trace;
 import evmtools.core.Trace.Exception.Error;
 import static evmtools.util.Bytecodes.*;
 
 public class Tests {
-
 	// ========================================================================
 	// 0s: Stop and Arithmetic Operations
 	// ========================================================================
