@@ -137,12 +137,37 @@ module WorldState {
         }
 
         /**
-         * Check whether we can deposity without causing an overflow.
+         * Check whether we can deposit without causing an overflow.
          */
         function method CanDeposit(account:u160, value: u256) : bool
         // Account must be valid!
         requires account in this.accounts {
             (MAX_U256 as u256 - accounts[account].balance) >= value
+        }
+
+        /**
+         * Check whether we can withdraw without causing an underflow.
+         */
+        function method CanWithdraw(account:u160, value: u256) : bool
+        // Account must be valid!
+        requires account in this.accounts {
+            accounts[account].balance >= value
+        }
+
+        /**
+         * Withdraw a given amount of Wei into this account.
+         */
+        function method Withdraw(account:u160, value: u256) : T
+        // Account must be valid!
+        requires account in this.accounts
+        // Ensure balance does not overflow!
+        requires CanWithdraw(account,value) {
+            // Extract account data
+            var entry := accounts[account];
+            // Compute updated balance.
+            var nBalance := entry.balance - value;
+            // Write it back
+            this.(accounts:=this.accounts[account:=entry.(balance:=nBalance)])
         }
 
         /**
@@ -159,6 +184,18 @@ module WorldState {
             var nBalance := entry.balance + value;
             // Write it back
             this.(accounts:=this.accounts[account:=entry.(balance:=nBalance)])
+        }
+
+        /**
+         * Transfer a given amount of Wei from one account to another.
+         */
+        function method Transfer(from:u160, to: u160, value: u256) : T
+        // Both accounts must be valid
+        requires from in this.accounts && to in this.accounts
+        // Ensure balance does not overflow!
+        requires CanWithdraw(from,value) && CanDeposit(to,value) {
+            // Transfer funds
+            this.Withdraw(from,value).Deposit(to,value)
         }
 
         /**

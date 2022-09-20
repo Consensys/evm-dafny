@@ -107,7 +107,6 @@ module EvmState {
         | BALANCE_OVERFLOW
         | RETURNDATA_OVERFLOW
         | INVALID_JUMPDEST
-        | CALLDEPTH_EXCEEDED
 
     /**
      * Captures the possible state of the machine.  Normal execution is
@@ -567,7 +566,7 @@ module EvmState {
         requires |callData| <= MAX_U256
         requires |code| <= Code.MAX_CODE_SIZE
         // World state must contain this account
-        requires evm.world.Exists(evm.context.address) {
+        requires evm.world.Exists(sender) {
             // Extract what is needed from context
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
@@ -693,15 +692,21 @@ module EvmState {
      * @param depth The current call depth.
      */
     function method Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, code: seq<u8>, value: u256, gas: nat, depth: nat) : State
+    // Sender account must exist
+    requires world.Exists(ctx.sender)
+    // Code cannot be larger than limit
     requires |code| <= Code.MAX_CODE_SIZE {
-        // Check call depth
-        if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
+        // Check call depth & available balance
+        if depth >= 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(ctx.address);
+            // Sanity check deposit won't overflow
             if !w.CanDeposit(ctx.address,value) then State.INVALID(BALANCE_OVERFLOW)
+            // Sanity check sufficient funds
             else
-                var nw := w.Deposit(ctx.address,value);
+                // Transfer wei
+                var nw := w.Transfer(ctx.sender,ctx.address,value);
                 // Check for end-user account
                 if |code| == 0 then State.RETURNS(gas, [], nw, substate)
                 else
@@ -726,22 +731,24 @@ module EvmState {
     function method Create(world: WorldState.T, ctx: Context.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
     requires |initcode| <= Code.MAX_CODE_SIZE
     requires world.Exists(ctx.sender) {
-        // Check call depth
-        if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
+        var endowment := ctx.callValue;
+        // Check call depth & available balance
+        if depth >= 1024 || !world.CanWithdraw(ctx.sender,endowment) then State.REVERTS(gas, [])
         else
-            var endowment := ctx.callValue;
             var storage := Storage.Create(map[]); // empty
             var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]));
             // Create initial account
             var w := world.Put(ctx.address,account).IncNonce(ctx.sender);
+            // Deduct wei
+            var nw := w.Withdraw(ctx.sender,endowment);
             // When creating end-use account, return immediately.
-            if |initcode| == 0 then State.RETURNS(gas, [], w, substate)
+            if |initcode| == 0 then State.RETURNS(gas, [], nw, substate)
             else
                 // Construct fresh EVM
                 var stack := Stack.Create();
                 var mem := Memory.Create();
                 var cod := Code.Create(initcode);
-                var evm := EVM(ctx,w,stack,mem,cod,substate,gas,0);
+                var evm := EVM(ctx,nw,stack,mem,cod,substate,gas,0);
                 // Off we go!
                 State.OK(evm)
     }

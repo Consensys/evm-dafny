@@ -68,6 +68,10 @@ public class DafnyEvm {
 	 */
 	public final static BigInteger DEFAULT_VALUE = BigInteger.ZERO;
 	/**
+	 * Default balance for origin of a call (unless otherwise specified).
+	 */
+	public final static BigInteger DEFAULT_BALANCE = BigInteger.valueOf(10000);
+	/**
 	 * Default gas limit to use for contract calls.
 	 */
 	public static final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
@@ -301,6 +305,10 @@ public class DafnyEvm {
 		return create(address, BigInteger.ZERO, BigInteger.ZERO, Collections.emptyMap(), bytecode);
 	}
 
+	public DafnyEvm create(BigInteger address, BigInteger balance) {
+		return create(address, BigInteger.ZERO, balance, Collections.emptyMap(), new byte[0]);
+	}
+
 	public DafnyEvm create(BigInteger address, BigInteger nonce, BigInteger endowment, Map<BigInteger, BigInteger> storage, byte[] bytecode) {
 		Storage_Compile.T store = Storage_Compile.T.create(new DafnyMap<BigInteger,BigInteger>(storage));
 		Code_Compile.Raw code = new Code_Compile.Raw(DafnySequence.fromBytes(bytecode));
@@ -316,6 +324,11 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public  DafnyEvm.State<?> call() {
+		// Sanity check whether sender's account exists!
+		if(!worldState.contains(sender)) {
+			// If not, create it.
+			create(sender,DEFAULT_BALANCE);
+		}
 		Account c = worldState.get(recipient);
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		byte[] code = DafnySequence.toByteArray((DafnySequence) c.code.contents);
