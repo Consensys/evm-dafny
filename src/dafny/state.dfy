@@ -659,8 +659,6 @@ module EvmState {
             var st := OK(evm);
             if st.Capacity() >= 1
             then
-                // Calculate the exitcode
-                var exitCode := if vm.RETURNS? then (address as u256) else 0;
                 // Extract return data (if applicable)
                 if vm.INVALID? then st.Push(0)
                 else if vm.RETURNS?
@@ -668,19 +666,21 @@ module EvmState {
                     // Calculate the deposit cost
                     var depositcost := G_CODEDEPOSIT * |vm.data|;
                     // Check code within permitted bounds
-                    if |vm.data| > Code.MAX_CODE_SIZE then INVALID(CODE_OVERFLOW)
+                    if |vm.data| > Code.MAX_CODE_SIZE then st.Push(0)
+                    // Enforce EIP-3541 "Reject new contract code starting with the 0xEF byte"
+                    else if |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0)
                     // Check sufficient gas for deposit
-                    else if vm.gas < depositcost then INVALID(INSUFFICIENT_GAS)
+                    else if vm.gas < depositcost then st.Push(0)
                     else
                         // Initialise contract code for new account
                         var nworld := vm.world.SetCode(address,vm.data);
                         // Thread world state through
-                        st.Refund(vm.gas - depositcost).Merge(nworld,vm.substate).Push(exitCode).SetReturnData([])
+                        st.Refund(vm.gas - depositcost).Merge(nworld,vm.substate).Push(address as u256).SetReturnData([])
                 else if |vm.data| <= MAX_U256
                 then
                     // NOTE: in the event of a revert, the return data is
                     // provided back.
-                    st.Refund(vm.gas).Push(exitCode).SetReturnData(vm.data)
+                    st.Refund(vm.gas).Push(0).SetReturnData(vm.data)
                 else
                     INVALID(MEMORY_OVERFLOW)
             else
@@ -748,7 +748,7 @@ module EvmState {
         var endowment := ctx.callValue;
         // Check call depth & available balance
         if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
-        else if !world.CanWithdraw(ctx.sender,endowment) then State.INVALID(INSUFFICIENT_FUNDS)
+        else if !world.CanWithdraw(ctx.sender,endowment) then State.REVERTS(gas,[])
         // Sanity checks for existing account
         else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then State.INVALID(ACCOUNT_COLLISION)
         else

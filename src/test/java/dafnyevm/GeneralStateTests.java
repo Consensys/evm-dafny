@@ -34,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.web3j.crypto.Hash;
 
 import dafnyevm.DafnyEvm.State;
 import evmtools.util.Bytecodes;
@@ -88,7 +89,8 @@ public class GeneralStateTests {
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/exp.json", // #195
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
-			"stMemoryTest/oog.json", // #299
+			"stCreateTest/CreateCollisionResults.json", // #195
+			"stReturnDataTest/returndatacopy_initial_big_sum.json", // #195
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
@@ -101,10 +103,8 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
 			"stCreate2/create2callPrecompiles.json", // #266
-//			"stCreateTest/CREATE_FirstByte_loop.json", // #318
-//			"stCreate2/CREATE2_FirstByte_loop.json", // #318
-//			"stCreate2/CREATE2_EOF1.json", // #318
-//			"stCreate2/Create2OOGafterInitCodeRevert2.json", // #318
+			"stMemoryTest/oog.json", // #299
+			"stCreateTest/CREATE_FirstByte_loop.json", // #299
 			"stCreate2/CREATE2_Bounds3.json", // # 319
 			"stCreate2/create2collisionSelfdestructedOOG.json",  // #320
 			"stCreate2/create2collisionSelfdestructed.json", // #320
@@ -112,6 +112,7 @@ public class GeneralStateTests {
 			"stCreate2/create2collisionSelfdestructed2.json", // #320
 			"stCreate2/create2SmartInitCode.json", // #320
 			"stCreate2/CREATE2_Suicide.json", // #320
+			"VMTests/vmTests/suicide.json", // #320
 			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #320
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #320
 			"stCreateTest/CREATE_HighNonce.json", // #329
@@ -121,37 +122,27 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json", // wierd with CREATE?
 			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json", // wierd with CREATE?
-			"stCreateTest/CREATE_EOF1.json", // weird with CREATE?
-			"stCreateTest/TransactionCollisionToEmptyButCode.json", // wierd?
-			"stCreateTest/TransactionCollisionToEmptyButNonce.json", // wierd?
 			"stCreate2/create2noCash.json", // Unknown exception
 			// Gas Unknowns
 			"stRevertTest/NashatyrevSuicideRevert.json", // Gas (Unknown)
 			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // Gas (Unknown)
 			"stCreateTest/CREATE_AcreateB_BSuicide_BStore.json", // Gas (Unknown)
-			"stCreateTest/CreateCollisionResults.json", // Gas (Unknown)
-			"stCreateTest/CreateOOGafterInitCodeRevert2.json", // Gas (Unknown)
-			"stCreate2/create2checkFieldsInInitcode.json", // Gas (Unknown)
+			"stCreate2/create2checkFieldsInInitcode.json", // Gas (BALANCE?)
+			"stRevertTest/PythonRevertTestTue201814-1430.json", // Gas (STATICALL?)
 			//
 			"stCodeCopyTest/ExtCodeCopyTargetRangeLongerThanCodeTests.json",
 			"stCodeCopyTest/ExtCodeCopyTests.json",
 			"stRevertTest/RevertDepthCreateOOG.json",
-			"stRevertTest/RevertPrefoundEmptyOOG.json",
-			"stRevertTest/RevertInCreateInInit.json",
-			"stRevertTest/RevertPrefoundOOG.json",
 			"stRevertTest/RevertSubCallStorageOOG2.json",
 			"stRevertTest/LoopCallsThenRevert.json",
 			"stRevertTest/RevertOpcodeInCallsOnNonEmptyReturnData.json",
 			"stRevertTest/RevertOpcodeReturn.json",
 			"stRevertTest/RevertOpcodeCalls.json",
-			"stRevertTest/RevertPrefoundEmpty.json",
 			"stRevertTest/RevertInDelegateCall.json",
 			"stRevertTest/RevertOpcodeMultipleSubCalls.json",
 			"stRevertTest/RevertOpcodeDirectCall.json",
 			"stRevertTest/RevertInCallCode.json",
 			"stRevertTest/RevertInStaticCall.json",
-			"stRevertTest/PythonRevertTestTue201814-1430.json",
-			"stRevertTest/RevertPrefound.json",
 			"stRevertTest/TouchToEmptyAccountRevert2.json",
 			"stRevertTest/RevertOpcodeCreate.json",
 			"stRevertTest/TouchToEmptyAccountRevert3.json",
@@ -181,7 +172,6 @@ public class GeneralStateTests {
 			"VMTests/vmBitwiseLogicOperation/xor.json",
 			"VMTests/vmBitwiseLogicOperation/sgt.json",
 			"VMTests/vmTests/calldatacopy.json",
-			"VMTests/vmTests/suicide.json",
 			"VMTests/vmTests/swap.json",
 			"VMTests/vmTests/calldatasize.json",
 			"VMTests/vmTests/envInfo.json",
@@ -202,7 +192,6 @@ public class GeneralStateTests {
 			"VMTests/vmIOandFlowOperations/sstore_sload.json",
 			"stReturnDataTest/call_ecrec_success_empty_then_returndatasize.json",
 			"stReturnDataTest/returndatasize_initial.json",
-			"stReturnDataTest/returndatacopy_initial_big_sum.json",
 			"stReturnDataTest/returndatasize_after_successful_staticcall.json",
 			"stReturnDataTest/returndatacopy_0_0_following_successful_create.json",
 			"stReturnDataTest/returndatasize_initial_zero_read.json",
@@ -211,17 +200,14 @@ public class GeneralStateTests {
 			"stReturnDataTest/returndatasize_after_failing_staticcall.json",
 			"stReturnDataTest/returndatacopy_after_revert_in_staticcall.json",
 			"stReturnDataTest/returndatasize_after_failing_callcode.json",
-			"stReturnDataTest/returndatacopy_following_create.json",
 			"stReturnDataTest/returndatacopy_after_successful_delegatecall.json",
 			"stReturnDataTest/call_then_call_value_fail_then_returndatasize.json",
 			"stReturnDataTest/returndatasize_after_failing_delegatecall.json",
-			"stReturnDataTest/returndatacopy_following_successful_create.json",
 			"stReturnDataTest/returndatasize_bug.json",
 			"stReturnDataTest/returndatacopy_following_call.json",
 			"stReturnDataTest/returndatacopy_after_successful_staticcall.json",
 			"stReturnDataTest/call_then_create_successful_then_returndatasize.json",
 			"stReturnDataTest/returndatacopy_following_revert.json",
-			"stReturnDataTest/subcallReturnMoreThenExpected.json",
 			"stReturnDataTest/returndatasize_after_successful_delegatecall.json",
 			"stReturnDataTest/returndatacopy_following_revert_in_create.json",
 			"stReturnDataTest/returndatacopy_after_successful_callcode.json",
@@ -235,7 +221,6 @@ public class GeneralStateTests {
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
 			"stCallCodes/callcallcodecallcode_011_OOGMBefore.json",
 			"stCallCodes/callcallcodecall_010_OOGMAfter.json",
-			"stCallCodes/callcodeInInitcodeToExistingContractWithValueTransfer.json",
 			"stCallCodes/callcallcall_000_OOGMAfter.json",
 			"stCallCodes/callcallcall_000_OOGMBefore.json",
 			"stCallCodes/callcodeDynamicCode.json",
@@ -253,7 +238,6 @@ public class GeneralStateTests {
 			"stCallCodes/callcodecallcallcode_101_OOGE.json",
 			"stCallCodes/callcallcode_01_OOGE.json",
 			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json",
-			"stCallCodes/callcodeInInitcodeToExistingContract.json",
 			"stCallCodes/callcallcodecall_010_OOGMBefore.json",
 			"stCallCodes/callcodecall_10_OOGE.json",
 			"stCallCodes/callcallcallcode_001_OOGE.json",
@@ -267,7 +251,6 @@ public class GeneralStateTests {
 			"stCallCodes/callcall_00_OOGE.json",
 			"stSelfBalance/selfBalanceEqualsBalance.json",
 			"stExtCodeHash/extCodeHashDeletedAccount3.json",
-			"stExtCodeHash/extCodeHashInInitCode.json",
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccount.json",
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountCall.json",
 			"stExtCodeHash/extCodeHashCALL.json",
@@ -286,11 +269,9 @@ public class GeneralStateTests {
 			"stExtCodeHash/extCodeHashSubcallOOG.json",
 			"stExtCodeHash/createEmptyThenExtcodehash.json",
 			"stExtCodeHash/extCodeHashAccountWithoutCode.json",
-			"stExtCodeHash/extCodeHashDeletedAccount.json",
 			"stExtCodeHash/extCodeHashSTATICCALL.json",
 			"stExtCodeHash/extCodeHashPrecompiles.json",
 			"stExtCodeHash/extCodeHashNonExistingAccount.json",
-			"stExtCodeHash/extCodeHashSubcallSuicide.json",
 			"stExtCodeHash/extCodeHashSelfInInit.json",
 			"stExtCodeHash/extCodeHashDeletedAccount1.json",
 			"stLogTests/log0_logMemStartTooHigh.json",
@@ -306,40 +287,23 @@ public class GeneralStateTests {
 			"stLogTests/log1_logMemStartTooHigh.json",
 			"stCreate2/create2InitCodes.json",
 			"stCreate2/call_then_create2_successful_then_returndatasize.json",
-			"stCreate2/CreateMessageRevertedOOGInInit.json",
 			"stCreate2/returndatacopy_0_0_following_successful_create.json",
-			"stCreate2/create2collisionBalance.json",
 			"stCreate2/RevertDepthCreateAddressCollisionBerlin.json",
 			"stCreate2/RevertDepthCreate2OOGBerlin.json",
 			"stCreate2/returndatasize_following_successful_create.json",
 			"stCreate2/CREATE2_ContractSuicideDuringInit_ThenStoreThenReturn.json",
-			"stCreate2/Create2OOGafterInitCodeReturndataSize.json",
-			"stCreate2/returndatacopy_following_create.json",
 			"stCreate2/RevertInCreateInInitCreate2.json",
-			"stCreate2/CREATE2_HighNonceMinus1.json",
 			"stCreate2/Create2OOGafterInitCodeReturndata2.json",
-			"stCreate2/CreateMessageReverted.json",
 			"stCreate2/call_outsize_then_create2_successful_then_returndatasize.json",
-			"stCreate2/returndatacopy_following_successful_create.json",
-			"stCreate2/create2collisionStorage.json",
 			"stCreate2/Create2OOGafterInitCodeReturndata.json",
 			"stCreate2/returndatacopy_following_revert_in_create.json",
 			"stCreate2/RevertOpcodeCreate.json",
-			"stCreate2/Create2OOGafterInitCodeReturndata3.json",
 			"stCreate2/RevertOpcodeInCreateReturnsCreate2.json",
 			"stCreate2/returndatacopy_afterFailing_create.json",
 			"stCreate2/Create2OOGafterInitCodeRevert.json",
-			"stCreate2/Create2OOGafterInitCode.json",
-			"stCreateTest/CREATE_EContract_ThenCALLToNonExistentAcc.json",
 			"stCreateTest/CreateOOGafterInitCodeReturndata2.json",
-			"stCreateTest/CreateOOGafterInitCode.json",
-			"stCreateTest/CreateOOGafterInitCodeRevert.json",
-			"stCreateTest/CreateOOGafterInitCodeReturndataSize.json",
-			"stCreateTest/CREATE_HighNonceMinus1.json",
+			"stCreateTest/CreateOOGafterInitCodeRevert2.json",
 			"stCreateTest/CreateOOGafterInitCodeReturndata.json",
-			"stCreateTest/CREATE_EmptyContract.json",
-			"stCreateTest/CREATE_EmptyContractWithBalance.json",
-			"stCreateTest/CreateOOGafterInitCodeReturndata3.json",
 			"stCreateTest/CodeInConstructor.json",
 			//
 			"vmIOandFlowOperations/jump.json", // #295
@@ -367,6 +331,9 @@ public class GeneralStateTests {
 			"stCreateTest/CreateCollisionToEmpty.json", // #295
 			"stCreateTest/TransactionCollisionToEmpty.json", // #295
 			"stCreate2/CREATE2_HighNonceDelegatecall.json", // #295
+			"stCreateTest/CREATE_EOF1.json", // #295
+			"stCreate2/CREATE2_EOF1.json", // #295
+			"stCreate2/Create2OOGafterInitCodeRevert2.json", // #295
 			"stRevertTest/LoopCallsDepthThenRevert2.json", // #295
 			"stRevertTest/LoopCallsDepthThenRevert3.json", // #295
 			"stRevertTest/LoopCallsDepthThenRevert.json", // #295
@@ -432,10 +399,29 @@ public class GeneralStateTests {
 			}
 			//
 			Trace tr = new Trace(elements);
+			//
+//			if(!instance.getTrace().equals(tr)) {
+//				for(Trace.Element e : tr.getElements()) {
+//					if(e instanceof Trace.Step) {
+//						Trace.Step s = (Trace.Step) e;
+//						if(s.op == 0x55) {
+//							String n = pair.getLeft().toString();
+//							if(!visited.contains(n)) {
+//								visited.add(n);
+//								String fn = n.replace("tests/GeneralStateTests/","");
+//								System.out.println("\"" + fn + "\",");
+//							}
+//							return;
+//						}
+//					}
+//				}
+//			}
 			// Finally check for equality.
 			assertEquals(instance.getTrace(),tr);
 		}
 	}
+
+	private static HashSet<String> visited = new HashSet<>();
 
 	/**
 	 * Construct the necessary block environment from the test's environmental

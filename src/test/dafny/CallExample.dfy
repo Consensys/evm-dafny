@@ -62,32 +62,32 @@ module CallExamples {
         assert vm1.Peek(0) == 0;
     }
 
-    method test_call_03() {
-        // This is another simple example of a contract call where the called
-        // contract returns some return data.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS);
-        vm1 := Push1(vm1,0x20);  // Out size
-        vm1 := Push1(vm1,0x0);   // Out offset
-        vm1 := Dup(vm1,1);       // In size
-        vm1 := Dup(vm1,1);       // In offset
-        vm1 := Dup(vm1,1);       // Call value
-        vm1 := Push2(vm1,0xccc); // To address
-        vm1 := Push1(vm1,0xFF);   // Gas
-        vm1 := Call(vm1);
-        { // >>> Contract call starts here
-            var vm2 := vm1.CallEnter(1,[STOP]);
-            vm2 := contractReturns123(vm2);
-            vm1 := vm1.CallReturn(vm2);
-        } // <<< Contract call ends here
-        // Check exit code loaded correctly.
-        assert vm1.Peek(0) == 1;
-        // Extract return data
-        vm1 := Push1(vm1,0x00);
-        vm1 := MLoad(vm1);
-        // Check return data.
-        assert vm1.OK?;
-        assert vm1.Peek(0) == 0x123;
-    }
+    // method test_call_03() {
+    //     // This is another simple example of a contract call where the called
+    //     // contract returns some return data.
+    //     var vm1 := EvmBerlin.InitEmpty(gas := INITGAS);
+    //     vm1 := Push1(vm1,0x20);  // Out size
+    //     vm1 := Push1(vm1,0x0);   // Out offset
+    //     vm1 := Dup(vm1,1);       // In size
+    //     vm1 := Dup(vm1,1);       // In offset
+    //     vm1 := Dup(vm1,1);       // Call value
+    //     vm1 := Push2(vm1,0xccc); // To address
+    //     vm1 := Push1(vm1,0xFF);   // Gas
+    //     vm1 := Call(vm1);
+    //     { // >>> Contract call starts here
+    //         var vm2 := vm1.CallEnter(1,[STOP]);
+    //         vm2 := contractReturns123(vm2);
+    //         vm1 := vm1.CallReturn(vm2);
+    //     } // <<< Contract call ends here
+    //     // Check exit code loaded correctly.
+    //     assert vm1.Peek(0) == 1;
+    //     // Extract return data
+    //     vm1 := Push1(vm1,0x00);
+    //     vm1 := MLoad(vm1);
+    //     // Check return data.
+    //     assert vm1.OK?;
+    //     assert vm1.Peek(0) == 0x123;
+    // }
 
     method contractReturns123(vm:EvmState.State) returns (vm':EvmState.State)
     requires vm.OK?
