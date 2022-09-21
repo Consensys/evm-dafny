@@ -238,7 +238,7 @@ module Memory {
     /**
      * Slice out a section of memory.
      */
-    function method Slice(mem:T, address:nat, len:nat) : seq<u8> 
+    function method Slice(mem:T, address:nat, len:nat) : seq<u8>
       ensures |Slice(mem, address, len)| == len
     {
       Bytes.Slice(mem.contents,address,len)
