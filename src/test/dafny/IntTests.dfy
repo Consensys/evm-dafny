@@ -152,6 +152,33 @@ method {:test} ToBytesTests() {
 
 }
 
+method {:test} SarTests() {
+    Assert(()=>I256.Sar(4 as i256, 1 as u256) == 2);
+    Assert(()=>I256.Sar(4 as i256, 2 as u256) == 1);
+    Assert(()=>I256.Sar(4 as i256, 3 as u256) == 0);
+    Assert(()=>I256.Sar(4 as i256, 4 as u256) == 0);
+    Assert(()=>I256.Sar(15 as i256, 1 as u256) == 7);
+    Assert(()=>I256.Sar(15 as i256, 2 as u256) == 3);
+    Assert(()=>I256.Sar(15 as i256, 3 as u256) == 1);
+    Assert(()=>I256.Sar(15 as i256, 4 as u256) == 0);
+    Assert(()=>I256.Sar(90 as i256, 1 as u256) == 45);
+    Assert(()=>I256.Sar(90 as i256, 2 as u256) == 22);
+    Assert(()=>I256.Sar(90 as i256, 3 as u256) == 11);
+    Assert(()=>I256.Sar(90 as i256, 4 as u256) == 5);
+    Assert(()=>I256.Sar(-90 as i256, 1 as u256) == -45);
+    Assert(()=>I256.Sar(-90 as i256, 2 as u256) == -23);
+    Assert(()=>I256.Sar(-90 as i256, 3 as u256) == -12);
+    Assert(()=>I256.Sar(-90 as i256, 4 as u256) == -6);
+    Assert(()=>I256.Sar(-15 as i256, 1 as u256) == -8);
+    Assert(()=>I256.Sar(-15 as i256, 2 as u256) == -4);
+    Assert(()=>I256.Sar(-15 as i256, 3 as u256) == -2);
+    Assert(()=>I256.Sar(-15 as i256, 4 as u256) == -1);
+    Assert(()=>I256.Sar(-4 as i256, 1 as u256) == -2);
+    Assert(()=>I256.Sar(-4 as i256, 2 as u256) == -1);
+    Assert(()=>I256.Sar(-4 as i256, 3 as u256) == -1);
+    Assert(()=>I256.Sar(-4 as i256, 4 as u256) == -1);
+}
+
 method {:test} WordTests() {
     // ==>
     Assert(()=> Word.asI256(0) == 0);

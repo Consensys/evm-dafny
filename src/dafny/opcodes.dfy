@@ -158,6 +158,8 @@ module Opcode {
 	const LOG2 : u8 := 0xa2;
 	const LOG3 : u8 := 0xa3;
 	const LOG4 : u8 := 0xa4;
+    // e0s
+    const EOF : u8 := 0xef;
 	// f0s: System operations
 	const CREATE : u8 := 0xf0;
 	const CALL : u8 := 0xf1;

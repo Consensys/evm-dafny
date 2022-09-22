@@ -12,17 +12,17 @@
  * under the License.
  */
 
-include "../../dafny/evms/berlin.dfy" 
+include "../../dafny/evms/berlin.dfy"
 
 /** Provide some tests to check some qualitative properties of bytecode.
  *
  *  We use an EVM with no gas as the bytecode high-level instructions
- *  like `Push1` do not consume gas. 
+ *  like `Push1` do not consume gas.
  */
 module Test10 {
 
     import opened Int
-    import opened Bytecode 
+    import opened Bytecode
     import opened EvmBerlin
     import Stack
 
@@ -52,7 +52,7 @@ module Test10 {
 
     /**
      *  A loop.
-     *       
+     *
      *  @param  c   The number of times to iterate the loop.
      */
     method main2(c: u8)
@@ -122,7 +122,7 @@ module Test10 {
 
     /**
      *  A modular proof. main4a calls main4b
-     *       
+     *
      *  @param  c   The number of times to iterate the loop.
      */
     method main4a(c: u8)

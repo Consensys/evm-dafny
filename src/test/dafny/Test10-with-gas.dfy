@@ -16,13 +16,13 @@ include "../../dafny/evms/berlin.dfy"
 
 /** Provide some tests to check some quantitative properties of bytecode.
  *
- *  Start an EVM with some gas, a parametric constraint on the amount of gas 
+ *  Start an EVM with some gas, a parametric constraint on the amount of gas
  *  should ensure that the EVM does not stop because an out-of-gas exception.
  */
 module Test10Gas {
 
     import opened Int
-    import opened Bytecode 
+    import opened Bytecode
     import opened EvmBerlin
     import opened Gas
     import Stack
@@ -32,7 +32,7 @@ module Test10Gas {
      *
      *  @param  g   The initial amount of gas.
      */
-    method main1(g: nat) 
+    method main1(g: nat)
         requires g >= 2*G_VERYLOW + 2*G_LOW
     {
         // Initialise VM with g  gas unit.
@@ -43,14 +43,14 @@ module Test10Gas {
         //  Snapshot of the stack.
         ghost var st1 := vm.GetStack();
 
-        vm := Push1(vm, a).UseGas(G_VERYLOW); 
+        vm := Push1(vm, a).UseGas(G_VERYLOW);
         vm := Push1(vm, b).UseGas(G_VERYLOW);
         vm := Add(vm).UseGas(G_LOW);
         assert vm.Gas() == g - (2 * G_VERYLOW + G_LOW);
-        assert vm.Peek(0) as nat == (a + b) as nat; 
+        assert vm.Peek(0) as nat == (a + b) as nat;
 
-        vm := Pop(vm).UseGas(G_LOW); 
-        assert vm.GetStack() == st1; 
+        vm := Pop(vm).UseGas(G_LOW);
+        assert vm.GetStack() == st1;
     }
 
     /**
@@ -60,7 +60,7 @@ module Test10Gas {
      *  @param  c   The number of times to iterate the loop.
      *  @param  g   The initial amount of gas.
      */
-    method main2(c: u8, g: nat) 
+    method main2(c: u8, g: nat)
         requires g >= c as nat * (3 * G_VERYLOW + G_BASE)
     {
         // Initialise VM
@@ -71,9 +71,9 @@ module Test10Gas {
 
         ghost var st := vm.GetStack();
 
-        while count > 0 
+        while count > 0
             invariant !vm.IsFailure()
-            invariant  vm.GetStack() == st 
+            invariant  vm.GetStack() == st
             invariant vm.Gas() >= count as nat * (3 * G_VERYLOW + G_BASE)
         {
             vm := Push1(vm, a).UseGas(G_VERYLOW);
@@ -92,7 +92,7 @@ module Test10Gas {
      *  @param  c   The number of times to iterate the loop.
      *  @param  g   The initial amount of gas.
      */
-    method main3(c: u8, g: nat) 
+    method main3(c: u8, g: nat)
         requires g >= G_VERYLOW + c as nat * (6*G_VERYLOW + G_BASE)
     {
         var a: u8 := 0x01;
@@ -106,9 +106,9 @@ module Test10Gas {
 
         assert count == vm.Peek(0);
 
-        while vm.Peek(0) > 0 
+        while vm.Peek(0) > 0
             invariant !vm.IsFailure()
-            invariant Stack.Size(vm.GetStack()) > 0  
+            invariant Stack.Size(vm.GetStack()) > 0
             invariant count == vm.Peek(0)
             invariant vm.GetStack() == Stack.Make([count])
             invariant vm.Gas() >= count as nat * (6*G_VERYLOW + G_BASE)
@@ -131,16 +131,16 @@ module Test10Gas {
     /**
      *  Refines `main3` and compute the condition of the loop using the stack
      *  and the comparisons operators.
-     *  
+     *
      *  @param  c   The number of times to iterate the loop.
      *  @param  g   The initial amount of gas.
      */
-    method main5(c: u8, g: nat)  
+    method main5(c: u8, g: nat)
         requires g >= G_BASE + 4 * G_VERYLOW + c as nat * (2 * G_BASE + 9 * G_VERYLOW)
     {
         // Initialise Bytecode
         var vm := InitEmpty(g);
-        
+
         var a: u8 := 0x01;
         var b : u8 := 0x02;
 
@@ -150,7 +150,7 @@ module Test10Gas {
 
         assert vm.GetStack() == Stack.Make([count]);
 
-        //  compute count > 0 
+        //  compute count > 0
 
         //  top of the stack has the result of count > 0
         //  push 0, then duplicate second element on top
@@ -162,11 +162,11 @@ module Test10Gas {
         vm := Gt(vm).UseGas(G_VERYLOW);
         assert vm.GetStack() == Stack.Make([if count > 0 then 1 else 0, count]);
 
-        assert count == vm.Peek(1); 
+        assert count == vm.Peek(1);
 
-        while vm.Peek(0) > 0 
+        while vm.Peek(0) > 0
             invariant !vm.IsFailure()
-            invariant Stack.Size(vm.GetStack()) == 2 
+            invariant Stack.Size(vm.GetStack()) == 2
             invariant count == vm.Peek(1)
             invariant count == vm.Peek(1) >= 0
             invariant vm.Peek(0) > 0 <==> count > 0
@@ -200,7 +200,7 @@ module Test10Gas {
             assert vm.GetStack() == Stack.Make([count - 1, 0, count - 1]);
 
             //  compute stack[0] > stack[1]
-            vm := Gt(vm).UseGas(G_VERYLOW);   
+            vm := Gt(vm).UseGas(G_VERYLOW);
             assert vm.GetStack() == Stack.Make([if count - 1 > 0 then 1 else 0, count - 1]);
             count := count - 1;
         }

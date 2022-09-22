@@ -62,6 +62,18 @@ module WorldState {
         }
 
         /**
+         * Determine whether or not a given contract account can be created.
+           The rules here say that, in some cases, when an account already
+           exists at that address then you cannot overwrite it.
+         */
+        function method CanOverwrite(account:u160) : bool
+        requires account in accounts {
+            var data := accounts[account];
+            |data.code.contents| == 0 && data.nonce == 0
+        }
+
+
+        /**
          * Determine whether or not a given acount is an end-user account.
          */
         function method isEndUser(account:u160) : bool

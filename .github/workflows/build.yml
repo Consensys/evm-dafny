@@ -16,7 +16,10 @@ jobs:
       - name: Install Dafny
         uses: dafny-lang/setup-dafny-action@v1
         with:
-          dafny-version: "3.7.3"
+          dafny-version: "3.8.1"
+
+      - name: Z3 version
+        run: $HOME/dafny/z3/bin/z3 --version
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
