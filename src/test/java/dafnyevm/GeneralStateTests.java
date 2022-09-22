@@ -103,31 +103,20 @@ public class GeneralStateTests {
 			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
 			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
 			"stCreate2/create2callPrecompiles.json", // #266
+			"stCreate2/create2SmartInitCode.json", // #266
+			"stCreate2/CREATE2_Suicide.json", // #266
 			"stMemoryTest/oog.json", // #299
 			"stCreateTest/CREATE_FirstByte_loop.json", // #299
-			"stCreate2/CREATE2_Bounds3.json", // # 319
-			"stCreate2/create2collisionSelfdestructedOOG.json",  // #320
-			"stCreate2/create2collisionSelfdestructed.json", // #320
-			"stCreate2/create2collisionSelfdestructedRevert.json", // #320
-			"stCreate2/create2collisionSelfdestructed2.json", // #320
-			"stCreate2/create2SmartInitCode.json", // #320
-			"stCreate2/CREATE2_Suicide.json", // #320
-			"VMTests/vmTests/suicide.json", // #320
-			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #320
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #320
 			"stCreateTest/CREATE_HighNonce.json", // #329
 			"stCreate2/CREATE2_HighNonce.json", // #329
 			// Unknowns
-			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
-			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
-			"stCreateTest/CREATE_ContractSSTOREDuringInit.json", // wierd with CREATE?
-			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json", // wierd with CREATE?
+			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // unknown exception ??
 			"stCreate2/create2noCash.json", // Unknown exception
+			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
+			"stCreateTest/CREATE_ContractSSTOREDuringInit.json", // PERMISSIONS?
+			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json", // PERMISSIONS?
+			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json", // PERMISSIONS?
 			// Gas Unknowns
-			"stRevertTest/NashatyrevSuicideRevert.json", // Gas (Unknown)
-			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // Gas (Unknown)
-			"stCreateTest/CREATE_AcreateB_BSuicide_BStore.json", // Gas (Unknown)
-			"stCreate2/create2checkFieldsInInitcode.json", // Gas (BALANCE?)
 			"stRevertTest/PythonRevertTestTue201814-1430.json", // Gas (STATICALL?)
 			//
 			"stCodeCopyTest/ExtCodeCopyTargetRangeLongerThanCodeTests.json",
@@ -334,10 +323,13 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_EOF1.json", // #295
 			"stCreate2/CREATE2_EOF1.json", // #295
 			"stCreate2/Create2OOGafterInitCodeRevert2.json", // #295
+			"stCreate2/create2checkFieldsInInitcode.json", // #295
 			"stRevertTest/LoopCallsDepthThenRevert2.json", // #295
 			"stRevertTest/LoopCallsDepthThenRevert3.json", // #295
 			"stRevertTest/LoopCallsDepthThenRevert.json", // #295
+			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // #295
 			"stExtCodeHash/extcodehashEmpty.json", // #295
+			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #295
 			"stSStoreTest/InitCollision.json", // #295
 			"stSStoreTest/InitCollisionNonZeroNonce.json", // #295
 			"stSStoreTest/sstore_0to0.json", // #295

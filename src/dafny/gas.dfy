@@ -410,6 +410,33 @@ module Gas {
             G_ZERO
     }
 
+    /**
+     * Determine cost for deleting a given account.
+     */
+    function method CostSelfDestruct(st: State) : nat
+    requires !st.IsFailure()  {
+        if st.Operands() >= 1
+        then
+            var r := (st.Peek(0) as nat % TWO_160) as u160;
+            // Done
+            G_SELFDESTRUCT + CostSelfDestructAccess(st,r) + CostSelfDestructNewAccount(st,r)
+        else
+            G_ZERO
+    }
+
+    function method CostSelfDestructAccess(st: State, r: u160) : nat
+    requires !st.IsFailure()  {
+        if st.WasAccountAccessed(r) then 0 else G_COLDACCOUNTACCESS
+    }
+
+    function method CostSelfDestructNewAccount(st: State, r: u160) : nat
+    requires !st.IsFailure()  {
+        // Extract our address
+        var Ia := st.evm.context.address;
+        // Check whether refund can happen (or not)
+        if st.evm.world.IsDead(r) && st.evm.world.Balance(Ia) != 0 then G_NEWACCOUNT else 0
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -567,7 +594,7 @@ module Gas {
             case CREATE2 => s.UseGas(CostExpandRange(s,4,1,2) + CostCreate2(s))
             case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
-            case SELFDESTRUCT => s.UseGas(G_SELFDESTRUCT)
+            case SELFDESTRUCT => s.UseGas(CostSelfDestruct(s))
             case _ => State.INVALID(INVALID_OPCODE)
     }
 

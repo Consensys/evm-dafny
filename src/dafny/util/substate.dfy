@@ -51,6 +51,13 @@ module SubState {
         }
 
         /**
+         * Register an account for self destruction.
+         */
+        function method AccountDestructed(account: u160) : T {
+            this.(selfDestruct := this.selfDestruct + {account})
+        }
+
+        /**
          * Check whether a given account was previously accessed or not.
          */
         function method WasAccountAccessed(account: u160) : bool {

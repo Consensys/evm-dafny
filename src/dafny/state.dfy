@@ -765,7 +765,9 @@ module EvmState {
                 var stack := Stack.Create();
                 var mem := Memory.Create();
                 var cod := Code.Create(initcode);
-                var evm := EVM(ctx,nw,stack,mem,cod,substate,gas,0);
+                // Mark new account as having been accessed
+                var ss := substate.AccountAccessed(ctx.address);
+                var evm := EVM(ctx,nw,stack,mem,cod,ss,gas,0);
                 // Off we go!
                 State.OK(evm)
     }
