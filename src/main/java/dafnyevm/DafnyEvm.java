@@ -331,7 +331,7 @@ public class DafnyEvm {
 		}
 		Account c = worldState.get(recipient);
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		byte[] code = DafnySequence.toByteArray((DafnySequence) c.code.contents);
+		byte[] code = DafnySequence.toByteArray((DafnySequence) c.dtor_code().dtor_contents());
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
@@ -358,7 +358,7 @@ public class DafnyEvm {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DafnySequence<Byte> code = DafnySequence.fromBytes(callData);
 		// Determine sender's nonce
-		BigInteger nonce = worldState.get(sender).nonce;
+		BigInteger nonce = worldState.get(sender).dtor_nonce();
 		// NOTE: we do not subtract one from the nonce here, as this address is being
 		// calculated *before* the sender's nonce is incremented.
 		BigInteger address = addr(sender,nonce);
@@ -413,10 +413,10 @@ public class DafnyEvm {
 	 * @return
 	 */
 	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.State_CALLS cc) {
-		EvmState_Compile.Raw evm = cc.evm;
+		EvmState_Compile.Raw evm = cc.dtor_evm();
 		// Identify account whose code to execute
-		Account c = evm.world.accounts.get(cc.code);
-		DafnySequence<? extends Byte> code = (c != null) ? c.code.contents : DafnySequence.fromBytes(new byte[0]);
+		Account c = evm.dtor_world().dtor_accounts().get(cc.dtor_code());
+		DafnySequence<? extends Byte> code = (c != null) ? c.dtor_code().dtor_contents() : DafnySequence.fromBytes(new byte[0]);
 		// Begin recursive call.
 		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth), code);
 		// Run code within recursive call.
@@ -434,16 +434,16 @@ public class DafnyEvm {
 	 */
 	private static EvmState_Compile.State createContinue(int depth, Tracer tracer, EvmState_Compile.State_CREATES cc) {
 		// Determine sender
-		BigInteger sender = cc.evm.context.address;
+		BigInteger sender = cc.dtor_evm().dtor_context().dtor_address();
 		// Construct new account
-		Account acct = cc.evm.world.accounts.get(sender);
+		Account acct = cc.dtor_evm().dtor_world().dtor_accounts().get(sender);
 		// NOTE: we do not subtract one from the nonce here, as this address is being
 		// calculated *before* the sender's nonce is incremented.
-		byte[] hash = addr(sender, acct.nonce, cc.salt, cc.initcode);
+		byte[] hash = addr(sender, acct.dtor_nonce(), cc.dtor_salt(), cc.dtor_initcode());
 		// Finally reconstruct the address from the rightmost 160bits.
 		BigInteger address = new BigInteger(1, hash);
 		// Begin the recursive call.
-		EvmState_Compile.State st = cc.CreateEnter(BigInteger.valueOf(depth), address, cc.initcode);
+		EvmState_Compile.State st = cc.CreateEnter(BigInteger.valueOf(depth), address, cc.dtor_initcode());
 		// Run init code for recursive call.
 		st = run(depth + 1, tracer, st);
 		// Return from creation
@@ -488,7 +488,7 @@ public class DafnyEvm {
 			// Case for CREATE2 (see EIP 1014).
 			byte ff = (byte) (0xff & 0xff);
 			byte[] senderBytes = new Uint160(sender).getBytes();
-			byte[] saltBytes = new Uint256(s.v).getBytes();
+			byte[] saltBytes = new Uint256(s.dtor_v()).getBytes();
 			bytes = concat(new byte[] { ff }, senderBytes, saltBytes, Hash.sha3(code));
 		}
 		// Calculate hash.
@@ -609,14 +609,14 @@ public class DafnyEvm {
 			 * @return
 			 */
 			public BigInteger getRemainingGas() {
-				return getEVM().gas;
+				return getEVM().dtor_gas();
 			}
 
 			/**
 			 * Get current <code>pc</code> value.
 			 */
 			public BigInteger getPC() {
-				return getEVM().pc;
+				return getEVM().dtor_pc();
 			}
 
 			/**
@@ -627,7 +627,7 @@ public class DafnyEvm {
 			@SuppressWarnings("unchecked")
 			public byte[] getMemory() {
 				@SuppressWarnings("rawtypes")
-				DafnySequence bytes = getEVM().memory.contents;
+				DafnySequence bytes = getEVM().dtor_memory().dtor_contents();
 				return DafnySequence.toByteArray(bytes);
 			}
 
@@ -637,7 +637,7 @@ public class DafnyEvm {
 			 * @return
 			 */
 			public int getMemorySize() {
-				return getEVM().memory.contents.length();
+				return getEVM().dtor_memory().dtor_contents().length();
 			}
 
 			/**
@@ -646,7 +646,7 @@ public class DafnyEvm {
 			 * @return
 			 */
 			public BigInteger[] getStack() {
-				DafnySequence<? extends BigInteger> dStack = getEVM().stack.contents;
+				DafnySequence<? extends BigInteger> dStack = getEVM().dtor_stack().dtor_contents();
 				BigInteger[] rStack = new BigInteger[dStack.length()];
 				final int n = rStack.length;
 				// NOTE: this is necessary because the stack is actually maintained "backwards"
@@ -665,11 +665,11 @@ public class DafnyEvm {
 			public Map<BigInteger,BigInteger> getStorage() {
 				HashMap<BigInteger,BigInteger> storage = new HashMap<>();
 				// Determine executing account address
-				BigInteger address = getEVM().context.address;
+				BigInteger address = getEVM().dtor_context().dtor_address();
 				// Get account record
-				WorldState_Compile.Account a = getEVM().world.accounts.get(address);
+				WorldState_Compile.Account a = getEVM().dtor_world().dtor_accounts().get(address);
 				// Extract storage
-				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.storage.contents;
+				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.dtor_storage().dtor_contents();
 				// Copy over
 				m.forEach((k,v) -> storage.put(k,v));
 				return storage;
@@ -695,11 +695,11 @@ public class DafnyEvm {
 
 			@Override
 			protected EvmState_Compile.Raw getEVM() {
-				return state.evm;
+				return state.dtor_evm();
 			}
 
 			public Map<BigInteger,evmtools.core.Account> getWorldState() {
-				return toWorldState(state.evm.world);
+				return toWorldState(getEVM().dtor_world());
 			}
 
 			@Override
@@ -731,12 +731,12 @@ public class DafnyEvm {
 			@Override
 			public byte[] getReturnData() {
 				@SuppressWarnings("rawtypes")
-				DafnySequence data = (DafnySequence) state.data;
+				DafnySequence data = (DafnySequence) state.dtor_data();
 				return DafnySequence.toByteArray(data);
 			}
 
 			public BigInteger getGasRefunded() {
-				return state.gas;
+				return state.dtor_gas();
 			}
 		}
 
@@ -760,16 +760,16 @@ public class DafnyEvm {
 			@Override
 			public byte[] getReturnData() {
 				@SuppressWarnings("rawtypes")
-				DafnySequence data = (DafnySequence) state.data;
+				DafnySequence data = (DafnySequence) state.dtor_data();
 				return DafnySequence.toByteArray(data);
 			}
 
 			public BigInteger getGasRefunded() {
-				return state.gas;
+				return state.dtor_gas();
 			}
 
 			public Map<BigInteger,evmtools.core.Account> getWorldState() {
-				return toWorldState(state.world);
+				return toWorldState(state.dtor_world());
 			}
 
 			/**
@@ -780,7 +780,7 @@ public class DafnyEvm {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			@Override
 			public Pair<BigInteger[], byte[]>[] getLog() {
-				DafnySequence<? extends Tuple2> dlog = state.substate.log;
+				DafnySequence<? extends Tuple2> dlog = state.dtor_substate().dtor_log();
 				Pair<BigInteger[], byte[]>[] log = new Pair[dlog.length()];
 				for (int i = 0; i != log.length; ++i) {
 					Tuple2<DafnySequence<BigInteger>, DafnySequence<Byte>> ith = dlog.select(i);
@@ -832,17 +832,17 @@ public class DafnyEvm {
 		}
 
 		private static Map<BigInteger, evmtools.core.Account> toWorldState(WorldState_Compile.T world) {
-			DafnyMap<? extends BigInteger, ? extends Account> accounts = world.accounts;
+			DafnyMap<? extends BigInteger, ? extends Account> accounts = world.dtor_accounts();
 			HashMap<BigInteger, evmtools.core.Account> ws = new HashMap<>();
 			for (BigInteger account : accounts.keySet().Elements()) {
 				Account a = accounts.get(account);
 				@SuppressWarnings({ "rawtypes", "unchecked" })
-				byte[] bytecode = DafnySequence.toByteArray((DafnySequence) a.code.contents);
+				byte[] bytecode = DafnySequence.toByteArray((DafnySequence) a.dtor_code().dtor_contents());
 				Map<BigInteger, BigInteger> store = new HashMap<>();
-				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.storage.contents;
+				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.dtor_storage().dtor_contents();
 				// Copy over
 				m.forEach((k, v) -> store.put(k, v));
-				ws.put(account, new evmtools.core.Account(a.balance, a.nonce, store, bytecode));
+				ws.put(account, new evmtools.core.Account(a.dtor_balance(), a.dtor_nonce(), store, bytecode));
 			}
 			return ws;
 		}

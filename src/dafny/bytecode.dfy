@@ -512,7 +512,7 @@ module Bytecode {
             var rhs := st.Peek(0);
             var lhs := Word.asI256(st.Peek(1));
             var res := I256.Sar(lhs,rhs);
-            st.Pop().Pop().Push(res).Next()
+            st.Pop().Pop().Push(Word.fromI256(res)).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }

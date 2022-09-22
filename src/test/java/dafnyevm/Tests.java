@@ -682,6 +682,30 @@ public class Tests {
 		assertArrayEquals(INT256(-0xFE), output);
 	}
 
+	@Test
+	public void test_sar_06() {
+		// (0 - 0x5A) >> 1 = -0x2d
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x5A, PUSH1, 0x0, SUB, PUSH1, 0x1, SAR, PUSH1, 0x00,
+				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0x2d), output);
+	}
+
+	@Test
+	public void test_sar_07() {
+		// (0 - 0x5A) >> 2 = -0x17
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x5A, PUSH1, 0x0, SUB, PUSH1, 0x2, SAR, PUSH1, 0x00,
+				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0x17), output);
+	}
+
+	@Test
+	public void test_sar_08() {
+		// (0 - 0x5A) >> 3 = -0x0c
+		byte[] output = callWithReturn(new int[] { PUSH1, 0x5A, PUSH1, 0x0, SUB, PUSH1, 0x3, SAR, PUSH1, 0x00,
+				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
+		assertArrayEquals(INT256(-0x0c), output);
+	}
+
 	// ========================================================================
 	// 30s: Environmental Information
 	// ========================================================================
@@ -2605,7 +2629,7 @@ public class Tests {
 
 	private DafnyEvm.State<?> call(DafnyEvm context, int[] words) {
 		byte[] code = toBytes(words);
-//		System.out.println(Hex.toHexString(code));
+		System.out.println(Hex.toHexString(code));
 		// context = context.tracer(new Tracers.Debug());
 		return context.create(DEFAULT_RECEIVER, code).call();
 	}

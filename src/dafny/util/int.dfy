@@ -417,26 +417,13 @@ module I256 {
         Int.Rem(lhs as int, rhs as int) as i256
     }
 
-    // Shift Arithmetic Right using Bitshifts
-    function method Sar(lhs: i256, rhs: u256) : u256 {
-        if lhs >= 0 then
-            // Easy case, unsigned shr sufficient.
-            U256.Shr(lhs as u256, rhs)
-        else if rhs > 256 then MAX_U256 as u256
-        else
-            // Determine mask
-            var mask := (MAX_U256 as bv256) << (256 - rhs);
-            var lbv := (Word.fromI256(lhs) as bv256 >> rhs);
-            (mask | lbv) as u256
-    }
-
     // Shift Arithmetic Right.  This implementation follows the Yellow Paper quite
-    // accurately.  However, it performs very poorly when translated into Java.
-    function method Sar2(lhs: i256, rhs: u256) : i256 {
+    // accurately.
+    function method Sar(lhs: i256, rhs: u256) : i256 {
         if rhs == 0 then lhs
+        else if rhs >= 256 then -1 as i256
         else
-            var r := Int.Pow(2,rhs as nat);
-            lemma_pow2(rhs as nat);
+            var r := U256.Shl(1,rhs) as nat;
             ((lhs as int) / r) as i256
     }
 }
