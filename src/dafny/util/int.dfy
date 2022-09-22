@@ -12,7 +12,6 @@
  * under the License.
  */
 module Int {
-    // Powers of Two
     const TWO_7   : int := 0x0_80;
     const TWO_8   : int := 0x1_00;
     const TWO_15  : int := 0x0_8000;
@@ -172,6 +171,16 @@ module U16 {
     }
 
     /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
+    function method Log256(v:u16) : (r:nat)
+    ensures r <= 1 {
+        var low := (v % (TWO_8 as u16)) as u8;
+        var high := (v / (TWO_8 as u16)) as u8;
+        if high != 0 then 1 else 0
+    }
+
+    /**
      * Convert a u16 into a sequence of 2 bytes (in big endian representation).
      */
     function method ToBytes(v:u16) : (r:seq<u8>)
@@ -205,6 +214,16 @@ module U32 {
             then (v / (TWO_16 as u32)) as u16
         else
             (v % (TWO_16 as u32)) as u16
+    }
+
+    /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
+    function method Log256(v:u32) : (r:nat)
+    ensures r <= 3 {
+        var low := (v % (TWO_16 as u32)) as u16;
+        var high := (v / (TWO_16 as u32)) as u16;
+        if high != 0 then U16.Log256(high)+2 else U16.Log256(low)
     }
 
     /**
@@ -244,6 +263,16 @@ module U64 {
     }
 
     /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
+    function method Log256(v:u64) : (r:nat)
+    ensures r <= 7 {
+        var low := (v % (TWO_32 as u64)) as u32;
+        var high := (v / (TWO_32 as u64)) as u32;
+        if high != 0 then U32.Log256(high)+4 else U32.Log256(low)
+    }
+
+    /**
      * Convert a u64 into a sequence of 8bytes (in big endian representation).
      */
     function method ToBytes(v:u64) : (r:seq<u8>)
@@ -277,6 +306,16 @@ module U128 {
             then (v / (TWO_64 as u128)) as u64
         else
             (v % (TWO_64 as u128)) as u64
+    }
+
+    /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
+    function method Log256(v:u128) : (r:nat)
+    ensures r <= 15 {
+        var low := (v % (TWO_64 as u128)) as u64;
+        var high := (v / (TWO_64 as u128)) as u64;
+        if high != 0 then U64.Log256(high)+8 else U64.Log256(low)
     }
 
     /**
@@ -321,6 +360,16 @@ module U256 {
         var res := if rhs < 256 then (lbv >> rhs) else 0;
         //
         res as u256
+    }
+
+    /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
+    function method Log256(v:u256) : (r:nat)
+    ensures r <= 31 {
+        var low := (v % (TWO_128 as u256)) as u128;
+        var high := (v / (TWO_128 as u256)) as u128;
+        if high != 0 then U128.Log256(high)+16 else U128.Log256(low)
     }
 
     // Read nth 128bit word out of this u256, where 0 identifies the most
