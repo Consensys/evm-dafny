@@ -339,6 +339,9 @@ public class DafnyEvm {
 		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>());
 		// Construct initial substate
 		SubState_Compile.T ss = SubState_Compile.__default.Create();
+		// Mark sender + recipient as having been accessed.
+		ss = ss.AccountAccessed(sender);
+		ss = ss.AccountAccessed(recipient);
 		// Construct bytecode to execute
 		DafnySequence<Byte> bytecode = DafnySequence.fromBytes(code);
 		// Begin the call.

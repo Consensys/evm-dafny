@@ -1548,11 +1548,22 @@ module Bytecode {
          //
         if st.Operands() >= 1
         then
+            // Get address of currently executing account
+            var address := st.evm.context.address;
+            // Get balance of currently executing account
+            var balance := st.evm.world.Balance(address);
             // Determine account to send remaining any remaining funds.
-            var acct := (st.Peek(0) as nat) % TWO_160;
-            // FIXME: record contract deletion in substate!
-            // FIXME: actually refund the account!
-            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=st.evm.substate)
+            var r := ((st.Peek(0) as nat) % TWO_160) as u160;
+            // Register contract deletion in substate!
+            var ss := st.evm.substate.AccountAccessed(r);
+            // Apply refund
+            var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
+                // Refund balance to r
+                then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
+                // Otherwise reset balance to zero
+                else st.evm.world.Withdraw(address,balance);
+            //
+            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
