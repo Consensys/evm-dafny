@@ -437,6 +437,22 @@ module Gas {
         if st.evm.world.IsDead(r) && st.evm.world.Balance(Ia) != 0 then G_NEWACCOUNT else 0
     }
 
+    function method CostExp(st: State) : nat
+    requires !st.IsFailure()  {
+        if st.Operands() >= 2
+        then
+            var exp := st.Peek(1);
+            //
+            if exp == 0 then G_EXP
+            else
+                // Compute logarithim
+                var l256 := 1 + U256.Log256(exp);
+                // Perform gas calc
+                G_EXP + (G_EXPBYTE * l256)
+        else
+            G_ZERO
+    }
+
     /** The Berlin gas cost function.
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
@@ -454,7 +470,7 @@ module Gas {
             case SMOD => s.UseGas(G_LOW)
             case ADDMOD => s.UseGas(G_MID)
             case MULMOD => s.UseGas(G_MID)
-            case EXP => s.UseGas(G_EXP) // FIXME
+            case EXP => s.UseGas(CostExp(s))
             case SIGNEXTEND => s.UseGas(G_LOW)
             // 0x10s: Comparison & Bitwise Logic
             case LT => s.UseGas(G_VERYLOW)
