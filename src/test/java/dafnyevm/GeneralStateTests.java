@@ -87,10 +87,8 @@ public class GeneralStateTests {
 	 */
 	public final static List<String> IGNORES = Arrays.asList( //
 			"stExample/invalidTr.json", // Intrinsic Gas.
-			"VMTests/vmArithmeticTest/exp.json", // #195
-			"VMTests/vmArithmeticTest/expPower256Of256.json", // #195
-			"stCreateTest/CreateCollisionResults.json", // #195
-			"stReturnDataTest/returndatacopy_initial_big_sum.json", // #195
+			"VMTests/vmArithmeticTest/expPower256Of256.json", // performance?
+			//
 			"stMemoryTest/stackLimitGas_1023.json", // #201
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
@@ -294,7 +292,9 @@ public class GeneralStateTests {
 			"stCreateTest/CreateOOGafterInitCodeRevert2.json",
 			"stCreateTest/CreateOOGafterInitCodeReturndata.json",
 			"stCreateTest/CodeInConstructor.json",
+			"stCreateTest/CreateCollisionResults.json", // #295
 			//
+			"VMTests/vmArithmeticTest/exp.json", // #295
 			"vmIOandFlowOperations/jump.json", // #295
 			"vmIOandFlowOperations/jumpi.json", // #295
 			"stRevertTest/RevertDepth2.json", // #295

@@ -179,6 +179,79 @@ method {:test} SarTests() {
     Assert(()=>I256.Sar(-4 as i256, 4 as u256) == -1);
 }
 
+method {:test} Log256Tests() {
+    Assert(()=> U256.Log256(0) == 0);
+    Assert(()=> U256.Log256(1) == 0);
+    Assert(()=> U256.Log256(0x80) == 0);
+    Assert(()=> U256.Log256(0xff) == 0);
+    Assert(()=> U256.Log256(0x100) == 1);
+    Assert(()=> U256.Log256(0x554) == 1);
+    Assert(()=> U256.Log256(0x3334) == 1);
+    Assert(()=> U256.Log256(0xffff) == 1);
+    Assert(()=> U256.Log256(0x1_0000) == 2);
+    Assert(()=> U256.Log256(1020314) == 2);
+    Assert(()=> U256.Log256(16777215) == 2);
+    Assert(()=> U256.Log256(16777216) == 3);
+    Assert(()=> U256.Log256(1677091272) == 3);
+    Assert(()=> U256.Log256(0xffff_ffff) == 3);
+    Assert(()=> U256.Log256(0x1_0000_0000) == 4);
+    Assert(()=> U256.Log256(0xffff_ffff_ff) == 4);
+    Assert(()=> U256.Log256(0x1_0000_0000_00) == 5);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff) == 5);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000) == 6);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ff) == 6);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_00) == 7);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff) == 7);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000) == 8);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ff) == 8);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_00) == 9);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff) == 9);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000) == 10);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ff) == 10);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_00) == 11);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff) == 11);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000) == 12);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ff) == 12);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_00) == 13);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff) == 13);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000) == 14);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 14);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_00) == 15);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 15);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000) == 16);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 16);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_00) == 17);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 17);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 18);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 18);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 19);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 19);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 20);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 20);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 21);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 21);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 22);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 22);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 23);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 23);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 24);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 24);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 25);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 25);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 26);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 26);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 27);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 27);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 28);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 28);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 29);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 29);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000) == 30);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ff) == 30);
+    Assert(()=> U256.Log256(0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_00) == 31);
+    Assert(()=> U256.Log256(0xffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff_ffff) == 31);
+}
+
 method {:test} WordTests() {
     // ==>
     Assert(()=> Word.asI256(0) == 0);
