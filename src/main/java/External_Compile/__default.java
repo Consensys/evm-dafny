@@ -15,6 +15,7 @@ package External_Compile;
 
 import java.math.BigInteger;
 
+import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.web3j.crypto.Hash;
 
 import dafny.DafnySequence;
@@ -38,5 +39,49 @@ public class __default {
 		byte[] hash = Hash.sha3(bytes.toByteArray((DafnySequence) bytes));
 		// Construct an (unsigned) bigint.
 		return new BigInteger(1, hash);
+	}
+
+	/**
+	 * Compute the Sha256 hash of the byte sequence.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static DafnySequence<Byte> sha256(DafnySequence<? extends Byte> bytes) {
+		// Compute the hash
+		byte[] hash = Hash.sha256(bytes.toByteArray((DafnySequence) bytes));
+		// Construct an (unsigned) bigint.
+		return DafnySequence.fromBytes(hash);
+	}
+
+	/**
+	 * Compute the RIPEMD160 digest.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static DafnySequence<Byte> ripEmd160(DafnySequence<? extends Byte> _bytes) {
+		byte[] bytes = DafnySequence.toByteArray((DafnySequence) _bytes);
+		// Compute the hash
+		RIPEMD160Digest digest = new RIPEMD160Digest();
+		digest.update(bytes, 0, bytes.length);
+		byte[] out = new byte[20];
+		digest.doFinal(out, 0);
+		// Construct an (unsigned) bigint.
+		return DafnySequence.fromBytes(out);
+	}
+
+	/**
+	 * Compute the Sha256 hash of the byte sequence.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static DafnySequence<Byte> blake2f(DafnySequence<? extends Byte> bytes) {
+		// FIXME: this is wrong I believe.
+		// Compute the hash
+		byte[] hash = Hash.blake2b256(bytes.toByteArray((DafnySequence) bytes));
+		// Construct an (unsigned) bigint.
+		return DafnySequence.fromBytes(hash);
 	}
 }

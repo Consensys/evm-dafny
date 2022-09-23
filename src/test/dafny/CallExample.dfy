@@ -7,6 +7,7 @@ module CallExamples {
     import opened Opcode
     import opened Memory
     import EvmBerlin
+    import WorldState
     import opened Bytecode
     import Bytes
 
@@ -17,7 +18,7 @@ module CallExamples {
         // This is an absolutely minimal example of a contract call where the
         // called contract just stops.  Since the called contract stopped
         // successfully, we can at least check the exit code.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS);
+        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
         vm1 := Push1(vm1,0x0); // Out size
         vm1 := Dup(vm1,1);     // Out offset
         vm1 := Dup(vm1,1);     // In size
@@ -28,7 +29,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter(1,[STOP]);
+            var vm2 := vm1.CallEnter(1);
             vm2 := Stop(vm2);
             vm1 := vm1.CallReturn(vm2);
         }
@@ -41,7 +42,7 @@ module CallExamples {
     method test_call_02() {
         // This is another simple example of a contract call where the called
         // contract raises an exception.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS);
+        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
         vm1 := Push1(vm1,0x0); // Out size
         vm1 := Dup(vm1,1);     // Out offset
         vm1 := Dup(vm1,1);     // In size
@@ -52,7 +53,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter(1,[STOP]);
+            var vm2 := vm1.CallEnter(1);
             vm2 := Pop(vm2); // force exception
             vm1 := vm1.CallReturn(vm2);
         }
@@ -65,7 +66,7 @@ module CallExamples {
     method test_call_03() {
         // This is another simple example of a contract call where the called
         // contract returns some return data.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS);
+        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
         vm1 := Push1(vm1,0x20);  // Out size
         vm1 := Push1(vm1,0x0);   // Out offset
         vm1 := Dup(vm1,1);       // In size
@@ -75,7 +76,7 @@ module CallExamples {
         vm1 := Push1(vm1,0xFF);   // Gas
         vm1 := Call(vm1);
         { // >>> Contract call starts here
-            var vm2 := vm1.CallEnter(1,[STOP]);
+            var vm2 := vm1.CallEnter(1);
             vm2 := contractReturns123(vm2);
             vm1 := vm1.CallReturn(vm2);
         } // <<< Contract call ends here

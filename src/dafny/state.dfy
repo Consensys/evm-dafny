@@ -16,6 +16,7 @@ include "util/memory.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 include "util/extern.dfy"
+include "util/precompiled.dfy"
 include "util/storage.dfy"
 include "util/stack.dfy"
 include "util/substate.dfy"
@@ -36,6 +37,7 @@ module EvmState {
     import SubState
     import Code
     import Opcode
+    import Precompiled
     import opened ExtraTypes
 
     /**
@@ -114,6 +116,7 @@ module EvmState {
         | BALANCE_OVERFLOW
         | RETURNDATA_OVERFLOW
         | INVALID_JUMPDEST
+        | INVALID_PRECONDITION
         | CALLDEPTH_EXCEEDED
         | ACCOUNT_COLLISION
 
@@ -359,6 +362,18 @@ module EvmState {
         }
 
         /**
+         * Create an account at a given address in the world state.  An account
+         * cannot already exist at the given address.
+         */
+        function method CreateAccount(address:u160, nonce:nat, balance: u256, storage: map<u256,u256>, code: seq<u8>) : State
+        requires !IsFailure()
+        requires !evm.world.Exists(address)
+        requires |code| <= Code.MAX_CODE_SIZE {
+            var data := WorldState.CreateAccount(nonce,balance,Storage.Create(storage),Code.Create(code));
+            OK(evm.(world:=evm.world.Put(address,data)))
+        }
+
+        /**
          * Mark a given account as having been "accessed".
          */
         function method AccountAccessed(account: u160) : State
@@ -571,10 +586,9 @@ module EvmState {
         /**
          * Begin a nested contract call.
          */
-        function method CallEnter(depth: nat, code: seq<u8>) : State
+        function method CallEnter(depth: nat) : State
         requires this.CALLS?
         requires |callData| <= MAX_U256
-        requires |code| <= Code.MAX_CODE_SIZE
         // World state must contain this account
         requires evm.world.Exists(sender) {
             // Extract what is needed from context
@@ -701,36 +715,47 @@ module EvmState {
      *
      * @param world The current state of all accounts.
      * @param ctx The context for this call (where e.g. ctx.address is the recipient).
-     * @param code Bytecodes which should be executed.
+     * @param codeAddress Address of account containing code which should be executed.
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
      */
-    function method Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, code: seq<u8>, value: u256, gas: nat, depth: nat) : State
+    function method Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
     // Sender account must exist
-    requires world.Exists(ctx.sender)
-    // Code cannot be larger than limit
-    requires |code| <= Code.MAX_CODE_SIZE {
+    requires world.Exists(ctx.sender) {
+        // Address of called contract
+        var address := ctx.address;
         // Check call depth & available balance
         if depth >= 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
-            var w := world.EnsureAccount(ctx.address);
+            var w := world.EnsureAccount(address);
             // Sanity check deposit won't overflow
-            if !w.CanDeposit(ctx.address,value) then State.INVALID(BALANCE_OVERFLOW)
+            if !w.CanDeposit(address,value) then State.INVALID(BALANCE_OVERFLOW)
             // Sanity check sufficient funds
             else
                 // Transfer wei
-                var nw := w.Transfer(ctx.sender,ctx.address,value);
+                var nw := w.Transfer(ctx.sender,address,value);
+                // Check for precompiled contract
+                if codeAddress >= 1 && codeAddress <= 9
+                then
+                    // Execute precompiled contract
+                    match Precompiled.Call(codeAddress,ctx.callData)
+                    case None => State.INVALID(INVALID_PRECONDITION)
+                    case Some((data,gascost)) => if gas >= gascost
+                        then State.RETURNS(gas - gascost, data, nw, substate)
+                        else State.INVALID(INSUFFICIENT_GAS)
                 // Check for end-user account
-                if |code| == 0 then State.RETURNS(gas, [], nw, substate)
                 else
-                    // Construct fresh EVM
-                    var stack := Stack.Create();
-                    var mem := Memory.Create();
-                    var cod := Code.Create(code);
-                    var evm := EVM(ctx,nw,stack,mem,cod,substate,gas,0);
-                    // Off we go!
-                    State.OK(evm)
+                    // Extract contract code
+                    var cod := w.GetOrDefault(codeAddress).code;
+                    if |cod.contents| == 0 then State.RETURNS(gas, [], nw, substate)
+                    else
+                        // Construct fresh EVM
+                        var stack := Stack.Create();
+                        var mem := Memory.Create();
+                        var evm := EVM(ctx,nw,stack,mem,cod,substate,gas,0);
+                        // Off we go!
+                        State.OK(evm)
     }
 
     /**

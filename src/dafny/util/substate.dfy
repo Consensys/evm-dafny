@@ -25,7 +25,7 @@ module SubState {
     /**
      * A mapping from contract addresses to accounts.
      */
-    datatype T = SubState(
+    datatype Raw = SubState(
         // The set of accounts that will be discarded following the
         // transaction's completion.
         selfDestruct: set<u160>,
@@ -46,14 +46,14 @@ module SubState {
         /**
          * Append zero or more entries onto the current log.
          */
-        function method Append(entries: seq<LogEntry>) : T {
+        function method Append(entries: seq<LogEntry>) : Raw {
             this.(log := this.log + entries)
         }
 
         /**
          * Register an account for self destruction.
          */
-        function method AccountDestructed(account: u160) : T {
+        function method AccountDestructed(account: u160) : Raw {
             this.(selfDestruct := this.selfDestruct + {account})
         }
 
@@ -67,7 +67,7 @@ module SubState {
         /**
          * Mark a particular account as having been "accessed".
          */
-        function method AccountAccessed(account: u160) : T {
+        function method AccountAccessed(account: u160) : Raw {
             var naccessed := accessedAccounts + {account};
             this.(accessedAccounts := naccessed)
         }
@@ -82,7 +82,7 @@ module SubState {
         /**
          * Mark a particular storage location as having been "accessed".
          */
-        function method KeyAccessed(account: u160, address: u256) : T {
+        function method KeyAccessed(account: u160, address: u256) : Raw {
             var naccessed := accessedKeys + {(account,address)};
             this.(accessedKeys := naccessed)
         }
@@ -90,9 +90,16 @@ module SubState {
     }
 
     /**
+     * Define the substate as the raw state with an additional invariant that
+     * all precompiled contracts are always considered as having been accessed.
+     */
+    type T = c:Raw | {1,2,3,4,5,6,7,8,9} <= c.accessedAccounts
+    witness SubState({},[],{},0,{1,2,3,4,5,6,7,8,9},{})
+
+    /**
      * Create an initially empty substate.  This is "A_0" in the yellow paper.
      */
     function method Create() : T {
-        SubState({},[],{},0,{},{})
+        SubState({},[],{},0,{1,2,3,4,5,6,7,8,9},{})
     }
 }
