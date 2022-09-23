@@ -14,17 +14,20 @@
 include "bytes.dfy"
 include "extern.dfy"
 include "int.dfy"
+include "ExtraTypes.dfy"
 
 /**
  * Interface for the so-called "precompiled contracts".
  */
 module Precompiled {
     import opened Int
+    import opened ExtraTypes
+    import U32
     import U256
     import External
     import Bytes
 
-    function method Call(address: u160, data: seq<u8>) : seq<u8>
+    function method Call(address: u160, data: seq<u8>) : Option<(seq<u8>,nat)>
     requires address >= 1 && address <= 9 {
         match address
         case 1 => CallEcdsaRecover(data)
@@ -38,36 +41,16 @@ module Precompiled {
         case 9 => CallBlake2f(data)
     }
 
-    function method Cost(address: u160, data: seq<u8>) : nat
-    requires address >= 1 && address <= 9 {
-        match address
-        case 1 => CostEcdsaRecover(data)
-        case 2 => CostSha256(data)
-        case 3 => CostRipEmd160(data)
-        case 4 => CostID(data)
-        case 5 => CostModExp(data)
-        case 6 => CostBnAdd(data)
-        case 7 => CostBnMul(data)
-        case 8 => CostSnarkV(data)
-        case 9 => CostBlake2f(data)
-    }
-
     // ========================================================================
     // (1) ECDSA Recover
     // ========================================================================
+    const G_ECDSA := 3000;
 
     /**
      * Key recovery.
      */
-    function method CallEcdsaRecover(data: seq<u8>) : seq<u8> {
-        data
-    }
-
-    /**
-     * Gas cost for key recovery.
-     */
-    function method CostEcdsaRecover(data: seq<u8>) : nat {
-        3000
+    function method CallEcdsaRecover(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((data, G_ECDSA))
     }
 
     // ========================================================================
@@ -77,8 +60,8 @@ module Precompiled {
     /**
      * SHA256
      */
-    function method CallSha256(data: seq<u8>) : seq<u8> {
-        External.sha256(data)
+    function method CallSha256(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((External.sha256(data),CostSha256(data)))
     }
 
     /**
@@ -98,8 +81,8 @@ module Precompiled {
     /**
      * RipEmd160
      */
-    function method CallRipEmd160(data: seq<u8>) : seq<u8> {
-        data
+    function method CallRipEmd160(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((External.ripEmd160(data), CostRipEmd160(data)))
     }
 
     /**
@@ -119,8 +102,8 @@ module Precompiled {
     /**
      * The identify function just returns what it is given.
      */
-    function method CallID(data: seq<u8>) : seq<u8> {
-        data
+    function method CallID(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((data, CostID(data)))
     }
 
     /**
@@ -140,8 +123,8 @@ module Precompiled {
     /**
      * The identify function just returns what it is given.
      */
-    function method CallModExp(data: seq<u8>) : seq<u8> {
-        data
+    function method CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((data,CostModExp(data)))
     }
 
     /**
@@ -164,32 +147,28 @@ module Precompiled {
     // (6)
     // ========================================================================
 
-    function method CallBnAdd(data: seq<u8>) : seq<u8> {
-        data
-    }
+    const G_BNADD := 150;
 
-    function method CostBnAdd(data: seq<u8>) : nat {
-        150
+    function method CallBnAdd(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((data, G_BNADD))
     }
 
     // ========================================================================
     // (7)
     // ========================================================================
 
-    function method CallBnMul(data: seq<u8>) : seq<u8> {
-        data
-    }
+    const G_BNMUL := 6000;
 
-    function method CostBnMul(data: seq<u8>) : nat {
-        6000
+    function method CallBnMul(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((data, G_BNMUL))
     }
 
     // ========================================================================
     // (8) Pairing
     // ========================================================================
 
-    function method CallSnarkV(data: seq<u8>) : seq<u8> {
-        data
+    function method CallSnarkV(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        Some((data, CostSnarkV(data)))
     }
 
     function method CostSnarkV(data: seq<u8>) : nat {
@@ -200,12 +179,13 @@ module Precompiled {
     // (9) Blake2f
     // ========================================================================
 
-    function method CallBlake2f(data: seq<u8>) : seq<u8> {
-        data
-    }
-
-    function method CostBlake2f(data: seq<u8>) : nat {
-
-        200 // TODO
+    function method CallBlake2f(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        if |data| == 213 && data[212] in {0,1}
+        then
+            var r := U32.Read(data,0) as nat;
+            // FIXME: pull out stuff!
+            Some((External.blake2f(data),r))
+        else
+            None
     }
 }

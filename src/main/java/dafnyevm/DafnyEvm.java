@@ -329,9 +329,6 @@ public class DafnyEvm {
 			// If not, create it.
 			create(sender,DEFAULT_BALANCE);
 		}
-		Account c = worldState.get(recipient);
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		byte[] code = DafnySequence.toByteArray((DafnySequence) c.dtor_code().dtor_contents());
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
@@ -342,10 +339,8 @@ public class DafnyEvm {
 		// Mark sender + recipient as having been accessed.
 		ss = ss.AccountAccessed(sender);
 		ss = ss.AccountAccessed(recipient);
-		// Construct bytecode to execute
-		DafnySequence<Byte> bytecode = DafnySequence.fromBytes(code);
 		// Begin the call.
-		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, bytecode, value, gas, BigInteger.ONE);
+		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, recipient, value, gas, BigInteger.ONE);
 		// Execute bytecodes!
 		st = run(1, tracer, st);
 		// Convert back into the Java API
@@ -416,12 +411,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.State_CALLS cc) {
-		EvmState_Compile.Raw evm = cc.dtor_evm();
-		// Identify account whose code to execute
-		Account c = evm.dtor_world().dtor_accounts().get(cc.dtor_code());
-		DafnySequence<? extends Byte> code = (c != null) ? c.dtor_code().dtor_contents() : DafnySequence.fromBytes(new byte[0]);
-		// Begin recursive call.
-		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth), code);
+		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth));
 		// Run code within recursive call.
 		st = run(depth + 1, tracer, st);
 		// Return from call.

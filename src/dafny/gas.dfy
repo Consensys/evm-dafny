@@ -275,33 +275,16 @@ module Gas {
      * @param dataLenSlot Slot number for the calldata length (this varies between e.g. CALL and DELEGATECALL).
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method CallCost(st: State, dataLenSlot: nat, nOperands: nat) : nat
-    requires dataLenSlot >= 3 && nOperands > dataLenSlot
+    function method CallCost(st: State, nOperands: nat) : nat
+    requires nOperands > 2
     requires !st.IsFailure() {
         if st.Operands() >= nOperands
             then
                 var value := st.Peek(2) as nat;
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
-                var len := st.Peek(dataLenSlot) as nat;
-                var loc := st.Peek(dataLenSlot-1) as nat;
-                var data :=  Memory.Slice(st.evm.memory, loc, len);
                 // Check for precompiled constracts
-                CostCallExtra(st,to,value) + CostPrecompiled(to,data)
+                CostCallExtra(st,to,value)
         else
-            G_ZERO
-    }
-
-    /**
-     * Determine additional cost for calling precompiled contract (if we are in
-     * fact calling one).
-     */
-    function method CostPrecompiled(to: u160, data: seq<u8>) : nat {
-        if to >= 1 && to <= 9
-        then
-            // Yes, is precompiled so apply cost calculator for precompiles
-            Precompiled.Cost(to,data)
-        else
-            // Not precompiled
             G_ZERO
     }
 
@@ -621,21 +604,14 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,4,7))
-            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,4,7))
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
+            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
-            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,3,6))
+            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case CREATE2 => s.UseGas(CostExpandRange(s,4,1,2) + CostCreate2(s))
-            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,3,6))
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(CostSelfDestruct(s))
             case _ => State.INVALID(INVALID_OPCODE)
-    }
-
-    method test() {
-        var len := 0x2fffff;
-        var rhs := RoundUp(len,32) / 32;
-        var cost := G_KECCAK256 + (G_KECCAK256WORD * rhs);
-        assert cost == 0x9001e;
     }
 }
