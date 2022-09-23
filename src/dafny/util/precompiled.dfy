@@ -120,22 +120,30 @@ module Precompiled {
     // (5) ModExp
     // ========================================================================
     const G_QUADDIVISOR: nat := 100;
-    /**
-     * The identify function just returns what it is given.
-     */
-    function method CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
-        Some((data,CostModExp(data)))
-    }
 
     /**
-     * Gas calculation for the identity function.
+     * Compute arbitrary precision exponentiation under modulo.  Specifically,
+     * we compue B^E % M.  All words are unsigned integers in big endian format.
      */
-    function method CostModExp(data: seq<u8>) : nat {
-        var Lb := Bytes.ReadUint32(data,0) as nat;
-        var Le := Bytes.ReadUint32(data,4) as nat;
-        var Lm := Bytes.ReadUint32(data,8) as nat;
-        var r := f(Int.Max(Lm,Lb)) * Int.Max(Le,1) / G_QUADDIVISOR;
-        Int.Max(200,r)
+    function method CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
+        // Length of B
+        var lB := Bytes.ReadUint32(data,0) as nat;
+        // Length of E
+        var lE := Bytes.ReadUint32(data,4) as nat;
+        // Length of M
+        var lM := Bytes.ReadUint32(data,8) as nat;
+        // Extract B(ase)
+        var B := Bytes.Slice(data,12,lB);
+        // Extract E(xponent)
+        var E := Bytes.Slice(data,12+lB,lE);
+        // Extract M(odulo)
+        var M := Bytes.Slice(data,12+lB+lE,lM);
+        // Compute modexp (+lEp)
+        var (modexp,lEp) := External.modExp(B,E,M);
+        // Gas calculation
+        var gascost := Int.Max(200,f(Int.Max(lM,lB)) * Int.Max(lEp,1) / G_QUADDIVISOR);
+        // Done
+        Some((modexp,gascost))
     }
 
     function method f(x: nat) : nat {
