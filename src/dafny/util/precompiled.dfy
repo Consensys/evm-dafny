@@ -127,17 +127,17 @@ module Precompiled {
      */
     function method CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
         // Length of B
-        var lB := Bytes.ReadUint32(data,0) as nat;
+        var lB := Bytes.ReadUint256(data,0) as nat;
         // Length of E
-        var lE := Bytes.ReadUint32(data,4) as nat;
+        var lE := Bytes.ReadUint256(data,32) as nat;
         // Length of M
-        var lM := Bytes.ReadUint32(data,8) as nat;
+        var lM := Bytes.ReadUint256(data,64) as nat;
         // Extract B(ase)
-        var B := Bytes.Slice(data,12,lB);
+        var B := Bytes.Slice(data,96,lB);
         // Extract E(xponent)
-        var E := Bytes.Slice(data,12+lB,lE);
+        var E := Bytes.Slice(data,96+lB,lE);
         // Extract M(odulo)
-        var M := Bytes.Slice(data,12+lB+lE,lM);
+        var M := Bytes.Slice(data,96+lB+lE,lM);
         // Compute modexp (+lEp)
         var (modexp,lEp) := External.modExp(B,E,M);
         // Gas calculation

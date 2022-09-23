@@ -14,7 +14,7 @@
 package External_Compile;
 
 import java.math.BigInteger;
-
+import java.util.Arrays;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.web3j.crypto.Hash;
 
@@ -86,14 +86,17 @@ public class __default {
 		BigInteger E = new BigInteger(1, Ebytes);
 		BigInteger M = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _M));
 		BigInteger r;
-		if (B.equals(BigInteger.ZERO) && E.equals(BigInteger.ZERO)) {
-			r = BigInteger.ONE.mod(M);
-		} else if (E.equals(BigInteger.ZERO)) {
+		System.out.println("B=" + B + ", E=" + E + ", M=" + M);
+		System.out.println("|B|=" + _B.length() + ", |E|=" + _E.length() + ", |M|=" + _M.length());
+		if (M.equals(BigInteger.ZERO)) {
 			r = BigInteger.ZERO;
+		} else if (B.equals(BigInteger.ZERO) && E.equals(BigInteger.ZERO)) {
+			r = BigInteger.ONE;
 		} else {
 			r = B.modPow(E, M);
 		}
 		BigInteger lEp = lep(E, Ebytes);
+		System.out.println("BYTES: " + Arrays.toString(r.toByteArray()) + ", " + lEp);
 		return Tuple2.create(DafnySequence.fromBytes(r.toByteArray()), lEp);
 	}
 
