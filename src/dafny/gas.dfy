@@ -282,9 +282,11 @@ module Gas {
             then
                 var value := st.Peek(2) as nat;
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
-                var dataLen := st.Peek(dataLenSlot) as nat;
+                var len := st.Peek(dataLenSlot) as nat;
+                var loc := st.Peek(dataLenSlot-1) as nat;
+                var data :=  Memory.Slice(st.evm.memory, loc, len);
                 // Check for precompiled constracts
-                CostCallExtra(st,to,value) + CostPrecompiled(to,dataLen)
+                CostCallExtra(st,to,value) + CostPrecompiled(to,data)
         else
             G_ZERO
     }
@@ -293,11 +295,11 @@ module Gas {
      * Determine additional cost for calling precompiled contract (if we are in
      * fact calling one).
      */
-    function method CostPrecompiled(to: u160, dataLen: nat) : nat {
+    function method CostPrecompiled(to: u160, data: seq<u8>) : nat {
         if to >= 1 && to <= 9
         then
             // Yes, is precompiled so apply cost calculator for precompiles
-            Precompiled.Cost(to,dataLen)
+            Precompiled.Cost(to,data)
         else
             // Not precompiled
             G_ZERO
