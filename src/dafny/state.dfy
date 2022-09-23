@@ -16,6 +16,7 @@ include "util/memory.dfy"
 include "util/context.dfy"
 include "util/code.dfy"
 include "util/extern.dfy"
+include "util/precompiled.dfy"
 include "util/storage.dfy"
 include "util/stack.dfy"
 include "util/substate.dfy"
@@ -36,6 +37,7 @@ module EvmState {
     import SubState
     import Code
     import Opcode
+    import Precompiled
     import opened ExtraTypes
 
     /**
@@ -710,19 +712,28 @@ module EvmState {
     requires world.Exists(ctx.sender)
     // Code cannot be larger than limit
     requires |code| <= Code.MAX_CODE_SIZE {
+        // Address of called contract
+        var address := ctx.address;
         // Check call depth & available balance
         if depth >= 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
-            var w := world.EnsureAccount(ctx.address);
+            var w := world.EnsureAccount(address);
             // Sanity check deposit won't overflow
-            if !w.CanDeposit(ctx.address,value) then State.INVALID(BALANCE_OVERFLOW)
+            if !w.CanDeposit(address,value) then State.INVALID(BALANCE_OVERFLOW)
             // Sanity check sufficient funds
             else
                 // Transfer wei
-                var nw := w.Transfer(ctx.sender,ctx.address,value);
+                var nw := w.Transfer(ctx.sender,address,value);
+                // Check for precompiled contract
+                if address >= 1 && address <= 9
+                then
+                    // Execute precompiled contract
+                    var data := Precompiled.Call(address,ctx.callData);
+                    // Return data
+                    State.RETURNS(gas, data, nw, substate)
                 // Check for end-user account
-                if |code| == 0 then State.RETURNS(gas, [], nw, substate)
+                else if |code| == 0 then State.RETURNS(gas, [], nw, substate)
                 else
                     // Construct fresh EVM
                     var stack := Stack.Create();

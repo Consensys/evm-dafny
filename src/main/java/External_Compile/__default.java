@@ -39,4 +39,17 @@ public class __default {
 		// Construct an (unsigned) bigint.
 		return new BigInteger(1, hash);
 	}
+
+	/**
+	 * Compute the Sha256 hash of the byte sequence.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static DafnySequence<Byte> sha256(DafnySequence<? extends Byte> bytes) {
+		// Compute the hash
+		byte[] hash = Hash.sha256(bytes.toByteArray((DafnySequence) bytes));
+		// Construct an (unsigned) bigint.
+		return DafnySequence.fromBytes(hash);
+	}
 }

@@ -93,16 +93,14 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
 			"vmIOandFlowOperations/jumpToPush.json", // #241
-			"stReturnDataTest/create_callprecompile_returndatasize.json", // #266
-			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266
-			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266
-			"stRevertTest/RevertPrecompiledTouch.json",  // #266
-			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266
-			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266
-			"stRevertTest/RevertPrecompiledTouch_storage.json",  // #266
-			"stCreate2/create2callPrecompiles.json", // #266
-			"stCreate2/create2SmartInitCode.json", // #266
-			"stCreate2/CREATE2_Suicide.json", // #266
+//			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266 + callcode calc?
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266 (address 0x5)
+			"stRevertTest/RevertPrecompiledTouch.json",  // #266 (address 0x1)
+			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266 (address 0x1)
+			"stRevertTest/RevertPrecompiledTouch_noncestorage.json",  // #266 (address 0x1)
+			"stRevertTest/RevertPrecompiledTouch_storage.json",   // #266 (address 0x1)
+			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
+			"stCreate2/CREATE2_Suicide.json", // #274
 			"stMemoryTest/oog.json", // #299
 			"stCreateTest/CREATE_FirstByte_loop.json", // #299
 			"stCreateTest/CREATE_HighNonce.json", // #329
@@ -199,6 +197,7 @@ public class GeneralStateTests {
 			"stReturnDataTest/returndatacopy_following_revert_in_create.json",
 			"stReturnDataTest/returndatacopy_after_successful_callcode.json",
 			"stReturnDataTest/returndatacopy_afterFailing_create.json",
+			"stReturnDataTest/create_callprecompile_returndatasize.json", // #295
 			"stMemoryTest/mload8bitBound.json",
 			"stMemoryTest/mload16bitBound.json",
 			"stMemoryTest/bufferSrcOffset.json",
@@ -288,6 +287,7 @@ public class GeneralStateTests {
 			"stCreate2/RevertOpcodeInCreateReturnsCreate2.json",
 			"stCreate2/returndatacopy_afterFailing_create.json",
 			"stCreate2/Create2OOGafterInitCodeRevert.json",
+			"stCreate2/create2SmartInitCode.json", // #295
 			"stCreateTest/CreateOOGafterInitCodeReturndata2.json",
 			"stCreateTest/CreateOOGafterInitCodeRevert2.json",
 			"stCreateTest/CreateOOGafterInitCodeReturndata.json",
@@ -391,23 +391,6 @@ public class GeneralStateTests {
 			}
 			//
 			Trace tr = new Trace(elements);
-			//
-//			if(!instance.getTrace().equals(tr)) {
-//				for(Trace.Element e : tr.getElements()) {
-//					if(e instanceof Trace.Step) {
-//						Trace.Step s = (Trace.Step) e;
-//						if(s.op == 0x55) {
-//							String n = pair.getLeft().toString();
-//							if(!visited.contains(n)) {
-//								visited.add(n);
-//								String fn = n.replace("tests/GeneralStateTests/","");
-//								System.out.println("\"" + fn + "\",");
-//							}
-//							return;
-//						}
-//					}
-//				}
-//			}
 			// Finally check for equality.
 			assertEquals(instance.getTrace(),tr);
 		}
