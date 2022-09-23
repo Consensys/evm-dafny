@@ -93,7 +93,7 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
 			"vmIOandFlowOperations/jumpToPush.json", // #241
-//			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266 + callcode calc?
+			"stRevertTest/RevertPrecompiledTouchExactOOG.json",  // #266
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266 (address 0x5)
 			"stRevertTest/RevertPrecompiledTouch.json",  // #266 (address 0x1)
 			"stRevertTest/RevertPrecompiledTouch_nonce.json",  // #266 (address 0x1)

@@ -115,6 +115,7 @@ module Gas {
         if len == 0 || address + len - 1 < |mem.contents| then
             0
         else
+            // NOTE: there is a bug here as this should not round down.
             var before := |mem.contents| / 32;
             var after := Memory.SmallestLarg32(address + len - 1) / 32;
             QuadraticCostIsMonotonic(after, before);
@@ -191,11 +192,9 @@ module Gas {
         then
             // Determine which range is higher in the address space (hence will
             // determine gas requred).
-            if (aLocSlot + aLenSlot) > (bLocSlot + bLenSlot)
-            then
-                CostExpandRange(st,nOperands,aLocSlot,aLenSlot)
-            else
-                CostExpandRange(st,nOperands,bLocSlot,bLenSlot)
+            var aCost := CostExpandRange(st,nOperands,aLocSlot,aLenSlot);
+            var bCost := CostExpandRange(st,nOperands,bLocSlot,bLenSlot);
+            Int.Max(aCost,bCost)
         else
             G_ZERO
     }
