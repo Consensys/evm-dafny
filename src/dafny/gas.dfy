@@ -73,7 +73,8 @@ module Gas {
 	const G_COPY: nat := 3;
 	const G_BLOCKHASH: nat := 20;
 	const G_QUADDIVISOR: nat := 100;
-
+    const G_WARM_STORAGE_READ_COST: nat := 100              // EIP1283 refers to this as "SLOAD_GAS"
+    const G_SSTORECLEAR: nat := 15000                     //EIP2200 refers to this as "SSTORE_CLEARS_SCHEDULE"
     /**
      *  Assign a cost as a function of the memory size.
      *
@@ -411,6 +412,134 @@ module Gas {
             G_ZERO
     }
 
+    /* this is the "r_dirtyresetclear" function used as part of the gas computation of SSTORE
+     * @param   originalVal     it is the value of the storage slot in the pre-transaction state of the account
+     * @param   currentVal      it is the  current value of the  storage slot
+     * @param   newVal          it is the  new value given as input to the SSTORE opcode as its second argument
+     */
+    function method DirtyResetClear(originalVal: nat, currentVal: nat, newVal: nat): int
+        {
+            if originalVal == newVal
+                then
+                    if originalVal == 0 
+                        then 
+                            G_SSET - G_WARM_STORAGE_READ_COST
+                    else
+                        G_SRESET - G_WARM_STORAGE_READ_COST
+            else 
+                0
+        }
+    /* this is the "r_dirtyclear" function used as part of the gas computation of SSTORE
+     * @param   originalVal     it is the value of the storage slot in the pre-transaction state of the account
+     * @param   currentVal      it is the  current value of the  storage slot
+     * @param   newVal          it is the  new value given as input to the SSTORE opcode as its second argument
+     */
+    function method DirtyClear(originalVal: nat, currentVal: nat, newVal: nat): int
+        {
+            if originalVal != 0
+                then
+                    if currentVal == 0 
+                        then  0 - G_SSTORECLEAR
+                    else if newVal == 0
+                        then 
+                            G_SSTORECLEAR
+                    else
+                        0
+            else
+                0
+        }
+
+    /* this is part of the  computation of SSTORE gas charge where 
+       the refund compopnent of the accrued substate ((A_r^)') is computed*/
+    function method AccruedSubstateRefund(originalVal: nat, currentVal: nat, newVal: nat): int
+        {
+            if currentVal != newVal
+                then    
+                    if originalVal == currentVal
+                        then    
+                            if newVal == 0
+                                then
+                                    G_SSTORECLEAR
+                            else
+                                0
+                    else
+                        DirtyClear(originalVal, currentVal, newVal) + DirtyResetClear(originalVal, currentVal, newVal)
+            else
+                0
+        }
+
+    /* computes the part of SSTORE gas cost */
+    function method GasCostSSTORE(originalVal: nat, currentVal: nat, newVal: nat): nat
+        {
+            if currentVal == newVal 
+                then
+                    G_WARM_STORAGE_READ_COST
+            else
+                if originalVal == currentVal
+                    then
+                        if originalVal == 0
+                            then
+                                G_SSET
+                        else
+                            G_SRESET
+                else
+                    G_ZERO            
+        }
+
+    /* computes both the gas charge and gas refund for SSTORE opcode 
+     * @param       st      takes a state
+     * @returns     a tuple where the first component of the tuple computes the amount of gas to be charged
+                    and the second component the amount of wei to be refunded to the originator of the call
+     */
+    function method CostSSTOREChargeRefund(st: State) : (nat, int)
+    requires !st.IsFailure() 
+        {
+            if st.Operands() >= 2 && (st.evm.world.Exists(st.evm.context.address))
+            then   
+                var loc := st.Peek(0);
+                var newValue := st.Peek(1);
+                var currentAccount := st.evm.world.GetOrDefault(st.evm.context.address);
+                var currentAccountPretransaction := st.evm.world.GetOrDefaultPretransaction(st.evm.context.address);
+                // determine if it is a cold or warm storage access and charge accordingly
+                var accessCost := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
+                if loc in currentAccount.storage.contents
+                    then
+                        var currentValue := Storage.Read(currentAccount.storage, loc);
+                        var originalValue := Storage.Read(currentAccountPretransaction.storage, loc);
+                        // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
+                        if currentValue == newValue 
+                            then 
+                                (G_WARM_STORAGE_READ_COST + accessCost, 0)
+                        else 
+                            if originalValue == currentValue
+                                then
+                                    if newValue == 0 
+                                        then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, G_SSTORECLEAR)
+                                    else
+                                        (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
+
+                            else
+                                (G_WARM_STORAGE_READ_COST + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
+
+                else    
+                    (G_ZERO, G_ZERO)
+            else    
+                (G_ZERO, G_ZERO)
+        }
+
+    // returns the amount of gas to charge upon the execution of SSTORE
+    function method CostSSTORE(st: State): nat
+    requires !st.IsFailure() {
+        CostSSTOREChargeRefund(st).0
+    }
+
+    // sets in the refund component of the substate the refund amount computed upon the execution of SSTORE
+    function method PutRefund(st: State): State
+    requires !st.IsFailure() {
+        var computeRefund := CostSSTOREChargeRefund(st).1;
+        st.ModifyRefundCounter(computeRefund)
+        }
+
     /**
      * Determine cost for deleting a given account.
      */
@@ -522,7 +651,7 @@ module Gas {
             case MSTORE => s.UseGas(CostExpandBytes(s,2,0,32) + G_VERYLOW)
             case MSTORE8 => s.UseGas(CostExpandBytes(s,2,0,1) + G_VERYLOW)
             case SLOAD => s.UseGas(CostSLoad(s))
-            case SSTORE => s.UseGas(CostSStore(s)) // for now
+            case SSTORE => s.UseGas(CostSSTORE(s)) // for now
             case JUMP => s.UseGas(G_MID)
             case JUMPI => s.UseGas(G_HIGH) // for now
             case PC => s.UseGas(G_BASE)

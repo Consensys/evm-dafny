@@ -383,6 +383,14 @@ module EvmState {
         }
 
         /**
+         * increment/decrement the refund counter of the substate for a given address.
+         */
+        function method ModifyRefundCounter(k: int) : State
+        requires !IsFailure() {
+            OK(evm.(substate:=evm.substate.ModifyRefundCounter(k)))
+        }
+
+        /**
          * Check whether a given account was previously accessed (or not).
          */
         function method WasAccountAccessed(account: u160) : bool
@@ -419,6 +427,8 @@ module EvmState {
          * Check whether a given storage location in the currently executing
          * account was previously modified or not.
          */
+         /* we do not need this */
+         /*
         function method WasModified(address: u256) : bool
         requires !IsFailure() {
             // Determine executing account
@@ -426,7 +436,7 @@ module EvmState {
             // Perform the check
             evm.world.WasModified(account,address)
         }
-
+        */
         /**
          * Thread through world state and substate from a successful contract
          * call.

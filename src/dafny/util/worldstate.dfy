@@ -53,7 +53,7 @@ module WorldState {
     /**
      * A mapping from contract addresses to accounts.
      */
-    datatype T = WorldState(accounts:map<u160,Account>, modified:set<(u160,u256)>) {
+    datatype T = WorldState(accounts:map<u160,Account>, pretransactionaccounts:map<u160,Account>) {
         /**
          * Determine whether or not a given account exists.
          */
@@ -117,6 +117,18 @@ module WorldState {
             if account in accounts
             then
                 accounts[account]
+            else
+                DefaultAccount()
+        }
+
+        /**
+         * Get the account associated with a given address in the world state prior to the transaction execution.  If no such account
+         * exists, a default (i.e. empty) account is returned.
+         */
+        function method GetOrDefaultPretransaction(account:u160) : Account {
+            if account in pretransactionaccounts
+            then
+                pretransactionaccounts[account]
             else
                 DefaultAccount()
         }
@@ -251,9 +263,10 @@ module WorldState {
             // Update account storage
             var nStorage := Storage.Write(entry.storage,address,value);
             // Update modification record (if applicable).
-            var nmodified := if value != pValue then modified + {(account,address)} else modified;
+            /* the line below which hass been commented out is not needed */
+            //var nmodified := if value != pValue then modified + {(account,address)} else modified;
             // Write it all back
-            WorldState(this.accounts[account:=entry.(storage:=nStorage)],nmodified)
+            WorldState(this.accounts[account:=entry.(storage:=nStorage)],pretransactionaccounts)
         }
 
         /**
@@ -271,24 +284,30 @@ module WorldState {
         /**
          * Check whether a given storage location was previously modified or not.
          */
+         /* not needed */
+        /* 
         function method WasModified(account: u160, address: u256) : bool {
             (account,address) in modified
         }
+        */
 
         /**
          * Mark a particular storage location as having been "modified".
          */
+         /* not needed */
+         /*
         function method Modified(account: u160, address: u256) : T {
             var nmodified := modified + {(account,address)};
             this.(modified := nmodified)
         }
+        */
     }
 
     /**
-     * Create world state from an initial mapping of addresses to accounts.
+     * Create world state from an initial mapping of addresses to accounts, and thread through a copy of the pre-transaction world.
      */
     function method Create(accounts:map<u160,Account>) : T {
         // Initially all accessed / modified flags are cleared.
-        WorldState(accounts, {})
+        WorldState(accounts, accounts)
     }
 }
