@@ -333,7 +333,7 @@ public class DafnyEvm {
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
 		// Construct world state
-		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>());
+		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate
 		SubState_Compile.Raw ss = SubState_Compile.__default.Create();
 		// Mark sender + recipient as having been accessed.
@@ -364,7 +364,7 @@ public class DafnyEvm {
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
 				code, gasPrice, blockInfo.toDafny());
 		// Construct world state
-		WorldState_Compile.T ws = WorldState_Compile.T.create(worldState, new DafnySet<>());
+		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate
 		SubState_Compile.Raw ss = SubState_Compile.__default.Create();
 		// Begin the call.
