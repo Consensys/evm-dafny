@@ -524,7 +524,7 @@ module Gas {
                 else    
                     (G_ZERO, G_ZERO)
             else    
-                (G_SSET + G_COLDSLOAD, G_ZERO)
+                (G_ZERO, G_ZERO)
         }
 
     // returns the amount of gas to charge upon the execution of SSTORE
