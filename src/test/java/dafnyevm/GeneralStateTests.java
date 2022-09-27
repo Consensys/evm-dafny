@@ -93,7 +93,7 @@ public class GeneralStateTests {
 			"stMemoryTest/stackLimitGas_1024.json", // #201
 			"stMemoryTest/stackLimitGas_1025.json", // #201
 			"vmIOandFlowOperations/jumpToPush.json", // #241
-//			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266 (address 0x5)
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266 (address 0x5)
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
 			"stCreate2/CREATE2_Suicide.json", // #274
 			"stMemoryTest/oog.json", // #299

@@ -92,8 +92,23 @@ public class __default {
 			r = BigInteger.ONE;
 		} else {
 			r = B.modPow(E, M);
+			// Done
+			return DafnySequence.fromBytes(leftPad(r.toByteArray(),_M.length()));
 		}
 		return DafnySequence.fromBytes(r.toByteArray());
+	}
+
+	/**
+	 * Pad out a given byte sequence with zeros (to the left) upto a given length.
+	 *
+	 * @param bytes
+	 * @param length
+	 * @return
+	 */
+	private static byte[] leftPad(byte[] bytes, int length) {
+		byte[] output = new byte[length];
+		System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
+		return output;
 	}
 
 	/**
