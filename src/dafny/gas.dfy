@@ -502,27 +502,23 @@ module Gas {
                 var currentAccountPretransaction := st.evm.world.GetOrDefaultPretransaction(st.evm.context.address);
                 // determine if it is a cold or warm storage access and charge accordingly
                 var accessCost := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
-                if loc in currentAccount.storage.contents
-                    then
-                        var currentValue := Storage.Read(currentAccount.storage, loc);
-                        var originalValue := Storage.Read(currentAccountPretransaction.storage, loc);
+                var currentValue := Storage.Read(currentAccount.storage, loc);
+                var originalValue := Storage.Read(currentAccountPretransaction.storage, loc);
                         // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
-                        if currentValue == newValue 
-                            then 
-                                (G_WARM_STORAGE_READ_COST + accessCost, 0)
-                        else 
-                            if originalValue == currentValue
-                                then
-                                    if newValue == 0 
-                                        then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, G_SSTORECLEAR)
-                                    else
-                                        (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
-
+                if currentValue == newValue 
+                    then 
+                        (G_WARM_STORAGE_READ_COST + accessCost, 0)
+                else 
+                    if originalValue == currentValue
+                        then
+                            if newValue == 0 
+                                then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, G_SSTORECLEAR)
                             else
-                                (G_WARM_STORAGE_READ_COST + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
+                                (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
 
-                else    
-                    (G_ZERO, G_ZERO)
+                    else
+                        (G_WARM_STORAGE_READ_COST + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
+
             else    
                 (G_ZERO, G_ZERO)
         }
