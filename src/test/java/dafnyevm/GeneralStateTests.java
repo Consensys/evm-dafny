@@ -100,6 +100,29 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_FirstByte_loop.json", // #299
 			"stCreateTest/CREATE_HighNonce.json", // #329
 			"stCreate2/CREATE2_HighNonce.json", // #329
+			"stSStoreTest/sstore_0to0.json", // #331
+			"stSStoreTest/sstore_0to0to0.json", // #331
+			"stSStoreTest/sstore_0to0toX.json", // #331
+			"stSStoreTest/sstore_0toX.json", // #331
+			"stSStoreTest/sstore_0toXto0.json", // #331
+			"stSStoreTest/sstore_0toXto0toX.json", // #331
+			"stSStoreTest/sstore_0toXtoX.json", // #331
+			"stSStoreTest/sstore_0toXtoY.json", // #331
+			"stSStoreTest/sstore_Xto0.json", // #331
+			"stSStoreTest/sstore_Xto0to0.json", // #331
+			"stSStoreTest/sstore_Xto0toX.json", // #331
+			"stSStoreTest/sstore_Xto0toXto0.json", // #331
+			"stSStoreTest/sstore_Xto0toY.json", // #331
+			"stSStoreTest/sstore_XtoX.json", // #331
+			"stSStoreTest/sstore_XtoXto0.json", // #331
+			"stSStoreTest/sstore_XtoXtoX.json", // #331
+			"stSStoreTest/sstore_XtoXtoY.json", // #331
+			"stSStoreTest/sstore_XtoY.json", // #331
+			"stSStoreTest/sstore_XtoYto0.json", // #331
+			"stSStoreTest/sstore_XtoYtoX.json", // #331
+			"stSStoreTest/sstore_XtoYtoY.json", // #331
+			"stSStoreTest/sstore_XtoYtoZ.json", // #331
+			"stRevertTest/RevertInCreateInInit.json", // #343
 			// Unknowns
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // unknown exception ??
 			"stCreate2/create2noCash.json", // Unknown exception
@@ -110,52 +133,10 @@ public class GeneralStateTests {
 			// Gas Unknowns
 			"stRevertTest/PythonRevertTestTue201814-1430.json", // Gas (STATICALL?)
 			//
-			"stCodeCopyTest/ExtCodeCopyTargetRangeLongerThanCodeTests.json",
-			"stCodeCopyTest/ExtCodeCopyTests.json",
-			"stRevertTest/RevertDepthCreateOOG.json",
-			"stRevertTest/RevertSubCallStorageOOG2.json",
 			"stRevertTest/LoopCallsThenRevert.json",
 			"stRevertTest/RevertOpcodeInCallsOnNonEmptyReturnData.json",
-			"stRevertTest/RevertOpcodeReturn.json",
-			"stRevertTest/RevertOpcodeCalls.json",
-			"stRevertTest/RevertInDelegateCall.json",
-			"stRevertTest/RevertOpcodeMultipleSubCalls.json",
-			"stRevertTest/RevertOpcodeDirectCall.json",
-			"stRevertTest/RevertInCallCode.json",
-			"stRevertTest/RevertInStaticCall.json",
-			"stRevertTest/TouchToEmptyAccountRevert2.json",
-			"stRevertTest/RevertOpcodeCreate.json",
-			"stRevertTest/TouchToEmptyAccountRevert3.json",
 			"stRevertTest/RevertOpcodeInCreateReturns.json",
-			"VMTests/vmArithmeticTest/smod.json",
-			"VMTests/vmArithmeticTest/divByZero.json",
-			"VMTests/vmArithmeticTest/add.json",
-			"VMTests/vmArithmeticTest/mod.json",
-			"VMTests/vmArithmeticTest/expPower2.json",
-			"VMTests/vmArithmeticTest/addmod.json",
-			"VMTests/vmArithmeticTest/arith.json",
-			"VMTests/vmArithmeticTest/mul.json",
-			"VMTests/vmArithmeticTest/signextend.json",
-			"VMTests/vmArithmeticTest/mulmod.json",
-			"VMTests/vmArithmeticTest/sdiv.json",
-			"VMTests/vmArithmeticTest/div.json",
-			"VMTests/vmArithmeticTest/expPower256.json",
 			"VMTests/vmArithmeticTest/twoOps.json",
-			"VMTests/vmBitwiseLogicOperation/iszero.json",
-			"VMTests/vmBitwiseLogicOperation/lt.json",
-			"VMTests/vmBitwiseLogicOperation/byte.json",
-			"VMTests/vmBitwiseLogicOperation/not.json",
-			"VMTests/vmBitwiseLogicOperation/and.json",
-			"VMTests/vmBitwiseLogicOperation/eq.json",
-			"VMTests/vmBitwiseLogicOperation/gt.json",
-			"VMTests/vmBitwiseLogicOperation/slt.json",
-			"VMTests/vmBitwiseLogicOperation/xor.json",
-			"VMTests/vmBitwiseLogicOperation/sgt.json",
-			"VMTests/vmTests/calldatacopy.json",
-			"VMTests/vmTests/swap.json",
-			"VMTests/vmTests/calldatasize.json",
-			"VMTests/vmTests/envInfo.json",
-			"VMTests/vmTests/blockInfo.json",
 			"VMTests/vmLogTest/log4.json",
 			"VMTests/vmLogTest/log2.json",
 			"VMTests/vmLogTest/log0.json",
@@ -163,7 +144,6 @@ public class GeneralStateTests {
 			"VMTests/vmLogTest/log3.json",
 			"VMTests/vmIOandFlowOperations/mstore8.json",
 			"VMTests/vmIOandFlowOperations/mload.json",
-			"VMTests/vmIOandFlowOperations/codecopy.json",
 			"VMTests/vmIOandFlowOperations/gas.json",
 			"VMTests/vmIOandFlowOperations/loopsConditionals.json",
 			"VMTests/vmIOandFlowOperations/return.json",
@@ -192,167 +172,69 @@ public class GeneralStateTests {
 			"stReturnDataTest/returndatacopy_following_revert_in_create.json",
 			"stReturnDataTest/returndatacopy_after_successful_callcode.json",
 			"stReturnDataTest/returndatacopy_afterFailing_create.json",
-			"stReturnDataTest/create_callprecompile_returndatasize.json", // #295
-			"stMemoryTest/mload8bitBound.json",
-			"stMemoryTest/mload16bitBound.json",
+			"stReturnDataTest/create_callprecompile_returndatasize.json",
 			"stMemoryTest/bufferSrcOffset.json",
-			"stCallCodes/callcallcall_000_OOGE.json",
-			"stCallCodes/callcall_00_OOGE_valueTransfer.json",
-			"stCallCodes/callcodecallcodecall_110_OOGMAfter.json",
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
-			"stCallCodes/callcallcodecallcode_011_OOGMBefore.json",
-			"stCallCodes/callcallcodecall_010_OOGMAfter.json",
-			"stCallCodes/callcallcall_000_OOGMAfter.json",
-			"stCallCodes/callcallcall_000_OOGMBefore.json",
-			"stCallCodes/callcodeDynamicCode.json",
-			"stCallCodes/callcallcodecallcode_011_OOGMAfter.json",
-			"stCallCodes/callcodecallcallcode_101_OOGMAfter.json",
-			"stCallCodes/callcallcodecallcode_011_OOGE.json",
-			"stCallCodes/callcodecallcodecallcode_111_OOGE.json",
-			"stCallCodes/callcodecallcall_100_OOGE.json",
-			"stCallCodes/callcodecallcodecall_110_OOGMBefore.json",
-			"stCallCodes/callcallcallcode_001_OOGMBefore.json",
-			"stCallCodes/callcodecallcodecallcode_111_OOGMBefore.json",
-			"stCallCodes/callcodecallcode_11_OOGE.json",
-			"stCallCodes/callcodecallcallcode_101_OOGMBefore.json",
-			"stCallCodes/callcodecallcodecall_110_OOGE.json",
-			"stCallCodes/callcodecallcallcode_101_OOGE.json",
-			"stCallCodes/callcallcode_01_OOGE.json",
-			"stCallCodes/callcodeInInitcodeToExisContractWithVTransferNEMoney.json",
-			"stCallCodes/callcallcodecall_010_OOGMBefore.json",
-			"stCallCodes/callcodecall_10_OOGE.json",
-			"stCallCodes/callcallcallcode_001_OOGE.json",
-			"stCallCodes/callcodecallcall_100_OOGMAfter.json",
-			"stCallCodes/callcodecallcodecallcode_111_OOGMAfter.json",
-			"stCallCodes/callcallcodecall_010_OOGE.json",
-			"stCallCodes/callcodeDynamicCode2SelfCall.json",
-			"stCallCodes/callcallcallcode_001_OOGMAfter.json",
-			"stCallCodes/callcodecallcall_100_OOGMBefore.json",
 			"stCallCodes/callcodeEmptycontract.json",
-			"stCallCodes/callcall_00_OOGE.json",
-			"stSelfBalance/selfBalanceEqualsBalance.json",
-			"stExtCodeHash/extCodeHashDeletedAccount3.json",
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccount.json",
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountCall.json",
 			"stExtCodeHash/extCodeHashCALL.json",
 			"stExtCodeHash/codeCopyZero.json",
-			"stExtCodeHash/extCodeHashDeletedAccount4.json",
 			"stExtCodeHash/callToNonExistent.json",
-			"stExtCodeHash/extCodeHashDeletedAccount2.json",
-			"stExtCodeHash/extCodeHashNewAccount.json",
 			"stExtCodeHash/dynamicAccountOverwriteEmpty.json",
 			"stExtCodeHash/extCodeHashCALLCODE.json",
 			"stExtCodeHash/extCodeHashDynamicArgument.json",
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountRecheckInOuterCall.json",
 			"stExtCodeHash/extCodeHashSelf.json",
 			"stExtCodeHash/extCodeHashDELEGATECALL.json",
-			"stExtCodeHash/extCodeCopyBounds.json",
 			"stExtCodeHash/extCodeHashSubcallOOG.json",
 			"stExtCodeHash/createEmptyThenExtcodehash.json",
-			"stExtCodeHash/extCodeHashAccountWithoutCode.json",
 			"stExtCodeHash/extCodeHashSTATICCALL.json",
 			"stExtCodeHash/extCodeHashPrecompiles.json",
 			"stExtCodeHash/extCodeHashNonExistingAccount.json",
-			"stExtCodeHash/extCodeHashSelfInInit.json",
-			"stExtCodeHash/extCodeHashDeletedAccount1.json",
-			"stLogTests/log0_logMemStartTooHigh.json",
-			"stLogTests/log4_logMemsizeTooHigh.json",
-			"stLogTests/log3_logMemsizeTooHigh.json",
-			"stLogTests/log0_logMemsizeTooHigh.json",
-			"stLogTests/log3_logMemStartTooHigh.json",
-			"stLogTests/log1_logMemsizeTooHigh.json",
-			"stLogTests/log4_logMemStartTooHigh.json",
-			"stLogTests/log2_logMemsizeTooHigh.json",
-			"stLogTests/log2_logMemStartTooHigh.json",
-			"stLogTests/logInOOG_Call.json",
-			"stLogTests/log1_logMemStartTooHigh.json",
-			"stCreate2/create2InitCodes.json",
 			"stCreate2/call_then_create2_successful_then_returndatasize.json",
 			"stCreate2/returndatacopy_0_0_following_successful_create.json",
-			"stCreate2/RevertDepthCreateAddressCollisionBerlin.json",
-			"stCreate2/RevertDepthCreate2OOGBerlin.json",
 			"stCreate2/returndatasize_following_successful_create.json",
-			"stCreate2/CREATE2_ContractSuicideDuringInit_ThenStoreThenReturn.json",
 			"stCreate2/RevertInCreateInInitCreate2.json",
 			"stCreate2/Create2OOGafterInitCodeReturndata2.json",
 			"stCreate2/call_outsize_then_create2_successful_then_returndatasize.json",
 			"stCreate2/Create2OOGafterInitCodeReturndata.json",
 			"stCreate2/returndatacopy_following_revert_in_create.json",
-			"stCreate2/RevertOpcodeCreate.json",
 			"stCreate2/RevertOpcodeInCreateReturnsCreate2.json",
 			"stCreate2/returndatacopy_afterFailing_create.json",
 			"stCreate2/Create2OOGafterInitCodeRevert.json",
-			"stCreate2/create2SmartInitCode.json", // #295
-			"stCreateTest/CreateOOGafterInitCodeReturndata2.json",
 			"stCreateTest/CreateOOGafterInitCodeRevert2.json",
-			"stCreateTest/CreateOOGafterInitCodeReturndata.json",
 			"stCreateTest/CodeInConstructor.json",
-			"stCreateTest/CreateCollisionResults.json", // #295
+			"stCreateTest/CreateCollisionResults.json",
 			//
-			"VMTests/vmArithmeticTest/exp.json", // #295
-			"vmIOandFlowOperations/jump.json", // #295
-			"vmIOandFlowOperations/jumpi.json", // #295
-			"stRevertTest/RevertDepth2.json", // #295
-			"stRevertTest/LoopDelegateCallsDepthThenRevert.json", // #295
-			"stRevertTest/RevertDepthCreateAddressCollision.json", // #295
-			"stMemoryTest/memCopySelf.json", // #295
-			"stSelfBalance/selfBalanceCallTypes.json", // #295
-			"stCallCodes/callcallcall_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json", // #295
-			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json", // #295
-			"stCreateTest/CREATE_EmptyContractAndCallIt_0wei.json", // #295
-			"stCreateTest/CREATE_EmptyContractAndCallIt_1wei.json", // #295
-			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_0wei.json", // #295
-			"stCreateTest/CREATE_EmptyContractWithStorageAndCallIt_1wei.json", // #295
-			"stCreateTest/CREATE_EmptyContractWithStorage.json", // #295
-			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json", // #295
-			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json", // #295
-			"stCreateTest/CreateCollisionToEmpty.json", // #295
-			"stCreateTest/TransactionCollisionToEmpty.json", // #295
-			"stCreate2/CREATE2_HighNonceDelegatecall.json", // #295
-			"stCreateTest/CREATE_EOF1.json", // #295
-			"stCreate2/CREATE2_EOF1.json", // #295
-			"stCreate2/Create2OOGafterInitCodeRevert2.json", // #295
-			"stCreate2/create2checkFieldsInInitcode.json", // #295
-			"stRevertTest/LoopCallsDepthThenRevert2.json", // #295
-			"stRevertTest/LoopCallsDepthThenRevert3.json", // #295
-			"stRevertTest/LoopCallsDepthThenRevert.json", // #295
-			"stRevertTest/RevertRemoteSubCallStorageOOG.json", // #295
-			"stExtCodeHash/extcodehashEmpty.json", // #295
-			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #295
-			"stSStoreTest/InitCollision.json", // #295
-			"stSStoreTest/InitCollisionNonZeroNonce.json", // #295
-			"stSStoreTest/sstore_0to0.json", // #295
-			"stSStoreTest/sstore_0to0to0.json", // #295
-			"stSStoreTest/sstore_0to0toX.json", // #295
-			"stSStoreTest/sstore_0toX.json", // #295
-			"stSStoreTest/sstore_0toXto0.json", // #295
-			"stSStoreTest/sstore_0toXto0toX.json", // #295
-			"stSStoreTest/sstore_0toXtoX.json", // #295
-			"stSStoreTest/sstore_0toXtoY.json", // #295
-			"stSStoreTest/SstoreCallToSelfSubRefundBelowZero.json", // #295
-			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #295
-			"stSStoreTest/sstoreGas.json", // #295
-			"stSStoreTest/sstore_gasLeft.json", // #295
-			"stSStoreTest/sstore_Xto0.json", // #295
-			"stSStoreTest/sstore_Xto0to0.json", // #295
-			"stSStoreTest/sstore_Xto0toX.json", // #295
-			"stSStoreTest/sstore_Xto0toXto0.json", // #295
-			"stSStoreTest/sstore_Xto0toY.json", // #295
-			"stSStoreTest/sstore_XtoX.json", // #295
-			"stSStoreTest/sstore_XtoXto0.json", // #295
-			"stSStoreTest/sstore_XtoXtoX.json", // #295
-			"stSStoreTest/sstore_XtoXtoY.json", // #295
-			"stSStoreTest/sstore_XtoY.json", // #295
-			"stSStoreTest/sstore_XtoYto0.json", // #295
-			"stSStoreTest/sstore_XtoYtoX.json", // #295
-			"stSStoreTest/sstore_XtoYtoY.json", // #295
-			"stSStoreTest/sstore_XtoYtoZ.json", // #295
+			"VMTests/vmArithmeticTest/exp.json", // too slow?
+			"vmIOandFlowOperations/jump.json",
+			"vmIOandFlowOperations/jumpi.json",
+			"stRevertTest/LoopDelegateCallsDepthThenRevert.json",
+			"stMemoryTest/memCopySelf.json",
+			"stCallCodes/callcallcall_ABCB_RECURSIVE.json",
+			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json",
+			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json",
+			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json",
+			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json",
+			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json",
+			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json",
+			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json",
+			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json",
+			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json",
+			"stCreateTest/TransactionCollisionToEmpty.json",
+			"stCreate2/CREATE2_HighNonceDelegatecall.json",
+			"stCreate2/Create2OOGafterInitCodeRevert2.json",
+			"stCreate2/create2checkFieldsInInitcode.json",
+			"stRevertTest/LoopCallsDepthThenRevert2.json",
+			"stRevertTest/LoopCallsDepthThenRevert3.json",
+			"stRevertTest/LoopCallsDepthThenRevert.json",
+			"stRevertTest/RevertRemoteSubCallStorageOOG.json",
+			"stExtCodeHash/extcodehashEmpty.json",
+			"stExtCodeHash/callToSuicideThenExtcodehash.json",
+			"stSStoreTest/InitCollision.json",
+			"stSStoreTest/InitCollisionNonZeroNonce.json",
+			"stSStoreTest/SstoreCallToSelfSubRefundBelowZero.json",
+			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json",
+			"stSStoreTest/sstoreGas.json",
+			"stSStoreTest/sstore_gasLeft.json",
 			"dummy"
 	);
 

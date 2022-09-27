@@ -424,20 +424,6 @@ module EvmState {
         }
 
         /**
-         * Check whether a given storage location in the currently executing
-         * account was previously modified or not.
-         */
-         /* we do not need this */
-         /*
-        function method WasModified(address: u256) : bool
-        requires !IsFailure() {
-            // Determine executing account
-            var account := evm.context.address;
-            // Perform the check
-            evm.world.WasModified(account,address)
-        }
-        */
-        /**
          * Thread through world state and substate from a successful contract
          * call.
          */

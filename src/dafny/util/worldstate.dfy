@@ -262,9 +262,6 @@ module WorldState {
             var pValue := Storage.Read(entry.storage,address);
             // Update account storage
             var nStorage := Storage.Write(entry.storage,address,value);
-            // Update modification record (if applicable).
-            /* the line below which hass been commented out is not needed */
-            //var nmodified := if value != pValue then modified + {(account,address)} else modified;
             // Write it all back
             WorldState(this.accounts[account:=entry.(storage:=nStorage)],pretransactionaccounts)
         }
@@ -280,27 +277,6 @@ module WorldState {
             // Read from account storage
             Storage.Read(entry.storage,address)
         }
-
-        /**
-         * Check whether a given storage location was previously modified or not.
-         */
-         /* not needed */
-        /* 
-        function method WasModified(account: u160, address: u256) : bool {
-            (account,address) in modified
-        }
-        */
-
-        /**
-         * Mark a particular storage location as having been "modified".
-         */
-         /* not needed */
-         /*
-        function method Modified(account: u160, address: u256) : T {
-            var nmodified := modified + {(account,address)};
-            this.(modified := nmodified)
-        }
-        */
     }
 
     /**
