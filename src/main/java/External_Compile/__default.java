@@ -14,11 +14,12 @@
 package External_Compile;
 
 import java.math.BigInteger;
-
+import java.util.Arrays;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 import org.web3j.crypto.Hash;
 
 import dafny.DafnySequence;
+import dafny.Tuple2;
 
 /**
  * Provides concrete implementations for all methods defined as
@@ -72,7 +73,46 @@ public class __default {
 	}
 
 	/**
-	 * Compute the Sha256 hash of the byte sequence.
+	 * Compute arbitrary precision exponentiation under modulo.  Specifically,
+     * we compue B^E % M.  All words are unsigned integers in big endian format.
+	 *
+	 * @param bytes
+	 * @return
+	 */
+	public static DafnySequence<? extends Byte> modExp(DafnySequence<? extends Byte> _B,
+			DafnySequence<? extends Byte> _E, DafnySequence<? extends Byte> _M) {
+		BigInteger B = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _B));
+		byte[] Ebytes = DafnySequence.toByteArray((DafnySequence) _E);
+		BigInteger E = new BigInteger(1, Ebytes);
+		BigInteger M = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _M));
+		BigInteger r;
+		if (M.equals(BigInteger.ZERO)) {
+			r = BigInteger.ZERO;
+		} else if (B.equals(BigInteger.ZERO) && E.equals(BigInteger.ZERO)) {
+			r = BigInteger.ONE;
+		} else {
+			r = B.modPow(E, M);
+			// Done
+			return DafnySequence.fromBytes(leftPad(r.toByteArray(),_M.length()));
+		}
+		return DafnySequence.fromBytes(r.toByteArray());
+	}
+
+	/**
+	 * Pad out a given byte sequence with zeros (to the left) upto a given length.
+	 *
+	 * @param bytes
+	 * @param length
+	 * @return
+	 */
+	private static byte[] leftPad(byte[] bytes, int length) {
+		byte[] output = new byte[length];
+		System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
+		return output;
+	}
+
+	/**
+	 * Compute the blake hash of the byte sequence.
 	 *
 	 * @param bytes
 	 * @return

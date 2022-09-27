@@ -119,7 +119,7 @@ module Int {
             assert Pow(2,k) == 1;
         } else if k == 1 {
             assert Pow(2,k) == 2;
-        } else {
+            } else {
             lemma_pow2(k/2);
         }
     }
@@ -154,10 +154,39 @@ module Int {
 }
 
 /**
+ * Various helper methods related to unsigned 8bit integers.
+ */
+module U8 {
+    import opened Int
+    // Compute the log of a value at base 2 where the result is rounded down.
+    function method Log2(v:u8) : (r:nat)
+    ensures r < 8 {
+        // Split 4 bits
+        if v <= 15 then
+            // Split 2 bits
+            if v <= 3 then
+                // Split 1 bit
+                if v <= 1 then 0 else 1
+            else
+                // Split 1 bit
+                if v <= 7 then 2 else 3
+        else
+            // Split 2 bits
+            if v <= 63 then
+                // Split 1 bit
+                if v <= 31 then 4 else 5
+            else
+                // Split 1 bit
+                if v <= 127 then 6 else 7
+    }
+}
+
+/**
  * Various helper methods related to unsigned 16bit integers.
  */
 module U16 {
     import opened Int
+    import U8
 
     // Read nth 8bit word (i.e. byte) out of this u16, where 0
     // identifies the most significant byte.
@@ -168,6 +197,16 @@ module U16 {
             then (v / (TWO_8 as u16)) as u8
         else
             (v % (TWO_8 as u16)) as u8
+    }
+
+    /**
+     * Compute the log of a value at base 2 where the result is rounded down.
+     */
+    function method Log2(v:u16) : (r:nat)
+    ensures r < 16 {
+        var low := (v % (TWO_8 as u16)) as u8;
+        var high := (v / (TWO_8 as u16)) as u8;
+        if high != 0 then U8.Log2(high)+8 else U8.Log2(low)
     }
 
     /**
@@ -219,6 +258,16 @@ module U32 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
+    function method Log2(v:u32) : (r:nat)
+    ensures r < 32 {
+        var low := (v % (TWO_16 as u32)) as u16;
+        var high := (v / (TWO_16 as u32)) as u16;
+        if high != 0 then U16.Log2(high)+16 else U16.Log2(low)
+    }
+
+    /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
     function method Log256(v:u32) : (r:nat)
     ensures r <= 3 {
         var low := (v % (TWO_16 as u32)) as u16;
@@ -260,6 +309,16 @@ module U64 {
             then (v / (TWO_32 as u64)) as u32
         else
             (v % (TWO_32 as u64)) as u32
+    }
+
+    /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
+    function method Log2(v:u64) : (r:nat)
+    ensures r < 64 {
+        var low := (v % (TWO_32 as u64)) as u32;
+        var high := (v / (TWO_32 as u64)) as u32;
+        if high != 0 then U32.Log2(high)+32 else U32.Log2(low)
     }
 
     /**
@@ -311,6 +370,16 @@ module U128 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
+    function method Log2(v:u128) : (r:nat)
+    ensures r < 128 {
+        var low := (v % (TWO_64 as u128)) as u64;
+        var high := (v / (TWO_64 as u128)) as u64;
+        if high != 0 then U64.Log2(high)+64 else U64.Log2(low)
+    }
+
+    /**
+     * Compute the log of a value at base 256 where the result is rounded down.
+     */
     function method Log256(v:u128) : (r:nat)
     ensures r <= 15 {
         var low := (v % (TWO_64 as u128)) as u64;
@@ -341,10 +410,11 @@ module U128 {
  */
 module U256 {
     import opened Int
-    import U128
-    import U64
-    import U32
+    import U8
     import U16
+    import U32
+    import U64
+    import U128
 
     function method Shl(lhs: u256, rhs: u256) : u256 {
         var lbv := lhs as bv256;
@@ -360,6 +430,17 @@ module U256 {
         var res := if rhs < 256 then (lbv >> rhs) else 0;
         //
         res as u256
+    }
+
+    /**
+     * Compute the log of a value at base 2, where the result in rounded down.
+     * This effectively determines the position of the highest on bit.
+     */
+    function method Log2(v:u256) : (r:nat)
+    ensures r < 256 {
+        var low := (v % (TWO_128 as u256)) as u128;
+        var high := (v / (TWO_128 as u256)) as u128;
+        if high != 0 then U128.Log2(high)+128 else U128.Log2(low)
     }
 
     /**
