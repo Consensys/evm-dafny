@@ -37,7 +37,7 @@ module SubState {
         // the end of a transaction.
         touched: set<(u160,u256)>,
         // The refund balance which increased through SSTORE.
-        refund: nat,
+        refund: int,
         // The set of accessed account addresses.
         accessedAccounts:set<u160>,
         // The set of accessed storage keys.
@@ -85,6 +85,10 @@ module SubState {
         function method KeyAccessed(account: u160, address: u256) : Raw {
             var naccessed := accessedKeys + {(account,address)};
             this.(accessedKeys := naccessed)
+        }
+
+        function method ModifyRefundCounter(k: int): Raw {
+            this.(refund := this.refund + k)
         }
 
     }
