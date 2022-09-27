@@ -79,15 +79,13 @@ public class __default {
 	 * @param bytes
 	 * @return
 	 */
-	public static Tuple2<DafnySequence<? extends Byte>, BigInteger> modExp(DafnySequence<? extends Byte> _B,
+	public static DafnySequence<? extends Byte> modExp(DafnySequence<? extends Byte> _B,
 			DafnySequence<? extends Byte> _E, DafnySequence<? extends Byte> _M) {
 		BigInteger B = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _B));
 		byte[] Ebytes = DafnySequence.toByteArray((DafnySequence) _E);
 		BigInteger E = new BigInteger(1, Ebytes);
 		BigInteger M = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _M));
 		BigInteger r;
-		System.out.println("B=" + B + ", E=" + E + ", M=" + M);
-		System.out.println("|B|=" + _B.length() + ", |E|=" + _E.length() + ", |M|=" + _M.length());
 		if (M.equals(BigInteger.ZERO)) {
 			r = BigInteger.ZERO;
 		} else if (B.equals(BigInteger.ZERO) && E.equals(BigInteger.ZERO)) {
@@ -95,45 +93,7 @@ public class __default {
 		} else {
 			r = B.modPow(E, M);
 		}
-		BigInteger lEp = lep(E, Ebytes);
-		System.out.println("BYTES: " + Arrays.toString(r.toByteArray()) + ", " + lEp);
-		return Tuple2.create(DafnySequence.fromBytes(r.toByteArray()), lEp);
-	}
-
-	private static BigInteger lep(BigInteger E, byte[] bytes) {
-		boolean zero = E.equals(BigInteger.ZERO);
-		//
-		if(bytes.length <= 32 && zero) {
-			return BigInteger.ZERO;
-		} else if(bytes.length <= 32) {
-			return BigInteger.valueOf(E.bitLength());
-		} else  {
-			BigInteger base = BigInteger.valueOf(bytes.length - 32).multiply(BigInteger.valueOf(8));
-			long log2 = 0;
-			if(bytes[0] != 0) {
-				log2 = log2(bytes[0]) + 24;
-			} else if(bytes[1] != 0) {
-				log2 = log2(bytes[1]) + 16;
-			} else if(bytes[2] != 0) {
-				log2 = log2(bytes[2]) + 8;
-			} else if(bytes[3] != 0) {
-				log2 = log2(bytes[3]);
-			} else {
-				return base;
-			}
-			return base.add(BigInteger.valueOf(log2));
-		}
-	}
-
-	private static int log2(byte _b) {
-		int b = _b & 0Xff;
-		for (int i = 7; i != 0; --i) {
-			int mask = 1 << i;
-			if ((b & mask) != 0) {
-				return i;
-			}
-		}
-		throw new IllegalArgumentException("unreachable code");
+		return DafnySequence.fromBytes(r.toByteArray());
 	}
 
 	/**

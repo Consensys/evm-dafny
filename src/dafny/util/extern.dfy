@@ -35,7 +35,7 @@ module External {
      * Compute arbitrary precision exponentiation under modulo.  Specifically,
      * we compue B^E % M.  All words are unsigned integers in big endian format.
      */
-    function method {:extern} modExp(B: seq<u8>, E: seq<u8>, M: seq<u8>) : (seq<u8>, nat) {
-        ([],0)
+    function method {:extern} modExp(B: seq<u8>, E: seq<u8>, M: seq<u8>) : seq<u8> {
+        []
     }
 }

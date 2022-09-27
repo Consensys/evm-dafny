@@ -179,6 +179,137 @@ method {:test} SarTests() {
     Assert(()=>I256.Sar(-4 as i256, 4 as u256) == -1);
 }
 
+method {:test} Log2Tests() {
+    // U8
+    Assert(()=> U8.Log2(0) == 0);
+    Assert(()=> U8.Log2(1) == 0);
+    Assert(()=> U8.Log2(2) == 1);
+    Assert(()=> U8.Log2(3) == 1);
+    Assert(()=> U8.Log2(4) == 2);
+    Assert(()=> U8.Log2(5) == 2);
+    Assert(()=> U8.Log2(6) == 2);
+    Assert(()=> U8.Log2(7) == 2);
+    Assert(()=> U8.Log2(8) == 3);
+    Assert(()=> U8.Log2(9) == 3);
+    Assert(()=> U8.Log2(10) == 3);
+    Assert(()=> U8.Log2(11) == 3);
+    Assert(()=> U8.Log2(12) == 3);
+    Assert(()=> U8.Log2(13) == 3);
+    Assert(()=> U8.Log2(14) == 3);
+    Assert(()=> U8.Log2(15) == 3);
+    Assert(()=> U8.Log2(16) == 4);
+    Assert(()=> U8.Log2(17) == 4);
+    Assert(()=> U8.Log2(28) == 4);
+    Assert(()=> U8.Log2(29) == 4);
+    Assert(()=> U8.Log2(30) == 4);
+    Assert(()=> U8.Log2(31) == 4);
+    Assert(()=> U8.Log2(32) == 5);
+    Assert(()=> U8.Log2(33) == 5);
+    Assert(()=> U8.Log2(60) == 5);
+    Assert(()=> U8.Log2(61) == 5);
+    Assert(()=> U8.Log2(62) == 5);
+    Assert(()=> U8.Log2(63) == 5);
+    Assert(()=> U8.Log2(64) == 6);
+    Assert(()=> U8.Log2(65) == 6);
+    Assert(()=> U8.Log2(66) == 6);
+    Assert(()=> U8.Log2(126) == 6);
+    Assert(()=> U8.Log2(127) == 6);
+    Assert(()=> U8.Log2(128) == 7);
+    Assert(()=> U8.Log2(129) == 7);
+    Assert(()=> U8.Log2(130) == 7);
+    Assert(()=> U8.Log2(181) == 7);
+    Assert(()=> U8.Log2(182) == 7);
+    Assert(()=> U8.Log2(183) == 7);
+    Assert(()=> U8.Log2(184) == 7);
+    Assert(()=> U8.Log2(185) == 7);
+    Assert(()=> U8.Log2(186) == 7);
+    Assert(()=> U8.Log2(254) == 7);
+    Assert(()=> U8.Log2(255) == 7);
+    // U16
+    Assert(()=> U16.Log2(0) == 0);
+    Assert(()=> U16.Log2(1) == 0);
+    Assert(()=> U16.Log2(2) == 1);
+    Assert(()=> U16.Log2(3) == 1);
+    Assert(()=> U16.Log2(4) == 2);
+    Assert(()=> U16.Log2(5) == 2);
+    Assert(()=> U16.Log2(254) == 7);
+    Assert(()=> U16.Log2(255) == 7);
+    Assert(()=> U16.Log2(256) == 8);
+    Assert(()=> U16.Log2(257) == 8);
+    Assert(()=> U16.Log2(511) == 8);
+    Assert(()=> U16.Log2(512) == 9);
+    Assert(()=> U16.Log2(513) == 9);
+    Assert(()=> U16.Log2(1023) == 9);
+    Assert(()=> U16.Log2(1024) == 10);
+    Assert(()=> U16.Log2(1025) == 10);
+    Assert(()=> U16.Log2(65534) == 15);
+    Assert(()=> U16.Log2(65535) == 15);
+    // U32
+    Assert(()=> U32.Log2(0) == 0);
+    Assert(()=> U32.Log2(1) == 0);
+    Assert(()=> U32.Log2(2) == 1);
+    Assert(()=> U32.Log2(3) == 1);
+    Assert(()=> U32.Log2(4) == 2);
+    Assert(()=> U32.Log2(5) == 2);
+    Assert(()=> U32.Log2(254) == 7);
+    Assert(()=> U32.Log2(255) == 7);
+    Assert(()=> U32.Log2(65535) == 15);
+    Assert(()=> U32.Log2(65536) == 16);
+    Assert(()=> U32.Log2(131071) == 16);
+    Assert(()=> U32.Log2(131072) == 17);
+    Assert(()=> U32.Log2(262143) == 17);
+    Assert(()=> U32.Log2(262144) == 18);
+    Assert(()=> U32.Log2(MAX_U32 as u32) == 31);
+    // U64
+    Assert(()=> U64.Log2(0) == 0);
+    Assert(()=> U64.Log2(1) == 0);
+    Assert(()=> U64.Log2(2) == 1);
+    Assert(()=> U64.Log2(3) == 1);
+    Assert(()=> U64.Log2(4) == 2);
+    Assert(()=> U64.Log2(5) == 2);
+    Assert(()=> U64.Log2(254) == 7);
+    Assert(()=> U64.Log2(255) == 7);
+    Assert(()=> U64.Log2(65535) == 15);
+    Assert(()=> U64.Log2(65536) == 16);
+    Assert(()=> U64.Log2(MAX_U32 as u64) == 31);
+    Assert(()=> U64.Log2(TWO_32 as u64) == 32);
+    Assert(()=> U64.Log2(MAX_U64 as u64) == 63);
+    // U128
+    Assert(()=> U128.Log2(0) == 0);
+    Assert(()=> U128.Log2(1) == 0);
+    Assert(()=> U128.Log2(2) == 1);
+    Assert(()=> U128.Log2(3) == 1);
+    Assert(()=> U128.Log2(4) == 2);
+    Assert(()=> U128.Log2(5) == 2);
+    Assert(()=> U128.Log2(254) == 7);
+    Assert(()=> U128.Log2(255) == 7);
+    Assert(()=> U128.Log2(65535) == 15);
+    Assert(()=> U128.Log2(65536) == 16);
+    Assert(()=> U128.Log2(MAX_U32 as u128) == 31);
+    Assert(()=> U128.Log2(TWO_32 as u128) == 32);
+    Assert(()=> U128.Log2(MAX_U64 as u128) == 63);
+    Assert(()=> U128.Log2(TWO_64 as u128) == 64);
+    Assert(()=> U128.Log2(MAX_U128 as u128) == 127);
+    // U256
+    Assert(()=> U256.Log2(0) == 0);
+    Assert(()=> U256.Log2(1) == 0);
+    Assert(()=> U256.Log2(2) == 1);
+    Assert(()=> U256.Log2(3) == 1);
+    Assert(()=> U256.Log2(4) == 2);
+    Assert(()=> U256.Log2(5) == 2);
+    Assert(()=> U256.Log2(254) == 7);
+    Assert(()=> U256.Log2(255) == 7);
+    Assert(()=> U256.Log2(65535) == 15);
+    Assert(()=> U256.Log2(65536) == 16);
+    Assert(()=> U256.Log2(MAX_U32 as u256) == 31);
+    Assert(()=> U256.Log2(TWO_32 as u256) == 32);
+    Assert(()=> U256.Log2(MAX_U64 as u256) == 63);
+    Assert(()=> U256.Log2(TWO_64 as u256) == 64);
+    Assert(()=> U256.Log2(MAX_U128 as u256) == 127);
+    Assert(()=> U256.Log2(TWO_128 as u256) == 128);
+    Assert(()=> U256.Log2(MAX_U256 as u256) == 255);
+}
+
 method {:test} Log256Tests() {
     Assert(()=> U256.Log256(0) == 0);
     Assert(()=> U256.Log256(1) == 0);

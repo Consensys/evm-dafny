@@ -119,7 +119,7 @@ module Precompiled {
     // ========================================================================
     // (5) ModExp
     // ========================================================================
-    const G_QUADDIVISOR: nat := 100;
+    const G_QUADDIVISOR: nat := 3;
 
     /**
      * Compute arbitrary precision exponentiation under modulo.  Specifically,
@@ -138,17 +138,43 @@ module Precompiled {
         var E := Bytes.Slice(data,96+lB,lE);
         // Extract M(odulo)
         var M := Bytes.Slice(data,96+lB+lE,lM);
-        // Compute modexp (+lEp)
-        var (modexp,lEp) := External.modExp(B,E,M);
+        // Compute modexp
+        var modexp := External.modExp(B,E,M);
+        // Compute lEp
+        var lEp := LenEp(lB,E,data);
         // Gas calculation
-        var gascost := Int.Max(200,f(Int.Max(lM,lB)) * Int.Max(lEp,1) / G_QUADDIVISOR);
+        var gascost := Int.Max(200, (f(Int.Max(lM,lB)) * Int.Max(lEp,1)) / G_QUADDIVISOR);
         // Done
         Some((modexp,gascost))
     }
 
+    /**
+     * Function "f" from the yellow paper.
+     */
     function method f(x: nat) : nat {
         var xd8 := Int.RoundUp(x,8) / 8;
-        x * x
+        xd8 * xd8
+    }
+
+    /**
+     * Calculation for "LenEp" (the Length of E primed) as stated in the yellow
+     * paper.
+     */
+    function method LenEp(lB: nat, E: seq<u8>, data: seq<u8>) : nat {
+        var lE := |E|;
+        //
+        if lE <= 32 then
+            // NOTE: the following could be improved by performing the log
+            // directly on the byte sequence and, hence, avoiding the coercion.
+            var w := Bytes.ReadUint256(Bytes.LeftPad(E,32),0);
+            // Check where we stand
+            if w == 0 then 0 else U256.Log2(w)
+        else
+            var w := Bytes.ReadUint256(data,96 + lB);
+            var g := 8 * (lE - 32);
+            // NOTE: the following could be improved by performing the log
+            // directly on the byte sequence and, hence, avoiding the coercion.
+            if 32 < lE && w != 0 then g + U256.Log2(w) else g
     }
 
     // ========================================================================
