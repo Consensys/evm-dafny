@@ -136,7 +136,7 @@ public class GeneralStateTests {
 			// Gas Unknowns
 			"stRevertTest/PythonRevertTestTue201814-1430.json", // Gas (STATICALL?)
 			//
-			"VMTests/vmArithmeticTest/twoOps.json",
+//			"VMTests/vmArithmeticTest/twoOps.json",
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
 			"stCallCodes/callcodeEmptycontract.json",
 			"stExtCodeHash/codeCopyZero.json",
