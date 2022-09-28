@@ -35,6 +35,7 @@ module Gas {
     import opened SubState
 
     const G_ZERO: nat := 0;
+    const G_JUMPDEST: nat := 1;
 	const G_BASE: nat := 2;
 	const G_VERYLOW: nat := 3;
 	const G_LOW: nat := 5;
@@ -46,10 +47,8 @@ module Gas {
     const G_COLDACCOUNTACCESS: nat := 2600;
     // Cost of cold storage access
     const G_COLDSLOAD: nat := 2100;
-	const G_EXTCODE: nat := 700;
-	const G_JUMPDEST: nat := 1;
 	const G_SSET: nat := 20000;
-	const G_SRESET: nat := 5000;
+	const G_SRESET: nat := 2900;
 	const R_SCLEAR: nat := 15000;
 	const R_SELFDESTRUCT: nat := 24000;
 	const G_SELFDESTRUCT: nat := 5000;
@@ -63,7 +62,7 @@ module Gas {
 	const G_MEMORY: nat := 3;
 	const G_TXCREATE: nat := 32000;
 	const G_TXDATAZERO: nat := 4;
-	const G_TXDATANONZERO: nat := 68;
+	const G_TXDATANONZERO: nat := 16;
 	const G_TRANSACTION: nat := 21000;
 	const G_LOG: nat := 375;
 	const G_LOGDATA: nat := 8;
@@ -72,9 +71,6 @@ module Gas {
 	const G_KECCAK256WORD: nat := 6;
 	const G_COPY: nat := 3;
 	const G_BLOCKHASH: nat := 20;
-	const G_QUADDIVISOR: nat := 100;
-    const G_WARM_STORAGE_READ_COST: nat := 100              // EIP1283 refers to this as "SLOAD_GAS"
-    const G_SSTORECLEAR: nat := 15000                     //EIP2200 refers to this as "SSTORE_CLEARS_SCHEDULE"
     /**
      *  Assign a cost as a function of the memory size.
      *
@@ -404,9 +400,9 @@ module Gas {
                 then
                     if originalVal == 0
                         then
-                            G_SSET - G_WARM_STORAGE_READ_COST
+                            G_SSET - G_WARMACCESS
                     else
-                        G_SRESET - G_WARM_STORAGE_READ_COST
+                        G_SRESET - G_WARMACCESS
             else
                 0
         }
@@ -420,10 +416,10 @@ module Gas {
             if originalVal != 0
                 then
                     if currentVal == 0
-                        then  0 - G_SSTORECLEAR
+                        then  0 - R_SCLEAR
                     else if newVal == 0
                         then
-                            G_SSTORECLEAR
+                            R_SCLEAR
                     else
                         0
             else
@@ -440,7 +436,7 @@ module Gas {
                         then
                             if newVal == 0
                                 then
-                                    G_SSTORECLEAR
+                                    R_SCLEAR
                             else
                                 0
                     else
@@ -454,7 +450,7 @@ module Gas {
         {
             if currentVal == newVal
                 then
-                    G_WARM_STORAGE_READ_COST
+                    G_WARMACCESS
             else
                 if originalVal == currentVal
                     then
@@ -488,17 +484,17 @@ module Gas {
                         // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
                 if currentValue == newValue
                     then
-                        (G_WARM_STORAGE_READ_COST + accessCost, 0)
+                        (G_WARMACCESS + accessCost, 0)
                 else
                     if originalValue == currentValue
                         then
                             if newValue == 0
-                                then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, G_SSTORECLEAR)
+                                then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, R_SCLEAR)
                             else
                                 (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
 
                     else
-                        (G_WARM_STORAGE_READ_COST + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
+                        (G_WARMACCESS + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
 
             else
                 (G_ZERO, G_ZERO)
