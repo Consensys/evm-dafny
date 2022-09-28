@@ -98,6 +98,7 @@ public class GeneralStateTests {
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
 			"stCreate2/CREATE2_Suicide.json", // #274
+			"stExtCodeHash/extcodehashEmpty.json", // #299
 			"stMemoryTest/oog.json", // #299
 			"stCreateTest/CREATE_FirstByte_loop.json", // #299
 			"stCreateTest/CREATE_HighNonce.json", // #329
@@ -128,13 +129,11 @@ public class GeneralStateTests {
 			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #331
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
-			"stRevertTest/PythonRevertTestTue201814-1430.json", // #349
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
 			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
 			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
-			"stExtCodeHash/extcodehashEmpty.json", // ?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			//
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
