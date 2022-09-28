@@ -269,7 +269,6 @@ module Gas {
      * CALL, CALLCODE, or DELEGATECALL.  Note that GasCap is not included here,
      * as this is accounted for separately.
      * @param st A non-failure state
-     * @param dataLenSlot Slot number for the calldata length (this varies between e.g. CALL and DELEGATECALL).
      * @param nOperands number of operands in total required for this bytecode.
      */
     function method CallCost(st: State, nOperands: nat) : nat
@@ -279,8 +278,23 @@ module Gas {
             then
                 var value := st.Peek(2) as nat;
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
-                // Check for precompiled constracts
                 CostCallExtra(st,to,value)
+        else
+            G_ZERO
+    }
+
+    /**
+     * Determine the amount of gas for a STATICCALL.
+     * @param st A non-failure state
+     * @param nOperands number of operands in total required for this bytecode.
+     */
+    function method StaticCallCost(st: State, nOperands: nat) : nat
+    requires nOperands > 2
+    requires !st.IsFailure() {
+        if st.Operands() >= nOperands
+            then
+                var to := ((st.Peek(1) as int) % TWO_160) as u160;
+                CostCallExtra(st,to,0)
         else
             G_ZERO
     }
@@ -711,7 +725,7 @@ module Gas {
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
             case CREATE2 => s.UseGas(CostExpandRange(s,4,1,2) + CostCreate2(s))
-            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + StaticCallCost(s,6))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(CostSelfDestruct(s))
             case _ => State.INVALID(INVALID_OPCODE)
