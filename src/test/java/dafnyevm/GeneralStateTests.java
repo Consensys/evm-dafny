@@ -129,7 +129,6 @@ public class GeneralStateTests {
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
 			"stRevertTest/PythonRevertTestTue201814-1430.json", // #349
-			"VMTests/vmArithmeticTest/twoOps.json", // #350
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",

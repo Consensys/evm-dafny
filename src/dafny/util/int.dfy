@@ -551,10 +551,12 @@ module I256 {
     // accurately.
     function method Sar(lhs: i256, rhs: u256) : i256 {
         if rhs == 0 then lhs
-        else if rhs >= 256 then -1 as i256
+        else if rhs >= 256 then 0 as i256
         else
-            var r := U256.Shl(1,rhs) as nat;
-            ((lhs as int) / r) as i256
+            var r := U256.Shl(1,rhs);
+            // NOTE: don't use Dafny's division operator here because that is
+            // Euclidean!
+            Int.Div(lhs as int, r as int) as i256
     }
 }
 
