@@ -695,15 +695,15 @@ public class Tests {
 		// (0 - 0x5A) >> 2 = -0x17
 		byte[] output = callWithReturn(new int[] { PUSH1, 0x5A, PUSH1, 0x0, SUB, PUSH1, 0x2, SAR, PUSH1, 0x00,
 				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(INT256(-0x17), output);
+		assertArrayEquals(INT256(-0x16), output);
 	}
 
 	@Test
 	public void test_sar_08() {
-		// (0 - 0x5A) >> 3 = -0x0c
+		// (0 - 0x5A) >> 3 = -0x0b
 		byte[] output = callWithReturn(new int[] { PUSH1, 0x5A, PUSH1, 0x0, SUB, PUSH1, 0x3, SAR, PUSH1, 0x00,
 				MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(INT256(-0x0c), output);
+		assertArrayEquals(INT256(-0x0b), output);
 	}
 
 	// ========================================================================
