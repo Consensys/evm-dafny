@@ -193,13 +193,40 @@ public class GeneralStateTests {
 				evm.create();
 			}
 			//
-			Trace tr = new Trace(elements);
+			Trace actual = new Trace(elements);
+			Trace expected = instance.getTrace();
+			//
+			if(!expected.equals(actual)) {
+				// NOTE: the following is really just to help provide additional debugging support when running tests from e.g. gradle on the command line.
+				printTraceDiff(expected,actual);
+			}
 			// Finally check for equality.
-			assertEquals(instance.getTrace(),tr);
+			assertEquals(expected,actual);
 		}
 	}
 
-	private static HashSet<String> visited = new HashSet<>();
+	/**
+	 * Attempt to identify where the traces diverge.
+	 *
+	 * @param expected
+	 * @param actual
+	 */
+	private static void printTraceDiff(Trace _expected, Trace _actual) {
+		List<Trace.Element> expected = _expected.getElements();
+		List<Trace.Element> actual = _actual.getElements();
+		//
+		int n = Math.min(expected.size(),actual.size());
+		for(int i=0;i!=n;++i) {
+			Trace.Element eith = expected.get(i);
+			Trace.Element aith = actual.get(i);
+			if(!eith.equals(aith)) {
+				System.err.println("(expected) " + eith);
+				System.err.println("(actual)   " + aith);
+				System.err.println("--");
+				return;
+			}
+		}
+	}
 
 	/**
 	 * Construct the necessary block environment from the test's environmental
