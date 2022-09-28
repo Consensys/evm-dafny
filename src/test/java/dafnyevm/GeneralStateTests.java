@@ -95,7 +95,7 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jump.json", // #241
 			"vmIOandFlowOperations/jumpi.json", // #241
 			"vmIOandFlowOperations/jumpToPush.json", // #241
-			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #266 (address 0x5)
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
 			"stCreate2/CREATE2_Suicide.json", // #274
 			"stMemoryTest/oog.json", // #299
@@ -124,28 +124,29 @@ public class GeneralStateTests {
 			"stSStoreTest/sstore_XtoYtoX.json", // #331
 			"stSStoreTest/sstore_XtoYtoY.json", // #331
 			"stSStoreTest/sstore_XtoYtoZ.json", // #331
+			"stCreate2/create2noCash.json", // #331
+			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #331
+			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
+			"stRevertTest/PythonRevertTestTue201814-1430.json", // #349
+			"VMTests/vmArithmeticTest/twoOps.json", // #350
+			"stExtCodeHash/extCodeHashDynamicArgument.json", // #351
+			"stExtCodeHash/extCodeHashSubcallOOG.json", // #351
+			"stExtCodeHash/extCodeHashPrecompiles.json", // #351
+			"stExtCodeHash/extCodeHashNonExistingAccount.json", // #351
+			"stExtCodeHash/extcodehashEmpty.json", // #351
+			"stExtCodeHash/codeCopyZero.json", // #351
+			"stExtCodeHash/callToNonExistent.json", // #351
+			"stExtCodeHash/dynamicAccountOverwriteEmpty.json", // #351
 			// Unknowns
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // unknown exception ??
-			"stCreate2/create2noCash.json", // Unknown exception
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
-			"stCreateTest/CREATE_ContractSSTOREDuringInit.json", // PERMISSIONS?
-			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json", // PERMISSIONS?
-			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json", // PERMISSIONS?
+			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
+			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
+			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
-			// Gas Unknowns
-			"stRevertTest/PythonRevertTestTue201814-1430.json", // Gas (STATICALL?)
 			//
-//			"VMTests/vmArithmeticTest/twoOps.json",
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
 			"stCallCodes/callcodeEmptycontract.json",
-			"stExtCodeHash/codeCopyZero.json",
-			"stExtCodeHash/callToNonExistent.json",
-			"stExtCodeHash/dynamicAccountOverwriteEmpty.json",
-			"stExtCodeHash/extCodeHashDynamicArgument.json",
-			"stExtCodeHash/extCodeHashSubcallOOG.json",
-			"stExtCodeHash/extCodeHashPrecompiles.json",
-			"stExtCodeHash/extCodeHashNonExistingAccount.json",
 			"stCreate2/RevertInCreateInInitCreate2.json",
 			"stCreateTest/CreateCollisionResults.json",
 			"stRevertTest/LoopDelegateCallsDepthThenRevert.json",
@@ -165,8 +166,6 @@ public class GeneralStateTests {
 			"stRevertTest/LoopCallsDepthThenRevert2.json",
 			"stRevertTest/LoopCallsDepthThenRevert3.json",
 			"stRevertTest/LoopCallsDepthThenRevert.json",
-			"stExtCodeHash/extcodehashEmpty.json",
-			"stExtCodeHash/callToSuicideThenExtcodehash.json",
 			"stSStoreTest/InitCollision.json",
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
 			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json",
