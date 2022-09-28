@@ -745,12 +745,17 @@ module Bytecode {
         then
             // Extract contract account
             var account := (st.Peek(0) as nat % TWO_160) as u160;
-            // Lookup account
-            var data := st.evm.world.GetOrDefault(account);
-            // Determine its code size
-            var size := |data.code.contents| as u256;
-            // Done
-            st.AccountAccessed(account).Pop().Push(size).Next()
+            // Sanity check aliveness
+            if st.IsDead(account)
+            then
+                st.AccountAccessed(account).Pop().Push(0).Next()
+            else
+                // Lookup account
+                var data := st.evm.world.GetOrDefault(account);
+                // Determine its code size
+                var size := |data.code.contents| as u256;
+                // Done
+                st.AccountAccessed(account).Pop().Push(size).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -798,10 +803,15 @@ module Bytecode {
         then
             // Extract contract account
             var account := (st.Peek(0) as nat % TWO_160) as u160;
-            // Lookup account
-            var data := st.evm.world.GetOrDefault(account);
-            // Done
-            st.AccountAccessed(account).Pop().Push(data.hash).Next()
+            // Sanity check aliveness
+            if st.IsDead(account)
+            then
+                st.AccountAccessed(account).Pop().Push(0).Next()
+            else
+                // Lookup account
+                var data := st.evm.world.Get(account).Unwrap();
+                // Done
+                st.AccountAccessed(account).Pop().Push(data.hash).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
