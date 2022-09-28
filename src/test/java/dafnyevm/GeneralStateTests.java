@@ -130,19 +130,12 @@ public class GeneralStateTests {
 			"stRevertTest/RevertInCreateInInit.json", // #343
 			"stRevertTest/PythonRevertTestTue201814-1430.json", // #349
 			"VMTests/vmArithmeticTest/twoOps.json", // #350
-			"stExtCodeHash/extCodeHashDynamicArgument.json", // #351
-			"stExtCodeHash/extCodeHashSubcallOOG.json", // #351
-			"stExtCodeHash/extCodeHashPrecompiles.json", // #351
-			"stExtCodeHash/extCodeHashNonExistingAccount.json", // #351
-			"stExtCodeHash/extcodehashEmpty.json", // #351
-			"stExtCodeHash/codeCopyZero.json", // #351
-			"stExtCodeHash/callToNonExistent.json", // #351
-			"stExtCodeHash/dynamicAccountOverwriteEmpty.json", // #351
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
 			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
 			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
+			"stExtCodeHash/extcodehashEmpty.json", // ?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			//
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
