@@ -133,8 +133,6 @@ public class GeneralStateTests {
 			"stCreate2/create2checkFieldsInInitcode.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
 			"stSStoreTest/InitCollision.json", // #347
-			"stRevertTest/LoopCallsDepthThenRevert2.json", // #358
-			"stRevertTest/LoopCallsDepthThenRevert3.json", // #358
 			"stCallCodes/callcodeEmptycontract.json", // #359
 			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #359
 			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json", // #360
@@ -378,7 +376,7 @@ public class GeneralStateTests {
 
 		@Override
 		public void end(State.Return state) {
-			if(state.depth == 1) {
+			if(state.depth == 0) {
 				// Unfortunately, Geth only reports RETURNS on the outermost contract call.
 				out.add(new Trace.Returns(state.getReturnData()));
 			}
@@ -386,7 +384,7 @@ public class GeneralStateTests {
 
 		@Override
 		public void revert(State.Revert state) {
-			if(state.depth == 1) {
+			if(state.depth == 0) {
 				// Unfortunately, Geth only reports REVERTS on the outermost contract call.
 				out.add(new Trace.Reverts(state.getReturnData()));
 			}

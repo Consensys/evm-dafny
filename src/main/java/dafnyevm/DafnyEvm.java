@@ -342,7 +342,7 @@ public class DafnyEvm {
 		// Begin the call.
 		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, recipient, value, gas, BigInteger.ONE);
 		// Execute bytecodes!
-		st = run(1, tracer, st);
+		st = run(0, tracer, st);
 		// Convert back into the Java API
 		return State.from(1,tracer,st);
 	}
@@ -370,7 +370,7 @@ public class DafnyEvm {
 		// Begin the call.
 		EvmState_Compile.State st = EvmState_Compile.__default.Create(ws, ctx, ss, code, gas, BigInteger.ONE);
 		// Execute bytecodes!
-		st = run(1, tracer, st);
+		st = run(0, tracer, st);
 		// Convert back into the Java API
 		return State.from(1,tracer,st);
 	}

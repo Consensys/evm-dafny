@@ -2338,20 +2338,37 @@ public class Tests {
 				PUSH1, 0xF, JUMPI, INVALID, JUMPDEST, STOP });
 	}
 
-//	@Test
-//	public void test_recursive_call_02() {
-//		// Recursive contract call
-//		byte[] output = callWithReturn(new int[] {
-//				// Branch to STOP if calldata == 0xF.
-//				PUSH1, 0x00, CALLDATALOAD, DUP1, PUSH1, 0xF, EQ, PUSH1, 0x21, JUMPI,
-//				// Add one to value for next call
-//				PUSH1, 0x1, ADD, PUSH1, 0x0, MSTORE,
-//				// Make recursive contract call to myself with all remaining gas
-//				PUSH1, 0x00, DUP1, PUSH1, 0x20, PUSH1, 0x00, DUP1, ADDRESS, PUSH2, 0xff, 0xff, CALL,
-//				// Succeed if call succeeded
-//				PUSH1, 0x21, JUMPI, INVALID, JUMPDEST, STOP });
-//		assertArrayEquals(new byte[0], output);
-//	}
+	@Test
+	public void test_recursive_call_02() {
+		// Recursive contract call
+		byte[] output = callWithReturn(new int[] {
+				// Branch to STOP if calldata == 0xF.
+				PUSH1, 0x00, CALLDATALOAD, DUP1, PUSH1, 0xF, EQ, PUSH1, 0x21, JUMPI,
+				// Add one to value for next call
+				PUSH1, 0x1, ADD, PUSH1, 0x0, MSTORE,
+				// Make recursive contract call to myself with all remaining gas
+				PUSH1, 0x00, DUP1, PUSH1, 0x20, PUSH1, 0x00, DUP1, ADDRESS, PUSH2, 0xff, 0xff, CALL,
+				// Succeed if call succeeded
+				PUSH1, 0x21, JUMPI, INVALID, JUMPDEST, STOP });
+		assertArrayEquals(new byte[0], output);
+	}
+
+	@Test
+	public void test_recursive_call_03() {
+		// Recursive contract call (with lots of gas)
+		DafnyEvm tx = new DafnyEvm().gas(Long.MAX_VALUE);
+		//
+		byte[] output = callWithReturn(tx,new int[] {
+				// Branch to STOP if calldata == 0x3ff.
+				PUSH1, 0x00, CALLDATALOAD, DUP1, PUSH2, 0x3, 0xff, EQ, PUSH1, 0x20, JUMPI,
+				// Add one to value for next call
+				PUSH1, 0x1, ADD, PUSH1, 0x0, MSTORE,
+				// Make recursive contract call to myself with all remaining gas
+				PUSH1, 0x00, DUP1, PUSH1, 0x20, PUSH1, 0x00, DUP1, ADDRESS, GAS, CALL,
+				// Succeed if call succeeded
+				PUSH1, 0x20, JUMPI, INVALID, JUMPDEST, STOP });
+		assertArrayEquals(new byte[0], output);
+	}
 
 	@Test
 	public void test_callcode_01() {
