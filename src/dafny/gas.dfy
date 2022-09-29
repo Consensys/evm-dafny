@@ -265,20 +265,57 @@ module Gas {
     }
 
     /**
-     * Determine the amount of gas which is the function C_CALL in YP
-     * CALL, CALLCODE, or DELEGATECALL.  Note that GasCap is not included here,
-     * as this is accounted for separately.
+     * Determine the amount of gas for a CALL bytecode only. Note that GasCap is
+     * not included here, as this is accounted for separately.
      * @param st A non-failure state
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method CallCost(st: State, nOperands: nat) : nat
-    requires nOperands > 2
+    function method CallCost(st: State) : nat
     requires !st.IsFailure() {
-        if st.Operands() >= nOperands
+        if st.Operands() >= 7
             then
                 var value := st.Peek(2) as nat;
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
-                CostCallExtra(st,to,value)
+                CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to,value)
+        else
+            G_ZERO
+    }
+
+    /**
+     * Determine the amount of gas for a CALLCODE bytecode only. Note
+     * that GasCap is not included here, as this is accounted for separately.
+     * @param st A non-failure state
+     * @param nOperands number of operands in total required for this bytecode.
+     */
+    function method CallCodeCost(st: State) : nat
+    requires !st.IsFailure() {
+        if st.Operands() >= 7
+            then
+                var value := st.Peek(2) as nat;
+                var to := ((st.Peek(1) as int) % TWO_160) as u160;
+                // NOTE: it is not a mistake that CostCallNew() is left out
+                // here.  Despite what the yellow paper says, the new account
+                // cost is never charged here.
+                CostAccess(st,to) + CostCallXfer(value)
+        else
+            G_ZERO
+    }
+
+    /**
+     * Determine the amount of gas for a DELEGATECALL bytecode only. Note that
+     * GasCap is not included here, as this is accounted for separately.
+     * @param st A non-failure state
+     * @param nOperands number of operands in total required for this bytecode.
+     */
+    function method DelegateCallCost(st: State) : nat
+    requires !st.IsFailure() {
+        if st.Operands() >= 6
+            then
+                var to := ((st.Peek(1) as int) % TWO_160) as u160;
+                // NOTE: it is not a mistake that CostCallNew() is left out
+                // here.  Despite what the yellow paper says, the new account
+                // cost is never charged here.
+                CostAccess(st,to)
         else
             G_ZERO
     }
@@ -288,13 +325,12 @@ module Gas {
      * @param st A non-failure state
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method StaticCallCost(st: State, nOperands: nat) : nat
-    requires nOperands > 2
+    function method StaticCallCost(st: State) : nat
     requires !st.IsFailure() {
-        if st.Operands() >= nOperands
+        if st.Operands() >= 6
             then
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
-                CostCallExtra(st,to,0)
+                CostAccess(st,to)
         else
             G_ZERO
     }
@@ -357,7 +393,8 @@ module Gas {
      */
     function method CostCallNew(st: State, to: u160, value: nat) : nat
     requires !st.IsFailure() {
-        // if the account is DEAD (which is the default account) or does not exists, then charge G_newaccount amount of gas
+        // if the account is DEAD (which is the default account) or does not
+        // exists, then charge G_newaccount amount of gas
         if  st.IsDead(to) && (value != 0)
             then G_NEWACCOUNT
         else
@@ -726,12 +763,12 @@ module Gas {
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
             case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
-            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
-            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s,7))
+            case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s))
+            case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCodeCost(s))
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
-            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + CallCost(s,6))
+            case DELEGATECALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + DelegateCallCost(s))
             case CREATE2 => s.UseGas(CostExpandRange(s,4,1,2) + CostCreate2(s))
-            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + StaticCallCost(s,6))
+            case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + StaticCallCost(s))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(CostSelfDestruct(s))
             case _ => State.INVALID(INVALID_OPCODE)
