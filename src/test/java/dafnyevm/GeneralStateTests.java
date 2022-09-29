@@ -133,8 +133,6 @@ public class GeneralStateTests {
 			"stCreate2/create2checkFieldsInInitcode.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
 			"stSStoreTest/InitCollision.json", // #347
-			"stCallCodes/callcodeEmptycontract.json", // #359
-			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #359
 			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json", // #360
 			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json", // #360
 			"stCreateTest/TransactionCollisionToEmpty.json", // #360

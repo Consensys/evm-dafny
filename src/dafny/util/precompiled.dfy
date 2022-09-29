@@ -124,6 +124,7 @@ module Precompiled {
     /**
      * Compute arbitrary precision exponentiation under modulo.  Specifically,
      * we compue B^E % M.  All words are unsigned integers in big endian format.
+     * See also EIP-2565.
      */
     function method CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
         // Length of B
