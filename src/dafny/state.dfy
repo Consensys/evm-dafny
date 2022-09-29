@@ -721,7 +721,7 @@ module EvmState {
         // Address of called contract
         var address := ctx.address;
         // Check call depth & available balance
-        if depth >= 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(address);
@@ -768,8 +768,7 @@ module EvmState {
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
         // Check call depth & available balance
-        if depth >= 1024 then State.INVALID(CALLDEPTH_EXCEEDED)
-        else if !world.CanWithdraw(ctx.sender,endowment) then State.REVERTS(gas,[])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) then State.REVERTS(gas,[])
         // Sanity checks for existing account
         else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then State.INVALID(ACCOUNT_COLLISION)
         else
