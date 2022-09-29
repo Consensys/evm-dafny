@@ -1115,7 +1115,7 @@ module Bytecode {
             // Store word
             st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
         else
-        State.INVALID(STACK_UNDERFLOW)
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**

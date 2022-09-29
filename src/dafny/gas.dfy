@@ -517,7 +517,13 @@ module Gas {
     // returns the amount of gas to charge upon the execution of SSTORE
     function method CostSSTORE(st: State): nat
     requires !st.IsFailure() {
-        CostSSTOREChargeRefund(st).0
+        if st.Gas() <= G_CALLSTIPEND
+        then
+            // NOTE: The following forces an out-of-gas exception if the stipend
+            // would be jeorpodised, as following the yellow paper.
+            MAX_U256
+        else
+            CostSSTOREChargeRefund(st).0
     }
 
     // sets in the refund component of the substate the refund amount computed upon the execution of SSTORE

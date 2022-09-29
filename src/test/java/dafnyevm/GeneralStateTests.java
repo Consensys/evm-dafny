@@ -102,6 +102,7 @@ public class GeneralStateTests {
 			"stMemoryTest/oog.json", // #299
 			"stCreateTest/CREATE_FirstByte_loop.json", // #299
 			"stCreateTest/CREATE_HighNonce.json", // #329
+			"stCreate2/CREATE2_HighNonceDelegatecall.json", // #329
 			"stCreate2/CREATE2_HighNonce.json", // #329
 			"stSStoreTest/sstore_0to0.json", // #331
 			"stSStoreTest/sstore_0to0to0.json", // #331
@@ -128,7 +129,17 @@ public class GeneralStateTests {
 			"stCreate2/create2noCash.json", // #331
 			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #331
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
+			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #331
+			"stCreate2/create2checkFieldsInInitcode.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
+			"stSStoreTest/InitCollision.json", // #347
+			"stRevertTest/LoopCallsDepthThenRevert2.json", // #358
+			"stRevertTest/LoopCallsDepthThenRevert3.json", // #358
+			"stCallCodes/callcodeEmptycontract.json", // #359
+			"stCallCodes/callcodeInInitcodeToEmptyContract.json", // #359
+			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json", // #360
+			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json", // #360
+			"stCreateTest/TransactionCollisionToEmpty.json", // #360
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
@@ -136,31 +147,9 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			//
-			"stCallCodes/callcodeInInitcodeToEmptyContract.json",
-			"stCallCodes/callcodeEmptycontract.json",
 			"stCreate2/RevertInCreateInInitCreate2.json",
-			"stCreateTest/CreateCollisionResults.json",
-			"stRevertTest/LoopDelegateCallsDepthThenRevert.json",
-			"stCallCodes/callcallcall_ABCB_RECURSIVE.json",
-			"stCallCodes/callcallcallcode_ABCB_RECURSIVE.json",
-			"stCallCodes/callcallcodecall_ABCB_RECURSIVE.json",
-			"stCallCodes/callcallcodecallcode_ABCB_RECURSIVE.json",
-			"stCallCodes/callcodecallcall_ABCB_RECURSIVE.json",
-			"stCallCodes/callcodecallcallcode_ABCB_RECURSIVE.json",
-			"stCallCodes/callcodecallcodecall_ABCB_RECURSIVE.json",
-			"stCallCodes/callcodecallcodecallcode_ABCB_RECURSIVE.json",
-			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json",
-			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json",
-			"stCreateTest/TransactionCollisionToEmpty.json",
-			"stCreate2/CREATE2_HighNonceDelegatecall.json",
-			"stCreate2/create2checkFieldsInInitcode.json",
-			"stRevertTest/LoopCallsDepthThenRevert2.json",
-			"stRevertTest/LoopCallsDepthThenRevert3.json",
-			"stRevertTest/LoopCallsDepthThenRevert.json",
-			"stSStoreTest/InitCollision.json",
+			"stCreateTest/CreateCollisionResults.json", // ?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
-			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json",
-			"stSStoreTest/sstore_gasLeft.json",
 			"dummy"
 	);
 
