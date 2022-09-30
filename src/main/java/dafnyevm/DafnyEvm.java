@@ -42,6 +42,7 @@ import dafny.Tuple2;
 import evmtools.util.Hex;
 import dafnyevm.util.Word.Uint160;
 import dafnyevm.util.Word.Uint256;
+import dafnyevm.util.Word.Uint64;
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
@@ -339,6 +340,8 @@ public class DafnyEvm {
 		// Mark sender + recipient as having been accessed.
 		ss = ss.AccountAccessed(sender);
 		ss = ss.AccountAccessed(recipient);
+		// Increment sender's nonce
+		ws = ws.IncNonce(sender);
 		// Begin the call.
 		EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, recipient, value, gas, BigInteger.ONE);
 		// Execute bytecodes!
@@ -367,6 +370,8 @@ public class DafnyEvm {
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate
 		SubState_Compile.Raw ss = SubState_Compile.__default.Create();
+		// Increment sender's nonce
+		ws = ws.IncNonce(sender);
 		// Begin the call.
 		EvmState_Compile.State st = EvmState_Compile.__default.Create(ws, ctx, ss, code, gas, BigInteger.ONE);
 		// Execute bytecodes!

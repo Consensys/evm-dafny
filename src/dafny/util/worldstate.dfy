@@ -239,11 +239,22 @@ module WorldState {
         }
 
         /**
+         * Get the current nonce value for an account.  The account must exist.
+         */
+        function method Nonce(account:u160) : nat
+        // Account must be valid!
+        requires account in this.accounts {
+            accounts[account].nonce
+        }
+
+        /**
          * Increment the nonce associated with a given account.
          */
         function method IncNonce(account:u160) : T
         // Account must be valid!
-        requires account in this.accounts {
+        requires account in this.accounts
+        // Ensure the nonce cannot overflow
+        requires Nonce(account) < MAX_U64 {
             // Extract account data
             var entry := accounts[account];
             // Increment the nonce
