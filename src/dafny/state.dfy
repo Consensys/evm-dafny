@@ -349,6 +349,14 @@ module EvmState {
         }
 
         /**
+         * Increment the nonce associated with the currently executing account.
+         */
+        function method IncNonce() : State
+        requires !IsFailure()  {
+             OK(evm.(world:=evm.world.IncNonce(evm.context.address)))
+        }
+
+        /**
          * Get the account associated with a given address.  If no such account
          * exists, none is returned.
          */
@@ -775,7 +783,7 @@ module EvmState {
             var storage := Storage.Create(map[]); // empty
             var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]));
             // Create initial account
-            var w := world.Put(ctx.address,account).IncNonce(ctx.sender);
+            var w := world.Put(ctx.address,account);
             // Deduct wei
             var nw := w.Withdraw(ctx.sender,endowment);
             // When creating end-use account, return immediately.
