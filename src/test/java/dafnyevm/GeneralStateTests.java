@@ -97,10 +97,10 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
-			"stCreate2/CREATE2_Suicide.json", // #274
 			"stCreateTest/CREATE_HighNonce.json", // #329
 			"stCreate2/CREATE2_HighNonceDelegatecall.json", // #329
 			"stCreate2/CREATE2_HighNonce.json", // #329
+			"stCreate2/CREATE2_Suicide.json", // #331
 			"stSStoreTest/sstore_0to0.json", // #331
 			"stSStoreTest/sstore_0to0to0.json", // #331
 			"stSStoreTest/sstore_0to0toX.json", // #331
@@ -130,9 +130,6 @@ public class GeneralStateTests {
 			"stCreate2/create2checkFieldsInInitcode.json", // #331
 			"stRevertTest/RevertInCreateInInit.json", // #343
 			"stSStoreTest/InitCollision.json", // #347
-			"stCreateTest/CREATE_EContractCreateNEContractInInitOOG_Tr.json", // #360
-			"stCreateTest/CREATE_empty000CreateinInitCode_Transaction.json", // #360
-			"stCreateTest/TransactionCollisionToEmpty.json", // #360
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
