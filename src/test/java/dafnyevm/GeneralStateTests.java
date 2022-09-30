@@ -98,9 +98,6 @@ public class GeneralStateTests {
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
 			"stCreate2/CREATE2_Suicide.json", // #274
-			"stExtCodeHash/extcodehashEmpty.json", // #299
-			"stMemoryTest/oog.json", // #299
-			"stCreateTest/CREATE_FirstByte_loop.json", // #299
 			"stCreateTest/CREATE_HighNonce.json", // #329
 			"stCreate2/CREATE2_HighNonceDelegatecall.json", // #329
 			"stCreate2/CREATE2_HighNonce.json", // #329
@@ -144,7 +141,7 @@ public class GeneralStateTests {
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			//
 			"stCreate2/RevertInCreateInInitCreate2.json",
-			"stCreateTest/CreateCollisionResults.json", // ?
+			"stCreateTest/CreateCollisionResults.json", // gas after call
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
 			"dummy"
 	);

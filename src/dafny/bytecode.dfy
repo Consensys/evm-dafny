@@ -1333,8 +1333,8 @@ module Bytecode {
             var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
             // Calculate available gas
             var gascap := GasCalc.CreateGasCap(st);
-            //
-            var nst := st.UseGas(gascap).Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
+            // Apply everything
+            var nst := st.UseGas(gascap).IncNonce().Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
             // Pass back continuation
             State.CREATES(nst.evm,gascap,endowment,code, None)
         else
@@ -1486,8 +1486,8 @@ module Bytecode {
             var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
             // Calculate available gas
             var gascap := GasCalc.CreateGasCap(st);
-            //
-            var nst := st.UseGas(gascap).Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+            // Apply everything
+            var nst := st.UseGas(gascap).IncNonce().Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
             // Pass back continuation
             State.CREATES(nst.evm,gascap,endowment,code,Some(salt))
         else

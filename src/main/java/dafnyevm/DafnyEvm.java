@@ -430,9 +430,11 @@ public class DafnyEvm {
 		BigInteger sender = cc.dtor_evm().dtor_context().dtor_address();
 		// Construct new account
 		Account acct = cc.dtor_evm().dtor_world().dtor_accounts().get(sender);
+		// Subtract one from nonce (i.e. because it was already incremented prior to this point)
+		BigInteger nonce = acct.dtor_nonce().subtract(BigInteger.ONE);
 		// NOTE: we do not subtract one from the nonce here, as this address is being
 		// calculated *before* the sender's nonce is incremented.
-		byte[] hash = addr(sender, acct.dtor_nonce(), cc.dtor_salt(), cc.dtor_initcode());
+		byte[] hash = addr(sender, nonce, cc.dtor_salt(), cc.dtor_initcode());
 		// Finally reconstruct the address from the rightmost 160bits.
 		BigInteger address = new BigInteger(1, hash);
 		// Begin the recursive call.
@@ -473,7 +475,8 @@ public class DafnyEvm {
 		//
 		if (salt instanceof ExtraTypes_Compile.Option_None) {
 			// Case for CREATE
-			bytes = RlpEncoder.encode(new RlpList(RlpString.create(sender),RlpString.create(nonce)));
+			bytes = new Uint160(sender).getBytes();
+			bytes = RlpEncoder.encode(new RlpList(RlpString.create(bytes),RlpString.create(nonce)));
 		} else {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			byte[] code = DafnySequence.toByteArray((DafnySequence) initCode);

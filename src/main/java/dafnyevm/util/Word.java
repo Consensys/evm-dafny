@@ -151,7 +151,7 @@ public abstract class Word {
 	 * @param bytes
 	 * @return
 	 */
-	private byte[] trim(int n, byte[] bytes) {
+	private static byte[] trim(int n, byte[] bytes) {
 		int i = 0;
 		while((bytes.length-i) > n && bytes[i] == 0) {
 			i = i + 1;
