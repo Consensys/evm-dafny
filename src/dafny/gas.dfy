@@ -526,13 +526,13 @@ module Gas {
             then
                 var loc := st.Peek(0);
                 var newValue := st.Peek(1);
-                var currentAccount := st.evm.world.GetOrDefault(st.evm.context.address);
+                var currentAccount := st.evm.world.Get(st.evm.context.address).Unwrap();
                 var currentAccountPretransaction := st.evm.world.GetOrDefaultPretransaction(st.evm.context.address);
                 // determine if it is a cold or warm storage access and charge accordingly
                 var accessCost := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
                 var currentValue := Storage.Read(currentAccount.storage, loc);
                 var originalValue := Storage.Read(currentAccountPretransaction.storage, loc);
-                        // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
+                // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
                 if currentValue == newValue
                     then
                         (G_WARMACCESS + accessCost, 0)

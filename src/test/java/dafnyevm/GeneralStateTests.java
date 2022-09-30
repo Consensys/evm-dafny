@@ -82,6 +82,15 @@ public class GeneralStateTests {
 	public final static Path TESTS_DIR = Path.of("tests");
 
 	/**
+	 * The set of tests which are considered "impossible" by the execution specs and, therefore, can be safely ignored.
+	 */
+	public final static List<String> IMPOSSIBLES = Arrays.asList( //
+			"stSStoreTest/InitCollision.json",
+			"stRevertTest/RevertInCreateInInit.json",
+			"stCreate2/RevertInCreateInInitCreate2.json"
+		);
+
+	/**
 	 * The set of tests which are (for various reasons) currently ignored. Each
 	 * ignored test must be given a reason for this.
 	 */
@@ -128,8 +137,7 @@ public class GeneralStateTests {
 			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
 			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #331
 			"stCreate2/create2checkFieldsInInitcode.json", // #331
-			"stRevertTest/RevertInCreateInInit.json", // #343
-			"stSStoreTest/InitCollision.json", // #347
+
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
@@ -137,7 +145,6 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			//
-			"stCreate2/RevertInCreateInInitCreate2.json",
 			"stCreateTest/CreateCollisionResults.json", // gas after call
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
 			"dummy"
@@ -269,6 +276,20 @@ public class GeneralStateTests {
 		return false;
 	}
 
+
+	private static boolean isImpossible(Path path) {
+		// Normalise path notation for platofmr
+		String p = path.toString().replace(File.separator, "/");
+		// Check whether this matches an IGNORE or not.
+		for (int i = 0; i != IMPOSSIBLES.size(); ++i) {
+			String ith = IMPOSSIBLES.get(i);
+			if (p.endsWith(ith)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// ======================================================================
 	// Helpers
 	// ======================================================================
@@ -308,18 +329,20 @@ public class GeneralStateTests {
 	private static Stream<Pair<Path,TraceTest.Instance>> streamTestsFromFiles(Stream<Path> files) {
 		return files.flatMap(f -> {
 			try {
-				// Read contents of fixture file
-				String contents = Files.readString(f);
-				// Convert fixture into JSON
-				JSONObject json = new JSONObject(contents);
-				// Parse into one or more tests
 				ArrayList<Pair<Path, TraceTest.Instance>> instances = new ArrayList<>();
-				for (String test : JSONObject.getNames(json)) {
-					TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
-					if (tt.hasInstances(FORK)) {
-						// Add all instances
-						for (TraceTest.Instance i : tt.getInstances(FORK)) {
-							instances.add(Pair.of(f, i));
+				if(!isImpossible(f)) {
+					// Read contents of fixture file
+					String contents = Files.readString(f);
+					// 	Convert fixture into JSON
+					JSONObject json = new JSONObject(contents);
+					// 	Parse into one or more tests
+					for (String test : JSONObject.getNames(json)) {
+						TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
+						if (tt.hasInstances(FORK)) {
+							// Add all instances
+							for (TraceTest.Instance i : tt.getInstances(FORK)) {
+								instances.add(Pair.of(f, i));
+							}
 						}
 					}
 				}
