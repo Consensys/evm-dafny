@@ -106,9 +106,6 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
-			"stCreateTest/CREATE_HighNonce.json", // #329
-			"stCreate2/CREATE2_HighNonceDelegatecall.json", // #329
-			"stCreate2/CREATE2_HighNonce.json", // #329
 			"stCreate2/CREATE2_Suicide.json", // #331
 			"stSStoreTest/sstore_0to0.json", // #331
 			"stSStoreTest/sstore_0to0to0.json", // #331
@@ -140,9 +137,6 @@ public class GeneralStateTests {
 
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
-			"stCreateTest/CREATE_ContractSSTOREDuringInit.json",
-			"stCreateTest/CREATE_EContractCreateEContractInInit_Tr.json",
-			"stCreateTest/CREATE_EContractCreateNEContractInInit_Tr.json",
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			//
 			"stCreateTest/CreateCollisionResults.json", // gas after call

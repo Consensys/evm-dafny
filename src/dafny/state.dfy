@@ -352,8 +352,10 @@ module EvmState {
          * Increment the nonce associated with the currently executing account.
          */
         function method IncNonce() : State
-        requires !IsFailure()  {
-             OK(evm.(world:=evm.world.IncNonce(evm.context.address)))
+        requires !IsFailure()
+        // The nonce cannot overflow
+        requires evm.world.Nonce(evm.context.address) < MAX_U64 {
+            OK(evm.(world:=evm.world.IncNonce(evm.context.address)))
         }
 
         /**
