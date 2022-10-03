@@ -1110,10 +1110,13 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            var loc := st.Peek(0);
-            var val := st.Peek(1);
-            // Store word
-            st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
+            if st.WriteProtection() == false
+                then State.INVALID(WRITE_PROTECTION_VIOLATED)
+            else
+                var loc := st.Peek(0);
+                var val := st.Peek(1);
+                // Store word
+                st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1341,7 +1344,7 @@ module Bytecode {
                 // Charge gas and increment nonce
                 var nnst := nst.UseGas(gascap).IncNonce();
                 // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code, None)
+                State.CREATES(nnst.evm,gascap,endowment,code,None)
             else
                 // Immediate failure (nonce overflow)
                 nst.Push(0)
@@ -1366,18 +1369,22 @@ module Bytecode {
             var gas := st.Peek(0) as nat;
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,value);
-             // Sanity check bounds
-            if (inOffset + inSize) < MAX_U256
-            then
-                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
-                // Extract address of this account
-                var address := st.evm.context.address;
-                // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
-                // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+            if !(st.evm.context.writeProtection || value == 0)
+                then 
+                    State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
-                State.INVALID(MEMORY_OVERFLOW)
+             // Sanity check bounds
+                if (inOffset + inSize) < MAX_U256
+                    then
+                        var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                        // Extract address of this account
+                        var address := st.evm.context.address;
+                        // Compute the continuation (i.e. following) state.
+                        var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                        // Pass back continuation.
+                        State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
+                else
+                    State.INVALID(MEMORY_OVERFLOW)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1408,7 +1415,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1469,7 +1476,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1481,31 +1488,34 @@ module Bytecode {
      */
     function method Create2(st: State) : (nst: State)
     requires !st.IsFailure() {
-        if st.Operands() >= 4
-        then
-            var endowment := st.Peek(0);
-            // Extract start of initialisation code in memory
-            var codeOffset := st.Peek(1) as nat;
-            // Extract length of initialisation code
-            var codeSize := st.Peek(2) as nat;
-            // Extract the salt
-            var salt := st.Peek(3);
-            // Copy initialisation code from memory
-            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
-            // Calculate available gas
-            var gascap := GasCalc.CreateGasCap(st);
-            // Apply everything
-            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
-            // Sanity check nonce
-            if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
+        if st.Operands() >= 4 
             then
-                // Charge gas and increment nonce
-                var nnst := nst.UseGas(gascap).IncNonce();
-                // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code,Some(salt))
-            else
-                // Immediate failure (nonce overflow)
-                nst.Push(0)
+                if st.WriteProtection() == false
+                    then State.INVALID(WRITE_PROTECTION_VIOLATED)
+                else
+                    var endowment := st.Peek(0);
+                    // Extract start of initialisation code in memory
+                    var codeOffset := st.Peek(1) as nat;
+                    // Extract length of initialisation code
+                    var codeSize := st.Peek(2) as nat;
+                    // Extract the salt
+                    var salt := st.Peek(3);
+                    // Copy initialisation code from memory
+                    var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+                    // Calculate available gas
+                    var gascap := GasCalc.CreateGasCap(st);
+                    // Apply everything
+                    var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+                    // Sanity check nonce
+                    if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
+                        then
+                       // Charge gas and increment nonce
+                       var nnst := nst.UseGas(gascap).IncNonce();
+                       // Pass back continuation
+                       State.CREATES(nnst.evm,gascap,endowment,code,Some(salt))
+                    else
+                        // Immediate failure (nonce overflow)
+                        nst.Push(0)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1535,7 +1545,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata,false,outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1574,22 +1584,26 @@ module Bytecode {
          //
         if st.Operands() >= 1
         then
-            // Get address of currently executing account
-            var address := st.evm.context.address;
-            // Get balance of currently executing account
-            var balance := st.evm.world.Balance(address);
-            // Determine account to send remaining any remaining funds.
-            var r := ((st.Peek(0) as nat) % TWO_160) as u160;
-            // Register contract deletion in substate!
-            var ss := st.evm.substate.AccountAccessed(r);
-            // Apply refund
-            var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
+            if st.WriteProtection() == false
+                then 
+                    State.INVALID(WRITE_PROTECTION_VIOLATED)
+            else
+                // Get address of currently executing account
+                var address := st.evm.context.address;
+                // Get balance of currently executing account
+                var balance := st.evm.world.Balance(address);
+                // Determine account to send remaining any remaining funds.
+                var r := ((st.Peek(0) as nat) % TWO_160) as u160;
+                // Register contract deletion in substate!
+                var ss := st.evm.substate.AccountAccessed(r);
+                // Apply refund
+                var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
                 // Refund balance to r
                 then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
                 // Otherwise reset balance to zero
                 else st.evm.world.Withdraw(address,balance);
-            //
-            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
+                //
+                State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
         else
             State.INVALID(STACK_UNDERFLOW)
     }

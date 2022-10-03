@@ -340,7 +340,7 @@ public class DafnyEvm {
 		}
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
-				DafnySequence.fromBytes(callData), gasPrice, blockInfo.toDafny());
+				DafnySequence.fromBytes(callData), true, gasPrice, blockInfo.toDafny());
 		// Construct world state
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate
@@ -373,7 +373,7 @@ public class DafnyEvm {
 		BigInteger address = addr(sender,nonce);
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
-				code, gasPrice, blockInfo.toDafny());
+				code, true, gasPrice, blockInfo.toDafny());
 		// Construct world state
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate

@@ -97,44 +97,11 @@ public class GeneralStateTests {
 	public final static List<String> IGNORES = Arrays.asList( //
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // performance?
-			//
-			"stMemoryTest/stackLimitGas_1023.json", // #201
-			"stMemoryTest/stackLimitGas_1024.json", // #201
-			"stMemoryTest/stackLimitGas_1025.json", // #201
 			"vmIOandFlowOperations/jump.json", // #241
 			"vmIOandFlowOperations/jumpi.json", // #241
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
-			"stCreate2/CREATE2_Suicide.json", // #331
-			"stSStoreTest/sstore_0to0.json", // #331
-			"stSStoreTest/sstore_0to0to0.json", // #331
-			"stSStoreTest/sstore_0to0toX.json", // #331
-			"stSStoreTest/sstore_0toX.json", // #331
-			"stSStoreTest/sstore_0toXto0.json", // #331
-			"stSStoreTest/sstore_0toXto0toX.json", // #331
-			"stSStoreTest/sstore_0toXtoX.json", // #331
-			"stSStoreTest/sstore_0toXtoY.json", // #331
-			"stSStoreTest/sstore_Xto0.json", // #331
-			"stSStoreTest/sstore_Xto0to0.json", // #331
-			"stSStoreTest/sstore_Xto0toX.json", // #331
-			"stSStoreTest/sstore_Xto0toXto0.json", // #331
-			"stSStoreTest/sstore_Xto0toY.json", // #331
-			"stSStoreTest/sstore_XtoX.json", // #331
-			"stSStoreTest/sstore_XtoXto0.json", // #331
-			"stSStoreTest/sstore_XtoXtoX.json", // #331
-			"stSStoreTest/sstore_XtoXtoY.json", // #331
-			"stSStoreTest/sstore_XtoY.json", // #331
-			"stSStoreTest/sstore_XtoYto0.json", // #331
-			"stSStoreTest/sstore_XtoYtoX.json", // #331
-			"stSStoreTest/sstore_XtoYtoY.json", // #331
-			"stSStoreTest/sstore_XtoYtoZ.json", // #331
-			"stCreate2/create2noCash.json", // #331
-			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #331
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
-			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #331
-			"stCreate2/create2checkFieldsInInitcode.json", // #331
-
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
@@ -443,7 +410,9 @@ public class GeneralStateTests {
 			return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
 		} else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
 			return Trace.Exception.Error.ACCOUNT_COLLISION;
-		} else {
+		} else if (err instanceof EvmState_Compile.Error_WRITE__PROTECTION__VIOLATED) {
+            return Trace.Exception.Error.WRITE_PROTECTION;
+        } else {
 			return Trace.Exception.Error.UNKNOWN;
 		}
 	}
