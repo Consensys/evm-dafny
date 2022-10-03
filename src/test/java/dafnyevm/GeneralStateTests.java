@@ -98,9 +98,9 @@ public class GeneralStateTests {
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // performance?
 			//
-			"stMemoryTest/stackLimitGas_1023.json", // #201
-			"stMemoryTest/stackLimitGas_1024.json", // #201
-			"stMemoryTest/stackLimitGas_1025.json", // #201
+			//"stMemoryTest/stackLimitGas_1023.json", // #201
+			//"stMemoryTest/stackLimitGas_1024.json", // #201
+			//"stMemoryTest/stackLimitGas_1025.json", // #201
 			"vmIOandFlowOperations/jump.json", // #241
 			"vmIOandFlowOperations/jumpi.json", // #241
 			"vmIOandFlowOperations/jumpToPush.json", // #241
