@@ -1344,7 +1344,7 @@ module Bytecode {
                 // Charge gas and increment nonce
                 var nnst := nst.UseGas(gascap).IncNonce();
                 // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code,None,st.evm.context.writeProtection)
+                State.CREATES(nnst.evm,gascap,endowment,code,None)
             else
                 // Immediate failure (nonce overflow)
                 nst.Push(0)
@@ -1382,7 +1382,7 @@ module Bytecode {
                         // Compute the continuation (i.e. following) state.
                         var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                         // Pass back continuation.
-                        State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                        State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
                 else
                     State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1415,7 +1415,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1476,7 +1476,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
@@ -1509,7 +1509,7 @@ module Bytecode {
                 // Charge gas and increment nonce
                 var nnst := nst.UseGas(gascap).IncNonce();
                 // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code,Some(salt), st.evm.context.writeProtection)
+                State.CREATES(nnst.evm,gascap,endowment,code,Some(salt))
             else
                 // Immediate failure (nonce overflow)
                 nst.Push(0)
@@ -1542,7 +1542,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.UpdateWriteProtection(false).AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata, outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata,nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
