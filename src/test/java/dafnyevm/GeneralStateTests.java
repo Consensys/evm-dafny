@@ -82,6 +82,11 @@ public class GeneralStateTests {
 	public final static Path TESTS_DIR = Path.of("tests");
 
 	/**
+	 * Determine the maximum number of stack items that will be recorded in each step.
+	 */
+    private final static int STACK_LIMIT = 10;
+
+	/**
 	 * The set of tests which are considered "impossible" by the execution specs and, therefore, can be safely ignored.
 	 */
 	public final static List<String> IMPOSSIBLES = Arrays.asList( //
@@ -324,31 +329,39 @@ public class GeneralStateTests {
 	}
 
 	public static class StructuredTracer extends DafnyEvm.TraceAdaptor {
+        /**
+         * Defines the maximum number of stack elements to store with each step. This
+         * needs to agree with the number used to generate the trace files, otherwise
+         * things will fail.
+         */
 		private final List<Trace.Element> out;
 
 		public StructuredTracer(List<Trace.Element> out) {
 			this.out = out;
 		}
 
-		@Override
-		public void step(DafnyEvm.State.Ok state) {
-			int pc = state.getPC().intValueExact();
-			int op = state.getOpcode();
-			int depth = state.getDepth();
-			long gas = state.getGas().longValueExact();
-			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
-			// the invalid bytecode.
-			if(op != Bytecodes.INVALID) {
-				byte[] memory = state.getMemory();
-				BigInteger[] stack = (BigInteger[]) state.getStack();
-				// FIXME: this is a hack until such time as Geth actually reports storage.
-				//Map<BigInteger, BigInteger> storage = state.getStorage();
-				Map<BigInteger, BigInteger> storage = new HashMap<>();
-				out.add(new Trace.Step(pc, op, depth, gas, stack, memory, storage));
-			} else {
-				System.out.println("SKIPPING");
-			}
-		}
+        @Override
+        public void step(DafnyEvm.State.Ok state) {
+            int pc = state.getPC().intValueExact();
+            int op = state.getOpcode();
+            int depth = state.getDepth();
+            long gas = state.getGas().longValueExact();
+            // NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
+            // the invalid bytecode.
+            if (op != Bytecodes.INVALID) {
+                byte[] memory = state.getMemory();
+                BigInteger[] stack = (BigInteger[]) state.getStack();
+                // FIXME: this is a hack until such time as Geth actually reports storage.
+                // Map<BigInteger, BigInteger> storage = state.getStorage();
+                Map<BigInteger, BigInteger> storage = new HashMap<>();
+                // Trim the stack
+                BigInteger[] trimmed = evmtools.util.Arrays.trimFront(STACK_LIMIT, stack);
+                //
+                out.add(new Trace.Step(pc, op, depth, gas, stack.length, trimmed, memory, storage));
+            } else {
+                System.out.println("SKIPPING");
+            }
+        }
 
 		@Override
 		public void end(State.Return state) {
