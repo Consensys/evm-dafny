@@ -443,7 +443,9 @@ public class GeneralStateTests {
 			return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
 		} else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
 			return Trace.Exception.Error.ACCOUNT_COLLISION;
-		} else {
+		} else if (err instanceof EvmState_Compile.Error_WRITE__PROTECTION__VIOLATED) {
+            return Trace.Exception.Error.WRITE_PROTECTION;
+        } else {
 			return Trace.Exception.Error.UNKNOWN;
 		}
 	}
