@@ -106,34 +106,12 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
 			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
-			"stCreate2/CREATE2_Suicide.json", // #331
-			"stSStoreTest/sstore_0to0.json", // #331
-			"stSStoreTest/sstore_0to0to0.json", // #331
-			"stSStoreTest/sstore_0to0toX.json", // #331
-			"stSStoreTest/sstore_0toX.json", // #331
-			"stSStoreTest/sstore_0toXto0.json", // #331
-			"stSStoreTest/sstore_0toXto0toX.json", // #331
-			"stSStoreTest/sstore_0toXtoX.json", // #331
-			"stSStoreTest/sstore_0toXtoY.json", // #331
-			"stSStoreTest/sstore_Xto0.json", // #331
-			"stSStoreTest/sstore_Xto0to0.json", // #331
-			"stSStoreTest/sstore_Xto0toX.json", // #331
-			"stSStoreTest/sstore_Xto0toXto0.json", // #331
-			"stSStoreTest/sstore_Xto0toY.json", // #331
-			"stSStoreTest/sstore_XtoX.json", // #331
-			"stSStoreTest/sstore_XtoXto0.json", // #331
-			"stSStoreTest/sstore_XtoXtoX.json", // #331
-			"stSStoreTest/sstore_XtoXtoY.json", // #331
-			"stSStoreTest/sstore_XtoY.json", // #331
-			"stSStoreTest/sstore_XtoYto0.json", // #331
-			"stSStoreTest/sstore_XtoYtoX.json", // #331
-			"stSStoreTest/sstore_XtoYtoY.json", // #331
-			"stSStoreTest/sstore_XtoYtoZ.json", // #331
-			"stCreate2/create2noCash.json", // #331
-			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #331
-			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
-			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #331
-			"stCreate2/create2checkFieldsInInitcode.json", // #331
+//			"stCreate2/CREATE2_Suicide.json", // #331
+//			"stCreate2/create2noCash.json", // #331
+//			"stExtCodeHash/callToSuicideThenExtcodehash.json", // #331
+//			"stExtCodeHash/extCodeHashCreatedAndDeletedAccountStaticCall.json", // #331
+//			"stSStoreTest/sstore_changeFromExternalCallInInitCode.json", // #331
+//			"stCreate2/create2checkFieldsInInitcode.json", // #331
 
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
