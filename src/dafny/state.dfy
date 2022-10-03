@@ -137,14 +137,14 @@ module EvmState {
                 callValue: u256,     // value to transfer
                 delegateValue: u256, // apparent value in execution context
                 callData:seq<u8>,    // input data for call
+                writeProtection: bool,
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
         | CREATES(evm:T,
             gas: nat,            // available gas for creation
             endowment: u256,     // endowment
             initcode: seq<u8>,  // initialisation code
-            salt: Option<u256>,  // optional salt
-            writeProtection:bool
+            salt: Option<u256>  // optional salt
         )
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,substate:SubState.T)
@@ -179,8 +179,8 @@ module EvmState {
         requires !this.INVALID? {
             match this
                 case OK(evm) => evm.gas
-                case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
-                case CREATES(evm, _, _, _, _,_) => evm.gas
+                case CALLS(evm, _, _, _, _, _, _, _, _, _,_) => evm.gas
+                case CREATES(evm, _, _, _, _) => evm.gas
                 case RETURNS(g, _, _, _) => g
                 case REVERTS(g, _) => g
         }
@@ -671,7 +671,7 @@ module EvmState {
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,address,endowment,[],writeProtection,gasPrice,block);
+            var ctx := Context.Create(sender,origin,address,endowment,[],evm.context.writeProtection,gasPrice,block);
             // Make the creation!
             Create(evm.world,ctx,evm.substate,initcode,gas,depth+1)
         }
