@@ -1488,31 +1488,34 @@ module Bytecode {
      */
     function method Create2(st: State) : (nst: State)
     requires !st.IsFailure() {
-        if st.Operands() >= 4
-        then
-            var endowment := st.Peek(0);
-            // Extract start of initialisation code in memory
-            var codeOffset := st.Peek(1) as nat;
-            // Extract length of initialisation code
-            var codeSize := st.Peek(2) as nat;
-            // Extract the salt
-            var salt := st.Peek(3);
-            // Copy initialisation code from memory
-            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
-            // Calculate available gas
-            var gascap := GasCalc.CreateGasCap(st);
-            // Apply everything
-            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
-            // Sanity check nonce
-            if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
+        if st.Operands() >= 4 
             then
-                // Charge gas and increment nonce
-                var nnst := nst.UseGas(gascap).IncNonce();
-                // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code,Some(salt))
-            else
-                // Immediate failure (nonce overflow)
-                nst.Push(0)
+                if st.WriteProtection() == false
+                    then State.INVALID(WRITE_PROTECTION_VIOLATED)
+                else
+                    var endowment := st.Peek(0);
+                    // Extract start of initialisation code in memory
+                    var codeOffset := st.Peek(1) as nat;
+                    // Extract length of initialisation code
+                    var codeSize := st.Peek(2) as nat;
+                    // Extract the salt
+                    var salt := st.Peek(3);
+                    // Copy initialisation code from memory
+                    var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+                    // Calculate available gas
+                    var gascap := GasCalc.CreateGasCap(st);
+                    // Apply everything
+                    var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+                    // Sanity check nonce
+                    if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
+                        then
+                       // Charge gas and increment nonce
+                       var nnst := nst.UseGas(gascap).IncNonce();
+                       // Pass back continuation
+                       State.CREATES(nnst.evm,gascap,endowment,code,Some(salt))
+                    else
+                        // Immediate failure (nonce overflow)
+                        nst.Push(0)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1581,22 +1584,26 @@ module Bytecode {
          //
         if st.Operands() >= 1
         then
-            // Get address of currently executing account
-            var address := st.evm.context.address;
-            // Get balance of currently executing account
-            var balance := st.evm.world.Balance(address);
-            // Determine account to send remaining any remaining funds.
-            var r := ((st.Peek(0) as nat) % TWO_160) as u160;
-            // Register contract deletion in substate!
-            var ss := st.evm.substate.AccountAccessed(r);
-            // Apply refund
-            var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
+            if st.WriteProtection() == false
+                then 
+                    State.INVALID(WRITE_PROTECTION_VIOLATED)
+            else
+                // Get address of currently executing account
+                var address := st.evm.context.address;
+                // Get balance of currently executing account
+                var balance := st.evm.world.Balance(address);
+                // Determine account to send remaining any remaining funds.
+                var r := ((st.Peek(0) as nat) % TWO_160) as u160;
+                // Register contract deletion in substate!
+                var ss := st.evm.substate.AccountAccessed(r);
+                // Apply refund
+                var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
                 // Refund balance to r
                 then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
                 // Otherwise reset balance to zero
                 else st.evm.world.Withdraw(address,balance);
-            //
-            State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
+                //
+                State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
