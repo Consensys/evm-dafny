@@ -1110,10 +1110,13 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            var loc := st.Peek(0);
-            var val := st.Peek(1);
-            // Store word
-            st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
+            if st.WriteProtection() == false
+                then State.INVALID(WRITE_PROTECTION_VIOLATED)
+            else
+                var loc := st.Peek(0);
+                var val := st.Peek(1);
+                // Store word
+                st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1341,7 +1344,7 @@ module Bytecode {
                 // Charge gas and increment nonce
                 var nnst := nst.UseGas(gascap).IncNonce();
                 // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code, None)
+                State.CREATES(nnst.evm,gascap,endowment,code,None,st.evm.context.writeProtection)
             else
                 // Immediate failure (nonce overflow)
                 nst.Push(0)
@@ -1366,18 +1369,22 @@ module Bytecode {
             var gas := st.Peek(0) as nat;
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,value);
-             // Sanity check bounds
-            if (inOffset + inSize) < MAX_U256
-            then
-                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
-                // Extract address of this account
-                var address := st.evm.context.address;
-                // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
-                // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+            if !(st.evm.context.writeProtection || value == 0)
+                then 
+                    State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
-                State.INVALID(MEMORY_OVERFLOW)
+             // Sanity check bounds
+                if (inOffset + inSize) < MAX_U256
+                    then
+                        var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                        // Extract address of this account
+                        var address := st.evm.context.address;
+                        // Compute the continuation (i.e. following) state.
+                        var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                        // Pass back continuation.
+                        State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, outOffset:=outOffset, outSize:=outSize)
+                else
+                    State.INVALID(MEMORY_OVERFLOW)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1502,7 +1509,7 @@ module Bytecode {
                 // Charge gas and increment nonce
                 var nnst := nst.UseGas(gascap).IncNonce();
                 // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code,Some(salt))
+                State.CREATES(nnst.evm,gascap,endowment,code,Some(salt), st.evm.context.writeProtection)
             else
                 // Immediate failure (nonce overflow)
                 nst.Push(0)
@@ -1533,7 +1540,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.UpdateWriteProtection(false).AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
                 State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata, outOffset:=outOffset, outSize:=outSize)
             else

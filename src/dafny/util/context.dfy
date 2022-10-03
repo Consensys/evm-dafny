@@ -53,6 +53,8 @@ module Context {
         callData:seq<u8>,
         // Return data from last contract call.
         returnData: seq<u8>,
+        // Write protection
+        writeProtection: bool,
         // Price of gas in current environment.
         gasPrice: u256,
         // Block information in current environment.
@@ -114,13 +116,17 @@ module Context {
     }
 
     type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
-    witness Context(0,0,0,0,[],[],0,Info(0,0,0,0,0,0))
+    witness Context(0,0,0,0,[],[],true,0,Info(0,0,0,0,0,0))
 
     /**
      * Create an initial context from various components.
      */
-    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,gasPrice:u256, block: Block) : T
+    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,writeProtection:bool,gasPrice:u256, block: Block) : T
     requires |callData| <= MAX_U256 {
-        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],gasPrice:=gasPrice,block:=block)
+        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writeProtection:=writeProtection,gasPrice:=gasPrice,block:=block)
+    }
+
+    function method UpdateWriteProtection(ctx: Raw, flag: bool): Raw {
+        ctx.(writeProtection:= flag)
     }
 }

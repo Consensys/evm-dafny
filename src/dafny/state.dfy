@@ -77,7 +77,7 @@ module EvmState {
     // being executed.
     type T = c:Raw | c.context.address in c.world.accounts
     // Create simple witness of htis
-    witness EVM(Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0)),
+    witness EVM(Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0)),
             WorldState.Create(map[0:=WorldState.DefaultAccount()]),
             Stack.Create(),
             Memory.Create(),
@@ -90,7 +90,7 @@ module EvmState {
     type OKState = s:State | !s.IsFailure()
       witness OK(
         EVM(
-            Context.Create(0,0,0,0,[],0,Context.Block.Info(0,0,0,0,0,0)),
+            Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0)),
             WorldState.Create(map[0:=WorldState.DefaultAccount()]),
             Stack.Create(),
             Memory.Create(),
@@ -119,6 +119,7 @@ module EvmState {
         | INVALID_PRECONDITION
         | CALLDEPTH_EXCEEDED
         | ACCOUNT_COLLISION
+        | WRITE_PROTECTION_VIOLATED
 
     /**
      * Captures the possible state of the machine.  Normal execution is
@@ -142,7 +143,8 @@ module EvmState {
             gas: nat,            // available gas for creation
             endowment: u256,     // endowment
             initcode: seq<u8>,  // initialisation code
-            salt: Option<u256>  // optional salt
+            salt: Option<u256>,  // optional salt
+            writeProtection:bool
         )
         | INVALID(Error)
         | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,substate:SubState.T)
@@ -178,7 +180,7 @@ module EvmState {
             match this
                 case OK(evm) => evm.gas
                 case CALLS(evm, _, _, _, _, _, _, _, _, _) => evm.gas
-                case CREATES(evm, _, _, _, _) => evm.gas
+                case CREATES(evm, _, _, _, _,_) => evm.gas
                 case RETURNS(g, _, _, _) => g
                 case REVERTS(g, _) => g
         }
@@ -191,6 +193,12 @@ module EvmState {
                 State.INVALID(INSUFFICIENT_GAS)
             else
                 OK(evm.(gas := this.Gas() - k as nat))
+        }
+
+        function method UpdateWriteProtection(flag: bool): State
+            requires !IsFailure()
+        {
+            OK(evm.(context:= Context.UpdateWriteProtection(evm.context, flag)))
         }
 
         /**
@@ -216,6 +224,12 @@ module EvmState {
         function method GetStack(): Stack.T
         requires !IsFailure() {
             this.evm.stack
+        }
+
+        /* get the value of the write protection flag from the context */
+        function method WriteProtection(): bool
+        requires !IsFailure() {
+            this.evm.context.writeProtection
         }
 
         // =======================================================================================
@@ -602,7 +616,7 @@ module EvmState {
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,gasPrice,block);
+            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,evm.context.writeProtection,gasPrice,block);
             // Make the call!
             Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1)
         }
@@ -657,7 +671,7 @@ module EvmState {
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,address,endowment,[],gasPrice,block);
+            var ctx := Context.Create(sender,origin,address,endowment,[],writeProtection,gasPrice,block);
             // Make the creation!
             Create(evm.world,ctx,evm.substate,initcode,gas,depth+1)
         }
@@ -731,7 +745,7 @@ module EvmState {
         // Address of called contract
         var address := ctx.address;
         // Check call depth & available balance
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) || !(ctx.writeProtection || value == 0) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(address);
@@ -778,7 +792,7 @@ module EvmState {
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
         // Check call depth & available balance
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) then State.REVERTS(gas,[])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writeProtection then State.REVERTS(gas,[])
         // Sanity checks for existing account
         else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then State.INVALID(ACCOUNT_COLLISION)
         else
