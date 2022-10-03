@@ -383,16 +383,8 @@ public class GeneralStateTests {
 					}
 				}
 				return instances.stream();
-			} catch (JSONException e) {
-				e.printStackTrace();
-				System.out.println("Problem parsing file into JSON (" + f + ")");
-				return null;
-			} catch (IOException e) {
-				System.out.println("Problem reading file (" + f + ")");
-				return null;
-			} catch (Exception e) {
-				System.out.println("Problem reading file (" + f + ")");
-				e.printStackTrace();
+			} catch (Throwable e) {
+				System.out.println("*** Error reading file \"" + f + "\" (" + e.getMessage() + ")");
 				return null;
 			}
 		});

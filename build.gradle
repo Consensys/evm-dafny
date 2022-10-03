@@ -80,6 +80,8 @@ repositories {
 test {
     // Specify inputs
     inputs.files(fileTree('tests') { include '**/*.json' } )
+    // Ensure can see stdout
+    testLogging.showStandardStreams = true
     //
     useJUnitPlatform()
     filter {

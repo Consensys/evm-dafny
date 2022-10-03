@@ -7,3 +7,5 @@ GeneralStateTests/stShift/shiftSignedCombinations.json
 GeneralStateTests/stShift/shiftCombinations.json
 GeneralStateTests/stStaticCall/static_Return50000_2.json
 GeneralStateTests/stStaticCall/static_Call50000*.json
+GeneralStateTests/stStaticCall/static_Call1MB1024Calldepth.json
+GeneralStateTests/stStaticCall/static_LoopCallsThenRevert.json

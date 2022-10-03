@@ -17,6 +17,7 @@ GeneralStateTests/stShift/*.json
 GeneralStateTests/stSLoadTest/*.json
 GeneralStateTests/stSStoreTest/*.json
 GeneralStateTests/stStackTests/*.json
+GeneralStateTests/stStaticCall/*.json
 GeneralStateTests/VMTests/vmArithmeticTest/*.json
 GeneralStateTests/VMTests/vmBitwiseLogicOperation/*.json
 GeneralStateTests/VMTests/vmIOandFlowOperations/*.json
