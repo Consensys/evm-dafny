@@ -117,6 +117,33 @@ dependencies {
 }
 
 // ======================================================================
+// Trace Generation
+// ======================================================================
+
+// A default task for convert reference tests into the trace format
+// required for testing the Dafny evm.
+task testgen(type: JavaExec) {
+    // Specify inputs
+    inputs.files(fileTree('fixtures/') { include '**/*.json' } )
+    // Specify outputs
+    outputs.files(fileTree('tests') { include '**/*.json' } )
+    // Enable caching
+    outputs.cacheIf { true }
+    // Specify actions
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'evmtools.Main'
+    // arguments to pass to the application
+    args '-fork'
+    args 'Berlin'
+    args '-dir'
+    args 'fixtures'
+    args '-out'
+    args 'tests'
+    args '-whitelist'
+    args 'tests/whitelist'
+}
+
+// ======================================================================
 // Java Application
 // ======================================================================
 
