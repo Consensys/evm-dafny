@@ -108,7 +108,7 @@ dependencies {
     implementation("org.json:org.json:chargebee-1.0")
     implementation("org.web3j:utils:5.0.0")
     implementation("org.web3j:rlp:5.0.0")
-    implementation("org.whiley:evmtools:0.3.21")
+    implementation("org.whiley:evmtools:0.3.23")
     implementation files('evm-java/DafnyRuntime.jar')
     //
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
@@ -124,7 +124,8 @@ dependencies {
 // required for testing the Dafny evm.
 task testgen(type: JavaExec) {
     // Specify inputs
-    inputs.files(fileTree('fixtures/') { include '**/*.json' } )
+    inputs.files("tests/includes.txt", "tests/excludes.txt",
+        fileTree('fixtures/') { include '**/*.json' } )
     // Specify outputs
     outputs.files(fileTree('tests') { include '**/*.json' } )
     // Enable caching
@@ -139,8 +140,10 @@ task testgen(type: JavaExec) {
     args 'fixtures'
     args '-out'
     args 'tests'
-    args '-whitelist'
-    args 'tests/whitelist'
+    args '-includes'
+    args 'tests/includes.txt'
+    args '-excludes'
+    args 'tests/excludes.txt'
 }
 
 // ======================================================================

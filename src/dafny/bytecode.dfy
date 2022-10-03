@@ -1099,7 +1099,7 @@ module Bytecode {
             // Push word
             st.Pop().Push(val).KeyAccessed(loc).Next()
         else
-            State.INVALID(STACK_OVERFLOW)
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -1261,7 +1261,8 @@ module Bytecode {
     requires !st.IsFailure()
     requires k > 0 {
         //
-        if st.Operands() > (k-1) && st.Capacity() >= 1
+        if st.Capacity() < 1 then State.INVALID(STACK_OVERFLOW)
+        else if st.Operands() > (k-1)
         then
         var kth := st.Peek(k-1);
             st.Push(kth).Next()
@@ -1370,7 +1371,7 @@ module Bytecode {
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,value);
             if !(st.evm.context.writeProtection || value == 0)
-                then 
+                then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
              // Sanity check bounds
@@ -1488,7 +1489,7 @@ module Bytecode {
      */
     function method Create2(st: State) : (nst: State)
     requires !st.IsFailure() {
-        if st.Operands() >= 4 
+        if st.Operands() >= 4
             then
                 if st.WriteProtection() == false
                     then State.INVALID(WRITE_PROTECTION_VIOLATED)
@@ -1585,7 +1586,7 @@ module Bytecode {
         if st.Operands() >= 1
         then
             if st.WriteProtection() == false
-                then 
+                then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
                 // Get address of currently executing account
