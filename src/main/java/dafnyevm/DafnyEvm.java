@@ -263,6 +263,14 @@ public class DafnyEvm {
 	}
 
 	/**
+	 * Get the gas limit for this call.
+	 * @return
+	 */
+	public BigInteger gas() {
+        return gas;
+    }
+
+	/**
 	 * Set the input data for this call.
 	 *
 	 * @param data
@@ -558,6 +566,13 @@ public class DafnyEvm {
 
 		public byte[] getReturnData() { return null; }
 
+        /**
+         * Get gas remaining.
+         *
+         * @return
+         */
+	    public abstract BigInteger getGas();
+
 		public Pair<BigInteger[], byte[]>[] getLog() {
 			throw new IllegalArgumentException("log not available in state " + this.getClass().getName());
 		}
@@ -609,7 +624,8 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
-			public BigInteger getRemainingGas() {
+			@Override
+            public BigInteger getGas() {
 				return getEVM().dtor_gas();
 			}
 
@@ -736,7 +752,8 @@ public class DafnyEvm {
 				return DafnySequence.toByteArray(data);
 			}
 
-			public BigInteger getGasRefunded() {
+			@Override
+            public BigInteger getGas() {
 				return state.dtor_gas();
 			}
 		}
@@ -765,7 +782,8 @@ public class DafnyEvm {
 				return DafnySequence.toByteArray(data);
 			}
 
-			public BigInteger getGasRefunded() {
+			@Override
+            public BigInteger getGas() {
 				return state.dtor_gas();
 			}
 
@@ -796,7 +814,7 @@ public class DafnyEvm {
 			@Override
 			public String toString() {
 				String ws = toWorldStateString(getWorldState());
-				return "RETURN(gas=" + getGasRefunded() + "," + Hex.toHexString(getReturnData()) + "," + ws + ")";
+				return "RETURN(gas=" + getGas() + "," + Hex.toHexString(getReturnData()) + "," + ws + ")";
 			}
 		}
 
@@ -821,8 +839,8 @@ public class DafnyEvm {
 				return state._a0;
 			}
 
-			public BigInteger getGasUsed() {
-				// TODO: fixme!
+			@Override
+            public BigInteger getGas() {
 				return BigInteger.ZERO;
 			}
 
