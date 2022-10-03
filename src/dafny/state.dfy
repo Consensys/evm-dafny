@@ -610,7 +610,7 @@ module EvmState {
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,evm.context.writeProtection,gasPrice,block);
+            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,writeProtection,gasPrice,block);
             // Make the call!
             Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1)
         }
