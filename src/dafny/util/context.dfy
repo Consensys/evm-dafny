@@ -125,8 +125,4 @@ module Context {
     requires |callData| <= MAX_U256 {
         Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writeProtection:=writeProtection,gasPrice:=gasPrice,block:=block)
     }
-
-    function method UpdateWriteProtection(ctx: Raw, flag: bool): Raw {
-        ctx.(writeProtection:= flag)
-    }
 }

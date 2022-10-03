@@ -195,12 +195,6 @@ module EvmState {
                 OK(evm.(gas := this.Gas() - k as nat))
         }
 
-        function method UpdateWriteProtection(flag: bool): State
-            requires !IsFailure()
-        {
-            OK(evm.(context:= Context.UpdateWriteProtection(evm.context, flag)))
-        }
-
         /**
          * Refund gas (e.g. after a call)
          */
