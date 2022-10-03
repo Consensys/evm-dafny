@@ -368,7 +368,7 @@ public class GeneralStateTests {
 			int pc = state.getPC().intValueExact();
 			int op = state.getOpcode();
 			int depth = state.getDepth();
-			long gas = state.getRemainingGas().longValueExact();
+			long gas = state.getGas().longValueExact();
 			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
 			// the invalid bytecode.
 			if(op != Bytecodes.INVALID) {

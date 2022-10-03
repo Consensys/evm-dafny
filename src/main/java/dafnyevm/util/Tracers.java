@@ -83,7 +83,7 @@ public class Tracers {
 				JSONWriter obj = json.object();
 				obj.key("pc").value(state.getPC());
 				obj.key("op").value(state.getOpcode());
-				obj.key("gas").value(Hex.toHexString(state.getRemainingGas()));
+				obj.key("gas").value(Hex.toHexString(state.getGas()));
 				if (state.getMemorySize() > 0) {
 					byte[] mem = state.getMemory();
 					obj.key("memory").value(Hex.toHexString(mem));
@@ -105,7 +105,7 @@ public class Tracers {
 			try {
 				JSONWriter obj = json.object();
 				obj.key("output").value(Hex.toHexString(state.getReturnData()));
-				obj.key("gasUsed").value(Hex.toHexString(state.getGasRefunded()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
 				// In principle, this should never happen!
@@ -119,7 +119,7 @@ public class Tracers {
 			try {
 				JSONWriter obj = json.object();
 				obj.key("output").value(Hex.toHexString(state.getReturnData()));
-				obj.key("gasUsed").value(Hex.toHexString(state.getGasRefunded()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
 				obj.key("error").value("execution reverted");
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
@@ -133,7 +133,7 @@ public class Tracers {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
-				obj.key("gasUsed").value(Hex.toHexString(state.getGasUsed()));
+				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
 				// In principle, this should never happen!
