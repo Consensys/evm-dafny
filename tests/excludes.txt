@@ -1,0 +1,11 @@
+GeneralStateTests/stExample/eip1559.json
+GeneralStateTests/stMemoryTest/stackLimitPush*
+GeneralStateTests/stMemoryTest/buffer.json
+GeneralStateTests/stCreate2/CREATE2_Bounds*.json
+GeneralStateTests/stCreateTest/CreateOOGafterMaxCodesize.json
+GeneralStateTests/stShift/shiftSignedCombinations.json
+GeneralStateTests/stShift/shiftCombinations.json
+GeneralStateTests/stStaticCall/static_Return50000_2.json
+GeneralStateTests/stStaticCall/static_Call50000*.json
+GeneralStateTests/stStaticCall/static_Call1MB1024Calldepth.json
+GeneralStateTests/stStaticCall/static_LoopCallsThenRevert.json

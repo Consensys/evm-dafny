@@ -109,6 +109,38 @@ This will verify the codebase using Dafny along with some examples,
 generate a Java implementation of the `EVM`, and run two test suites
 against it in Java.
 
+# Test Generation
+
+The test cases used for the Dafny EVM are stored in the `tests/`
+directory.  These are generated from the [Ethereum Consensus
+Tests](https://github.com/ethereum/tests) using Geth's `evm` tool.
+Each test is a `json` file similar in structure to that used by the
+Ethereum Consensus Tests, except that they include _full_ trace data
+(i.e. the state of the EVM after every execution step).
+
+To regenerate the trace tests, you need to ensure the `fixtures`
+submodule is updated appropriately.  If you originally employed `git
+clone --recursive` when cloning the repository, then you don't need to
+do anything.  Otherwise, you can do this:
+
+```
+git submodule update --init
+```
+
+Using `gradle` one can now regenerate all the trace tests as follows:
+
+```
+> gradle testgen
+```
+
+This can take several minutes to complete, and requires that Geth's
+`evm` tool is installed and visible on `PATH`.  Furthermore, the test
+generation process is governed by the files `tests/includes.txt` and
+`tests/excludes.txt`.  The former determines which of the reference
+tests should be included, whilst the latter identifies specific cases
+to exclude.  Finally, the trace generation process is managed by the
+[EvmTools](https://github.com/DavePearce/EvmTools) framework.
+
 # Contributing
 
 See the [CONTRIBUTORS](CONTRIBUTORS.md) file for more information on

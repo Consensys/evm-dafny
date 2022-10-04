@@ -82,6 +82,11 @@ public class GeneralStateTests {
 	public final static Path TESTS_DIR = Path.of("tests");
 
 	/**
+	 * Determine the maximum number of stack items that will be recorded in each step.
+	 */
+    private final static int STACK_LIMIT = 10;
+
+	/**
 	 * The set of tests which are considered "impossible" by the execution specs and, therefore, can be safely ignored.
 	 */
 	public final static List<String> IMPOSSIBLES = Arrays.asList( //
@@ -100,14 +105,84 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jump.json", // #241
 			"vmIOandFlowOperations/jumpi.json", // #241
 			"vmIOandFlowOperations/jumpToPush.json", // #241
-			"stReturnDataTest/modexp_modsize0_returndatasize.json", //
-			"stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
+	        "stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
+			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #371
+			"stReturnDataTest/revertRetDataSize.json", // #371
+	        "stCreateTest/CreateCollisionResults.json", // #372
+	        "stShift/sar_2^255_257.json", // #373
+	        "stShift/sar_2^256-1_1.json", // #373
+	        "stShift/sar_2^256-1_256.json", // #373
+	        "stShift/sar_2^255_256.json", // #373
+	        "stShift/sar_2^256-1_255.json", // #373
+	        "stArgsZeroOneBalance/callcodeNonConst.json", // #374
+	        "stArgsZeroOneBalance/delegatecallNonConst.json", // #374
+	        "stArgsZeroOneBalance/callNonConst.json", // #374
+	        "stStackTests/stackOverflow.json", // #375
+	        "stStackTests/stackOverflowM1.json", // #375
 			// Unknowns
+	        "stBadOpcode/badOpcodes.json",
+	        "stBadOpcode/invalidAddr.json",
+	        "stBadOpcode/undefinedOpcodeFirstByte.json", // chain id?
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
-			//
-			"stCreateTest/CreateCollisionResults.json", // gas after call
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
+			"stStaticCall/static_callBasic.json",
+			"stStaticCall/static_callcallcallcode_001_2.json",
+			"stStaticCall/static_callcallcode_01_2.json",
+			"stStaticCall/static_callcallcodecall_010_2.json",
+			"stStaticCall/static_callcallcodecallcode_011_2.json",
+			"stStaticCall/static_callcodecallcallcode_101_2.json",
+			"stStaticCall/static_callcodecallcallcode_ABCB_RECURSIVE2.json",
+			"stStaticCall/static_CallContractToCreateContractWhichWouldCreateContractIfCalled.json",
+			"stStaticCall/static_callCreate2.json",
+			"stStaticCall/static_callCreate.json",
+			"stStaticCall/static_CallEcrecover0_0input.json",
+			"stStaticCall/static_CallEcrecover0_completeReturnValue.json",
+			"stStaticCall/static_CallEcrecover0_Gas2999.json",
+			"stStaticCall/static_CallEcrecover0_gas3000.json",
+			"stStaticCall/static_CallEcrecover0.json",
+			"stStaticCall/static_CallEcrecover0_NoGas.json",
+			"stStaticCall/static_CallEcrecover0_overlappingInputOutput.json",
+			"stStaticCall/static_CallEcrecover1.json",
+			"stStaticCall/static_CallEcrecover2.json",
+			"stStaticCall/static_CallEcrecover3.json",
+			"stStaticCall/static_CallEcrecover80.json",
+			"stStaticCall/static_CallEcrecoverCheckLength.json",
+			"stStaticCall/static_CallEcrecoverCheckLengthWrongV.json",
+			"stStaticCall/static_CallEcrecoverH_prefixed0.json",
+			"stStaticCall/static_CallEcrecoverR_prefixed0.json",
+			"stStaticCall/static_CallEcrecoverS_prefixed0.json",
+			"stStaticCall/static_CallEcrecoverV_prefixed0.json",
+			"stStaticCall/static_CallIdentity_4_gas17.json",
+			"stStaticCall/static_CallIdentity_5.json",
+			"stStaticCall/static_CallRecursiveBombLog2.json",
+			"stStaticCall/static_CallRecursiveBombLog.json",
+			"stStaticCall/static_CallRipemd160_1.json",
+			"stStaticCall/static_CallRipemd160_2.json",
+			"stStaticCall/static_CallRipemd160_3.json",
+			"stStaticCall/static_CallRipemd160_3_postfixed0.json",
+			"stStaticCall/static_CallRipemd160_3_prefixed0.json",
+			"stStaticCall/static_CallRipemd160_4_gas719.json",
+			"stStaticCall/static_CallRipemd160_4.json",
+			"stStaticCall/static_CallRipemd160_5.json",
+			"stStaticCall/static_CallSha256_5.json",
+			"stStaticCall/StaticcallToPrecompileFromCalledContract.json",
+			"stStaticCall/StaticcallToPrecompileFromContractInitialization.json",
+			"stStaticCall/StaticcallToPrecompileFromTransaction.json",
+			"stStaticCall/static_CheckOpcodes2.json",
+			"stStaticCall/static_CheckOpcodes3.json",
+			"stStaticCall/static_log0_emptyMem.json",
+			"stStaticCall/static_log0_logMemsizeZero.json",
+			"stStaticCall/static_log0_nonEmptyMem.json",
+			"stStaticCall/static_log0_nonEmptyMem_logMemSize1.json",
+			"stStaticCall/static_log0_nonEmptyMem_logMemSize1_logMemStart31.json",
+			"stStaticCall/static_log1_emptyMem.json",
+			"stStaticCall/static_log1_logMemsizeZero.json",
+			"stStaticCall/static_log_Caller.json",
+			"stStaticCall/static_LoopCallsDepthThenRevert2.json",
+			"stStaticCall/static_LoopCallsDepthThenRevert3.json",
+			"stStaticCall/static_RETURN_Bounds.json",
+			"stStaticCall/static_RETURN_BoundsOOG.json",
 			"dummy"
 	);
 
@@ -308,47 +383,47 @@ public class GeneralStateTests {
 					}
 				}
 				return instances.stream();
-			} catch (JSONException e) {
-				e.printStackTrace();
-				System.out.println("Problem parsing file into JSON (" + f + ")");
-				return null;
-			} catch (IOException e) {
-				System.out.println("Problem reading file (" + f + ")");
-				return null;
-			} catch (Exception e) {
-				System.out.println("Problem reading file (" + f + ")");
-				e.printStackTrace();
+			} catch (Throwable e) {
+				System.out.println("*** Error reading file \"" + f + "\" (" + e.getMessage() + ")");
 				return null;
 			}
 		});
 	}
 
 	public static class StructuredTracer extends DafnyEvm.TraceAdaptor {
+        /**
+         * Defines the maximum number of stack elements to store with each step. This
+         * needs to agree with the number used to generate the trace files, otherwise
+         * things will fail.
+         */
 		private final List<Trace.Element> out;
 
 		public StructuredTracer(List<Trace.Element> out) {
 			this.out = out;
 		}
 
-		@Override
-		public void step(DafnyEvm.State.Ok state) {
-			int pc = state.getPC().intValueExact();
-			int op = state.getOpcode();
-			int depth = state.getDepth();
-			long gas = state.getGas().longValueExact();
-			// NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
-			// the invalid bytecode.
-			if(op != Bytecodes.INVALID) {
-				byte[] memory = state.getMemory();
-				BigInteger[] stack = (BigInteger[]) state.getStack();
-				// FIXME: this is a hack until such time as Geth actually reports storage.
-				//Map<BigInteger, BigInteger> storage = state.getStorage();
-				Map<BigInteger, BigInteger> storage = new HashMap<>();
-				out.add(new Trace.Step(pc, op, depth, gas, stack, memory, storage));
-			} else {
-				System.out.println("SKIPPING");
-			}
-		}
+        @Override
+        public void step(DafnyEvm.State.Ok state) {
+            int pc = state.getPC().intValueExact();
+            int op = state.getOpcode();
+            int depth = state.getDepth();
+            long gas = state.getGas().longValueExact();
+            // NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
+            // the invalid bytecode.
+            if (op != Bytecodes.INVALID) {
+                byte[] memory = state.getMemory();
+                BigInteger[] stack = (BigInteger[]) state.getStack();
+                // FIXME: this is a hack until such time as Geth actually reports storage.
+                // Map<BigInteger, BigInteger> storage = state.getStorage();
+                Map<BigInteger, BigInteger> storage = new HashMap<>();
+                // Trim the stack
+                BigInteger[] trimmed = evmtools.util.Arrays.trimFront(STACK_LIMIT, stack);
+                //
+                out.add(new Trace.Step(pc, op, depth, gas, stack.length, trimmed, memory, storage));
+            } else {
+                System.out.println("SKIPPING");
+            }
+        }
 
 		@Override
 		public void end(State.Return state) {
