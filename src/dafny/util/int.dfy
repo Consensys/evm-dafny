@@ -549,14 +549,14 @@ module I256 {
 
     // Shift Arithmetic Right.  This implementation follows the Yellow Paper quite
     // accurately.
-    function method Sar(lhs: i256, rhs: u256) : i256 {
+    function method {:verify false} Sar(lhs: i256, rhs: u256) : i256 {
         if rhs == 0 then lhs
-        else if rhs >= 256 then 0 as i256
-        else
+        else if rhs < 256
+        then
             var r := U256.Shl(1,rhs);
-            // NOTE: don't use Dafny's division operator here because that is
-            // Euclidean!
-            Int.Div(lhs as int, r as int) as i256
+            ((lhs as int) / (r as int)) as i256
+        else if lhs < 0 then -1
+        else 0
     }
 }
 

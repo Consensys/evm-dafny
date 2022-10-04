@@ -35,6 +35,8 @@ method {:test} DivTests() {
     Assert(()=> Div(-6,-3) == 2);
     Assert(()=> Div(-6,-4) == 1);
     Assert(()=> Div(-9,-4) == 2);
+    // Misc
+    Assert(()=> Div(-1,1) == -1);
 }
 
 // Various sanity tests for Remainder.
@@ -149,34 +151,37 @@ method {:test} ToBytesTests() {
     Assert(()=>U64.ToBytes(258) == [0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x02]);
     Assert(()=>U64.ToBytes(33554437) == [0x00,0x00,0x00,0x00,0x02,0x00,0x00,0x05]);
     Assert(()=>U64.ToBytes(65536 * 33554437) == [0x00,0x00,0x02,0x00,0x00,0x05,0x00,0x00]);
-
 }
 
 method {:test} SarTests() {
-    Assert(()=>I256.Sar(4 as i256, 1 as u256) == 2);
-    Assert(()=>I256.Sar(4 as i256, 2 as u256) == 1);
-    Assert(()=>I256.Sar(4 as i256, 3 as u256) == 0);
-    Assert(()=>I256.Sar(4 as i256, 4 as u256) == 0);
-    Assert(()=>I256.Sar(15 as i256, 1 as u256) == 7);
-    Assert(()=>I256.Sar(15 as i256, 2 as u256) == 3);
-    Assert(()=>I256.Sar(15 as i256, 3 as u256) == 1);
-    Assert(()=>I256.Sar(15 as i256, 4 as u256) == 0);
-    Assert(()=>I256.Sar(90 as i256, 1 as u256) == 45);
-    Assert(()=>I256.Sar(90 as i256, 2 as u256) == 22);
-    Assert(()=>I256.Sar(90 as i256, 3 as u256) == 11);
-    Assert(()=>I256.Sar(90 as i256, 4 as u256) == 5);
-    Assert(()=>I256.Sar(-90 as i256, 1 as u256) == -45);
-    Assert(()=>I256.Sar(-90 as i256, 2 as u256) == -22);
-    Assert(()=>I256.Sar(-90 as i256, 3 as u256) == -11);
-    Assert(()=>I256.Sar(-90 as i256, 4 as u256) == -5);
-    Assert(()=>I256.Sar(-15 as i256, 1 as u256) == -7);
-    Assert(()=>I256.Sar(-15 as i256, 2 as u256) == -3);
-    Assert(()=>I256.Sar(-15 as i256, 3 as u256) == -1);
-    Assert(()=>I256.Sar(-15 as i256, 4 as u256) == 0);
-    Assert(()=>I256.Sar(-4 as i256, 1 as u256) == -2);
-    Assert(()=>I256.Sar(-4 as i256, 2 as u256) == -1);
-    Assert(()=>I256.Sar(-4 as i256, 3 as u256) == 0);
-    Assert(()=>I256.Sar(-4 as i256, 4 as u256) == 0);
+    Assert(()=>I256.Sar(4, 1) == 2);
+    Assert(()=>I256.Sar(4, 2) == 1);
+    Assert(()=>I256.Sar(4, 3) == 0);
+    Assert(()=>I256.Sar(4, 4) == 0);
+    Assert(()=>I256.Sar(15, 1) == 7);
+    Assert(()=>I256.Sar(15, 2) == 3);
+    Assert(()=>I256.Sar(15, 3) == 1);
+    Assert(()=>I256.Sar(15, 4) == 0);
+    Assert(()=>I256.Sar(90, 1) == 45);
+    Assert(()=>I256.Sar(90, 2) == 22);
+    Assert(()=>I256.Sar(90, 3) == 11);
+    Assert(()=>I256.Sar(90, 4) == 5);
+    Assert(()=>I256.Sar(-90, 1) == -45);
+    Assert(()=>I256.Sar(-90, 2) == -23);
+    Assert(()=>I256.Sar(-90, 3) == -12);
+    Assert(()=>I256.Sar(-90, 4) == -6);
+    Assert(()=>I256.Sar(-15, 1) == -8);
+    Assert(()=>I256.Sar(-15, 2) == -4);
+    Assert(()=>I256.Sar(-15, 3) == -2);
+    Assert(()=>I256.Sar(-15, 4) == -1);
+    Assert(()=>I256.Sar(-4, 1) == -2);
+    Assert(()=>I256.Sar(-4, 2) == -1);
+    Assert(()=>I256.Sar(-4, 3) == -1);
+    Assert(()=>I256.Sar(-4, 4) == -1);
+    Assert(()=>I256.Sar(-1, 1) == -1);
+    Assert(()=>I256.Sar(1, 256) == 0);
+    Assert(()=>I256.Sar(-1, 256) == -1);
+    Assert(()=>I256.Sar(-TWO_128 as i256, 256) == -1);
 }
 
 method {:test} Log2Tests() {

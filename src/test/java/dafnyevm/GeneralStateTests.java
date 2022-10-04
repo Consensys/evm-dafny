@@ -109,11 +109,6 @@ public class GeneralStateTests {
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #371
 			"stReturnDataTest/revertRetDataSize.json", // #371
 	        "stCreateTest/CreateCollisionResults.json", // #372
-	        "stShift/sar_2^255_257.json", // #373
-	        "stShift/sar_2^256-1_1.json", // #373
-	        "stShift/sar_2^256-1_256.json", // #373
-	        "stShift/sar_2^255_256.json", // #373
-	        "stShift/sar_2^256-1_255.json", // #373
 	        "stArgsZeroOneBalance/callcodeNonConst.json", // #374
 	        "stArgsZeroOneBalance/delegatecallNonConst.json", // #374
 	        "stArgsZeroOneBalance/callNonConst.json", // #374
