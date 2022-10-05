@@ -134,8 +134,9 @@ Using `gradle` one can now regenerate all the trace tests as follows:
 ```
 
 This can take several minutes to complete, and requires that Geth's
-`evm` tool is installed and visible on `PATH`.  Furthermore, the test
-generation process is governed by the files `tests/includes.txt` and
+`evm` tool is installed and visible on `PATH` (we currently recommend
+version `1.10.25` or later).  Furthermore, the test generation process
+is governed by the files `tests/includes.txt` and
 `tests/excludes.txt`.  The former determines which of the reference
 tests should be included, whilst the latter identifies specific cases
 to exclude.  Finally, the trace generation process is managed by the
