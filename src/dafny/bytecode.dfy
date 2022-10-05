@@ -662,21 +662,12 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1);
             var len := st.Peek(2) as nat;
-
-            // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if m_loc + len < MAX_U256
-            then
-                // Slice bytes out of call data (with padding as needed)
-                var data := st.evm.context.CallDataSlice(d_loc,len as nat);
-                // Sanity check
-                assert |data| == len;
-                // Copy slice into memory
-                st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Slice bytes out of call data (with padding as needed)
+            var data := st.evm.context.CallDataSlice(d_loc,len as nat);
+            // Sanity check
+            assert |data| == len;
+            // Copy slice into memory
+            st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -706,20 +697,12 @@ module Bytecode {
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
             var last := (m_loc as nat) + len;
-            // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if last < MAX_U256
-            then
-                // Slice bytes out of code (with padding as needed)
-                var data := Code.Slice(st.evm.code,d_loc,len);
-                // Sanity check
-                assert |data| == len;
-                // Copy slice into memory
-                st.Expand(m_loc as nat, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Slice bytes out of code (with padding as needed)
+            var data := Code.Slice(st.evm.code,d_loc,len);
+            // Sanity check
+            assert |data| == len;
+            // Copy slice into memory
+            st.Expand(m_loc as nat, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -776,21 +759,13 @@ module Bytecode {
             var last := (m_loc as nat) + len;
             // Lookup account data
             var data := st.evm.world.GetOrDefault(account);
-            // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if last < MAX_U256
-            then
-                // Slice bytes out of code (with padding as needed)
-                var data := Code.Slice(data.code,d_loc,len);
-                // Sanity check
-                assert |data| == len;
-                // Copy slice into memory
-                st.AccountAccessed(account).Expand(m_loc as nat, len).Pop().Pop().Pop().Pop().Copy(m_loc,data).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
-        else
+            // Slice bytes out of code (with padding as needed)
+            var data := Code.Slice(data.code,d_loc,len);
+            // Sanity check
+            assert |data| == len;
+            // Copy slice into memory
+            st.AccountAccessed(account).Expand(m_loc as nat, len).Pop().Pop().Pop().Pop().Copy(m_loc,data).Next()
+         else
             State.INVALID(STACK_UNDERFLOW)
     }
 
@@ -825,7 +800,11 @@ module Bytecode {
         if st.Capacity() >= 1
         then
             var len := st.evm.context.ReturnDataSize();
-            st.Push(len as u256).Next()
+            if len <= MAX_U256
+            then
+                st.Push(len as u256).Next()
+            else
+                State.INVALID(MEMORY_OVERFLOW)
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -998,31 +977,17 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MLoad(st: State) : State
-        requires !st.IsFailure()
-        ensures
-            (Stack.Size(st.GetStack()) >= 1 && st.Peek(0) as nat + 31 < MAX_U256)
-                <==>
-            !MLoad(st).IsFailure()
-        ensures st.IsFailure() ==> MLoad(st).IsFailure()
-    {
+    requires !st.IsFailure() {
         //
         if st.Operands() >= 1
         then
             var loc := st.Peek(0) as nat;
-            // NOTE: This condition is not specified in the yellow paper.
-            // It is not clear whether that was intended or not.  However, it is
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if loc + 31 < MAX_U256
-            then
-                // Break out expanded state
-                var nst := st.Expand(loc,32);
-                // Read from expanded state
-                nst.Pop().Push(nst.Read(loc)).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Break out expanded state
+            var nst := st.Expand(loc,32);
+            // Read from expanded state
+            nst.Pop().Push(nst.Read(loc)).Next()
         else
-        State.INVALID(STACK_UNDERFLOW)
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -1040,28 +1005,14 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MStore(st: State) : State
-        requires !st.IsFailure()
-        ensures
-            (Stack.Size(st.GetStack()) >= 2 && st.Peek(0) as nat + 31 < MAX_U256)
-                <==>
-            !MStore(st).IsFailure()
-        ensures st.IsFailure() ==> MStore(st).IsFailure()
-    {
+    requires !st.IsFailure() {
         //
         if st.Operands() >= 2
         then
             var loc := st.Peek(0) as nat;
             var val := st.Peek(1);
-            // NOTE: This condition is not specified in the yellow paper.
-            // It is not clear whether that was intended or not.  However, it is
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if (loc + 31) < MAX_U256
-                then
-                // Write big endian order
-                st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Write big endian order
+            st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1076,14 +1027,10 @@ module Bytecode {
         then
             var loc := st.Peek(0) as nat;
             var val := (st.Peek(1) % 256) as u8;
-            if loc < MAX_U256
-                then
-                // Write byte
-                st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Write byte
+            st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
         else
-        State.INVALID(STACK_UNDERFLOW)
+            State.INVALID(STACK_UNDERFLOW)
     }
 
     /**
@@ -1301,18 +1248,10 @@ module Bytecode {
         then
             var m_loc := st.Peek(0) as nat;
             var len := st.Peek(1) as nat;
-            // NOTE: This condition is not specified in the yellow paper.
-            // Its not clear whether that was intended or not.  However, its
-            // impossible to trigger this in practice (due to the gas costs
-            // involved).
-            if m_loc + len < MAX_U256
-            then
-                // Construct log entry.
-                var entry := (st.PeekN(n+2)[2..],Memory.Slice(st.evm.memory, m_loc, len));
-                // Done
-                st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Construct log entry.
+            var entry := (st.PeekN(n+2)[2..],Memory.Slice(st.evm.memory, m_loc, len));
+            // Done
+            st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1374,18 +1313,13 @@ module Bytecode {
                 then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
-             // Sanity check bounds
-                if (inOffset + inSize) < MAX_U256
-                    then
-                        var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
-                        // Extract address of this account
-                        var address := st.evm.context.address;
-                        // Compute the continuation (i.e. following) state.
-                        var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
-                        // Pass back continuation.
-                        State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
-                else
-                    State.INVALID(MEMORY_OVERFLOW)
+                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+                // Extract address of this account
+                var address := st.evm.context.address;
+                // Compute the continuation (i.e. following) state.
+                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                // Pass back continuation.
+                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1407,18 +1341,13 @@ module Bytecode {
             var gas := st.Peek(0) as nat;
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,value);
-             // Sanity check bounds
-            if (inOffset + inSize) < MAX_U256
-            then
-                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
-                // Extract address of this account
-                var address := st.evm.context.address;
-                // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
-                // Pass back continuation.
-                State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+            // Extract address of this account
+            var address := st.evm.context.address;
+            // Compute the continuation (i.e. following) state.
+            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+            // Pass back continuation.
+            State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1434,15 +1363,10 @@ module Bytecode {
             // Determine amount of data to return.
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
-            // Sanity check bounds
-            if (start+len) < MAX_U256
-            then
-                // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start, len);
-                // Done
-                State.RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,substate:=st.evm.substate)
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Read out that data.
+            var data := Memory.Slice(st.evm.memory, start, len);
+            // Done
+            State.RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,substate:=st.evm.substate)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1464,22 +1388,17 @@ module Bytecode {
             var gas := st.Peek(0) as nat;
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,0);
-             // Sanity check bounds
-            if (inOffset + inSize) < MAX_U256
-            then
-                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
-                // Extract call value from enclosing context.
-                var callValue := st.evm.context.callValue;
-                // Extract sender of this account
-                var sender := st.evm.context.sender;
-                // Extract address of this account
-                var address := st.evm.context.address;
-                // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
-                // Pass back continuation.
-                State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+            // Extract call value from enclosing context.
+            var callValue := st.evm.context.callValue;
+            // Extract sender of this account
+            var sender := st.evm.context.sender;
+            // Extract address of this account
+            var address := st.evm.context.address;
+            // Compute the continuation (i.e. following) state.
+            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+            // Pass back continuation.
+            State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1537,18 +1456,13 @@ module Bytecode {
             var gas := st.Peek(0) as nat;
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,0);
-             // Sanity check bounds
-            if (inOffset + inSize) < MAX_U256
-            then
-                var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
-                // Extract address of this account
-                var address := st.evm.context.address;
-                // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
-                // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata,false,outOffset:=outOffset, outSize:=outSize)
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);
+            // Extract address of this account
+            var address := st.evm.context.address;
+            // Compute the continuation (i.e. following) state.
+            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+            // Pass back continuation.
+            State.CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata,false,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1563,15 +1477,10 @@ module Bytecode {
             // Determine amount of data to return.
             var len := st.Peek(1) as nat;
             var start := st.Peek(0) as nat;
-            // Sanity check bounds
-            if (start+len) < MAX_U256
-            then
-                // Read out that data.
-                var data := Memory.Slice(st.evm.memory, start, len);
-                // Done
-                State.REVERTS(gas:=st.evm.gas,data:=data)
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            // Read out that data.
+            var data := Memory.Slice(st.evm.memory, start, len);
+            // Done
+            State.REVERTS(gas:=st.evm.gas,data:=data)
         else
             State.INVALID(STACK_UNDERFLOW)
     }

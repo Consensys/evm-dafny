@@ -39,7 +39,7 @@ abstract module MemoryVerif_01 {
     var address := vm.Peek(0) as nat;
 
     //  address + 31 bytes fit in memory iff Store is successful.
-    assert address + 31 < MAX_U256 <==>
+    assert address + 31 < MAX_U256 ==>
       !r.IsFailure() && U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
 
     //  address + 31 bytes are already in memory. New state should be OK.
@@ -133,8 +133,8 @@ abstract module MemoryVerif_01 {
     var r := Bytecode.MLoad(vm);
     var address := vm.Peek(0) as nat;
 
-    //  address + 31 bytes fit in memory iff load is successful.
-    assert address + 31 < MAX_U256 <==>
+    //  address + 31 bytes fit in memory if load is successful.
+    assert address + 31 < MAX_U256 ==>
       !r.IsFailure() && r.Peek(0) == U256.Read(r.evm.memory.contents, address);
 
     //  address + 31 bytes are already in memory. New state should be OK.

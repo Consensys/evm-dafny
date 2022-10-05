@@ -89,8 +89,7 @@ module Context {
          * Determine the size (in bytes) of the return data from the previous call
          * associated with this context.
          */
-        function method ReturnDataSize() : nat
-        requires |this.returnData| <= MAX_U256 {
+        function method ReturnDataSize() : nat {
             |this.returnData|
         }
 
@@ -108,14 +107,13 @@ module Context {
         /**
          * Update the return data associated with this state.
          */
-        function method SetReturnData(data: seq<u8>) : Raw
-        requires |data| <= MAX_U256 {
+        function method SetReturnData(data: seq<u8>) : Raw {
            this.(returnData:=data)
         }
 
     }
 
-    type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
+    type T = c:Raw | |c.callData| <= MAX_U256
     witness Context(0,0,0,0,[],[],true,0,Info(0,0,0,0,0,0))
 
     /**

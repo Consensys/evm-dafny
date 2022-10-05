@@ -592,8 +592,7 @@ module EvmState {
          * Update the return data associated with this state.
          */
         function method SetReturnData(data: seq<u8>) : State
-        requires !IsFailure()
-        requires |data| <= MAX_U256 {
+        requires !IsFailure() {
             OK(evm.(context:=evm.context.SetReturnData(data)))
         }
 
@@ -633,8 +632,7 @@ module EvmState {
                 var exitCode := if vm.RETURNS? then 1 else 0;
                 // Extract return data (if applicable)
                 if vm.INVALID? then st.Push(0)
-                else if (outOffset + outSize) <= MAX_U256 && |vm.data| <= MAX_U256
-                then
+                else
                     // Determine amount of data to actually return
                     var m := Min(|vm.data|,outSize);
                     // Slice out that data
@@ -645,8 +643,6 @@ module EvmState {
                     var refund := if vm.RETURNS?||vm.REVERTS? then vm.gas else 0;
                     // Done
                     nst.Push(exitCode).Refund(refund).SetReturnData(vm.data).Copy(outOffset,data)
-                else
-                    INVALID(MEMORY_OVERFLOW)
             else
                 INVALID(STACK_UNDERFLOW)
         }
@@ -704,13 +700,10 @@ module EvmState {
                         var nworld := vm.world.SetCode(address,vm.data);
                         // Thread world state through
                         st.Refund(vm.gas - depositcost).Merge(nworld,vm.substate).Push(address as u256).SetReturnData([])
-                else if |vm.data| <= MAX_U256
-                then
+                else
                     // NOTE: in the event of a revert, the return data is
                     // provided back.
                     st.Refund(vm.gas).Push(0).SetReturnData(vm.data)
-                else
-                    INVALID(MEMORY_OVERFLOW)
             else
                 INVALID(STACK_UNDERFLOW)
         }
