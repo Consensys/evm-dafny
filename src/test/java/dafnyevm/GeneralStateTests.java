@@ -213,10 +213,12 @@ public class GeneralStateTests {
 			Trace actual = new Trace(elements);
 			Trace expected = instance.getTrace();
 			//
-			if(!expected.equals(actual)) {
-				// NOTE: the following is really just to help provide additional debugging support when running tests from e.g. gradle on the command line.
-				printTraceDiff(expected,actual);
-			}
+            if (!expected.equals(actual)) {
+                // NOTE: the following is really just to help provide additional debugging
+                // support when running tests from e.g. gradle on the command line.
+                System.err.println(pair);
+                printTraceDiff(expected, actual);
+            }
 			// Finally check for equality.
 			assertEquals(expected,actual);
 		}
