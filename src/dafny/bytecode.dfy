@@ -1278,16 +1278,21 @@ module Bytecode {
             var gascap := GasCalc.CreateGasCap(st);
             // Apply everything
             var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
-            // Sanity check nonce
-            if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
-            then
-                // Charge gas and increment nonce
-                var nnst := nst.UseGas(gascap).IncNonce();
-                // Pass back continuation
-                State.CREATES(nnst.evm,gascap,endowment,code,None)
+            // Check if the permission for writing has been given
+            if st.WriteProtection() == false
+                then    
+                    State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
-                // Immediate failure (nonce overflow)
-                nst.Push(0)
+                // Sanity check nonce
+                if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
+                    then
+                    // Charge gas and increment nonce
+                    var nnst := nst.UseGas(gascap).IncNonce();
+                    // Pass back continuation
+                    State.CREATES(nnst.evm,gascap,endowment,code,None)
+                else
+                    // Immediate failure (nonce overflow)
+                    nst.Push(0)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
