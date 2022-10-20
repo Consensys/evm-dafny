@@ -19,6 +19,7 @@ jobs:
           dafny-version: "3.8.1"
 
       - name: Z3 version
+        continue-on-error: true
         run: $HOME/dafny/z3/bin/z3 --version
 
       - name: Setup Gradle
