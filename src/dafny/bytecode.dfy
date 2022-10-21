@@ -1246,12 +1246,16 @@ module Bytecode {
     requires n <= 4 {
         if st.Operands() >= n+2
         then
-            var m_loc := st.Peek(0) as nat;
-            var len := st.Peek(1) as nat;
-            // Construct log entry.
-            var entry := (st.PeekN(n+2)[2..],Memory.Slice(st.evm.memory, m_loc, len));
-            // Done
-            st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
+            if st.WriteProtection() == false
+                then
+                    State.INVALID(WRITE_PROTECTION_VIOLATED)
+            else
+                var m_loc := st.Peek(0) as nat;
+                var len := st.Peek(1) as nat;
+                // Construct log entry.
+                var entry := (st.PeekN(n+2)[2..],Memory.Slice(st.evm.memory, m_loc, len));
+                // Done
+                st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
         else
             State.INVALID(STACK_UNDERFLOW)
     }
