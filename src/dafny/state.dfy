@@ -631,7 +631,7 @@ module EvmState {
                 // Calculate the exitcode
                 var exitCode := if vm.RETURNS? then 1 else 0;
                 // Extract return data (if applicable)
-                if vm.INVALID? then st.Push(0)
+                if vm.INVALID? then st.Push(0).SetReturnData([])
                 else
                     // Determine amount of data to actually return
                     var m := Min(|vm.data|,outSize);
