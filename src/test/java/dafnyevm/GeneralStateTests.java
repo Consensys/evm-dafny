@@ -129,7 +129,7 @@ public class GeneralStateTests {
 			"stStaticCall/static_callcodecallcallcode_101_2.json",
 			"stStaticCall/static_callcodecallcallcode_ABCB_RECURSIVE2.json",
 			"stStaticCall/static_CallContractToCreateContractWhichWouldCreateContractIfCalled.json",
-			"stStaticCall/static_callCreate2.json",
+			//"stStaticCall/static_callCreate2.json",
 			//"stStaticCall/static_callCreate.json",
 			"stStaticCall/static_CallEcrecover0_0input.json",
 			"stStaticCall/static_CallEcrecover0_completeReturnValue.json",
