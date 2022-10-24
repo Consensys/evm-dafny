@@ -129,7 +129,7 @@ public class GeneralStateTests {
 			"stStaticCall/static_callcodecallcallcode_101_2.json",
 			"stStaticCall/static_callcodecallcallcode_ABCB_RECURSIVE2.json",
 			"stStaticCall/static_CallContractToCreateContractWhichWouldCreateContractIfCalled.json",
-			"stStaticCall/static_callCreate2.json",
+			//"stStaticCall/static_callCreate2.json",
 			//"stStaticCall/static_callCreate.json",
 			"stStaticCall/static_CallEcrecover0_0input.json",
 			"stStaticCall/static_CallEcrecover0_completeReturnValue.json",
@@ -176,8 +176,8 @@ public class GeneralStateTests {
 			//"stStaticCall/static_log_Caller.json",
 			//"stStaticCall/static_LoopCallsDepthThenRevert2.json",
 			//"stStaticCall/static_LoopCallsDepthThenRevert3.json",
-			"stStaticCall/static_RETURN_Bounds.json",
-			"stStaticCall/static_RETURN_BoundsOOG.json",
+			//"stStaticCall/static_RETURN_Bounds.json",
+			//"stStaticCall/static_RETURN_BoundsOOG.json",
 			"dummy"
 	);
 

@@ -698,8 +698,9 @@ module EvmState {
                     else
                         // Initialise contract code for new account
                         var nworld := vm.world.SetCode(address,vm.data);
+                        var nvm := vm.substate.AccountAccessed(address);
                         // Thread world state through
-                        st.Refund(vm.gas - depositcost).Merge(nworld,vm.substate).Push(address as u256).SetReturnData([])
+                        st.Refund(vm.gas - depositcost).Merge(nworld,nvm).Push(address as u256).SetReturnData([])
                 else
                     // NOTE: in the event of a revert, the return data is
                     // provided back.
