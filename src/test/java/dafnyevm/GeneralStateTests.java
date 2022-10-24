@@ -176,8 +176,8 @@ public class GeneralStateTests {
 			//"stStaticCall/static_log_Caller.json",
 			//"stStaticCall/static_LoopCallsDepthThenRevert2.json",
 			//"stStaticCall/static_LoopCallsDepthThenRevert3.json",
-			"stStaticCall/static_RETURN_Bounds.json",
-			"stStaticCall/static_RETURN_BoundsOOG.json",
+			//"stStaticCall/static_RETURN_Bounds.json",
+			//"stStaticCall/static_RETURN_BoundsOOG.json",
 			"dummy"
 	);
 
