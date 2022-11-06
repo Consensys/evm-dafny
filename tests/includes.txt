@@ -23,3 +23,4 @@ GeneralStateTests/VMTests/vmBitwiseLogicOperation/*.json
 GeneralStateTests/VMTests/vmIOandFlowOperations/*.json
 GeneralStateTests/VMTests/vmLogTest/*.json
 GeneralStateTests/VMTests/vmTests/*.json
+GeneralStateTests/ZeroCallsRevert/*.json
