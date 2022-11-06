@@ -24,3 +24,7 @@ GeneralStateTests/VMTests/vmIOandFlowOperations/*.json
 GeneralStateTests/VMTests/vmLogTest/*.json
 GeneralStateTests/VMTests/vmTests/*.json
 GeneralStateTests/ZeroCallsRevert/*.json
+GeneralStateTests/stStaticFlagEnabled/CallWithNOTZeroValueToPrecompileFromCalledContract.json
+GeneralStateTests/stStaticFlagEnabled/StaticcallForPrecompilesIssue683.json
+GeneralStateTests/stStaticFlagEnabled/CallWithNOTZeroValueToPrecompileFromContractInitialization.json
+GeneralStateTests/stStaticFlagEnabled/CallWithNOTZeroValueToPrecompileFromTransaction.json
