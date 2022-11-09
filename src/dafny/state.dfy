@@ -584,8 +584,10 @@ module EvmState {
         /**
          * Check how many code operands are available.
          */
-        function method CodeOperands() : int
-        requires !IsFailure() {
+        function method CodeOperands(): nat
+        requires !IsFailure() 
+        requires evm.pc as nat + 1 <= Code.Size(evm.code) as nat
+        {
             (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
         }
 
