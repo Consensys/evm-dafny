@@ -11,6 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 include "util/int.dfy"
 include "util/memory.dfy"
 include "util/context.dfy"
@@ -102,9 +103,10 @@ module EvmState {
     )
 
     /**
-     * Identifiers the reason that an exceptional (i.e. INVALID) state was
-     * reached. This is not strictly part of the EVM specification (as per the
-     * Yellow Paper), but it does provide useful debugging information.
+     *  Refine the status of exceptional (i.e. INVALID) state.
+     *
+     *  This is not strictly part of the EVM specification (as per the
+     *  Yellow Paper), but it does provide useful debugging information.
      */
     datatype Error = INSUFFICIENT_GAS
         | INSUFFICIENT_FUNDS
@@ -129,7 +131,7 @@ module EvmState {
      * accordingly (along with any gas returned).
      */
     datatype State = 
-          OK(evm:T)
+          OK(evm:T)                 //  Normal execution
         | CALLS(evm:T,
                 sender: u160,        // sender
                 recipient:u160,      // recipient
@@ -147,9 +149,10 @@ module EvmState {
             initcode: seq<u8>,  // initialisation code
             salt: Option<u256>  // optional salt
         )
-        | INVALID(Error)
-        | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,substate:SubState.T)
-        | REVERTS(gas:nat,data:seq<u8>){
+        | INVALID(Error)        // exceptional halt (e.g. insufficient gas or stack operands, etc
+        | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,substate:SubState.T) //  return state
+        | REVERTS(gas:nat,data:seq<u8>) // Revert state 
+        {   
 
         /**
          * Check whether EVM has failed (e.g. due to an exception
@@ -158,7 +161,7 @@ module EvmState {
         predicate method IsFailure() { !this.OK? && !this.CALLS? }
 
         /**
-         * Extract underlying raw state.
+         * Extract underlying raw state of a non-failure state.
          */
         function method Unwrap(): T
         requires !IsFailure() {
@@ -166,7 +169,7 @@ module EvmState {
         }
 
         /**
-         * Determine number of operands on stack.
+         * Determine number of operands on stack i.e. stack size.
          */
         function method Operands() : nat
         requires !IsFailure() {
@@ -214,21 +217,21 @@ module EvmState {
         }
 
         /**
-         * Get the state of the internal stack.
+         * Extract the stack from a non-failure state.
          */
         function method GetStack(): Stack.T
         requires !IsFailure() {
             this.evm.stack
         }
 
-        /* get the value of the write protection flag from the context */
+        /* Get the write protection flag from the context in a non-failure state. */
         function method WriteProtection(): bool
         requires !IsFailure() {
             this.evm.context.writeProtection
         }
 
         // =======================================================================================
-        // Memory
+        // Memory operations
         // =======================================================================================
 
         /**
@@ -270,7 +273,13 @@ module EvmState {
         }
 
         /**
-         * Read word from byte address in memory.
+         *  Read word from address in memory.
+         *  
+         *  Assuming big-endian, read 256bits from `address`
+         *  @param  address The adress of the first byte.
+         *  @returns        The value of the 32bytes word starting at `address`.
+         *  
+         *  @note           Assuming big-endian.
          */
         function method Read(address:nat) : u256
         requires !IsFailure()
@@ -279,7 +288,12 @@ module EvmState {
         }
 
         /**
-         * Write word to byte address in memory.
+         *  Write word to byte address in memory. 
+         *
+         *  @param  address An address.
+         *  @param  val     A unsigned integer less than 2^256 - 1.
+         *  @returns        A new state with the 256bits (big-endian) encoding of
+         *                  `val` stored at [address, ..., address + 31].
          */
         function method Write(address:nat, val: u256) : State
         requires !IsFailure()
@@ -288,7 +302,12 @@ module EvmState {
         }
 
         /**
-         * Write byte to byte address in memory.
+         *  Write byte to byte address in memory.
+         *
+         *  @param  address An address.
+         *  @param  val     A unsigned integer less than 2^8 - 1.
+         *  @returns        A new state with the 8bits (big-endian) encoding of
+         *                  `val` stored at [address].
          */
         function method Write8(address:nat, val: u8) : State
         requires !IsFailure()
@@ -330,7 +349,9 @@ module EvmState {
         }
 
         /**
-         * Determine whether or not an account is considered to be "empty".
+         *  Determine whether or not an account is considered to be "empty".
+         *  
+         *  As per Yellow paper, if is the case iff code size, nonce and balance are zero.
          */
         function method IsEmpty(account:u160) : bool
         requires !IsFailure()
@@ -458,7 +479,10 @@ module EvmState {
         // =======================================================================================
 
         /**
-         * Decode next opcode from machine.
+         *  Decode opcode at pc (non-failure state).
+         *  
+         *  @returns  The opcode at location `pc` is `pc` is within range and zero otherwise. 
+         *  @note     Zero is the code for STOP and this is the specification in the Yellow Paper.
          */
         function method Decode() : u8
             requires !IsFailure() 
@@ -466,7 +490,8 @@ module EvmState {
         { Code.DecodeUint8(evm.code,evm.pc as nat) }
 
         /**
-         * Decode next opcode from machine.
+         *  Decode opcode at pc, arbitrary state.
+         *  @returns    An Option to identify whether the decoding could be performed or not.
          */
         function method OpDecode() : Option<u8>
         {
@@ -475,7 +500,9 @@ module EvmState {
         }
 
         /**
-         * Move program counter to a given location.
+         *  Move program counter to a given location.
+         *  
+         *  @note   The `pc` is a `nat` in our semantics but the result is < MAX_U256
          */
         function method Goto(k:u256) : State
         requires !IsFailure() 
@@ -485,7 +512,9 @@ module EvmState {
         }
 
         /**
-         * Move program counter to next instruction.
+         *  Move program counter to next instruction.
+         *
+         *  @note   The `pc` is a `nat` and the result of this operation may be > MAX_U256.
          */
         function method Next() : State
         requires !IsFailure() {
@@ -493,8 +522,10 @@ module EvmState {
         }
 
         /**
-        * Move program counter over k instructions / operands.
-        */
+         *  Move program counter over k instructions / operands.
+         *
+         *  @note   The `pc` is a `nat` and the result of this operation may be > MAX_U256.
+         */
         function method Skip(k:nat) : State
         requires !IsFailure() {
             var pc_k := (evm.pc as nat) + k;
@@ -506,7 +537,9 @@ module EvmState {
         // =======================================================================================
 
         /**
-         * Check capacity remaining on stack.
+         *  Check capacity remaining on stack.
+         *
+         *  @note The stack size is limited to 1024 inthe EVM.
          */
         function method Capacity() : nat
         requires !IsFailure() {
@@ -514,7 +547,7 @@ module EvmState {
         }
 
         /**
-         * Push word onto stack.
+         *  Push word onto stack.
          */
         function method Push(v:u256) : State
         requires !IsFailure()
@@ -523,8 +556,10 @@ module EvmState {
         }
 
         /**
-         * peek word from a given position on the stack, where "1" is the
-         * topmost position, "2" is the next position and so on.
+         *  Peek word from a given position on the stack.
+         *
+         *  @param  k   An index with 0 being the top of the stack.
+         *  @returns    Peek(0) is the top of the stack, Peek(1) the second element etc.
          */
         function method Peek(k:nat) : u256
         requires !IsFailure()
@@ -534,8 +569,8 @@ module EvmState {
         }
 
         /**
-         * Peek n words from the top of the stack.  This requires there are
-         * enough items on the stack.
+         *  Peek n words from the top of the stack.  This requires there are
+         *  enough items on the stack.
          */
         function method PeekN(n:nat) : (r:seq<u256>)
         requires !IsFailure()
@@ -545,7 +580,7 @@ module EvmState {
         }
 
         /**
-         * Pop word from stack.
+         *  Pop word from stack.
          */
         function method Pop() : State
         requires !IsFailure()
@@ -555,7 +590,7 @@ module EvmState {
         }
 
         /**
-         * Pop n words from stack.
+         *  Pop n words from stack.
          */
         function method PopN(n:nat) : State
         requires !IsFailure()
@@ -565,7 +600,9 @@ module EvmState {
         }
 
         /**
-         * Swap top item with kth item.
+         *  Swap top item with k+1-th item.
+         *
+         *  @example    Swap(1) will swap top element and second element.
          */
         function method Swap(k:nat) : State
         requires !IsFailure()
@@ -578,7 +615,7 @@ module EvmState {
         // =======================================================================================
 
         /**
-         * Append zero or more log entries.
+         *  Append zero or more log entries.
          */
         function method Log(entries: seq<SubState.LogEntry>) : State
         requires !IsFailure() {
@@ -586,7 +623,7 @@ module EvmState {
         }
 
         /**
-         * Check how many code operands are available.
+         *  Check how many code operands are available.
          */
         function method CodeOperands(): nat
         requires !IsFailure() 
@@ -782,7 +819,13 @@ module EvmState {
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
      */
-    function method Create(world: WorldState.T, ctx: Context.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
+    function method Create(
+        world: WorldState.T, 
+        ctx: Context.T, 
+        substate: SubState.T, 
+        initcode: seq<u8>, 
+        gas: nat, 
+        depth: nat) : State
     requires |initcode| <= Code.MAX_CODE_SIZE
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
