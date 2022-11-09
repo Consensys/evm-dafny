@@ -461,7 +461,9 @@ module EvmState {
          * Decode next opcode from machine.
          */
         function method Decode() : u8
-        requires !IsFailure() { Code.DecodeUint8(evm.code,evm.pc as nat) }
+            requires !IsFailure() 
+            ensures evm.pc > Code.Size(evm.code) as nat ==> Decode() == 0  
+        { Code.DecodeUint8(evm.code,evm.pc as nat) }
 
         /**
          * Decode next opcode from machine.
