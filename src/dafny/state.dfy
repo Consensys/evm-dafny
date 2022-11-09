@@ -478,7 +478,9 @@ module EvmState {
          * Move program counter to a given location.
          */
         function method Goto(k:u256) : State
-        requires !IsFailure() {
+        requires !IsFailure() 
+        ensures !Goto(k).IsFailure() && Goto(k).PC() <= MAX_U256 as nat
+        {
             State.OK(evm.(pc := k as nat))
         }
 
