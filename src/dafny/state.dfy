@@ -128,7 +128,8 @@ module EvmState {
      * etc). Finally, a RETURN or REVERT with return data are indicated
      * accordingly (along with any gas returned).
      */
-    datatype State = OK(evm:T)
+    datatype State = 
+          OK(evm:T)
         | CALLS(evm:T,
                 sender: u160,        // sender
                 recipient:u160,      // recipient
@@ -564,7 +565,7 @@ module EvmState {
          */
         function method Swap(k:nat) : State
         requires !IsFailure()
-        requires Operands() > k {
+        requires Operands() > k > 0 {
             OK(evm.(stack:=Stack.Swap(evm.stack,k)))
         }
 
