@@ -83,9 +83,10 @@ module Stack {
             Stack(contents:=st.contents[n..])
     }
 
-    // Swap top item and kth item
+    /** Swap top item at index 0 and the k+1-th item at index k. */
     function method Swap(st:T, k:nat) : T
-      requires Size(st) > k {
+      requires Size(st) > k > 0 
+    {
         var top := st.contents[0];
         var kth := st.contents[k];
         Stack(contents:=st.contents[0:=kth][k:=top])

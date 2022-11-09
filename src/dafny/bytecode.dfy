@@ -1222,11 +1222,15 @@ module Bytecode {
     // =====================================================================
 
     /**
-    * Swap two items on the stack
-    */
+     *  Exchange first (index 0) and k+1-th (index k) item in the stack.
+     */
     function method Swap(st: State, k: nat) : State
-    requires !st.IsFailure() {
-        //
+        requires 1 <= k <= 16
+        requires !st.IsFailure() 
+        ensures !Swap(st, k).IsFailure() ==> 
+            st.Operands() > k && 
+            Swap(st, k).GetStack() == Stack.Swap(st.GetStack(), k)
+    {
         if st.Operands() > k
         then
             st.Swap(k).Next()
