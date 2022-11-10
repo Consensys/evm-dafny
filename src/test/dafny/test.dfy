@@ -47,12 +47,9 @@ module SimpleTests {
         vm := EvmBerlin.Execute(vm);
         // MSTORE
         vm := EvmBerlin.Execute(vm);
-        // PUSH
-        vm := EvmBerlin.Execute(vm);
-        // PUSH
-        vm := EvmBerlin.Execute(vm);
-        // RETURN
-        vm := EvmBerlin.Execute(vm);
+        // PUSH ... RETURN
+        vm := EvmBerlin.ExecuteN(vm,3);
+        //
         assert vm.RETURNS?;
         //
         assert vm.data == [x];

@@ -62,8 +62,8 @@ abstract module EVM {
     }
 
     /**
-     *  Execute the next instruction.
-     *return
+     *  Execute the next instruction
+     *  return
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
@@ -72,5 +72,21 @@ abstract module EVM {
         match st.OpDecode()
           case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
           case None => State.INVALID(INVALID_OPCODE)
+    }
+
+    /**
+     *  Execute the next instruction
+     *  return
+     *  @note       If the opcode semantics/gas is not implemented, the next
+     *              state is INVALID.
+     */
+    function method ExecuteN(st:State,steps: nat := 1) : State
+    decreases steps
+    requires steps > 0
+    {
+        // Execute next instruction
+        var nst := Execute(st);
+        // Recurse as necessary
+        if steps == 1 || !nst.OK? then nst else ExecuteN(nst,steps-1)
     }
 }
