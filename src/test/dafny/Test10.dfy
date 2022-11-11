@@ -67,8 +67,8 @@ module Test10 {
         ghost var g := vm.GetStack();
 
         while count > 0
-            invariant !vm.IsFailure()
-            invariant  vm.GetStack() == g
+            invariant vm.IsExecuting()
+            invariant vm.GetStack() == g
         {
             vm := Push1(vm, a);
             vm := Push1(vm, b);
@@ -100,7 +100,7 @@ module Test10 {
         assert count == vm.Peek(0);
 
         while vm.Peek(0) > 0
-            invariant !vm.IsFailure()
+            invariant vm.IsExecuting()
             invariant Stack.Size(vm.GetStack()) > 0
             invariant count == vm.Peek(0)
             invariant vm.GetStack() == Stack.Make([count])
@@ -137,8 +137,8 @@ module Test10 {
         ghost var g := vm.GetStack();
 
         while count > 0
-            invariant !vm.IsFailure()
-            invariant  vm.GetStack() == g
+            invariant vm.IsExecuting()
+            invariant vm.GetStack() == g
         {
             vm := main4b(vm);
             count := count - 1 ;
@@ -148,9 +148,9 @@ module Test10 {
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
     method main4b(v: EvmState.State) returns (v': EvmState.State)
-        requires !v.IsFailure()
+        requires v.IsExecuting()
         requires v.Capacity() >= 2
-        ensures !v'.IsFailure() && v'.GetStack() == v.GetStack()
+        ensures v'.IsExecuting() && v'.GetStack() == v.GetStack()
     {
         v':= v;
         v' := Push1(v', 0x1);
@@ -194,7 +194,7 @@ module Test10 {
         assert count == vm.Peek(1);
 
         while vm.Peek(0) > 0
-            invariant !vm.IsFailure()
+            invariant vm.IsExecuting()
             invariant Stack.Size(vm.GetStack()) == 2
             invariant count == vm.Peek(1)
             invariant count == vm.Peek(1) >= 0
