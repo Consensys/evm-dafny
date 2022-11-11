@@ -129,6 +129,43 @@ module Test10Gas {
     }
 
     /**
+     *  A modular proof. main4a calls main4b
+     *  Compute the sum of the numbers between 1 and c.
+     *
+     *  @param  c   The number of times to iterate the loop.
+     */
+    method main4aa(c: u8, g: nat)
+        requires g >= 2*G_VERYLOW + c as nat * (7*G_VERYLOW + G_BASE) + G_BASE
+    {
+        // Initialise VM
+        var vm := EvmBerlin.InitEmpty(g);
+        ghost var count: u8 := 0;
+        
+        vm := Push1(vm, 0).UseGas(G_VERYLOW); //  [0]
+        vm := Push1(vm, c).UseGas(G_VERYLOW); //  [c, 0]
+        while vm.Peek(0) > 0
+            invariant !vm.IsFailure()
+            invariant Stack.Size(vm.GetStack()) == 2
+            invariant vm.Peek(0) as nat + count as nat == c as nat  
+            invariant vm.Peek(1) as nat == 2*count as nat 
+            invariant vm.Gas() >= (c - count) as nat * (7*G_VERYLOW + G_BASE) + G_BASE
+            decreases c - count 
+        {   //  stack is [v,count] with v == c - count
+            vm := Push1(vm, 2).UseGas(G_VERYLOW);   //  [1,v,count]
+            vm := Dup(vm, 3).UseGas(G_VERYLOW);     //  [count,2,v,count]
+            vm := Add(vm).UseGas(G_VERYLOW);        //  [count+2,v,count]
+            vm := Swap(vm, 2).UseGas(G_VERYLOW);    //  [count,v,count+2]
+            vm := Pop(vm).UseGas(G_BASE);           //  [v,count+2]
+            vm := Push1(vm, 1).UseGas(G_VERYLOW);   //  [1,v,count+2]  
+            vm := Swap(vm,1).UseGas(G_VERYLOW);     //  [v,1,count+2]
+            vm := Sub(vm).UseGas(G_VERYLOW);        //  [v-1,count+2]
+            count := count + 1;
+        }
+        vm := Pop(vm).UseGas(G_BASE);
+        assert vm.Peek(0) as nat == 2*c as nat;
+    }
+
+    /**
      *  Refines `main3` and compute the condition of the loop using the stack
      *  and the comparisons operators.
      *
