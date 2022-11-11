@@ -132,7 +132,7 @@ module Gas {
      * @param length  Number of bytes to read.
      */
     function method CostExpandBytes(st: State, nOperands: nat, locSlot: nat, length: nat) : nat
-    requires !st.IsFailure()
+    requires st.IsExecuting()
     requires nOperands > locSlot {
         if st.Operands() >= nOperands
         then
@@ -155,7 +155,7 @@ module Gas {
      * @param lenSlot Stack slot containing the number of bytes to access.
      */
     function method CostExpandRange(st: State, nOperands: nat, locSlot: nat, lenSlot: nat) : nat
-    requires !st.IsFailure()
+    requires st.IsExecuting()
     requires nOperands > locSlot && nOperands > lenSlot {
         if st.Operands() >= nOperands
         then
@@ -182,7 +182,7 @@ module Gas {
      * @param bLenSlot Stack slot containing the number of bytes to access (for second range).
      */
     function method CostExpandDoubleRange(st: State, nOperands: nat, aLocSlot: nat, aLenSlot: nat, bLocSlot: nat, bLenSlot: nat) : nat
-    requires !st.IsFailure()
+    requires st.IsExecuting()
     requires nOperands > aLocSlot && nOperands > aLenSlot
     requires nOperands > bLocSlot && nOperands > bLenSlot {
         if st.Operands() >= nOperands
@@ -202,7 +202,7 @@ module Gas {
      * differs between bytecodes (e.g. EXTCODECOPY vs CODECOPY).
      */
     function method CostCopy(st: State, lenSlot: nat) : nat
-        requires !st.IsFailure()
+        requires st.IsExecuting()
     {
         if st.Operands() > lenSlot
         then
@@ -218,7 +218,7 @@ module Gas {
      * @param st    A non-failure state.
      */
     function method CostCreate2(st: State) : nat
-        requires !st.IsFailure()
+        requires st.IsExecuting()
     {
         if st.Operands() >= 4
         then
@@ -234,7 +234,7 @@ module Gas {
      * @param st    A non-failure state.
      */
     function method CostKeccak256(st: State) : nat
-        requires !st.IsFailure()
+        requires st.IsExecuting()
     {
         if st.Operands() >= 2
         then
@@ -251,7 +251,7 @@ module Gas {
      * @param n     The number of topics being logged.
      */
     function method CostLog(st: State, n: nat) : nat
-        requires !st.IsFailure()
+        requires st.IsExecuting()
     {
         if st.Operands() >= 2
         then
@@ -271,7 +271,7 @@ module Gas {
      * @param nOperands number of operands in total required for this bytecode.
      */
     function method CallCost(st: State) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.Operands() >= 7
             then
                 var value := st.Peek(2) as nat;
@@ -288,7 +288,7 @@ module Gas {
      * @param nOperands number of operands in total required for this bytecode.
      */
     function method CallCodeCost(st: State) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.Operands() >= 7
             then
                 var value := st.Peek(2) as nat;
@@ -308,7 +308,7 @@ module Gas {
      * @param nOperands number of operands in total required for this bytecode.
      */
     function method DelegateCallCost(st: State) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.Operands() >= 6
             then
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
@@ -326,7 +326,7 @@ module Gas {
      * @param nOperands number of operands in total required for this bytecode.
      */
     function method StaticCallCost(st: State) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.Operands() >= 6
             then
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
@@ -339,7 +339,7 @@ module Gas {
      * Determine amount of gas which should be supplied to the caller.
      */
     function method CallGas(st: State, gas: nat, value: u256) : (r:nat)
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         CallGasCap(st,gas) + CallStipend(value)
     }
 
@@ -355,7 +355,7 @@ module Gas {
      * that this cannot exceed the amount of available gas!
      */
     function method CallGasCap(st: State, gas: nat) : (r:nat)
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         Min(L(st.Gas()),gas)
     }
 
@@ -363,7 +363,7 @@ module Gas {
      * Determine amount of gas which should be provide for a create.
      */
     function method CreateGasCap(st: State) : (r:nat)
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         L(st.Gas())
     }
 
@@ -375,7 +375,7 @@ module Gas {
      * paper)
      */
     function method CostCallExtra(st: State, to: u160, value: nat) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to,value)
     }
 
@@ -392,7 +392,7 @@ module Gas {
      * the yellow paper).
      */
     function method CostCallNew(st: State, to: u160, value: nat) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         // if the account is DEAD (which is the default account) or does not
         // exists, then charge G_newaccount amount of gas
         if  st.IsDead(to) && (value != 0)
@@ -405,7 +405,7 @@ module Gas {
      * Determine cost for accessing a given contract address.
      */
     function method CostExtAccount(st: State) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.Operands() >= 1
         then
             // Extract contract account
@@ -421,7 +421,7 @@ module Gas {
      * in the yellow paper).
      */
     function method CostAccess(st: State, x: u160) : nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.WasAccountAccessed(x) then G_WARMACCESS else G_COLDACCOUNTACCESS
     }
 
@@ -430,7 +430,7 @@ module Gas {
      * executing account.
      */
     function method CostSLoad(st: State) : nat
-    requires !st.IsFailure()  {
+    requires st.IsExecuting()  {
         if st.Operands() >= 1
         then
             var loc := st.Peek(0);
@@ -520,7 +520,7 @@ module Gas {
                     and the second component the amount of wei to be refunded to the originator of the call
      */
     function method CostSSTOREChargeRefund(st: State) : (nat, int)
-    requires !st.IsFailure()
+    requires st.IsExecuting()
         {
             if st.Operands() >= 2 && (st.evm.world.Exists(st.evm.context.address))
             then
@@ -553,7 +553,7 @@ module Gas {
 
     // returns the amount of gas to charge upon the execution of SSTORE
     function method CostSSTORE(st: State): nat
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         if st.Gas() <= G_CALLSTIPEND
         then
             // NOTE: The following forces an out-of-gas exception if the stipend
@@ -565,7 +565,7 @@ module Gas {
 
     // sets in the refund component of the substate the refund amount computed upon the execution of SSTORE
     function method PutRefund(st: State): State
-    requires !st.IsFailure() {
+    requires st.IsExecuting() {
         var computeRefund := CostSSTOREChargeRefund(st).1;
         st.ModifyRefundCounter(computeRefund)
         }
@@ -574,7 +574,7 @@ module Gas {
      * Determine cost for deleting a given account.
      */
     function method CostSelfDestruct(st: State) : nat
-    requires !st.IsFailure()  {
+    requires st.IsExecuting()  {
         if st.Operands() >= 1
         then
             var r := (st.Peek(0) as nat % TWO_160) as u160;
@@ -585,12 +585,12 @@ module Gas {
     }
 
     function method CostSelfDestructAccess(st: State, r: u160) : nat
-    requires !st.IsFailure()  {
+    requires st.IsExecuting()  {
         if st.WasAccountAccessed(r) then 0 else G_COLDACCOUNTACCESS
     }
 
     function method CostSelfDestructNewAccount(st: State, r: u160) : nat
-    requires !st.IsFailure()  {
+    requires st.IsExecuting()  {
         // Extract our address
         var Ia := st.evm.context.address;
         // Check whether refund can happen (or not)
@@ -598,7 +598,7 @@ module Gas {
     }
 
     function method CostExp(st: State) : nat
-    requires !st.IsFailure()  {
+    requires st.IsExecuting()  {
         if st.Operands() >= 2
         then
             var exp := st.Peek(1);

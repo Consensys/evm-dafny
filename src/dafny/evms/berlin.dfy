@@ -25,9 +25,9 @@ module EvmBerlin refines EVM {
      *  @param  g   The gas loaded in this EVM.
      *  @returns    An ready-to-use EVM.
      */
-    function method InitEmpty(gas: nat, code: seq<u8> := []): State
+    function method InitEmpty(gas: nat, code: seq<u8> := []) : (st:State)
         requires |code| <= Code.MAX_CODE_SIZE
-        ensures !InitEmpty(gas, code).IsFailure()
+        ensures st.IsExecuting()
     {
         var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
         Create(tx, map[0:=WorldState.DefaultAccount()], gas, code)
