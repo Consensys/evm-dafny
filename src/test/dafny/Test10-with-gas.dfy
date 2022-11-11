@@ -144,7 +144,7 @@ module Test10Gas {
         vm := Push1(vm, 0).UseGas(G_VERYLOW); //  [0]
         vm := Push1(vm, c).UseGas(G_VERYLOW); //  [c, 0]
         while vm.Peek(0) > 0
-            invariant !vm.IsFailure()
+            invariant vm.IsExecuting()
             invariant Stack.Size(vm.GetStack()) == 2
             invariant vm.Peek(0) as nat + count as nat == c as nat  
             invariant vm.Peek(1) as nat == 2*count as nat 
