@@ -72,8 +72,8 @@ module Test10Gas {
         ghost var st := vm.GetStack();
 
         while count > 0
-            invariant !vm.IsFailure()
-            invariant  vm.GetStack() == st
+            invariant vm.IsExecuting()
+            invariant vm.GetStack() == st
             invariant vm.Gas() >= count as nat * (3 * G_VERYLOW + G_BASE)
         {
             vm := Push1(vm, a).UseGas(G_VERYLOW);
@@ -107,7 +107,7 @@ module Test10Gas {
         assert count == vm.Peek(0);
 
         while vm.Peek(0) > 0
-            invariant !vm.IsFailure()
+            invariant vm.IsExecuting()
             invariant Stack.Size(vm.GetStack()) > 0
             invariant count == vm.Peek(0)
             invariant vm.GetStack() == Stack.Make([count])
@@ -202,7 +202,7 @@ module Test10Gas {
         assert count == vm.Peek(1);
 
         while vm.Peek(0) > 0
-            invariant !vm.IsFailure()
+            invariant vm.IsExecuting()
             invariant Stack.Size(vm.GetStack()) == 2
             invariant count == vm.Peek(1)
             invariant count == vm.Peek(1) >= 0

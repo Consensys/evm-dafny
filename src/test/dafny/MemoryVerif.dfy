@@ -40,11 +40,11 @@ abstract module MemoryVerif_01 {
 
     //  address + 31 bytes fit in memory iff Store is successful.
     assert address + 31 < MAX_U256 ==>
-      !r.IsFailure() && U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
+      r.IsExecuting() && U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
 
     //  address + 31 bytes are already in memory. New state should be OK.
     if address + 31 < vm.MemSize() <= MAX_U256 {
-      assert !r.IsFailure();
+      assert r.IsExecuting();
       //  Size is unchanged
       assert r.MemSize() == vm.MemSize();
       //  only chunk impacted is  r.evm.memory.contents[address..address + 31]
@@ -135,11 +135,11 @@ abstract module MemoryVerif_01 {
 
     //  address + 31 bytes fit in memory if load is successful.
     assert address + 31 < MAX_U256 ==>
-      !r.IsFailure() && r.Peek(0) == U256.Read(r.evm.memory.contents, address);
+      r.IsExecuting() && r.Peek(0) == U256.Read(r.evm.memory.contents, address);
 
     //  address + 31 bytes are already in memory. New state should be OK.
     if address + 31 < vm.MemSize() <= MAX_U256 {
-      assert !r.IsFailure();
+      assert r.IsExecuting();
       //  Size is unchanged
       assert r.MemSize() == vm.MemSize();
       //  Memory is unchanged
