@@ -114,10 +114,10 @@ public class GeneralStateTests {
 	        "stArgsZeroOneBalance/callNonConst.json", // #374
 	        "stStackTests/stackOverflow.json", // #375
 	        "stStackTests/stackOverflowM1.json", // #375
+	        "stBadOpcode/badOpcodes.json", // #413
+	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
-	        "stBadOpcode/badOpcodes.json",
 	        "stBadOpcode/invalidAddr.json",
-	        "stBadOpcode/undefinedOpcodeFirstByte.json", // chain id?
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
@@ -129,8 +129,6 @@ public class GeneralStateTests {
 			"stStaticCall/static_callcodecallcallcode_101_2.json",
 			"stStaticCall/static_callcodecallcallcode_ABCB_RECURSIVE2.json",
 			"stStaticCall/static_CallContractToCreateContractWhichWouldCreateContractIfCalled.json",
-			//"stStaticCall/static_callCreate2.json",
-			//"stStaticCall/static_callCreate.json",
 			"stStaticCall/static_CallEcrecover0_0input.json",
 			"stStaticCall/static_CallEcrecover0_completeReturnValue.json",
 			"stStaticCall/static_CallEcrecover0_Gas2999.json",
@@ -150,8 +148,6 @@ public class GeneralStateTests {
 			"stStaticCall/static_CallEcrecoverV_prefixed0.json",
 			"stStaticCall/static_CallIdentity_4_gas17.json",
 			"stStaticCall/static_CallIdentity_5.json",
-			//"stStaticCall/static_CallRecursiveBombLog2.json",
-			//"stStaticCall/static_CallRecursiveBombLog.json",
 			"stStaticCall/static_CallRipemd160_1.json",
 			"stStaticCall/static_CallRipemd160_2.json",
 			"stStaticCall/static_CallRipemd160_3.json",
@@ -166,18 +162,6 @@ public class GeneralStateTests {
 			"stStaticCall/StaticcallToPrecompileFromTransaction.json",
 			"stStaticCall/static_CheckOpcodes2.json",
 			"stStaticCall/static_CheckOpcodes3.json",
-			//"stStaticCall/static_log0_emptyMem.json",
-			//"stStaticCall/static_log0_logMemsizeZero.json",
-			//"stStaticCall/static_log0_nonEmptyMem.json",
-			//"stStaticCall/static_log0_nonEmptyMem_logMemSize1.json",
-			//"stStaticCall/static_log0_nonEmptyMem_logMemSize1_logMemStart31.json",
-			//"stStaticCall/static_log1_emptyMem.json",
-			//"stStaticCall/static_log1_logMemsizeZero.json",
-			//"stStaticCall/static_log_Caller.json",
-			//"stStaticCall/static_LoopCallsDepthThenRevert2.json",
-			//"stStaticCall/static_LoopCallsDepthThenRevert3.json",
-			//"stStaticCall/static_RETURN_Bounds.json",
-			//"stStaticCall/static_RETURN_BoundsOOG.json",
 			"dummy"
 	);
 
@@ -405,21 +389,15 @@ public class GeneralStateTests {
             int op = state.getOpcode();
             int depth = state.getDepth();
             long gas = state.getGas().longValueExact();
-            // NOTE: to make traces equivalent with Geth we cannot appear to have "executed"
-            // the invalid bytecode.
-            if (op != Bytecodes.INVALID) {
-                byte[] memory = state.getMemory();
-                BigInteger[] stack = (BigInteger[]) state.getStack();
-                // FIXME: this is a hack until such time as Geth actually reports storage.
-                // Map<BigInteger, BigInteger> storage = state.getStorage();
-                Map<BigInteger, BigInteger> storage = new HashMap<>();
-                // Trim the stack
-                BigInteger[] trimmed = evmtools.util.Arrays.trimFront(STACK_LIMIT, stack);
-                //
-                out.add(new Trace.Step(pc, op, depth, gas, stack.length, trimmed, memory, storage));
-            } else {
-                System.out.println("SKIPPING");
-            }
+            byte[] memory = state.getMemory();
+            BigInteger[] stack = (BigInteger[]) state.getStack();
+            // FIXME: this is a hack until such time as Geth actually reports storage.
+            // Map<BigInteger, BigInteger> storage = state.getStorage();
+            Map<BigInteger, BigInteger> storage = new HashMap<>();
+            // Trim the stack
+            BigInteger[] trimmed = evmtools.util.Arrays.trimFront(STACK_LIMIT, stack);
+            //
+            out.add(new Trace.Step(pc, op, depth, gas, stack.length, trimmed, memory, storage));
         }
 
 		@Override
