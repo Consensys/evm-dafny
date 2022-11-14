@@ -605,11 +605,14 @@ module EvmState {
         /**
          * Begin a nested contract call.
          */
-        function method CallEnter(depth: nat) : State
+        function method CallEnter(depth: nat, opcode: u8 := Opcode.CALL) : State
         requires this.CALLS?
         requires |callData| <= MAX_U256
+        // Ensure opcode is a calling opcode
+        requires opcode in {Opcode.CALL, Opcode.DELEGATECALL, Opcode.CALLCODE, Opcode.STATICCALL}
         // World state must contain this account
-        requires evm.world.Exists(sender) {
+        requires Exists(sender)
+        {
             // Extract what is needed from context
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
@@ -617,7 +620,7 @@ module EvmState {
             // Construct new context
             var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,writePermission,gasPrice,block);
             // Make the call!
-            Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1)
+            Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1,opcode)
         }
 
         /**
@@ -732,14 +735,19 @@ module EvmState {
      * @param codeAddress Address of account containing code which should be executed.
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
+     * @param opcode The opcode causing this call.
      */
-    function method Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
+    function method Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat, opcode: u8 := Opcode.CALL) : State
     // Sender account must exist
-    requires world.Exists(ctx.sender) {
+    requires world.Exists(ctx.sender)
+    // Ensure opcode makes sense
+    requires opcode in {Opcode.CALL, Opcode.DELEGATECALL, Opcode.CALLCODE, Opcode.STATICCALL} {
         // Address of called contract
         var address := ctx.address;
         // Check call depth & available balance
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) || !(ctx.writePermission || value == 0) then State.REVERTS(gas, [])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then State.REVERTS(gas, [])
+        // Check write permission
+        else if (!ctx.writePermission && value != 0 && opcode == Opcode.CALL) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(address);
