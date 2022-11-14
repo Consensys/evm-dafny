@@ -353,7 +353,7 @@ public class DafnyEvm {
 		ws = ws.IncNonce(sender);
 		// Begin the call.
         EvmState_Compile.State st = EvmState_Compile.__default.Call(ws, ctx, ss, recipient, value, gas,
-                BigInteger.ONE, (byte) Bytecodes.CALL);
+                BigInteger.ONE);
 		// Execute bytecodes!
 		st = run(0, tracer, st);
 		// Convert back into the Java API
@@ -426,17 +426,12 @@ public class DafnyEvm {
 	 * @return
 	 */
 	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.State_CALLS cc) {
-	    // Determine opcode which lead to this call (e.g. CALL, DELEGATECALL, etc).
-	    int opcode = Code_Compile.__default.DecodeUint8(cc._evm._code, cc.PC().subtract(BigInteger.ONE)) & 0xff;
 	    // Sanity check precondition for CallEnter
-        if (opcode != Bytecodes.CALL && opcode != Bytecodes.DELEGATECALL && opcode != Bytecodes.CALLCODE
-                && opcode != Bytecodes.STATICCALL) {
-            throw new IllegalArgumentException("Invalid calling bytecode (" + Integer.toHexString(opcode) + ")");
-        } else if(!cc.Exists(cc._sender)) {
+        if(!cc.Exists(cc._sender)) {
             throw new IllegalArgumentException("Non-existent sender account!");
         }
 	    //
-		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth), (byte) opcode);
+		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth));
 		// Run code within recursive call.
 		st = run(depth + 1, tracer, st);
 		// Return from call.
