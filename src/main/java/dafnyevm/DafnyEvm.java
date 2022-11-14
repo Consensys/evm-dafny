@@ -368,6 +368,7 @@ public class DafnyEvm {
 	public DafnyEvm.State<?> create() {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DafnySequence<Byte> code = DafnySequence.fromBytes(callData);
+		DafnySequence<Byte> data = DafnySequence.fromBytes(DEFAULT_DATA);
 		// Determine sender's nonce
 		BigInteger nonce = worldState.get(sender).dtor_nonce();
 		// NOTE: we do not subtract one from the nonce here, as this address is being
@@ -375,7 +376,7 @@ public class DafnyEvm {
 		BigInteger address = addr(sender,nonce);
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
-				code, true, gasPrice, blockInfo.toDafny());
+				data, true, gasPrice, blockInfo.toDafny());
 		// Construct world state
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate
