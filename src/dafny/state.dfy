@@ -138,7 +138,7 @@ module EvmState {
                 callValue: u256,     // value to transfer
                 delegateValue: u256, // apparent value in execution context
                 callData:seq<u8>,    // input data for call
-                writeProtection: bool,
+                writePermission: bool, // Permission to modify state
                 outOffset: nat,      // address to write return data
                 outSize: nat)        // bytes reserved for return data
         | CREATES(evm:T,
@@ -222,10 +222,13 @@ module EvmState {
             this.evm.stack
         }
 
-        /* get the value of the write protection flag from the context */
-        function method WriteProtection(): bool
+        /**
+         * Determine whether modifications to the world state are permitted in this
+         * context (true means writes are permitted).
+         */
+        function method WritesPermitted(): bool
         requires IsExecuting() {
-            this.evm.context.writeProtection
+            this.evm.context.writePermission
         }
 
         // =======================================================================================
@@ -612,7 +615,7 @@ module EvmState {
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,writeProtection,gasPrice,block);
+            var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,writePermission,gasPrice,block);
             // Make the call!
             Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1)
         }
@@ -664,7 +667,7 @@ module EvmState {
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
             // Construct new context
-            var ctx := Context.Create(sender,origin,address,endowment,[],evm.context.writeProtection,gasPrice,block);
+            var ctx := Context.Create(sender,origin,address,endowment,[],evm.context.writePermission,gasPrice,block);
             // Make the creation!
             Create(evm.world,ctx,evm.substate,initcode,gas,depth+1)
         }
@@ -736,7 +739,7 @@ module EvmState {
         // Address of called contract
         var address := ctx.address;
         // Check call depth & available balance
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) || !(ctx.writeProtection || value == 0) then State.REVERTS(gas, [])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) || !(ctx.writePermission || value == 0) then State.REVERTS(gas, [])
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(address);
@@ -783,7 +786,7 @@ module EvmState {
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
         // Check call depth & available balance
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writeProtection then State.REVERTS(gas,[])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writePermission then State.REVERTS(gas,[])
         // Sanity checks for existing account
         else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then State.INVALID(ACCOUNT_COLLISION)
         else

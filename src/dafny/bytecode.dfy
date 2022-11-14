@@ -1057,7 +1057,7 @@ module Bytecode {
         //
         if st.Operands() >= 2
         then
-            if st.WriteProtection() == false
+            if !st.WritesPermitted()
                 then State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
                 var loc := st.Peek(0);
@@ -1250,7 +1250,7 @@ module Bytecode {
     requires n <= 4 {
         if st.Operands() >= n+2
         then
-            if st.WriteProtection() == false
+            if !st.WritesPermitted()
                 then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
@@ -1287,7 +1287,7 @@ module Bytecode {
             // Apply everything
             var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
             // Check if the permission for writing has been given
-            if st.WriteProtection() == false
+            if !st.WritesPermitted()
                 then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
@@ -1322,7 +1322,7 @@ module Bytecode {
             var gas := st.Peek(0) as nat;
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,value);
-            if !(st.evm.context.writeProtection || value == 0)
+            if !st.WritesPermitted() && value != 0
                 then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
@@ -1332,7 +1332,7 @@ module Bytecode {
                 // Compute the continuation (i.e. following) state.
                 var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
                 // Pass back continuation.
-                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
+                State.CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writePermission,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1360,7 +1360,7 @@ module Bytecode {
             // Compute the continuation (i.e. following) state.
             var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
             // Pass back continuation.
-            State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
+            State.CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writePermission,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1411,7 +1411,7 @@ module Bytecode {
             // Compute the continuation (i.e. following) state.
             var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
             // Pass back continuation.
-            State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writeProtection,outOffset:=outOffset, outSize:=outSize)
+            State.CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writePermission,outOffset:=outOffset, outSize:=outSize)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
@@ -1423,7 +1423,7 @@ module Bytecode {
     requires st.IsExecuting() {
         if st.Operands() >= 4
             then
-                if st.WriteProtection() == false
+                if !st.WritesPermitted()
                     then State.INVALID(WRITE_PROTECTION_VIOLATED)
                 else
                     var endowment := st.Peek(0);
@@ -1507,7 +1507,7 @@ module Bytecode {
          //
         if st.Operands() >= 1
         then
-            if st.WriteProtection() == false
+            if !st.WritesPermitted()
                 then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
