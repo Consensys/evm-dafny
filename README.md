@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![made-for-VSCode](https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg)](https://code.visualstudio.com/)
 [![lemmas](https://img.shields.io/badge/Lemmas-0-yellow.svg)](https://shields.io/)
-[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3000/4000-Blue.svg)](https://shields.io/)
+[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3232/3375%20[95.7%]-Blue.svg)](https://shields.io/)
 [![Checks](https://img.shields.io/badge/DafnyVerify-Verified-orange.svg)](https://shields.io/)
 
  <!-- ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/PegaSysEng/eth2.0-dafny?style=flat) -->
