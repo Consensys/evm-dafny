@@ -24,12 +24,14 @@ module Test10 {
     import opened Int
     import opened Bytecode
     import opened EvmBerlin
+    import opened EvmState
+    import opened Opcode
     import Stack
 
     /**
-    *   A very simple linear program manipulating the stack.
-    *
-    */
+     *   A very simple linear program manipulating the stack.
+     *
+     */
     method {:test} main1()
     {
         // Initialise VM
@@ -288,5 +290,4 @@ module Test10 {
         assert Stack.Size(vm.GetStack()) == 1;
         assert vm.GetStack() == Stack.Make([0]);
     }
-
 }
