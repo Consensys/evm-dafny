@@ -1323,7 +1323,7 @@ module Bytecode {
             var gascap := GasCalc.CallGasCap(st,gas);
             var callgas := GasCalc.CallGas(st,gas,value);
             if !st.WritesPermitted() && value != 0
-                then
+            then
                     State.INVALID(WRITE_PROTECTION_VIOLATED)
             else
                 var calldata := Memory.Slice(st.evm.memory, inOffset, inSize);

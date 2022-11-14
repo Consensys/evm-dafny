@@ -114,7 +114,6 @@ public class GeneralStateTests {
 	        "stArgsZeroOneBalance/callNonConst.json", // #374
 	        "stStackTests/stackOverflow.json", // #375
 	        "stStackTests/stackOverflowM1.json", // #375
-	        "stBadOpcode/badOpcodes.json", // #413
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 	        "stBadOpcode/invalidAddr.json",
@@ -232,6 +231,9 @@ public class GeneralStateTests {
 		DafnyEvm.BlockInfo info = new DafnyEvm.BlockInfo();
 		info = info.coinBase(env.currentCoinbase);
 		info = info.timeStamp(env.currentTimestamp);
+        // NOTE: following currently replicates what Geth does (which default's to
+        // Ganache's ChainID). At some point, we'll need to fix this.
+		info = info.chainID(0x539);
 		// NOTE: following is commented out whilst trace data is generated using the
 		// "evm" tool directly, as this does not allow a block number other than zero.
 		//info = info.number(env.currentNumber);
