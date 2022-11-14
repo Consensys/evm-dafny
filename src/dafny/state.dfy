@@ -651,7 +651,7 @@ module EvmState {
                     // Done
                     nst.Push(exitCode).Refund(refund).SetReturnData(vm.data).Copy(outOffset,data)
             else
-                INVALID(STACK_UNDERFLOW)
+                INVALID(STACK_OVERFLOW)
         }
 
         /**
@@ -713,7 +713,7 @@ module EvmState {
                     // provided back.
                     st.Refund(vm.gas).Push(0).SetReturnData(vm.data)
             else
-                INVALID(STACK_UNDERFLOW)
+                INVALID(STACK_OVERFLOW)
         }
 
         /**

@@ -112,8 +112,6 @@ public class GeneralStateTests {
 	        "stArgsZeroOneBalance/callcodeNonConst.json", // #374
 	        "stArgsZeroOneBalance/delegatecallNonConst.json", // #374
 	        "stArgsZeroOneBalance/callNonConst.json", // #374
-	        "stStackTests/stackOverflow.json", // #375
-	        "stStackTests/stackOverflowM1.json", // #375
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 	        "stBadOpcode/invalidAddr.json",
