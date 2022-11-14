@@ -2,7 +2,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![made-for-VSCode](https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg)](https://code.visualstudio.com/)
 [![lemmas](https://img.shields.io/badge/Lemmas-0-yellow.svg)](https://shields.io/)
-[![Checks](https://img.shields.io/badge/DafnyVerify-Verified-darkgreen.svg)](https://shields.io/)
+[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3000/4000-Blue.svg)](https://shields.io/)
+[![Checks](https://img.shields.io/badge/DafnyVerify-Verified-orange.svg)](https://shields.io/)
 
  <!-- ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/PegaSysEng/eth2.0-dafny?style=flat) -->
 
@@ -34,7 +35,7 @@ prior experience.
 Our functional specification is also _executable_, meaning that we can
 run contracts using it and compare their output with existing clients
 (e.g. [Geth](https://geth.ethereum.org/)).  In particular, we are
-interested in comparing against the [Ethereum Reference
+interested in comparing against the Ethereum [Common Reference
 Tests](https://github.com/ethereum/tests) and have made some progress
 towards this.
 
@@ -47,9 +48,10 @@ solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)
 like [Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover)).  This
 means Dafny can prove a program is **correct** with respect to its
 specification.  To do this, Dafny requires the developer to provide
+annotations in the form of 
 [preconditions](https://en.wikipedia.org/wiki/Precondition) and
 [postconditions](https://en.wikipedia.org/wiki/Postcondition) where
-appropriate, along with [loop
+appropriate, and/or [loop
 invariants](https://en.wikipedia.org/wiki/Loop_invariant) as
 necessary.
 
@@ -59,8 +61,10 @@ can be verified._
 
 ## Example
 
+Our semantics is written as a state transformer of type `State -> State`.
+
 As a simple example, consider the following specification given for
-the [`ADD`](https://ethereum.org/en/developers/docs/evm/opcodes/)
+the semantics of the [`ADD`](https://ethereum.org/en/developers/docs/evm/opcodes/)
 bytecode:
 
 ```Dafny
@@ -68,25 +72,24 @@ bytecode:
  * Unsigned integer addition with modulo arithmetic.
  */
 function method Add(st: State) : State
-requires !st.IsFailure() {
-  var OK(vm) := st;
-  //
+requires st.IsExecuting() {
   if st.Operands() >= 2
   then
-    var lhs := st.Peek(0) as int;
-    var rhs := st.Peek(1) as int;
-    var res := (lhs + rhs) % TWO_256;
-    st.Pop().Pop().Push(res as u256).Next()
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
+      var res := (lhs + rhs) % TWO_256;
+      st.Pop().Pop().Push(res as u256).Next()
   else
-    State.INVALID
+      State.INVALID(STACK_UNDERFLOW)
 }
 ```
 
-This tells us that `ADD` requires _two operands_ on the stack
-(otherwise, the exceptional `INVALID` state is reached).  Furthermore,
+This tells us that `ADD` requires _two operands_ on the stack to be performed,
+otherwise, the exceptional state `INVALID(STACK_UNDERFLOW)` state is reached.  
+When more than two operands are on the stack, 
 addition employs _modulo arithmetic_ (hence, overflows wrap around)
-and that the final result is pushed onto the stack after the operands
-are popped.
+and the final result is pushed onto the stack after the operands
+are popped, and the program counter is advanced by 1.
 
 # Building the Code
 
