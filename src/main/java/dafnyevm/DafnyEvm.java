@@ -433,10 +433,18 @@ public class DafnyEvm {
         }
 	    //
 		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth));
-		// Run code within recursive call.
-		st = run(depth + 1, tracer, st);
-		// Return from call.
-		return cc.CallReturn(st);
+		//
+		if(st instanceof State_INVALID) {
+            // NOTE: this is in place to work around an issue with the way in which Geth
+            // reports errors for immediate failures in a contract call. Its unclear to me
+            // whether there is a better work around at this stage. See issue #374.
+	        return cc.CallReturn(st);
+		} else {
+		    // Run code within recursive call.
+		    st = run(depth + 1, tracer, st);
+		    // Return from call.
+		    return cc.CallReturn(st);
+		}
 	}
 
 	/**
