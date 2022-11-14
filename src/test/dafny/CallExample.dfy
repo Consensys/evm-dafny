@@ -53,7 +53,7 @@ module CallExamples {
         vm1 := Call(vm1);
         // >>> Contract call starts here
         {
-            var vm2 := vm1.CallEnter(1, Opcode.CALL);
+            var vm2 := vm1.CallEnter(1);
             vm2 := Pop(vm2); // force exception
             vm1 := vm1.CallReturn(vm2);
         }
