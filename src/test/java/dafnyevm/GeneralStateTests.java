@@ -121,14 +121,6 @@ public class GeneralStateTests {
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
-			"stStaticCall/static_callBasic.json",
-			"stStaticCall/static_callcallcallcode_001_2.json",
-			"stStaticCall/static_callcallcode_01_2.json",
-			"stStaticCall/static_callcallcodecall_010_2.json",
-			"stStaticCall/static_callcallcodecallcode_011_2.json",
-			"stStaticCall/static_callcodecallcallcode_101_2.json",
-			"stStaticCall/static_callcodecallcallcode_ABCB_RECURSIVE2.json",
-			"stStaticCall/static_CallContractToCreateContractWhichWouldCreateContractIfCalled.json",
 			"stStaticCall/static_CallEcrecover0_0input.json",
 			"stStaticCall/static_CallEcrecover0_completeReturnValue.json",
 			"stStaticCall/static_CallEcrecover0_Gas2999.json",
@@ -160,8 +152,6 @@ public class GeneralStateTests {
 			"stStaticCall/StaticcallToPrecompileFromCalledContract.json",
 			"stStaticCall/StaticcallToPrecompileFromContractInitialization.json",
 			"stStaticCall/StaticcallToPrecompileFromTransaction.json",
-			"stStaticCall/static_CheckOpcodes2.json",
-			"stStaticCall/static_CheckOpcodes3.json",
 			"dummy"
 	);
 

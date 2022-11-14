@@ -53,8 +53,8 @@ module Context {
         callData:seq<u8>,
         // Return data from last contract call.
         returnData: seq<u8>,
-        // Write protection
-        writeProtection: bool,
+        // Write permission (true means allowed)
+        writePermission: bool,
         // Price of gas in current environment.
         gasPrice: u256,
         // Block information in current environment.
@@ -119,8 +119,8 @@ module Context {
     /**
      * Create an initial context from various components.
      */
-    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,writeProtection:bool,gasPrice:u256, block: Block) : T
+    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,writePermission:bool,gasPrice:u256, block: Block) : T
     requires |callData| <= MAX_U256 {
-        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writeProtection:=writeProtection,gasPrice:=gasPrice,block:=block)
+        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writePermission:=writePermission,gasPrice:=gasPrice,block:=block)
     }
 }
