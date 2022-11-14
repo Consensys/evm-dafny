@@ -958,7 +958,7 @@ module Bytecode {
             else
                 State.INVALID(MEMORY_OVERFLOW)
         else
-            State.INVALID(STACK_UNDERFLOW)
+            State.INVALID(STACK_OVERFLOW)
     }
 
     /**
