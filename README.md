@@ -2,7 +2,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![made-for-VSCode](https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg)](https://code.visualstudio.com/)
 [![lemmas](https://img.shields.io/badge/Lemmas-0-yellow.svg)](https://shields.io/)
-[![Checks](https://img.shields.io/badge/DafnyVerify-Verified-darkgreen.svg)](https://shields.io/)
+[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3232/3375-Blue.svg)](https://shields.io/)
+[![Checks](https://img.shields.io/badge/DafnyVerify-Verified-orange.svg)](https://shields.io/)
 
  <!-- ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/PegaSysEng/eth2.0-dafny?style=flat) -->
 
@@ -10,7 +11,8 @@
 
 1. [Overview](#overview)
    1. [Dafny](#dafny)
-   1. [Example](#example)
+   1. [Example](#semantics-example)
+1. [Verifying Bytecode](#verifying-bytecode)
 1. [Building](#building-the-code)
 1. [Contributing](#contributing)
 1. [Resources](#resources)
@@ -34,7 +36,7 @@ prior experience.
 Our functional specification is also _executable_, meaning that we can
 run contracts using it and compare their output with existing clients
 (e.g. [Geth](https://geth.ethereum.org/)).  In particular, we are
-interested in comparing against the [Ethereum Reference
+interested in comparing against the Ethereum [Common Reference
 Tests](https://github.com/ethereum/tests) and have made some progress
 towards this.
 
@@ -47,9 +49,10 @@ solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)
 like [Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover)).  This
 means Dafny can prove a program is **correct** with respect to its
 specification.  To do this, Dafny requires the developer to provide
+annotations in the form of 
 [preconditions](https://en.wikipedia.org/wiki/Precondition) and
 [postconditions](https://en.wikipedia.org/wiki/Postcondition) where
-appropriate, along with [loop
+appropriate, and/or [loop
 invariants](https://en.wikipedia.org/wiki/Loop_invariant) as
 necessary.
 
@@ -57,10 +60,12 @@ _In this project, we are providing a specification of the Ethereum
 Virtual Machine against which other programs (e.g. in EVM Bytecode)
 can be verified._
 
-## Example
+## Semantics Example
+
+Our semantics is written as a state transformer of type `State -> State`.
 
 As a simple example, consider the following specification given for
-the [`ADD`](https://ethereum.org/en/developers/docs/evm/opcodes/)
+the semantics of the [`ADD`](https://ethereum.org/en/developers/docs/evm/opcodes/)
 bytecode:
 
 ```Dafny
@@ -68,26 +73,29 @@ bytecode:
  * Unsigned integer addition with modulo arithmetic.
  */
 function method Add(st: State) : State
-requires !st.IsFailure() {
-  var OK(vm) := st;
-  //
+requires st.IsExecuting() {
   if st.Operands() >= 2
   then
-    var lhs := st.Peek(0) as int;
-    var rhs := st.Peek(1) as int;
-    var res := (lhs + rhs) % TWO_256;
-    st.Pop().Pop().Push(res as u256).Next()
+      var lhs := st.Peek(0) as int;
+      var rhs := st.Peek(1) as int;
+      var res := (lhs + rhs) % TWO_256;
+      st.Pop().Pop().Push(res as u256).Next()
   else
-    State.INVALID
+      State.INVALID(STACK_UNDERFLOW)
 }
 ```
 
-This tells us that `ADD` requires _two operands_ on the stack
-(otherwise, the exceptional `INVALID` state is reached).  Furthermore,
+This tells us that `ADD` requires _two operands_ on the stack to be performed,
+otherwise, the exceptional state `INVALID(STACK_UNDERFLOW)` state is reached.  
+When more than two operands are on the stack, 
 addition employs _modulo arithmetic_ (hence, overflows wrap around)
-and that the final result is pushed onto the stack after the operands
-are popped.
+and the final result is pushed onto the stack after the operands
+are popped, and the program counter is advanced by 1.
 
+# Verifying Bytecode 
+
+Our EVM is written in Dafny. As a result we can instrument bytecode with some reasoning features.
+Some examples are given in [the verification examples section.](./VERIFICATION.md)
 # Building the Code
 
 This repository uses [`gradle`](https://gradle.org/) as the de facto
@@ -110,6 +118,17 @@ generate a Java implementation of the `EVM`, and run two test suites
 against it in Java.
 
 # Test Generation
+
+As the main purpose of our EVM is to reason about bytecode, we may want to have some guarantees that the proofs 
+we develop are also valid on _other_ EVM implementations: if the same code is run on another implementation then the guarantees (e.g. no stack under/overflow) that we obtain using our automated reasoning and our EVM are still valid.
+This requires to prove that the other implementation produces exactly the same computations as our EVM on all inputs and for all programs. 
+It is not practical to formally prove this kind of equivalence.
+
+However we can _compare_ the results of the execution of some bytecode on different implementations.
+If for a large number of tests two implementations give the same results (sequences of states), we have some confidence
+that the two implementations are _equivalent_.
+If our EVM yields the same results as, say the Geth's `evm` tools, then we can be confident that our proofs on the bytecode should be valid on the Geth EVM too.
+
 
 The test cases used for the Dafny EVM are stored in the `tests/`
 directory.  These are generated from the [Ethereum Consensus
