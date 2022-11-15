@@ -71,6 +71,8 @@ The source files including our formalisation of the EVM semantics, the state, ga
     <img width="600" src="https://github.com/ConsenSys/evm-dafny/tree/412-add-architecturemd-file/Arch_DafnyEvm.png" alt="Dafny-EVM Architecture">
 </p>
 
+The above image illustrates module dependencies in our system. Every file in the [Dafny-EVM Source Files] contains only one theory module named according to the File name in which it is located. In the architecture image above, an arrow from a module M1 to another module M2 depicts the dependency of M1 on M2. Note that module dependency is transitive. Moreover, modules appearing in the same color in the image are located in the same directory.  
+
 
 
 
