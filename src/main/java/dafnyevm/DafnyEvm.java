@@ -368,6 +368,7 @@ public class DafnyEvm {
 	public DafnyEvm.State<?> create() {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		DafnySequence<Byte> code = DafnySequence.fromBytes(callData);
+		DafnySequence<Byte> data = DafnySequence.fromBytes(DEFAULT_DATA);
 		// Determine sender's nonce
 		BigInteger nonce = worldState.get(sender).dtor_nonce();
 		// NOTE: we do not subtract one from the nonce here, as this address is being
@@ -375,7 +376,7 @@ public class DafnyEvm {
 		BigInteger address = addr(sender,nonce);
 		// Construct the transaction context for the call.
 		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
-				code, true, gasPrice, blockInfo.toDafny());
+				data, true, gasPrice, blockInfo.toDafny());
 		// Construct world state
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
 		// Construct initial substate
@@ -432,10 +433,18 @@ public class DafnyEvm {
         }
 	    //
 		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth));
-		// Run code within recursive call.
-		st = run(depth + 1, tracer, st);
-		// Return from call.
-		return cc.CallReturn(st);
+		//
+		if(st instanceof State_INVALID) {
+            // NOTE: this is in place to work around an issue with the way in which Geth
+            // reports errors for immediate failures in a contract call. Its unclear to me
+            // whether there is a better work around at this stage. See issue #374.
+	        return cc.CallReturn(st);
+		} else {
+		    // Run code within recursive call.
+		    st = run(depth + 1, tracer, st);
+		    // Return from call.
+		    return cc.CallReturn(st);
+		}
 	}
 
 	/**

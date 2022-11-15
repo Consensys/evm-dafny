@@ -651,7 +651,7 @@ module EvmState {
                     // Done
                     nst.Push(exitCode).Refund(refund).SetReturnData(vm.data).Copy(outOffset,data)
             else
-                INVALID(STACK_UNDERFLOW)
+                INVALID(STACK_OVERFLOW)
         }
 
         /**
@@ -691,7 +691,7 @@ module EvmState {
             if st.Capacity() >= 1
             then
                 // Extract return data (if applicable)
-                if vm.INVALID? then st.Push(0)
+                if vm.INVALID? then st.AccountAccessed(address).Push(0)
                 else if vm.RETURNS?
                 then
                     // Calculate the deposit cost
@@ -711,9 +711,9 @@ module EvmState {
                 else
                     // NOTE: in the event of a revert, the return data is
                     // provided back.
-                    st.Refund(vm.gas).Push(0).SetReturnData(vm.data)
+                    st.Refund(vm.gas).AccountAccessed(address).Push(0).SetReturnData(vm.data)
             else
-                INVALID(STACK_UNDERFLOW)
+                INVALID(STACK_OVERFLOW)
         }
 
         /**

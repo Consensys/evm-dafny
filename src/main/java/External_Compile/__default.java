@@ -85,6 +85,7 @@ public class __default {
 		byte[] Ebytes = DafnySequence.toByteArray((DafnySequence) _E);
 		BigInteger E = new BigInteger(1, Ebytes);
 		BigInteger M = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _M));
+		//System.out.println("MODEXP(" + B + "," + E + "," + M + ")");
 		BigInteger r;
 		if (M.equals(BigInteger.ZERO)) {
 			r = BigInteger.ZERO;
@@ -92,10 +93,8 @@ public class __default {
 			r = BigInteger.ONE;
 		} else {
 			r = B.modPow(E, M);
-			// Done
-			return DafnySequence.fromBytes(leftPad(r.toByteArray(),_M.length()));
 		}
-		return DafnySequence.fromBytes(r.toByteArray());
+		return DafnySequence.fromBytes(leftPad(r.toByteArray(),_M.length()));
 	}
 
 	/**
@@ -106,9 +105,15 @@ public class __default {
 	 * @return
 	 */
 	private static byte[] leftPad(byte[] bytes, int length) {
-		byte[] output = new byte[length];
-		System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
-		return output;
+	    if(length == bytes.length) {
+	        return bytes;
+	    } else if(length < bytes.length) {
+	        return Arrays.copyOfRange(bytes,0,length);
+	    } else {
+	        byte[] output = new byte[length];
+	        System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
+	        return output;
+	    }
 	}
 
 	/**
