@@ -106,40 +106,34 @@ public class GeneralStateTests {
 			"vmIOandFlowOperations/jumpi.json", // #241
 			"vmIOandFlowOperations/jumpToPush.json", // #241
 	        "stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
+	        "stStaticCall/static_CallEcrecover0_0input.json", // #338
+            "stStaticCall/static_CallEcrecover0_completeReturnValue.json", // #338
+            "stStaticCall/static_CallEcrecover0_Gas2999.json", // #338
+            "stStaticCall/static_CallEcrecover0_gas3000.json", // #338
+            "stStaticCall/static_CallEcrecover0.json", // #338
+            "stStaticCall/static_CallEcrecover0_NoGas.json", // #338
+            "stStaticCall/static_CallEcrecover0_overlappingInputOutput.json", // #338
+            "stStaticCall/static_CallEcrecover1.json", // #338
+            "stStaticCall/static_CallEcrecover2.json", // #338
+            "stStaticCall/static_CallEcrecover3.json", // #338
+            "stStaticCall/static_CallEcrecover80.json", // #338
+            "stStaticCall/static_CallEcrecoverCheckLength.json", // #338
+            "stStaticCall/static_CallEcrecoverCheckLengthWrongV.json", // #338
+            "stStaticCall/static_CallEcrecoverH_prefixed0.json", // #338
+            "stStaticCall/static_CallEcrecoverR_prefixed0.json", // #338
+            "stStaticCall/static_CallEcrecoverS_prefixed0.json", // #338
+            "stStaticCall/static_CallEcrecoverV_prefixed0.json", // #338
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
-	        "stBadOpcode/invalidAddr.json",
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
-			"stStaticCall/static_CallEcrecover0_0input.json",
-			"stStaticCall/static_CallEcrecover0_completeReturnValue.json",
-			"stStaticCall/static_CallEcrecover0_Gas2999.json",
-			"stStaticCall/static_CallEcrecover0_gas3000.json",
-			"stStaticCall/static_CallEcrecover0.json",
-			"stStaticCall/static_CallEcrecover0_NoGas.json",
-			"stStaticCall/static_CallEcrecover0_overlappingInputOutput.json",
-			"stStaticCall/static_CallEcrecover1.json",
-			"stStaticCall/static_CallEcrecover2.json",
-			"stStaticCall/static_CallEcrecover3.json",
-			"stStaticCall/static_CallEcrecover80.json",
-			"stStaticCall/static_CallEcrecoverCheckLength.json",
-			"stStaticCall/static_CallEcrecoverCheckLengthWrongV.json",
-			"stStaticCall/static_CallEcrecoverH_prefixed0.json",
-			"stStaticCall/static_CallEcrecoverR_prefixed0.json",
-			"stStaticCall/static_CallEcrecoverS_prefixed0.json",
-			"stStaticCall/static_CallEcrecoverV_prefixed0.json",
-			"stStaticCall/static_CallIdentity_4_gas17.json",
-			"stStaticCall/static_CallIdentity_5.json",
 			"stStaticCall/static_CallRipemd160_1.json",
 			"stStaticCall/static_CallRipemd160_2.json",
 			"stStaticCall/static_CallRipemd160_3.json",
 			"stStaticCall/static_CallRipemd160_3_postfixed0.json",
 			"stStaticCall/static_CallRipemd160_3_prefixed0.json",
-			"stStaticCall/static_CallRipemd160_4_gas719.json",
 			"stStaticCall/static_CallRipemd160_4.json",
-			"stStaticCall/static_CallRipemd160_5.json",
-			"stStaticCall/static_CallSha256_5.json",
 			"stStaticCall/StaticcallToPrecompileFromCalledContract.json",
 			"stStaticCall/StaticcallToPrecompileFromContractInitialization.json",
 			"stStaticCall/StaticcallToPrecompileFromTransaction.json",

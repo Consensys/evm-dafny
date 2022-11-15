@@ -1521,12 +1521,12 @@ module Bytecode {
                 var ss := st.evm.substate.AccountAccessed(r);
                 // Apply refund
                 var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
-                // Refund balance to r
-                then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
-                // Otherwise reset balance to zero
-                else st.evm.world.Withdraw(address,balance);
+                    // Refund balance to r
+                    then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
+                    // Otherwise reset balance to zero
+                    else st.evm.world.Withdraw(address,balance);
                 //
-                State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
+                State.RETURNS(gas:=st.Gas(),data:=[],world:=w,substate:=ss)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
