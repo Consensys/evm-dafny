@@ -68,7 +68,7 @@ The source files including our formalisation of the EVM semantics, the state, ga
 # Dafny-EVM Architecture
 
 <p align="center">
-    <img width="600" src="https://github.com/ConsenSys/evm-dafny/tree/412-add-architecturemd-file/resources/Arch_DafnyEvm.png" alt="Dafny-EVM Arch">
+    <img width="600" src="https://github.com/ConsenSys/evm-dafny/tree/412-add-architecturemd-file/Arch_DafnyEvm.png" alt="Dafny-EVM Architecture">
 </p>
 
 
