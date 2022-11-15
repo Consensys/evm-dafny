@@ -109,9 +109,6 @@ public class GeneralStateTests {
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #371
 			"stReturnDataTest/revertRetDataSize.json", // #371
 	        "stCreateTest/CreateCollisionResults.json", // #372
-	        "stArgsZeroOneBalance/callcodeNonConst.json", // #374
-	        "stArgsZeroOneBalance/delegatecallNonConst.json", // #374
-	        "stArgsZeroOneBalance/callNonConst.json", // #374
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 	        "stBadOpcode/invalidAddr.json",
