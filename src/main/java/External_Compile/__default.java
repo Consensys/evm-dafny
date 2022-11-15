@@ -66,8 +66,8 @@ public class __default {
 		// Compute the hash
 		RIPEMD160Digest digest = new RIPEMD160Digest();
 		digest.update(bytes, 0, bytes.length);
-		byte[] out = new byte[20];
-		digest.doFinal(out, 0);
+		byte[] out = new byte[32];
+		digest.doFinal(out, 12);
 		// Construct an (unsigned) bigint.
 		return DafnySequence.fromBytes(out);
 	}
