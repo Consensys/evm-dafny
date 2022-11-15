@@ -102,6 +102,7 @@ public class GeneralStateTests {
 	public final static List<String> IGNORES = Arrays.asList( //
 			"stExample/invalidTr.json", // Intrinsic Gas.
 			"VMTests/vmArithmeticTest/expPower256Of256.json", // performance?
+	         "VMTests/vmArithmeticTest/exp.json", // too slow?
 			"vmIOandFlowOperations/jump.json", // #241
 			"vmIOandFlowOperations/jumpi.json", // #241
 			"vmIOandFlowOperations/jumpToPush.json", // #241
@@ -123,20 +124,13 @@ public class GeneralStateTests {
             "stStaticCall/static_CallEcrecoverR_prefixed0.json", // #338
             "stStaticCall/static_CallEcrecoverS_prefixed0.json", // #338
             "stStaticCall/static_CallEcrecoverV_prefixed0.json", // #338
+            "stStaticCall/StaticcallToPrecompileFromCalledContract.json", // #338
+            "stStaticCall/StaticcallToPrecompileFromContractInitialization.json", // #338
+            "stStaticCall/StaticcallToPrecompileFromTransaction.json",  // #338
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
-			"VMTests/vmArithmeticTest/exp.json", // too slow?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
-			"stStaticCall/static_CallRipemd160_1.json",
-			"stStaticCall/static_CallRipemd160_2.json",
-			"stStaticCall/static_CallRipemd160_3.json",
-			"stStaticCall/static_CallRipemd160_3_postfixed0.json",
-			"stStaticCall/static_CallRipemd160_3_prefixed0.json",
-			"stStaticCall/static_CallRipemd160_4.json",
-			"stStaticCall/StaticcallToPrecompileFromCalledContract.json",
-			"stStaticCall/StaticcallToPrecompileFromContractInitialization.json",
-			"stStaticCall/StaticcallToPrecompileFromTransaction.json",
 			"dummy"
 	);
 
