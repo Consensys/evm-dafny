@@ -11,7 +11,8 @@
 
 1. [Overview](#overview)
    1. [Dafny](#dafny)
-   1. [Example](#example)
+   1. [Example](#semantics-example)
+1. [Verifying Bytecode](#verifying-bytecode)
 1. [Building](#building-the-code)
 1. [Contributing](#contributing)
 1. [Resources](#resources)
@@ -59,7 +60,7 @@ _In this project, we are providing a specification of the Ethereum
 Virtual Machine against which other programs (e.g. in EVM Bytecode)
 can be verified._
 
-## Example
+## Semantics Example
 
 Our semantics is written as a state transformer of type `State -> State`.
 
@@ -91,6 +92,10 @@ addition employs _modulo arithmetic_ (hence, overflows wrap around)
 and the final result is pushed onto the stack after the operands
 are popped, and the program counter is advanced by 1.
 
+# Verifying Bytecode 
+
+Our EVM is written in Dafny. As a result we can instrument bytecode with some reasoning features.
+Some examples are given in [the verification examples section.](./VERIFICATION.md)
 # Building the Code
 
 This repository uses [`gradle`](https://gradle.org/) as the de facto
