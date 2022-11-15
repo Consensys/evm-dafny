@@ -2,7 +2,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![made-for-VSCode](https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg)](https://code.visualstudio.com/)
 [![lemmas](https://img.shields.io/badge/Lemmas-0-yellow.svg)](https://shields.io/)
-[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3232/3375%20[95.7%]-Blue.svg)](https://shields.io/)
+[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3232/3375-Blue.svg)](https://shields.io/)
 [![Checks](https://img.shields.io/badge/DafnyVerify-Verified-orange.svg)](https://shields.io/)
 
  <!-- ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/PegaSysEng/eth2.0-dafny?style=flat) -->
@@ -113,6 +113,17 @@ generate a Java implementation of the `EVM`, and run two test suites
 against it in Java.
 
 # Test Generation
+
+As the main purpose of our EVM is to reason about bytecode, we may want to have some guarantees that the proofs 
+we develop are also valid on _other_ EVM implementations: if the same code is run on another implementation then the guarantees (e.g. no stack under/overflow) that we obtain using our automated reasoning and our EVM are still valid.
+This requires to prove that the other implementation produces exactly the same computations as our EVM on all inputs and for all programs. 
+It is not practical to formally prove this kind of equivalence.
+
+However we can _compare_ the results of the execution of some bytecode on different implementations.
+If for a large number of tests two implementations give the same results (sequences of states), we have some confidence
+that the two implementations are _equivalent_.
+If our EVM yields the same results as, say the Geth's `evm` tools, then we can be confident that our proofs on the bytecode should be valid on the Geth EVM too.
+
 
 The test cases used for the Dafny EVM are stored in the `tests/`
 directory.  These are generated from the [Ethereum Consensus
