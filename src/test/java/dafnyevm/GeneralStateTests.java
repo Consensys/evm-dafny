@@ -108,7 +108,6 @@ public class GeneralStateTests {
 	        "stCreate2/create2callPrecompiles.json", // #266 (address 0x1)
 			"stReturnDataTest/modexp_modsize0_returndatasize.json", // #371
 			"stReturnDataTest/revertRetDataSize.json", // #371
-	        "stCreateTest/CreateCollisionResults.json", // #372
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 	        "stBadOpcode/invalidAddr.json",
