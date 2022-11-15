@@ -11,7 +11,8 @@
 
 1. [Overview](#overview)
    1. [Dafny](#dafny)
-   1. [Example](#example)
+   1. [Example](#semantics-example)
+1. [Verifying Bytecode](#verifying-bytecode)
 1. [Building](#building-the-code)
 1. [Contributing](#contributing)
 1. [Resources](#resources)
@@ -59,7 +60,7 @@ _In this project, we are providing a specification of the Ethereum
 Virtual Machine against which other programs (e.g. in EVM Bytecode)
 can be verified._
 
-## Example
+## Semantics Example
 
 Our semantics is written as a state transformer of type `State -> State`.
 
@@ -91,6 +92,10 @@ addition employs _modulo arithmetic_ (hence, overflows wrap around)
 and the final result is pushed onto the stack after the operands
 are popped, and the program counter is advanced by 1.
 
+# Verifying Bytecode 
+
+Our EVM is written in Dafny. As a result we can instrument bytecode with some reasoning features.
+Some examples are given in [the verification examples section.](./VERIFICATION.md)
 # Building the Code
 
 This repository uses [`gradle`](https://gradle.org/) as the de facto
@@ -113,6 +118,17 @@ generate a Java implementation of the `EVM`, and run two test suites
 against it in Java.
 
 # Test Generation
+
+As the main purpose of our EVM is to reason about bytecode, we may want to have some guarantees that the proofs 
+we develop are also valid on _other_ EVM implementations: if the same code is run on another implementation then the guarantees (e.g. no stack under/overflow) that we obtain using our automated reasoning and our EVM are still valid.
+This requires to prove that the other implementation produces exactly the same computations as our EVM on all inputs and for all programs. 
+It is not practical to formally prove this kind of equivalence.
+
+However we can _compare_ the results of the execution of some bytecode on different implementations.
+If for a large number of tests two implementations give the same results (sequences of states), we have some confidence
+that the two implementations are _equivalent_.
+If our EVM yields the same results as, say the Geth's `evm` tools, then we can be confident that our proofs on the bytecode should be valid on the Geth EVM too.
+
 
 The test cases used for the Dafny EVM are stored in the `tests/`
 directory.  These are generated from the [Ethereum Consensus
