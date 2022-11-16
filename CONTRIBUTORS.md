@@ -15,7 +15,6 @@
 # Contributors
 By default contributors accept the terms of the license.
 
-At the moment the repo is private, so the following is relevant for the project contributors, presumably from CSI.
 
 # Reporting bug or requesting a feature
 
@@ -33,12 +32,14 @@ For instance, for `issue10` with title `add support for opcode CALL`, you may cr
 You can then commit and make incremental changes. 
 When the bug is fixed or feature implemented, the code can be pushed to the `master` branch via a pull request.
 
-# Finalising implemenation and Pushing to `master`
+# Finalising implementation and Pushing to `master`
 Before pushing changes to `master`, it is suggested to:
 1. run `gradle build`
 2. fix any errors that can be triggered (type checking, compile errors, code generation, failing tests)
 
 Ideally, changes to `master` should be made via a pull request.
+
+**By making a pull request you accept the terms of the license.**
 
 # Coding style
 At the moment there is no code formatter for Dafny. 
@@ -71,7 +72,7 @@ It is also helpful to add some documentation to the functions, e.g. à-la-JavaDo
 
 # Commits message
 
-We follow the [standard giudelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53) for the message guidelines.
+We follow the [standard guidelines](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53) for the message guidelines.
 It is advisable to reference the issue related to the commit if any, `see #12`, or `fixes #12`.
 
 # Refactoring
@@ -80,4 +81,4 @@ The process for pushing changes is the same as for fixing a bug or a feature.
 
 # Comments in issue threads
 
-Be mindful that comments in the issue tracker may become public if we make the repo public.
+Be mindful that comments in the issue tracker are public.
