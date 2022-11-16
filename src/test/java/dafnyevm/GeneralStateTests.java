@@ -127,6 +127,7 @@ public class GeneralStateTests {
             "stStaticCall/StaticcallToPrecompileFromCalledContract.json", // #338
             "stStaticCall/StaticcallToPrecompileFromContractInitialization.json", // #338
             "stStaticCall/StaticcallToPrecompileFromTransaction.json",  // #338
+            "stSolidityTest/TestCryptographicFunctions.json", // #338
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
