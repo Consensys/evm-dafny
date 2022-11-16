@@ -14,6 +14,8 @@ GeneralStateTests/stInitCodeTest/*.json
 GeneralStateTests/stLogTests/*.json
 GeneralStateTests/stMemoryTest/*.json
 GeneralStateTests/stNonZeroCallsTest/*.json
+GeneralStateTests/stRandom/*.json
+GeneralStateTests/stRandom2/*.json
 GeneralStateTests/stReturnDataTest/*.json
 GeneralStateTests/stRevertTest/*.json
 GeneralStateTests/stSelfBalance/*.json

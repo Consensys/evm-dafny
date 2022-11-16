@@ -135,9 +135,15 @@ public class GeneralStateTests {
             "exp_Berlin_0_2_0",
             "exp_Berlin_0_9_0",
             "expPower256Of256_Berlin_0_0_0",
+            "randomStatetest52_Berlin_0_0_0",
+            "randomStatetest64_Berlin_0_0_0",
+            "randomStatetest320_Berlin_0_0_0",
+            "randomStatetest354_Berlin_0_0_0",
+            "randomStatetest367_Berlin_0_0_0",
             // Unknowns
             "CrashingTransaction_Berlin_0_0_0",
             "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
+            "randomStatetest353_Berlin_0_0_0",
             "dummy");
 
     @ParameterizedTest
