@@ -7,6 +7,7 @@
         1. [Detecting Overflows in ADD](#detecting-overflows)
         1. [Formal Verification of the Overflow Checker](#formally-verifying-the-overflow-checker)
         1. [Results](#results-of-the-verification)
+   1. [Simple Loop](#simple-loop)
 
 # Verifying Bytecode
 
@@ -175,4 +176,162 @@ Several interesting properties:
 - third, we have proved that no exceptions related to stack under/overflow occur: otherwise we would 
 reach an `INVALID` state which is ruled out by `Post0` 
 - finally, we have proved that the code snippet correctly detects overflows in addition (`Post1` and `Post2`), and this for any values of `x` and `y` initially on the stack.
+
+## A loop program 
+
+The previous bytecode `OVERFLOW_CHECK` does not exercise a loop which makes relatively easy to verify.
+The code below iterates a loop `c` times where `c` is an arbitrary `u8`, unsigned integer over 8 bits. 
+
+We want to guarantee that this bytecode always terminates for any value of `c` and,
+a suitable initial value of gas in the EVM.
+What we are doing here is building a proof for a _family_ of bytecodes as `c` is a paramater of the bytecode itself. 
+### What this bytecode is doing
+
+The layout of the bytecode is as follows:
+
+```assembly
+-------------------
+Address|Instruction
+-------------------
+0x00:   PUSH1 c
+0x02:   JUMPDEST   <-------
+0x03:   DUP1               |
+0x04:   PUSH1 0x08         |
+0x06:   JUMPI       ----   |
+0x07:   STOP            |  |
+0x08:   JUMPDEST    <---   |
+0x09:   PUSH1, 0x01        |
+0x0b:   SWAP1              |
+0x0c:   SUB                |
+0x0d:   PUSH1, 0x02        |
+0x0f:   JUMP       --------
+```
+
+The bytecode initially pushes `c` at the top of the stack.
+Let's assume the stack is initially empty. Then after executing `0x00` it is `[c]`.
+The bytecode then iterates the following sequence of instructions:
+1. duplicates top of the stack (`0x03`) and pushes a `JUMP` target `0x08`; the stack is `[0x08, c, c]`.
+2. if `stack[1] > 0` then jump to `stack[0]` and otherwise go to next instruction `0x07`; pop two elements off the stack. This all happens with `JUMPI` at `0x06`. After this instruction the stack is `[c]`.
+3. if we have not jumped in the previous step, the next instruction is `0x07` and we halt.
+4. otherwise we are at `0x08`. From `0x08` to `0x0d`, decrement the top of the stack by one resulting in a stack `[c - 1]` and push a `JUMP` target `0x02`.
+5. `JUMP` to `0x02` and pop top of the stack, i.e. go to step 1.
+
+### Formal verification of the loop program
+
+We assume that the starting state `st` of the EVM is such that:
+1. the state is a non-failure state, with `PC=0` and there is room for pushing 3 elements on the stack (in the EVM the stack has limited capcity of 1024). This is captured by precondition `Pre0`;
+2. we initially load the EVM with some gas, precondition `Pre1`. The amount of gas needed to terminate the computation depends on the value of `c`. It may take a while to figure out the formula but Dafny will _verify_ that it is indeed enough to run the program until completion.
+3. the code to execute in the EVM is the bytecode above: this is enforced precondition `Pre2`.
+
+```dafny
+/**
+ *  A program with a loop.
+ *
+ *  @param  c   The number of times to iterate the loop.
+ *
+ *  @note       The code iterates a loop `c` times by decremeting 
+ *              a copy of `c` until it is zero. 
+ *              We prove termination on this program and also 
+ *              that it ends in a RETURN state. 
+ *
+ *              The stack content is unconstrained but there must be 
+ *              enough capacity (3) to perform this computation. 
+ */
+method Loopy(st: State, c: u8) returns (st': State)
+    requires /* Pre0 */ st.OK? && st.PC() == 0 && st.Capacity() >= 3
+    requires /* Pre1 */ st.Gas() >= 
+        3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +
+        c as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW)
+        + Gas.G_HIGH
+
+    requires /* Pre2 */ st.evm.code == Code.Create(
+        [
+        //  0x00   0x01   
+            PUSH1, c, 
+        //  0x02,     0x03   0x04 0x05
+            JUMPDEST, DUP1, PUSH1, 0x08,
+        //  0x06
+            JUMPI, 
+        //  0x07
+            STOP,
+        //  0x08      0x09   0x0a
+            JUMPDEST, PUSH1, 0x01,
+        //  0x0b   0x0c
+            SWAP1, SUB, 
+        //  0x0d   0x0e  0x0f
+            PUSH1, 0x02, JUMP 
+        ]
+    );
+
+    ensures /* Post0 */ st'.RETURNS?
+{
+    //  Execute PUSH1, c, JUMPDEST, DUP1, PUSH1, 0x08
+    st' := ExecuteN(st, 4);
+    //  verification variable to track decreasing counter
+    ghost var count : u256 := c as u256;
+    //  number of times we get into the loop.
+    ghost var n: nat := 0; 
+
+    while st'.Peek(2) > 0 
+        invariant st'.OK?
+        invariant st'.Gas() >= count as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW) + Gas.G_HIGH
+        invariant st'.PC() == 0x06 
+        invariant Stack.Size(st'.GetStack()) > 2
+        invariant count == st'.Peek(2) == st'.Peek(1)
+        invariant st'.Peek(0) == 0x08;
+        invariant st'.evm.code == st.evm.code
+        invariant n == c as nat - count as nat
+        decreases st'.Peek(2)
+    {
+        assert st'.PC() == 0x06;
+        //  Execute body of the loop
+        st':= ExecuteN(st' ,10);
+        count := count - 1;
+        n := n + 1;
+    }
+    assert st'.PC() == 0x06;
+    //  Check we iterated the loop c times.
+    assert n == c as nat;
+    //  JUMPI, STOP
+    st' := ExecuteN(st', 2);
+}
+```
+
+To verify that the loop iterates `c` times we use a _verification_ `ghost` variable `n` to record
+the number of times we hit the instruction at `0x08`.
+We also use a `ghost` variable `count` to keep track of the value of the loop counter which is actually on the stack.
+Te fact that we iterate the loop `c` times is specified as `assert c == n` at the end the method `Loopy`.
+And normal termination of the bytecode is specified by postcondition `Post0`.
+
+So **How does it work?**
+
+To verify this bytecode we instrument it.
+The execution of the bytecode is _monitored_ by some Dafny code. 
+This includes tracking whether we are iterating the loop body or not.
+We can think about the instrumented code in `Loopy` as if we had two programs: the bytecode on the EVM executed with `ExecuteN` function, and in parallel a monitor that keeps track of where we are and can observe the state of the EVM but _not influence it_.
+
+For instance, our monitor can check the value of the third element of the stack, `st'.Peek(2)` and 
+according to its value, predicts the next instruction to be executed.
+If  `st'.Peek(2)` it predicts that `PC=0x06` and the result of the `JUMPI` will be the loop body.
+We then execute 9 more steps.
+Otherwise it predicts that the next two steps will end the program (exit the `while` loop).
+
+What if our predictions are wrong? The method will not verify as we won't be able to execute 10 instructions without
+encountering an `INVALID` state.
+
+And **what do we gain from this instrumentation?**
+
+We can define _loop invariants_ which are predicates that must hold on the loop entry, and must be maintained by the loop body. 
+By doing so we instrument the bytecode with some checks at regular intervals.
+We can ensure that the loop terminates by providing a _ranking function_ (`decreases`). 
+### Results 
+Dafny successfully verifies our method `Loopy` which means that the invariants are actually loop invariants, and the postcondition and `assert` statements always hold.
+As can be readily seen, the instrumentation and specification of the correctness criteria (pre- and postconditions, invariants) is much larger than the code to execute the bytecode, but this is expected in a formal verification world.
+
+What we have proved in this bytecode is:
+- the execution always terminates,for all values of `c`, and for any initial state of the EVM that satisfies the preconditions.
+- the loop is iterated `c` times.
+- there is no stack under/overflow.
+- if we start with enough gas (`Pre1`) there is no out of gas exception.
+ 
 

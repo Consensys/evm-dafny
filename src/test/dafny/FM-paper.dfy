@@ -147,4 +147,76 @@ module Kontract1 {
             assert st'.REVERTS?;
         }
     }
+
+    /**
+     *  A progrqm with a loop.
+     *
+     *  @param  c   The number of times to iterate the loop.
+     *
+     *  @note       The code iterates a loop `c` times by decremeting 
+     *              a copy of `c` until it is zero. 
+     *              We prove termination on this program and also 
+     *              that it ends in a RETURN state. 
+     *
+     *              The stack content is unconstrained but there must be 
+     *              enough capacity (3) to perform this computation. 
+     */
+    method Loopy(st: State, c: u8) returns (st': State)
+        requires /* Pre0 */ st.OK? && st.PC() == 0 && st.Capacity() >= 3
+        requires /* Pre1 */ st.Gas() >= 
+            3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +
+            c as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW)
+            + Gas.G_HIGH
+
+        requires /* Pre2 */ st.evm.code == Code.Create(
+            [
+            //  0x00   0x01   
+                PUSH1, c, 
+            //  0x02,     0x03   0x04 0x05
+                JUMPDEST, DUP1, PUSH1, 0x08,
+            //  0x06
+                JUMPI, 
+            //  0x07
+                STOP,
+            //  0x08      0x09   0x0a
+                JUMPDEST, PUSH1, 0x01,
+            //  0x0b   0x0c
+                SWAP1, SUB, 
+            //  0x0d   0x0e  0x0f
+                PUSH1, 0x02, JUMP 
+            ]
+        );
+
+        ensures /* Post0 */ st'.RETURNS?
+    {
+        //  Execute PUSH1, c, JUMPDEST, DUP1, PUSH1, 0x08
+        st' := ExecuteN(st, 4);
+        //  verification variable to track decreasing counter.
+        ghost var count : u256 := c as u256;
+        //  number of times we get into the loop.
+        ghost var n: nat := 0; 
+
+        while st'.Peek(2) > 0 
+            invariant st'.OK?
+            invariant st'.Gas() >= count as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW) + Gas.G_HIGH
+            invariant st'.PC() == 0x06 
+            invariant Stack.Size(st'.GetStack()) > 2
+            invariant count == st'.Peek(2) == st'.Peek(1)
+            invariant st'.Peek(0) == 0x08;
+            invariant st'.evm.code == st.evm.code
+            invariant n == c as nat - count as nat
+            decreases st'.Peek(2)
+        {
+            assert st'.PC() == 0x06;
+            //  Execute body of the loop. 10 steps.
+            st':= ExecuteN(st' ,10);
+            count := count - 1;
+            n := n + 1;
+        }
+        assert st'.PC() == 0x06;
+        //  Check we iterated the loop c times.
+        assert n == c as nat;
+        //  JUMPI, STOP
+        st' := ExecuteN(st', 2);
+    }
 }
