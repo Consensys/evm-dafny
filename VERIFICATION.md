@@ -7,7 +7,10 @@
         1. [Detecting Overflows in ADD](#detecting-overflows)
         1. [Formal Verification of the Overflow Checker](#formally-verifying-the-overflow-checker)
         1. [Results](#results-of-the-verification)
-   1. [Simple Loop](#simple-loop)
+   1. [Simple Loop](#a-loop-program)
+        1. [Bytecode overview](#what-this-bytecode-is-doing)
+        1. [Formal verification of the loop program](#formal-verification-of-the-loop-program)
+        1. [Results](#results)
 
 # Verifying Bytecode
 
