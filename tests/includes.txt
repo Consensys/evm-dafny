@@ -1,5 +1,7 @@
 GeneralStateTests/stArgsZeroOneBalance/*.json
+GeneralStateTests/stAttackTest/*.json
 GeneralStateTests/stBadOpcode/*.json
+GeneralStateTests/stBugs/*.json
 GeneralStateTests/stCallCodes/*.json
 GeneralStateTests/stCodeCopyTest/*.json
 GeneralStateTests/stCodeSizeLimit/*.json
@@ -7,6 +9,7 @@ GeneralStateTests/stCreate2/*.json
 GeneralStateTests/stCreateTest/*.json
 GeneralStateTests/stExample/*.json
 GeneralStateTests/stExtCodeHash/*.json
+GeneralStateTests/stHomesteadSpecific/*.json
 GeneralStateTests/stInitCodeTest/*.json
 GeneralStateTests/stLogTests/*.json
 GeneralStateTests/stMemoryTest/*.json

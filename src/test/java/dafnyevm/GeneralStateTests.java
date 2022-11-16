@@ -131,6 +131,7 @@ public class GeneralStateTests {
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
+			"stAttackTest/CrashingTransaction.json",
 			"dummy"
 	);
 
