@@ -1,3 +1,4 @@
+GeneralStateTests/stAttackTest/ContractCreationSpam.json
 GeneralStateTests/stExample/eip1559.json
 GeneralStateTests/stMemoryTest/stackLimitPush*
 GeneralStateTests/stMemoryTest/buffer.json
