@@ -191,9 +191,11 @@ module Kontract1 {
     {
         //  Execute PUSH1, c, JUMPDEST, DUP1, PUSH1, 0x08
         st' := ExecuteN(st, 4);
-        //  verification variable to track decreasing counter
+        //  verification variable to track decreasing counter.
         ghost var count : u256 := c as u256;
-       
+        //  number of times we get into the loop.
+        ghost var n: nat := 0; 
+
         while st'.Peek(2) > 0 
             invariant st'.OK?
             invariant st'.Gas() >= count as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW) + Gas.G_HIGH
@@ -202,12 +204,18 @@ module Kontract1 {
             invariant count == st'.Peek(2) == st'.Peek(1)
             invariant st'.Peek(0) == 0x08;
             invariant st'.evm.code == st.evm.code
+            invariant n == c as nat - count as nat
             decreases st'.Peek(2)
         {
-            //  Execute body of the loop
+            assert st'.PC() == 0x06;
+            //  Execute body of the loop. 10 steps.
             st':= ExecuteN(st' ,10);
             count := count - 1;
+            n := n + 1;
         }
+        assert st'.PC() == 0x06;
+        //  Check we iterated the loop c times.
+        assert n == c as nat;
         //  JUMPI, STOP
         st' := ExecuteN(st', 2);
     }
