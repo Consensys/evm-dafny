@@ -14,6 +14,8 @@ GeneralStateTests/stInitCodeTest/*.json
 GeneralStateTests/stLogTests/*.json
 GeneralStateTests/stMemoryTest/*.json
 GeneralStateTests/stNonZeroCallsTest/*.json
+GeneralStateTests/stRandom/*.json
+GeneralStateTests/stRandom2/*.json
 GeneralStateTests/stReturnDataTest/*.json
 GeneralStateTests/stRevertTest/*.json
 GeneralStateTests/stSelfBalance/*.json
@@ -24,9 +26,10 @@ GeneralStateTests/stSStoreTest/*.json
 GeneralStateTests/stStackTests/*.json
 GeneralStateTests/stStaticCall/*.json
 GeneralStateTests/stStaticFlagEnabled/*.json
+GeneralStateTests/stZeroCallsRevert/*.json
+GeneralStateTests/stZeroCallsTest/*.json
 GeneralStateTests/VMTests/vmArithmeticTest/*.json
 GeneralStateTests/VMTests/vmBitwiseLogicOperation/*.json
 GeneralStateTests/VMTests/vmIOandFlowOperations/*.json
 GeneralStateTests/VMTests/vmLogTest/*.json
 GeneralStateTests/VMTests/vmTests/*.json
-GeneralStateTests/ZeroCallsRevert/*.json
