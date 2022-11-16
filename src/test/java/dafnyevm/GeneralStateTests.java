@@ -129,7 +129,7 @@ public class GeneralStateTests {
             "stStaticCall/StaticcallToPrecompileFromTransaction.json",  // #338
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
-			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
+//			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
 			"dummy"
 	);
