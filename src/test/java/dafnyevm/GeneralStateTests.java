@@ -129,7 +129,6 @@ public class GeneralStateTests {
             "stStaticCall/StaticcallToPrecompileFromTransaction.json",  // #338
 	        "stBadOpcode/undefinedOpcodeFirstByte.json", // #413
 			// Unknowns
-//			"stCreateTest/CREATE_ContractRETURNBigOffset.json", // large return?
 			"stSStoreTest/InitCollisionNonZeroNonce.json",
 			"dummy"
 	);
@@ -374,7 +373,7 @@ public class GeneralStateTests {
 
 		@Override
 		public void end(State.Return state) {
-			if(state.depth == 0) {
+			if(state.depth < 0) {
 				// Unfortunately, Geth only reports RETURNS on the outermost contract call.
 				out.add(new Trace.Returns(state.getReturnData()));
 			}
@@ -382,7 +381,7 @@ public class GeneralStateTests {
 
 		@Override
 		public void revert(State.Revert state) {
-			if(state.depth == 0) {
+			if(state.depth < 0) {
 				// Unfortunately, Geth only reports REVERTS on the outermost contract call.
 				out.add(new Trace.Reverts(state.getReturnData()));
 			}
@@ -391,7 +390,7 @@ public class GeneralStateTests {
 		@Override
 		public void exception(State.Invalid state) {
 			Trace.Exception.Error code = toErrorCode(state.getErrorCode());
-			if(!ignored(code)) {
+			if(state.depth != 0 && !ignored(code)) {
 				out.add(new Trace.Exception(code));
 			}
 		}
@@ -430,7 +429,9 @@ public class GeneralStateTests {
 			return Trace.Exception.Error.INSUFFICIENT_FUNDS;
 		} else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
 			return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
-		} else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
+		} else if (err instanceof EvmState_Compile.Error_CODESIZE__EXCEEDED) {
+            return Trace.Exception.Error.CODESIZE_EXCEEDED;
+        } else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
 			return Trace.Exception.Error.ACCOUNT_COLLISION;
 		} else if (err instanceof EvmState_Compile.Error_WRITE__PROTECTION__VIOLATED) {
             return Trace.Exception.Error.WRITE_PROTECTION;
