@@ -3,6 +3,12 @@ GeneralStateTests/stExample/eip1559.json
 GeneralStateTests/stEIP2930/coinbaseT01.json
 GeneralStateTests/stMemoryTest/stackLimitPush*
 GeneralStateTests/stMemoryTest/buffer.json
+GeneralStateTests/stMemoryStressTest/CALL_Bounds.json
+GeneralStateTests/stMemoryStressTest/CALLCODE_Bounds.json
+GeneralStateTests/stMemoryStressTest/DELEGATECALL_Bounds.json
+GeneralStateTests/stMemoryStressTest/static_CALL_Bounds.json
+GeneralStateTests/stSpecialTest/block504980.json
+GeneralStateTests/stQuadraticComplexityTest/*.json
 GeneralStateTests/stCreate2/CREATE2_Bounds*.json
 GeneralStateTests/stCreateTest/CreateOOGafterMaxCodesize.json
 GeneralStateTests/stShift/shiftSignedCombinations.json
