@@ -490,7 +490,7 @@ module Bytecode {
     /**
      * Right shift operation.
      */
-    function method {:verify false} Shr(st: State) : State
+    function method {:verify true} Shr(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
