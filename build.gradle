@@ -82,6 +82,8 @@ test {
     inputs.files(fileTree('tests') { include '**/*.json' } )
     // Ensure can see stdout
     testLogging.showStandardStreams = true
+    // Ensure enough memory
+    jvmArgs '-Xmx2G'
     //
     useJUnitPlatform()
     filter {
