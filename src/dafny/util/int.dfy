@@ -416,7 +416,12 @@ module U256 {
     import U64
     import U128
 
-    function method Shl(lhs: u256, rhs: u256) : u256 {
+    /** An axiom stating that a bv256 converted as a nat is bounded by 2^256. */
+    lemma {:axiom} as_bv256_as_u256(v: bv256)
+        ensures v as nat < TWO_256
+
+    function method Shl(lhs: u256, rhs: u256) : u256 
+    {
         var lbv := lhs as bv256;
         // NOTE: unclear whether shifting is optimal choice here.
         var res := if rhs < 256 then (lbv << rhs) else 0;
