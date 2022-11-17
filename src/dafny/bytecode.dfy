@@ -409,7 +409,7 @@ module Bytecode {
     /**
     * Bitwise OR operation.
     */
-    function method {:verify true} Or(st: State) : State
+    function method Or(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
@@ -426,7 +426,7 @@ module Bytecode {
     /**
     * Bitwise XOR operation.
     */
-    function method {:verify true} Xor(st: State) : State
+    function method Xor(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
@@ -490,7 +490,7 @@ module Bytecode {
     /**
      * Right shift operation.
      */
-    function method {:verify true} Shr(st: State) : State
+    function method Shr(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
