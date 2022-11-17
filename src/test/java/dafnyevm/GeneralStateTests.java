@@ -126,6 +126,7 @@ public class GeneralStateTests {
             "exp_Berlin_0_(1|2|9)_0",
             "expPower256Of256_Berlin_0_0_0",
             "randomStatetest(52|64|320|354|367)_Berlin_0_0_0",
+            "gasCostExp_Berlin_0_8_0",
             // Unknowns
             "CrashingTransaction_Berlin_0_0_0",
             "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
@@ -156,6 +157,8 @@ public class GeneralStateTests {
             "CallEcrecoverCheckLengthWrongV_Berlin_0_0_0",
             "sec80_Berlin_0_0_0",
             "randomStatetest353_Berlin_0_0_0",
+            "vitalikTransactionTest_Berlin_0_0_0",
+            "manualCreate_Berlin_0_[012]_0",
             "dummy");
 
     @ParameterizedTest
