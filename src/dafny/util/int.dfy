@@ -570,11 +570,13 @@ module I256 {
 
     // Shift Arithmetic Right.  This implementation follows the Yellow Paper quite
     // accurately.
-    function method {:verify false} Sar(lhs: i256, rhs: u256) : i256 {
+    function method Sar(lhs: i256, rhs: u256): i256 {
         if rhs == 0 then lhs
         else if rhs < 256
         then
+            assert 0 < rhs < 256;
             var r := U256.Shl(1,rhs);
+            ShiftYieldsNonZero(rhs);
             ((lhs as int) / (r as int)) as i256
         else if lhs < 0 then -1
         else 0
