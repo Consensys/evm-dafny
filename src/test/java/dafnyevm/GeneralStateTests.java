@@ -122,8 +122,9 @@ public class GeneralStateTests {
             "static_CallEcrecoverV_prefixed0_Berlin_0_0_0",
             "TestCryptographicFunctions_Berlin_0_0_0",
             "undefinedOpcodeFirstByte_Berlin_0_0_0",
-            // #265
+            // #455
             "MSTORE_Bounds2_Berlin_(0|1)_0_0",
+            "modexp_Berlin_[0123]_(2|28|29|30|36|37)_0", // int overflow
             // Performance
             "exp_Berlin_0_(1|2|9)_0",
             "expPower256Of256_Berlin_0_0_0",
@@ -132,8 +133,6 @@ public class GeneralStateTests {
             // Unknowns
             "CrashingTransaction_Berlin_0_0_0",
             "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
-            "modexp_Berlin_[0-9_]*",
-            "modexpTests_Berlin_0_1_0",
             "blake2B_Berlin_[0-9_]*",
             "idPrecomps_Berlin_0_[4-7]_0",
             "CALLBlake2f_Berlin_[0-9_]*",

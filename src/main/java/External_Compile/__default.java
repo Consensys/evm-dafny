@@ -85,12 +85,10 @@ public class __default {
 		byte[] Ebytes = DafnySequence.toByteArray((DafnySequence) _E);
 		BigInteger E = new BigInteger(1, Ebytes);
 		BigInteger M = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _M));
-		//System.out.println("MODEXP(" + B + "," + E + "," + M + ")");
+//		System.out.println("MODEXP(" + B + "," + E + "," + M + ")");
 		BigInteger r;
 		if (M.equals(BigInteger.ZERO)) {
 			r = BigInteger.ZERO;
-		} else if (B.equals(BigInteger.ZERO) && E.equals(BigInteger.ZERO)) {
-			r = BigInteger.ONE;
 		} else {
 			r = B.modPow(E, M);
 		}
