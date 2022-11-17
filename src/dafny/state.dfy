@@ -169,7 +169,7 @@ module EvmState {
         /**
          * Determine number of operands on stack.
          */
-        function method Operands() : nat
+        function method Operands() : nat 
         requires IsExecuting() {
             Stack.Size(evm.stack)
         }
