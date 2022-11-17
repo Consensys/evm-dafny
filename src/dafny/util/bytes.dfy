@@ -99,6 +99,22 @@ module Bytes {
       else Padding(len)
     }
 
+    /** Converts a sequence of bytes into a u256.
+     *  
+     *  @param  bytes   A sequence of bytes.
+     *  @returns        The big-endian and 0-left-padded value on 256 bits.
+     */
+    function method ConvertBytesTo256(bytes: seq<u8>): u256 
+        requires 0 < |bytes| <= 32
+    {
+        if |bytes| == 1 then (bytes[0] as u256) 
+        else if |bytes| == 2 then (ReadUint16(bytes,0) as u256)
+        else if |bytes| <= 4 then (ReadUint32(LeftPad(bytes,4),0) as u256)
+        else if |bytes| <= 8 then (ReadUint64(LeftPad(bytes,8),0) as u256)
+        else if |bytes| <= 16 then (ReadUint128(LeftPad(bytes,16),0) as u256)
+        else ReadUint256(LeftPad(bytes,32),0)
+    }
+
     /**
      * Construct a sequence of an arbitrary sized padded out with zeros.
      */
