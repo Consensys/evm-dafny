@@ -552,6 +552,22 @@ module I256 {
         Int.Rem(lhs as int, rhs as int) as i256
     }
 
+    /**
+     *  Shifting 1 left less than 256 times produces a non-zero value.
+     *
+     *  More generally, shifting-left 1 less than k times over k bits 
+     *  yield a non-zero number.
+     *
+     *  @example    over 2 bits, left-shift 1 once: 01 -> 10
+     *  @example    over 4 bits, left-shift 1 3 times: 0001 -> 0010 -> 0100 -> 1000
+     */
+    lemma ShiftYieldsNonZero(x: u256) 
+        requires 0 < x < 256 
+        ensures U256.Shl(1, x) > 0 
+    {
+        //  Thanks Dafny.
+    }
+
     // Shift Arithmetic Right.  This implementation follows the Yellow Paper quite
     // accurately.
     function method {:verify false} Sar(lhs: i256, rhs: u256) : i256 {
