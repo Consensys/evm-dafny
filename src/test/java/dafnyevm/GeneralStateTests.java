@@ -122,6 +122,8 @@ public class GeneralStateTests {
             "static_CallEcrecoverV_prefixed0_Berlin_0_0_0",
             "TestCryptographicFunctions_Berlin_0_0_0",
             "undefinedOpcodeFirstByte_Berlin_0_0_0",
+            // #265
+            "MSTORE_Bounds2_Berlin_(0|1)_0_0",
             // Performance
             "exp_Berlin_0_(1|2|9)_0",
             "expPower256Of256_Berlin_0_0_0",
@@ -159,6 +161,8 @@ public class GeneralStateTests {
             "randomStatetest353_Berlin_0_0_0",
             "vitalikTransactionTest_Berlin_0_0_0",
             "manualCreate_Berlin_0_[012]_0",
+            "CreateTransactionEOF1_Berlin_0_[0123]_0",
+            "Opcodes_TransactionInit_Berlin_0_131_0",
             "dummy");
 
     @ParameterizedTest
