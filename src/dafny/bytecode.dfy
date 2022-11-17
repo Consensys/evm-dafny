@@ -409,13 +409,14 @@ module Bytecode {
     /**
     * Bitwise OR operation.
     */
-    function method {:verify false} Or(st: State) : State
+    function method Or(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
         then
             var lhs := st.Peek(0) as bv256;
             var rhs := st.Peek(1) as bv256;
+            U256.as_bv256_as_u256(lhs | rhs);
             var res := (lhs | rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
@@ -425,13 +426,14 @@ module Bytecode {
     /**
     * Bitwise XOR operation.
     */
-    function method {:verify false} Xor(st: State) : State
+    function method Xor(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
         then
             var lhs := st.Peek(0) as bv256;
             var rhs := st.Peek(1) as bv256;
+            U256.as_bv256_as_u256(lhs ^ rhs);
             var res := (lhs ^ rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
@@ -488,7 +490,7 @@ module Bytecode {
     /**
      * Right shift operation.
      */
-    function method {:verify false} Shr(st: State) : State
+    function method Shr(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
