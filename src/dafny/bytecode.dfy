@@ -409,13 +409,14 @@ module Bytecode {
     /**
     * Bitwise OR operation.
     */
-    function method {:verify false} Or(st: State) : State
+    function method Or(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
         then
             var lhs := st.Peek(0) as bv256;
             var rhs := st.Peek(1) as bv256;
+            U256.as_bv256_as_u256(lhs | rhs);
             var res := (lhs | rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
@@ -425,13 +426,14 @@ module Bytecode {
     /**
     * Bitwise XOR operation.
     */
-    function method {:verify false} Xor(st: State) : State
+    function method Xor(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
         then
             var lhs := st.Peek(0) as bv256;
             var rhs := st.Peek(1) as bv256;
+            U256.as_bv256_as_u256(lhs ^ rhs);
             var res := (lhs ^ rhs) as u256;
             st.Pop().Pop().Push(res).Next()
         else
@@ -488,7 +490,7 @@ module Bytecode {
     /**
      * Right shift operation.
      */
-    function method {:verify false} Shr(st: State) : State
+    function method Shr(st: State) : State
     requires st.IsExecuting() {
         //
         if st.Operands() >= 2
@@ -1137,8 +1139,9 @@ module Bytecode {
     }
 
     /**
-     * Marks a valid destination for a jump, but otherwise has no effect
-     * on machine state.
+     *  Marks a valid destination for a jump, but otherwise has no effect
+     *  on machine state, except incrementing PC.
+     *  Equivalent to SKIP instruction semantics-wise. 
      */
     function method JumpDest(st: State) : State
     requires st.IsExecuting() {
@@ -1150,8 +1153,41 @@ module Bytecode {
     // =====================================================================
 
     /**
-    * Push one byte onto stack.
-    */
+     *  Push bytes on the stack.
+     *  
+     *  @param st   A state.
+     *  @param k    The number of bytes to push.
+     *
+     *  @note       The semantics of the EVM does not seem to require 
+     *              that k bytes are following the current OPCODE, PUSHk.
+     *              So a number of bytes is read and left-padded if not enough
+     *              are after PUSHk, and a value is pushed on the stack even
+     *              not enough (< k) bytes are available in the code after PUSHk.
+     *              As the PC is advanced by k, the next PC will be outside 
+     *              the code range, and the next opcode to be executed will be defaulted
+     *              to 0 (zero) which is the STOP opcode.
+     *              In summary: if m < k bytes are following a PUSHk opcode, 
+     *              a zero-left-padded value of m bytes is pushed on the stack, and 
+     *              the next instruction is STOP.
+     */
+    function method Push(st: State, k: nat) : State
+    requires k > 0 && k <= 32 
+    requires st.IsExecuting()
+    {
+        if st.Capacity() >= 1 
+        then
+            var bytes := Code.Slice(st.evm.code, (st.evm.pc+1), k);
+            assert 0 < |bytes| <= 32;
+            var k := Bytes.ConvertBytesTo256(bytes);
+            st.Push(k).Skip(|bytes|+1)
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    
+    /**
+     * Push one byte onto stack.
+     */
     function method Push1(st: State, k: u8) : State
     requires st.IsExecuting() {
         //
@@ -1178,24 +1214,24 @@ module Bytecode {
     /**
      * Push n bytes onto stack.
      */
-    function method Push(st: State, bytes: seq<u8>) : State
-    requires st.IsExecuting()
-    requires |bytes| > 0 && |bytes| <= 32 {
-        //
-        if st.Capacity() >= 1
-        then
-            var k := if |bytes| == 1 then (bytes[0] as u256)
-            else if |bytes| == 2 then (Bytes.ReadUint16(bytes,0) as u256)
-            else if |bytes| <= 4 then (Bytes.ReadUint32(Bytes.LeftPad(bytes,4),0) as u256)
-            else if |bytes| <= 8 then (Bytes.ReadUint64(Bytes.LeftPad(bytes,8),0) as u256)
-            else if |bytes| <= 16 then (Bytes.ReadUint128(Bytes.LeftPad(bytes,16),0) as u256)
-            else
-                Bytes.ReadUint256(Bytes.LeftPad(bytes,32),0);
-            // Done
-            st.Push(k).Skip(|bytes|+1)
-        else
-            State.INVALID(STACK_OVERFLOW)
-    }
+    // function method PushBytes(st: State, bytes: seq<u8>) : State
+    // requires st.IsExecuting()
+    // requires |bytes| > 0 && |bytes| <= 32 {
+    //     //
+    //     if st.Capacity() >= 1
+    //     then
+    //         var k := if |bytes| == 1 then (bytes[0] as u256)
+    //         else if |bytes| == 2 then (Bytes.ReadUint16(bytes,0) as u256)
+    //         else if |bytes| <= 4 then (Bytes.ReadUint32(Bytes.LeftPad(bytes,4),0) as u256)
+    //         else if |bytes| <= 8 then (Bytes.ReadUint64(Bytes.LeftPad(bytes,8),0) as u256)
+    //         else if |bytes| <= 16 then (Bytes.ReadUint128(Bytes.LeftPad(bytes,16),0) as u256)
+    //         else
+    //             Bytes.ReadUint256(Bytes.LeftPad(bytes,32),0);
+    //         // Done
+    //         st.Push(k).Skip(|bytes|+1)
+    //     else
+    //         State.INVALID(STACK_OVERFLOW)
+    // }
 
     // =====================================================================
     // 80s: Duplication Operations
@@ -1521,12 +1557,12 @@ module Bytecode {
                 var ss := st.evm.substate.AccountAccessed(r);
                 // Apply refund
                 var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
-                // Refund balance to r
-                then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
-                // Otherwise reset balance to zero
-                else st.evm.world.Withdraw(address,balance);
+                    // Refund balance to r
+                    then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
+                    // Otherwise reset balance to zero
+                    else st.evm.world.Withdraw(address,balance);
                 //
-                State.RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=ss)
+                State.RETURNS(gas:=st.Gas(),data:=[],world:=w,substate:=ss)
         else
             State.INVALID(STACK_UNDERFLOW)
     }
