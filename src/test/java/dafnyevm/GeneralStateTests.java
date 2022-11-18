@@ -162,6 +162,7 @@ public class GeneralStateTests {
             "manualCreate_Berlin_0_[012]_0",
             "CreateTransactionEOF1_Berlin_0_[0123]_0",
             "Opcodes_TransactionInit_Berlin_0_131_0",
+            "eip1559_Berlin_0_0_0",
             "ecmul_.*",
             "ecadd_.*",
             "ecpairing.*",

@@ -2,7 +2,6 @@ GeneralStateTests/stAttackTest/ContractCreationSpam.json
 GeneralStateTests/stChainId/chainIdGasCost.json
 GeneralStateTests/stChainId/chainId.json
 GeneralStateTests/stCreate2/CREATE2_Bounds*.json
-GeneralStateTests/stCreateTest/CreateOOGafterMaxCodesize.json
 GeneralStateTests/stEIP1559/lowFeeCap.json
 GeneralStateTests/stEIP1559/lowGasPriceOldTypes.json
 GeneralStateTests/stEIP1559/outOfFunds.json
@@ -15,7 +14,6 @@ GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_callsItself.
 GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_calls.json
 GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_init.json
 GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_send.json
-GeneralStateTests/stExample/eip1559.json
 GeneralStateTests/stMemoryStressTest/CALL_Bounds2a.json
 GeneralStateTests/stMemoryStressTest/CALL_Bounds2.json
 GeneralStateTests/stMemoryStressTest/CALL_Bounds.json
@@ -32,8 +30,6 @@ GeneralStateTests/stMemoryStressTest/MLOAD_Bounds.json
 GeneralStateTests/stMemoryStressTest/static_CALL_Bounds2a.json
 GeneralStateTests/stMemoryStressTest/static_CALL_Bounds2.json
 GeneralStateTests/stMemoryStressTest/static_CALL_Bounds.json
-GeneralStateTests/stMemoryTest/buffer.json
-GeneralStateTests/stMemoryTest/stackLimitPush*
 GeneralStateTests/stNonZeroCallsTest/NonZeroValue_TransactionCALL.json
 GeneralStateTests/stNonZeroCallsTest/NonZeroValue_TransactionCALLwithData.json
 GeneralStateTests/stPreCompiledContracts2/modexpRandomInput.json
@@ -50,7 +46,6 @@ GeneralStateTests/stRandom/randomStatetest177.json
 GeneralStateTests/stRandom/randomStatetest205.json
 GeneralStateTests/stRandom/randomStatetest306.json
 GeneralStateTests/stShift/shiftCombinations.json
-GeneralStateTests/stShift/shiftSignedCombinations.json
 GeneralStateTests/stSolidityTest/CallInfiniteLoop.json
 GeneralStateTests/stSpecialTest/block504980.json
 GeneralStateTests/stSpecialTest/OverflowGasMakeMoney.json
