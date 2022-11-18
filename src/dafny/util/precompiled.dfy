@@ -45,12 +45,26 @@ module Precompiled {
     // (1) ECDSA Recover
     // ========================================================================
     const G_ECDSA := 3000;
-
+    /**
+     * Constant as defined in the Yellow Paper
+     */
+    const SECP256K1N : u256 := 115792089237316195423570985008687907852837564279074904382605163141518161494337;
     /**
      * Key recovery.
      */
     function method CallEcdsaRecover(data: seq<u8>) : Option<(seq<u8>,nat)> {
-        Some((data, G_ECDSA))
+        var h := Bytes.Slice(data,0,32);
+        var v := Bytes.ReadUint256(data,32);
+        var r := Bytes.ReadUint256(data,64);
+        var s := Bytes.ReadUint256(data,96);
+        // Sanity checks
+        var key := if !(v in {27,28}) || r == 0 || r >= SECP256K1N || s == 0 || s >= SECP256K1N
+        then
+            []
+        else
+            External.ECDSARecover(h,v as u8,r,s);
+        //
+        Some((key, G_ECDSA))
     }
 
     // ========================================================================

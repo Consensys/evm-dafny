@@ -45,8 +45,6 @@ public abstract class Word {
 		bytes = trim(n,bytes);
 		//
 		if (bytes.length > n) {
-			System.out.println("GOT: " + bytes.length);
-			System.out.println("BYTES: " + Arrays.toString(bytes));
 			throw new IllegalArgumentException("invalid byte array (too big)");
 		}
 		this.bytes = new byte[n];
