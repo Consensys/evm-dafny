@@ -76,14 +76,3 @@ The source files including our formalisation of the EVM semantics, the state, ga
 - [`extern.dfy`](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/util/extern.dfy) interfaces Dafny with Java.
 
 
- 
-
-
-
-
-
-
-
-
-
-
