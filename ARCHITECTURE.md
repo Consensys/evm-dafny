@@ -34,7 +34,7 @@ We organize the [Source Files](#sourceFiles) of the Dafny-EVM according to a thr
 The architecture of the [Source Files](#sourceFiles) comprises the three layers; top, middle and the bottom layer, as shown in the image below. The top of the stack image, shows the [Top layer] modules containing bytecode semantics and top-level types.  We locate in the middle of the image, modules of the [Middle Layer](#mid) which contain abstractions of the main components.  The bottom of the stack depicts the modules placed at the [Bottom Layer](#low) which specify fundamental primitives (e.g. for manipulating bytes and ints). 
 
 <p align="center">
-    <img width="450" src="https://github.com/ConsenSys/evm-dafny/tree/resources/stackArch.png" alt="Dafny-EVM Architecture">
+    <img width="450" src="https://github.com/ConsenSys/evm-dafny/blob/master/resources/stackArch.png" alt="Dafny-EVM Architecture">
 </p>
 
 
