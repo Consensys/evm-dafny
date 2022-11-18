@@ -128,7 +128,7 @@ public class GeneralStateTests {
             // Performance
             "exp_Berlin_0_(1|2|9)_0",
             "expPower256Of256_Berlin_0_0_0",
-            "randomStatetest(52|64|320|354|367)_Berlin_0_0_0",
+            "randomStatetest(52|64|320|354|367|650)_Berlin_0_0_0",
             "gasCostExp_Berlin_0_8_0",
             // Unknowns
             "CrashingTransaction_Berlin_0_0_0",
@@ -162,6 +162,13 @@ public class GeneralStateTests {
             "manualCreate_Berlin_0_[012]_0",
             "CreateTransactionEOF1_Berlin_0_[0123]_0",
             "Opcodes_TransactionInit_Berlin_0_131_0",
+            "eip1559_Berlin_0_0_0",
+            "ecmul_.*",
+            "ecadd_.*",
+            "ecpairing.*",
+            "pairingTest.*",
+            "pointMulAdd.*",
+            "pointAdd.*",
             "dummy");
 
     @ParameterizedTest
