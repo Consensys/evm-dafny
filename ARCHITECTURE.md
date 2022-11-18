@@ -34,7 +34,7 @@ We organize the [Source Files](#sourceFiles) of the Dafny-EVM according to a thr
 The architecture of the [Source Files](#sourceFiles) comprises the three layers; top, middle and the bottom layer, as shown in the image below. The top of the stack image, shows the [Top layer] modules containing bytecode semantics and top-level types.  We locate in the middle of the image, modules of the [Middle Layer](#mid) which contain abstractions of the main components.  The bottom of the stack depicts the modules placed at the [Bottom Layer](#low) which specify fundamental primitives (e.g. for manipulating bytes and ints). 
 
 <p align="center">
-    <img width="450" src="https://github.com/ConsenSys/evm-dafny/tree/412-add-architecturemd-file/resources/stackArch.png" alt="Dafny-EVM Architecture">
+    <img width="450" src="https://github.com/ConsenSys/evm-dafny/tree/resources/stackArch.png" alt="Dafny-EVM Architecture">
 </p>
 
 
@@ -44,17 +44,17 @@ The source files including our formalisation of the EVM semantics, the state, ga
 
 ## Top Layer
 
-- [`evms`](https://github.com/MiladKetabGhale/Playing/tree/master/src/dafny/evms) contains modules each of which specify an extension of our EVM with a particular hardfork of users' choice, for example [`berlin.dfy`](https://github.com/MiladKetabGhale/Playing/blob/master/src/dafny/evms/berlin.dfy).
+- [`evms`](https://github.com/ConsenSys/evm-dafny/tree/master/src/dafny/evms) contains modules each of which specify an extension of our EVM with a particular hardfork of users' choice, for example [`berlin.dfy`](https://github.com/ConsenSys/evm-dafny/tree/master/src/dafny/evms/berlin.dfy).
 
-- [`opcodes.dfy`](https://github.com/MiladKetabGhale/Playing/blob/master/src/dafny/opcodes.dfy) encodes all of the EVM opcodes.
+- [`opcodes.dfy`](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/opcodes.dfy) encodes all of the EVM opcodes.
 
-- [`evm.dfy`](https://github.com/MiladKetabGhale/Playing/blob/master/src/dafny/evm.dfy) provides a generic mechanism for building extensions on our EVM based on a hardfork of users' choice.
+- [`evm.dfy`](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/evm.dfy) provides a generic mechanism for building extensions on our EVM based on a hardfork of users' choice.
 
-- [`state.dfy`](https://github.com/MiladKetabGhale/Playing/blob/master/src/dafny/state.dfy) specifies various EVM states and how to perform operations on them.
+- [`state.dfy`](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/state.dfy) specifies various EVM states and how to perform operations on them.
 
-- [`bytecode.dfy`](https://github.com/MiladKetabGhale/Playing/blob/master/src/dafny/bytecode.dfy) includes the implementation of the EVM opcodes' semantics.
+- [`bytecode.dfy`](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/bytecode.dfy) includes the implementation of the EVM opcodes' semantics.
 
-- [`gas.dfy`](https://github.com/MiladKetabGhale/Playing/blob/master/src/dafny/gas.dfy) specifies gas charging calculations.
+- [`gas.dfy`](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/gas.dfy) specifies gas charging calculations.
 
 
 ## Middle Layer 
