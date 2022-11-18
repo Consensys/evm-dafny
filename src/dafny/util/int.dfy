@@ -416,7 +416,12 @@ module U256 {
     import U64
     import U128
 
-    function method Shl(lhs: u256, rhs: u256) : u256 {
+    /** An axiom stating that a bv256 converted as a nat is bounded by 2^256. */
+    lemma {:axiom} as_bv256_as_u256(v: bv256)
+        ensures v as nat < TWO_256
+
+    function method Shl(lhs: u256, rhs: u256) : u256 
+    {
         var lbv := lhs as bv256;
         // NOTE: unclear whether shifting is optimal choice here.
         var res := if rhs < 256 then (lbv << rhs) else 0;
@@ -547,13 +552,31 @@ module I256 {
         Int.Rem(lhs as int, rhs as int) as i256
     }
 
+    /**
+     *  Shifting 1 left less than 256 times produces a non-zero value.
+     *
+     *  More generally, shifting-left 1 less than k times over k bits 
+     *  yield a non-zero number.
+     *
+     *  @example    over 2 bits, left-shift 1 once: 01 -> 10
+     *  @example    over 4 bits, left-shift 1 3 times: 0001 -> 0010 -> 0100 -> 1000
+     */
+    lemma ShiftYieldsNonZero(x: u256) 
+        requires 0 < x < 256 
+        ensures U256.Shl(1, x) > 0 
+    {
+        //  Thanks Dafny.
+    }
+
     // Shift Arithmetic Right.  This implementation follows the Yellow Paper quite
     // accurately.
-    function method {:verify false} Sar(lhs: i256, rhs: u256) : i256 {
+    function method Sar(lhs: i256, rhs: u256): i256 {
         if rhs == 0 then lhs
         else if rhs < 256
         then
+            assert 0 < rhs < 256;
             var r := U256.Shl(1,rhs);
+            ShiftYieldsNonZero(rhs);
             ((lhs as int) / (r as int)) as i256
         else if lhs < 0 then -1
         else 0

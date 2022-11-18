@@ -53,6 +53,10 @@ import dafnyevm.util.Word.Uint64;
  *
  */
 public class DafnyEvm {
+    /**
+     * Extract the maximum permitted code size from Dafny,
+     */
+    private static final int MAX_CODE_SIZE = Code_Compile.__default.MAX__CODE__SIZE().intValueExact();
 	/**
 	 * A default tracer which does nothing.
 	 */
@@ -356,8 +360,10 @@ public class DafnyEvm {
                 BigInteger.ONE);
 		// Execute bytecodes!
 		st = run(0, tracer, st);
+		// Outermost trace step
+		tracer.step(-1,st);
 		// Convert back into the Java API
-		return State.from(1,tracer,st);
+		return State.from(0,tracer,st);
 	}
 
 	/**
@@ -387,8 +393,20 @@ public class DafnyEvm {
 		EvmState_Compile.State st = EvmState_Compile.__default.Create(ws, ctx, ss, code, gas, BigInteger.ONE);
 		// Execute bytecodes!
 		st = run(0, tracer, st);
+		// Sanity check returned contract code
+        if (st.is_RETURNS()) {
+            State_RETURNS rst = (State_RETURNS) st;
+            // Sanity check contract size
+            if (rst.dtor_data().length() > MAX_CODE_SIZE) {
+                // Contract being created is too large.
+                EvmState_Compile.Error err = EvmState_Compile.Error.create_CODESIZE__EXCEEDED();
+                st = EvmState_Compile.State.create_INVALID(err);
+            }
+        }
+        // Outermost trace step
+        tracer.step(-1,st);
 		// Convert back into the Java API
-		return State.from(1,tracer,st);
+		return State.from(0,tracer,st);
 	}
 
 	/**

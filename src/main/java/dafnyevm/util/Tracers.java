@@ -104,7 +104,7 @@ public class Tracers {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
-				obj.key("output").value(Hex.toHexString(state.getReturnData()));
+				obj.key("output").value(Hex.toAbbreviatedHexString(state.getReturnData()));
 				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
@@ -118,7 +118,7 @@ public class Tracers {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
-				obj.key("output").value(Hex.toHexString(state.getReturnData()));
+				obj.key("output").value(Hex.toAbbreviatedHexString(state.getReturnData()));
 				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
 				obj.key("error").value("execution reverted");
 				System.out.println(obj.endObject().toString());
