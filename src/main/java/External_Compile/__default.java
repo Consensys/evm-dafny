@@ -16,10 +16,15 @@ package External_Compile;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
+import org.web3j.crypto.ECDSASignature;
 import org.web3j.crypto.Hash;
+import org.web3j.crypto.Sign;
+import org.web3j.crypto.Sign.SignatureData;
 
 import dafny.DafnySequence;
 import dafny.Tuple2;
+import dafnyevm.util.Word.Uint160;
+import evmtools.util.Hex;
 
 /**
  * Provides concrete implementations for all methods defined as
@@ -29,6 +34,39 @@ import dafny.Tuple2;
  *
  */
 public class __default {
+    /**
+     * Compute the ECDSA key recovery procedure for a given byte sequence.
+     *
+     * @param h Hash of transaction
+     * @param v recovery identifier (assumed to be one byte)
+     * @param r
+     * @param s
+     * @return
+     */
+    public static DafnySequence<Byte> ECDSARecover(DafnySequence<? extends Byte> _h, byte v, BigInteger r, BigInteger s) {
+        byte[] h = DafnySequence.toByteArray((DafnySequence) _h);
+//        System.out.println("ECDSARecover(" + Hex.toAbbreviatedHexString(h) + "," + v + "," + r + "," + s + ")");
+        ECDSASignature sig = new ECDSASignature(r,s);
+        // Recover Key
+        try {
+            BigInteger key = Sign.recoverFromSignature(v-27, sig, h);
+            // Sanity checks
+            if(key != null && !key.equals(BigInteger.ZERO)) {
+                // Compute KEC
+                byte[] hash = Hash.sha3(key.toByteArray());
+                // Split out bytes 12--31
+                hash = Arrays.copyOfRange(hash, 12, hash.length);
+                // Done
+                return DafnySequence.fromBytes(leftPad(hash,32));
+            }
+        } catch(IllegalArgumentException e) {
+            // This indicates key recovery was impossible. Therefore, according to the
+            // Yellow Paper, we simply return the empty byte sequence.
+        }
+        //
+        return DafnySequence.fromBytes(new byte[0]);
+    }
+
 	/**
 	 * Compute the Keccak256 hash of the byte sequence.
 	 *

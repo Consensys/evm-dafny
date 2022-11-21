@@ -4,6 +4,12 @@ include "int.dfy"
 module External {
     import opened Int
     /**
+     * Compute the ECDSA key recovery procedure for a given byte sequence.
+     */
+    function method {:extern} ECDSARecover(h: seq<u8>, v: u8, r: u256, s: u256) : seq<u8> {
+        []
+    }
+    /**
      * Compute the SHA3 (a.k.a KECCAK256) hash of a sequence of bytes.
      */
     function method {:extern} sha3(bytes:seq<u8>) : u256 {
