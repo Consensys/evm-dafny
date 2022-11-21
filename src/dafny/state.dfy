@@ -546,6 +546,21 @@ module EvmState {
         }
 
         /**
+         *  Extract a slice of the stack. 
+         *
+         *  @param  l   An index.
+         *  @param  u   An index.
+         *  @returns    A stack made of the first u elements of `st` minus the first `l`.
+         */
+        function SlicePeek(l: nat, u: nat): (r: Stack.T)
+        requires IsExecuting()
+        requires l <= u <= Stack.Size(evm.stack) 
+        ensures Stack.Size(r) == u - l
+        { 
+            Stack.Slice(evm.stack, l, u)  
+        }
+
+        /**
          * Pop word from stack.
          */
         function method Pop() : State
@@ -715,6 +730,22 @@ module EvmState {
             else
                 INVALID(STACK_OVERFLOW)
         }
+
+        /** The opcode at a given index in the code.
+         *  
+         *  Following the EVM convention, if index is outside the range of code,
+         *  returns STOP.
+         */
+        function CodeAtIndex(index: nat): u8 
+        requires IsExecuting() {
+            if index < Code.Size(evm.code) as nat then 
+                Code.CodeAt(evm.code, index) 
+            else 
+                Opcode.STOP
+        }
+
+        function CodeAtPC(): u8 
+        requires IsExecuting() { CodeAtIndex(PC()) }
 
         /**
          * Check whether a given Program Counter location holds the JUMPDEST bytecode.
