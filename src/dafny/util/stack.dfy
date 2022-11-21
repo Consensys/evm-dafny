@@ -26,6 +26,8 @@ module Stack {
     type T = s:Raw | |s.contents| <= CAPACITY
     witness Stack([])
 
+    const Empty := Stack([])
+    
     // Get number of items currently on this Stack.
     function method Size(st:T) : nat { |st.contents| }
 
@@ -90,5 +92,18 @@ module Stack {
         var top := st.contents[0];
         var kth := st.contents[k];
         Stack(contents:=st.contents[0:=kth][k:=top])
+    }
+
+    /**
+     *  A sliced stack.
+     *  @param  st  A stack.
+     *  @param  l   An index.
+     *  @param  u   An index.
+     *  @returns    The stack made of the first u elements minus the first l.
+     */
+    function Slice(st: T, l: nat, u: nat): (r:T)  
+        requires l <= u <= Size(st)
+    {
+        Stack(st.contents[l..u])
     }
 }

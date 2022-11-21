@@ -51,6 +51,11 @@ module Code {
     else 0 // Opcodes.STOP
   }
 
+  function CodeAt(c: T, index: nat): u8
+  requires 0 <= index < Size(c) as nat {
+    c.contents[index]
+  }
+
   /**
    * Slice out a subsequence of bytes from a given sequence.
    * If the requested subsequence overflows available memory,
