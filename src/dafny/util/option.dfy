@@ -12,7 +12,7 @@
  * under the License.
  */
 
-module ExtraTypes {
+module Optional {
 
     datatype Option<T> = Some(v: T) | None {
         /**

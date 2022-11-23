@@ -11,8 +11,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "int.dfy"
-include "bytes.dfy"
+include "../util/int.dfy"
+include "../util/bytes.dfy"
 
 /**
  * Memory on the EVM is a byte-addressable (volatile) random access memory.

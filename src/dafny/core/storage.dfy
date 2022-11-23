@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "int.dfy"
+include "../util/int.dfy"
 
 /**
  * Storage on the EVM is a word-addressable (non-volatile) random access memory.

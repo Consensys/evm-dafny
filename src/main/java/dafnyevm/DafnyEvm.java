@@ -501,7 +501,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public static BigInteger addr(BigInteger sender, BigInteger nonce) {
-		byte[] hash = addr(sender,nonce,new ExtraTypes_Compile.Option_None<>(),null);
+		byte[] hash = addr(sender,nonce,new Optional_Compile.Option_None<>(),null);
 		return new BigInteger(1,hash);
 	}
 
@@ -516,18 +516,18 @@ public class DafnyEvm {
 	 * @param initCode The initialisation code (only used with salt).
 	 * @return
 	 */
-	public static byte[] addr(BigInteger sender, BigInteger nonce, ExtraTypes_Compile.Option<BigInteger> salt,
+	public static byte[] addr(BigInteger sender, BigInteger nonce, Optional_Compile.Option<BigInteger> salt,
 			DafnySequence<? extends Byte> initCode) {
 		byte[] bytes;
 		//
-		if (salt instanceof ExtraTypes_Compile.Option_None) {
+		if (salt instanceof Optional_Compile.Option_None) {
 			// Case for CREATE
 			bytes = new Uint160(sender).getBytes();
 			bytes = RlpEncoder.encode(new RlpList(RlpString.create(bytes),RlpString.create(nonce)));
 		} else {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			byte[] code = DafnySequence.toByteArray((DafnySequence) initCode);
-			ExtraTypes_Compile.Option_Some<BigInteger> s = (ExtraTypes_Compile.Option_Some<BigInteger>) salt;
+			Optional_Compile.Option_Some<BigInteger> s = (Optional_Compile.Option_Some<BigInteger>) salt;
 			// Case for CREATE2 (see EIP 1014).
 			byte ff = (byte) (0xff & 0xff);
 			byte[] senderBytes = new Uint160(sender).getBytes();

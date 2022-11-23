@@ -11,8 +11,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "bytes.dfy"
-include "int.dfy"
+include "../util/bytes.dfy"
+include "../util/int.dfy"
 
 module Code {
   import Bytes
