@@ -14,19 +14,19 @@
 include "util/int.dfy"
 include "opcodes.dfy"
 include "state.dfy"
-include "util/ExtraTypes.dfy"
-include "util/memory.dfy"
+include "core/memory.dfy"
+include "core/code.dfy"
+include "core/context.dfy"
+include "core/worldstate.dfy"
+include "core/substate.dfy"
+include "util/option.dfy"
 include "util/bytes.dfy"
-include "util/code.dfy"
-include "util/context.dfy"
-include "util/worldstate.dfy"
-include "util/substate.dfy"
 
 module Gas {
 	import opened Opcode
 	import opened EvmState
     import opened Int
-    import opened ExtraTypes
+    import opened Optional
     import opened Memory
     import opened Bytes
     import opened Code

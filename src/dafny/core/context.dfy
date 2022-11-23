@@ -11,8 +11,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "int.dfy"
-include "bytes.dfy"
+include "../util/int.dfy"
+include "../util/bytes.dfy"
 
 module Context {
     import opened Int

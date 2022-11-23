@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "int.dfy"
+include "../util/int.dfy"
 
 module Stack {
     import opened Int
@@ -27,7 +27,7 @@ module Stack {
     witness Stack([])
 
     const Empty := Stack([])
-    
+
     // Get number of items currently on this Stack.
     function method Size(st:T) : nat { |st.contents| }
 
@@ -87,7 +87,7 @@ module Stack {
 
     /** Swap top item at index 0 and the k+1-th item at index k. */
     function method Swap(st:T, k:nat) : T
-      requires Size(st) > k > 0 
+      requires Size(st) > k > 0
     {
         var top := st.contents[0];
         var kth := st.contents[k];
@@ -101,7 +101,7 @@ module Stack {
      *  @param  u   An index.
      *  @returns    The stack made of the first u elements minus the first l.
      */
-    function Slice(st: T, l: nat, u: nat): (r:T)  
+    function Slice(st: T, l: nat, u: nat): (r:T)
         requires l <= u <= Size(st)
     {
         Stack(st.contents[l..u])

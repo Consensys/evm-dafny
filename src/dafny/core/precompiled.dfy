@@ -11,17 +11,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "bytes.dfy"
-include "extern.dfy"
-include "int.dfy"
-include "ExtraTypes.dfy"
+include "../util/bytes.dfy"
+include "../util/extern.dfy"
+include "../util/int.dfy"
+include "../util/option.dfy"
 
 /**
  * Interface for the so-called "precompiled contracts".
  */
 module Precompiled {
     import opened Int
-    import opened ExtraTypes
+    import opened Optional
     import U32
     import U256
     import External

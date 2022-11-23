@@ -11,11 +11,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "int.dfy"
 include "code.dfy"
-include "ExtraTypes.dfy"
 include "storage.dfy"
-include "extern.dfy"
+include "../util/int.dfy"
+include "../util/option.dfy"
+include "../util/extern.dfy"
 
 /**
  * World state provides a snapshot of all accounts on the blockchain at a given
@@ -24,7 +24,7 @@ include "extern.dfy"
 module WorldState {
     import opened Int
     import Code
-    import opened ExtraTypes
+    import opened Optional
     import Storage
     import External
 

@@ -12,7 +12,7 @@
  * under the License.
  */
 include "state.dfy"
-include "util/ExtraTypes.dfy"
+include "util/option.dfy"
 
 /**
  * Top-level definition of an Ethereum Virtual Machine.
@@ -20,7 +20,7 @@ include "util/ExtraTypes.dfy"
 abstract module EVM {
     import opened EvmState
     import opened Int
-    import opened ExtraTypes
+    import opened Optional
 
     /** The semantics of opcodes.
      *

@@ -27,7 +27,7 @@ module EvmBerlin refines EVM {
      */
     function method InitEmpty(gas: nat, code: seq<u8> := []) : (st:State)
         requires |code| <= Code.MAX_CODE_SIZE
-        ensures st.IsExecuting() 
+        ensures st.IsExecuting()
     {
         var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
         Create(tx, map[0:=WorldState.DefaultAccount()], gas, code)
@@ -216,5 +216,5 @@ module EvmBerlin refines EVM {
             case _ => s
     }
 
-    
+
 }

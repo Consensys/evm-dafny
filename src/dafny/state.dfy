@@ -11,18 +11,18 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "util/int.dfy"
-include "util/memory.dfy"
-include "util/context.dfy"
-include "util/code.dfy"
+include "core/memory.dfy"
+include "core/precompiled.dfy"
+include "core/stack.dfy"
+include "core/context.dfy"
+include "core/code.dfy"
+include "core/storage.dfy"
+include "core/substate.dfy"
+include "core/worldstate.dfy"
 include "util/extern.dfy"
-include "util/precompiled.dfy"
-include "util/storage.dfy"
-include "util/stack.dfy"
-include "util/substate.dfy"
-include "util/worldstate.dfy"
+include "util/option.dfy"
+include "util/int.dfy"
 include "opcodes.dfy"
-include "util/ExtraTypes.dfy"
 
 /**
  *  Provide State type to encode the current state of the EVM.
@@ -38,7 +38,7 @@ module EvmState {
     import Code
     import Opcode
     import Precompiled
-    import opened ExtraTypes
+    import opened Optional
 
     /**
      * Following included from gas.dfy to avoid circular definition.  However,
@@ -169,7 +169,7 @@ module EvmState {
         /**
          * Determine number of operands on stack.
          */
-        function method Operands() : nat 
+        function method Operands() : nat
         requires IsExecuting() {
             Stack.Size(evm.stack)
         }
@@ -546,7 +546,7 @@ module EvmState {
         }
 
         /**
-         *  Extract a slice of the stack. 
+         *  Extract a slice of the stack.
          *
          *  @param  l   An index.
          *  @param  u   An index.
@@ -554,10 +554,10 @@ module EvmState {
          */
         function SlicePeek(l: nat, u: nat): (r: Stack.T)
         requires IsExecuting()
-        requires l <= u <= Stack.Size(evm.stack) 
+        requires l <= u <= Stack.Size(evm.stack)
         ensures Stack.Size(r) == u - l
-        { 
-            Stack.Slice(evm.stack, l, u)  
+        {
+            Stack.Slice(evm.stack, l, u)
         }
 
         /**
@@ -732,19 +732,19 @@ module EvmState {
         }
 
         /** The opcode at a given index in the code.
-         *  
+         *
          *  Following the EVM convention, if index is outside the range of code,
          *  returns STOP.
          */
-        function CodeAtIndex(index: nat): u8 
+        function CodeAtIndex(index: nat): u8
         requires IsExecuting() {
-            if index < Code.Size(evm.code) as nat then 
-                Code.CodeAt(evm.code, index) 
-            else 
+            if index < Code.Size(evm.code) as nat then
+                Code.CodeAt(evm.code, index)
+            else
                 Opcode.STOP
         }
 
-        function CodeAtPC(): u8 
+        function CodeAtPC(): u8
         requires IsExecuting() { CodeAtIndex(PC()) }
 
         /**

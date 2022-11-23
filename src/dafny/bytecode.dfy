@@ -23,7 +23,7 @@ module Bytecode {
     import External
     import GasCalc = Gas
     import opened EvmState
-    import opened ExtraTypes
+    import opened Optional
 
     // =====================================================================
     // 0s: Stop and Arithmetic Operations
@@ -1141,7 +1141,7 @@ module Bytecode {
     /**
      *  Marks a valid destination for a jump, but otherwise has no effect
      *  on machine state, except incrementing PC.
-     *  Equivalent to SKIP instruction semantics-wise. 
+     *  Equivalent to SKIP instruction semantics-wise.
      */
     function method JumpDest(st: State) : State
     requires st.IsExecuting() {
@@ -1154,27 +1154,27 @@ module Bytecode {
 
     /**
      *  Push bytes on the stack.
-     *  
+     *
      *  @param st   A state.
      *  @param k    The number of bytes to push.
      *
-     *  @note       The semantics of the EVM does not seem to require 
+     *  @note       The semantics of the EVM does not seem to require
      *              that k bytes are following the current OPCODE, PUSHk.
      *              So a number of bytes is read and left-padded if not enough
      *              are after PUSHk, and a value is pushed on the stack even
      *              not enough (< k) bytes are available in the code after PUSHk.
-     *              As the PC is advanced by k, the next PC will be outside 
+     *              As the PC is advanced by k, the next PC will be outside
      *              the code range, and the next opcode to be executed will be defaulted
      *              to 0 (zero) which is the STOP opcode.
-     *              In summary: if m < k bytes are following a PUSHk opcode, 
-     *              a zero-left-padded value of m bytes is pushed on the stack, and 
+     *              In summary: if m < k bytes are following a PUSHk opcode,
+     *              a zero-left-padded value of m bytes is pushed on the stack, and
      *              the next instruction is STOP.
      */
     function method Push(st: State, k: nat) : State
-    requires k > 0 && k <= 32 
+    requires k > 0 && k <= 32
     requires st.IsExecuting()
     {
-        if st.Capacity() >= 1 
+        if st.Capacity() >= 1
         then
             var bytes := Code.Slice(st.evm.code, (st.evm.pc+1), k);
             assert 0 < |bytes| <= 32;
@@ -1184,7 +1184,7 @@ module Bytecode {
             State.INVALID(STACK_OVERFLOW)
     }
 
-    
+
     /**
      * Push one byte onto stack.
      */
