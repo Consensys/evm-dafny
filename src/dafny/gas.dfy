@@ -440,10 +440,10 @@ module Gas {
             G_ZERO
     }
 
-    /* this is the "r_dirtyresetclear" function used as part of the gas computation of SSTORE
-     * @param   originalVal     it is the value of the storage slot in the pre-transaction state of the account
-     * @param   currentVal      it is the  current value of the  storage slot
-     * @param   newVal          it is the  new value given as input to the SSTORE opcode as its second argument
+    /** This is the "r_dirtyresetclear" function used as part of the gas computation of SSTORE
+     *  @param   originalVal     it is the value of the storage slot in the pre-transaction state of the account
+     *  @param   currentVal      it is the  current value of the  storage slot
+     *  @param   newVal          it is the  new value given as input to the SSTORE opcode as its second argument
      */
     function method DirtyResetClear(originalVal: nat, currentVal: nat, newVal: nat): int
         {
@@ -457,10 +457,11 @@ module Gas {
             else
                 0
         }
-    /* this is the "r_dirtyclear" function used as part of the gas computation of SSTORE
-     * @param   originalVal     it is the value of the storage slot in the pre-transaction state of the account
-     * @param   currentVal      it is the  current value of the  storage slot
-     * @param   newVal          it is the  new value given as input to the SSTORE opcode as its second argument
+
+    /** This is the "r_dirtyclear" function used as part of the gas computation of SSTORE
+     *  @param   originalVal     it is the value of the storage slot in the pre-transaction state of the account
+     *  @param   currentVal      it is the  current value of the  storage slot
+     *  @param   newVal          it is the  new value given as input to the SSTORE opcode as its second argument
      */
     function method DirtyClear(originalVal: nat, currentVal: nat, newVal: nat): int
         {
