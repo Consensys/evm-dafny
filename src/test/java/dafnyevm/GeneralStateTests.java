@@ -132,7 +132,7 @@ public class GeneralStateTests {
             "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
             "blake2B_Berlin_[0-9_]*",
             "idPrecomps_Berlin_0_[4-7]_0",
-            "CALLBlake2f_Berlin_[0-9_]*",
+            //"CALLBlake2f_Berlin_[0-9_]*",
             "CALLCODEBlake2f_Berlin_[0-9_]*",
             "randomStatetest353_Berlin_0_0_0",
             "vitalikTransactionTest_Berlin_0_0_0",
