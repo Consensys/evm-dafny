@@ -39,10 +39,14 @@ module Bytecode {
     }
 
     /**
-    * Unsigned integer addition with modulo arithmetic.
-    */
-    function method Add(st: State) : State
-    requires st.IsExecuting() {
+     * Unsigned integer addition with modulo arithmetic.
+     * @param   st  A state.
+     * @returns     The state after executing an `ADD` or an `Error` state. 
+     */
+    function method Add(st: State): (st': State)
+    requires st.IsExecuting() 
+    ensures st'.OK? <==> st.Operands() >= 2
+    {
         if st.Operands() >= 2
         then
             var lhs := st.Peek(0) as int;
