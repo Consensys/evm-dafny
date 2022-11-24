@@ -1242,12 +1242,11 @@ module Bytecode {
     /**
      *  Exchange first (index 0) and k+1-th (index k) item in the stack.
      */
-    function method Swap(st: State, k: nat) : (st':State)
+    function method Swap(st: State, k: nat): (st':State)
         requires 1 <= k <= 16
         requires st.IsExecuting()
-        ensures st'.IsExecuting() ==>
-            st.Operands() > k &&
-            st'.GetStack() == Stack.Swap(st.GetStack(), k)
+        ensures st'.IsExecuting() <==> st.Operands() > k
+        ensures st'.IsExecuting() ==> st'.Operands() == st.Operands()
     {
         if st.Operands() > k
         then
