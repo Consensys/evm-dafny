@@ -5,8 +5,8 @@ In this section, we explain how to navigate the semantics, why it is verified an
 # Table of Contents
 
 1. [Understanding the Semantics](#reading-and-understanding-the-semantics)
-1. [Verifying Bytecode](#verifying-the-semantics)
-1. [Executing bytecode](#executing-evm-bytecode)
+1. [Verifying the Semantics](#verifying-the-semantics)
+1. [Executing the Semantics](#executing-the-semantics)
 
 # Reading and Understanding the Semantics
 
@@ -110,7 +110,7 @@ The verification-friendliness of Dafny does not stop at preconditions, but also 
 
 
 
-# Executing EVM bytecode
+# Executing the Semantics
 
 An EVM is in a given state `s: State`. The effect of an _opcode_ `op` on the current state
 is described in two separate functions `OpSem` and `OpGas` in [evm.dfy](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/evm.dfy):

@@ -12,6 +12,7 @@
 1. [Overview](#overview)
    1. [Dafny](#dafny)
    1. [Example](#semantics-example)
+1. [Getting Started](#getting-started)
 1. [Verifying Bytecode](#verifying-bytecode)
 1. [Building](#building-the-code)
 1. [Contributing](#contributing)
@@ -115,7 +116,7 @@ To use our code base you may follow these steps:
 
 - Install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VsCode Dafny extention](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax colouring, error reporting, etc) and the Dafny compiler code.
 - Clone [this repository](https://github.com/ConsenSys/evm-dafny).
-- Build the code (see below) or follow one of the ...
+- Build the code (see below) or start with this [introductory material](SEMANTICS.md).
 
 # Verifying Bytecode 
 
