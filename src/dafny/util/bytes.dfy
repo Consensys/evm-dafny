@@ -14,7 +14,7 @@
 include "int.dfy"
 
 module Bytes {
-  import opened Int
+    import opened Int
 
     /**
      * Read the byte at a given address in Memory.  If the given location

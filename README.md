@@ -12,6 +12,7 @@
 1. [Overview](#overview)
    1. [Dafny](#dafny)
    1. [Example](#semantics-example)
+1. [Getting Started](#getting-started)
 1. [Verifying Bytecode](#verifying-bytecode)
 1. [Building](#building-the-code)
 1. [Contributing](#contributing)
@@ -19,11 +20,19 @@
 
 # Overview
 
-The aim of this project is to develop a functional specification of
+In this project we develop the **Dafny-EVM**, a _functional specification_ of
 the [Ethereum Virtual
 Machine](https://ethereum.org/en/developers/docs/evm/) in
-[Dafny](https://github.com/dafny-lang/dafny).  Developing this
-specification in Dafny allows us to apply [formal
+[Dafny](https://github.com/dafny-lang/dafny).  
+
+This type of specification has several advantages:
+- it is _programming-language agnostic_ and _easily readable_: it does not require any prior knowledge of a specific programming language, but rather defines the semantics of the EVM as functions and compositions thereof. [Read more](./SEMANTICS.md)
+- it is _executable_: we can run EVM bytecode, and in effect we have an _interpreter_ of EVM bytecode. [Read more](./EXECUTION.md)
+- it is _verified_. We guarantee that our EVM interpreter is free of runtime errors (e.g. division by zero, arithmetic under/overflow). [Read more](./GUARANTEES.md)
+- it is provides a _usable API_ for _formal verification_ of EVM bytecode. [Read more](./VERIFICATION.md)
+
+
+Developing this specification in Dafny allows us to apply [formal
 reasoning](https://en.wikipedia.org/wiki/Formal_methods) to Smart
 Contracts at the EVM Bytecode level.  For example, one can prove that
 certain key properties are maintained by the contract.  We choose
@@ -33,8 +42,8 @@ Dafny over other verification systems
 because it is relatively accessible to someone without significant
 prior experience.
 
-Our functional specification is also _executable_, meaning that we can
-run contracts using it and compare their output with existing clients
+Our functional specification is _executable_, meaning that we can
+run bytecode using it and compare their output with existing clients
 (e.g. [Geth](https://geth.ethereum.org/)).  In particular, we are
 interested in comparing against the Ethereum [Common Reference
 Tests](https://github.com/ethereum/tests) and have made some progress
@@ -48,7 +57,7 @@ automated theorem provers (e.g with [SMT
 solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)
 like [Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover)).  This
 means Dafny can prove a program is **correct** with respect to its
-specification.  To do this, Dafny requires the developer to provide
+_specification_.  To do this, Dafny requires the developer to provide
 annotations in the form of 
 [preconditions](https://en.wikipedia.org/wiki/Precondition) and
 [postconditions](https://en.wikipedia.org/wiki/Postcondition) where
@@ -56,9 +65,9 @@ appropriate, and/or [loop
 invariants](https://en.wikipedia.org/wiki/Loop_invariant) as
 necessary.
 
-_In this project, we are providing a specification of the Ethereum
+<!-- _In this project, we are providing a specification of the Ethereum
 Virtual Machine against which other programs (e.g. in EVM Bytecode)
-can be verified._
+can be verified._ -->
 
 ## Semantics Example
 
@@ -71,17 +80,21 @@ bytecode:
 ```Dafny
 /**
  * Unsigned integer addition with modulo arithmetic.
+ * @param   st  A state.
+ * @returns     The state after executing an `ADD` or an `Error` state.
  */
-function method Add(st: State) : State
-requires st.IsExecuting() {
-  if st.Operands() >= 2
-  then
-      var lhs := st.Peek(0) as int;
-      var rhs := st.Peek(1) as int;
-      var res := (lhs + rhs) % TWO_256;
-      st.Pop().Pop().Push(res as u256).Next()
-  else
-      State.INVALID(STACK_UNDERFLOW)
+function method Add(st: State): (st': State)
+requires st.IsExecuting() 
+ensures st'.OK? <==> st.Operands() >= 2
+{
+    if st.Operands() >= 2
+    then
+        var lhs := st.Peek(0) as int;
+        var rhs := st.Peek(1) as int;
+        var res := (lhs + rhs) % TWO_256;
+        st.Pop().Pop().Push(res as u256).Next()
+    else
+        State.INVALID(STACK_UNDERFLOW)
 }
 ```
 
@@ -89,8 +102,21 @@ This tells us that `ADD` requires _two operands_ on the stack to be performed,
 otherwise, the exceptional state `INVALID(STACK_UNDERFLOW)` state is reached.  
 When more than two operands are on the stack, 
 addition employs _modulo arithmetic_ (hence, overflows wrap around)
-and the final result is pushed onto the stack after the operands
-are popped, and the program counter is advanced by 1.
+and the final result (of the addition modulo) is pushed onto the stack after the operands
+are popped, and then the program counter is advanced by 1.
+
+The postcondition `ensures st'.OK? <==> st.Operands() >= 2` specifies a _strong guarantee_ on the code in the body of
+function: **for any** input state `st`, `Add` returns an `OK` state (non-failure) _if and only if_ 
+the stack in the input state `st` has at least two elements (`Operands()`).
+Note that this postcondition is _checked_ by the Dafny verification engine at compile-time not at runtime.
+
+
+# Getting Started 
+To use our code base you may follow these steps:
+
+- Install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VsCode Dafny extention](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax colouring, error reporting, etc) and the Dafny compiler code.
+- Clone [this repository](https://github.com/ConsenSys/evm-dafny).
+- Build the code (see below) or start with this [introductory material](SEMANTICS.md).
 
 # Verifying Bytecode 
 
