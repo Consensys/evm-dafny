@@ -67,7 +67,7 @@ abstract module EVM {
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
-    function method Execute(st:State) : State
+    function method Execute(st: State): State
     {
         match st.OpDecode()
           case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
@@ -80,7 +80,7 @@ abstract module EVM {
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
-    function method ExecuteN(st:State,steps: nat := 1) : State
+    function method ExecuteN(st:State, steps: nat := 1): State
     decreases steps
     requires steps > 0
     {
