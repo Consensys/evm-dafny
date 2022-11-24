@@ -1,8 +1,8 @@
 <!-- [![Build Status](https://circleci.com/gh/ConsenSys/eth2.0-dafny.svg?style=shield)](https://circleci.com/gh/ConsenSys/workflows/eth2.0-dafny)  -->
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![made-for-VSCode](https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg)](https://code.visualstudio.com/)
-[![lemmas](https://img.shields.io/badge/Lemmas-0-yellow.svg)](https://shields.io/)
-[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-3232/3375-Blue.svg)](https://shields.io/)
+<!-- [![lemmas](https://img.shields.io/badge/Lemmas-0-yellow.svg)](https://shields.io/) -->
+[![Common Tests Passing](https://img.shields.io/badge/Common%20Tests%20Passed-6618/8189-Blue.svg)](https://shields.io/)
 [![Checks](https://img.shields.io/badge/DafnyVerify-Verified-orange.svg)](https://shields.io/)
 
  <!-- ![GitHub commit activity](https://img.shields.io/github/commit-activity/w/PegaSysEng/eth2.0-dafny?style=flat) -->
@@ -26,9 +26,9 @@ Machine](https://ethereum.org/en/developers/docs/evm/) in
 [Dafny](https://github.com/dafny-lang/dafny).  
 
 This type of specification has several advantages:
-- it is _programming-language agnostic_ and _easily readable_: it does not require any prior knowledge of a specific programming language, but rather defines the semantics of the EVM as functions and compositions thereof. [Read more](./SEMANTICS.md)
-- it is _executable_: we can run EVM bytecode, and in effect we have an _interpreter_ of EVM bytecode. [Read more](./EXECUTION.md)
-- it is _verified_. We guarantee that our EVM interpreter is free of runtime errors (e.g. division by zero, arithmetic under/overflow). [Read more](./GUARANTEES.md)
+- it is _programming-language agnostic_ and _easily readable_: it does not require any prior knowledge of a specific programming language, but rather defines the semantics of the EVM as functions and compositions thereof. [Read more](./SEMANTICS.md#reading-and-understanding-the-semantics)
+- it is _executable_: we can run EVM bytecode, and in effect we have an _interpreter_ of EVM bytecode. [Read more](./SEMANTICS.md#executing-the-semantics)
+- it is _verified_. We guarantee that our EVM interpreter is free of runtime errors (e.g. division by zero, arithmetic under/overflow). [Read more](./SEMANTICS.md#verifying-the-semantics)
 - it is provides a _usable API_ for _formal verification_ of EVM bytecode. [Read more](./VERIFICATION.md)
 
 
