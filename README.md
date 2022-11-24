@@ -112,10 +112,10 @@ Note that this postcondition is _checked_ by the Dafny verification engine at co
 
 # Getting Started 
 To use our code base you may follow these steps:
-- install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VsCode Dafny extention](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax coloring, error reporting, etc) and the Dafny compiler code.
-- clone [this repository](https://github.com/ConsenSys/evm-dafny).
-- either build the code (see below) or follow the step-by-step video on _how to use and verify 
-some bytecode with the Dafny-EVM_.
+
+- Install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VsCode Dafny extention](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax colouring, error reporting, etc) and the Dafny compiler code.
+- Clone [this repository](https://github.com/ConsenSys/evm-dafny).
+- Build the code (see below) or follow one of the ...
 
 # Verifying Bytecode 
 
