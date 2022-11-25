@@ -104,7 +104,6 @@ public class GeneralStateTests {
             "jump_Berlin_0_9_0",
             "jumpi_Berlin_0_14_0",
             "jumpToPush_Berlin_[0-9_]*",
-            //
             // #339
             "create2callPrecompiles_Berlin_0_[56]_0",
             "static_CallEcrecover0_0input_Berlin_0_8_0",
@@ -112,6 +111,7 @@ public class GeneralStateTests {
             "StaticcallToPrecompileFromCalledContract_Berlin_0_0_0",
             "StaticcallToPrecompileFromTransaction_Berlin_0_0_0",
             "precompsEIP2929_Berlin_0_(43|61|151|169|241|295)_0",
+            "idPrecomps_Berlin_0_[4-7]_0",
             "ecmul_.*",
             "ecadd_.*",
             "ecpairing.*",
@@ -130,10 +130,6 @@ public class GeneralStateTests {
             "undefinedOpcodeFirstByte_Berlin_0_0_0",
             "CrashingTransaction_Berlin_0_0_0",
             "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
-            "blake2B_Berlin_[0-9_]*",
-            "idPrecomps_Berlin_0_[4-7]_0",
-            "CALLBlake2f_Berlin_[0-9_]*",
-            "CALLCODEBlake2f_Berlin_[0-9_]*",
             "randomStatetest353_Berlin_0_0_0",
             "vitalikTransactionTest_Berlin_0_0_0",
             "manualCreate_Berlin_0_[012]_0",
