@@ -33,6 +33,20 @@ module EvmBerlin refines EVM {
         Create(tx, map[0:=WorldState.DefaultAccount()], gas, code)
     }
 
+    /** An empty VM, with some initial gas and initial stack.
+     *
+     *  @param  gas     The gas loaded in this EVM.
+     *  @returns        An ready-to-use EVM.
+     */
+    function method Init(gas: nat, stk: seq<u256> := [], code: seq<u8> := []) : (st:State)
+        requires |code| <= Code.MAX_CODE_SIZE
+        requires |stk| <= 1024
+        ensures st.IsExecuting()
+    {
+        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
+        Create(tx, map[0:=WorldState.DefaultAccount()], gas, code, stk)
+    }
+
     /** The gas cost semantics of an opcode.
      *
      *  @param op   The opcode to look up.
