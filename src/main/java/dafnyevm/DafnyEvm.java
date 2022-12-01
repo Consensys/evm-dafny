@@ -37,13 +37,10 @@ import EvmState_Compile.State_REVERTS;
 import WorldState_Compile.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
-import dafny.DafnySet;
 import dafny.Tuple2;
-import evmtools.util.Bytecodes;
 import evmtools.util.Hex;
 import dafnyevm.util.Word.Uint160;
 import dafnyevm.util.Word.Uint256;
-import dafnyevm.util.Word.Uint64;
 
 /**
  * An API which wraps the Dafny-generated classes to interacting with the Dafny
