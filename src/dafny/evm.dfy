@@ -46,12 +46,13 @@ abstract module EVM {
      * Create a fresh EVM to execute a given sequence of bytecode instructions.
      * The EVM is initialised with an empty stack and empty local memory.
      */
-    function method Create(context: Context.T, world: map<u160,WorldState.Account>, gas: nat, code: seq<u8>) : State
+    function method Create(context: Context.T, world: map<u160,WorldState.Account>, gas: nat, code: seq<u8>, st: seq<u256> := []) : State
     // Code to executed cannot exceed maximum limit.
     requires |code| <= Code.MAX_CODE_SIZE
+    requires |st| <= 1024
     // Account under which EVM is executing must exist!
     requires context.address in world {
-        var stck := Stack.Create();
+        var stck := Stack.Make(st);
         var mem := Memory.Create();
         var wld := WorldState.Create(world);
         var cod := Code.Create(code);
@@ -72,6 +73,11 @@ abstract module EVM {
         match st.OpDecode()
           case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
           case None => State.INVALID(INVALID_OPCODE)
+    }
+
+    function method ExecuteOP(st: State, op: u8): State
+    {
+          OpSem(op, OpGas(op, st))
     }
 
     /**

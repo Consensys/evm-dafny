@@ -229,7 +229,9 @@ module Bytecode {
     }
 
     /**
-     * Unsigned integer modulo multiplication.
+     *  Unsigned integer modulo multiplication.
+     * 
+     *  if Peek(2) == 0 then 0 else (Peek(0) * Peek(1)) % Peek(2)
      */
     function method MulMod(st: State) : State
     requires st.IsExecuting() {
@@ -1211,6 +1213,19 @@ module Bytecode {
         if st.Capacity() >= 1
         then
             st.Push(k as u256).Skip(3)
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
+    /** 
+     *  Push 32 bytes on the stack.
+     */
+    function method Push32(st: State, k: u256) : State
+    requires st.IsExecuting() {
+        //
+        if st.Capacity() >= 1
+        then
+            st.Push(k).Skip(3)
         else
             State.INVALID(STACK_OVERFLOW)
     }
