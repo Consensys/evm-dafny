@@ -229,7 +229,9 @@ module Bytecode {
     }
 
     /**
-     * Unsigned integer modulo multiplication.
+     *  Unsigned integer modulo multiplication.
+     * 
+     *  if Peek(2) == 0 then 0 else (Peek(0) * Peek(1)) % Peek(2)
      */
     function method MulMod(st: State) : State
     requires st.IsExecuting() {
