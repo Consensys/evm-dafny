@@ -1215,6 +1215,19 @@ module Bytecode {
             State.INVALID(STACK_OVERFLOW)
     }
 
+    /** 
+     *  Push 32 bytes on the stack.
+     */
+    function method Push32(st: State, k: u256) : State
+    requires st.IsExecuting() {
+        //
+        if st.Capacity() >= 1
+        then
+            st.Push(k).Skip(3)
+        else
+            State.INVALID(STACK_OVERFLOW)
+    }
+
     // =====================================================================
     // 80s: Duplication Operations
     // =====================================================================
