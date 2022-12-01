@@ -35,7 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import dafnyevm.DafnyEvm.State;
-import evmtools.core.Environment;
+import dafnyevm.util.StateTests;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
@@ -104,7 +104,6 @@ public class GeneralStateTests {
             "jump_Berlin_0_9_0",
             "jumpi_Berlin_0_14_0",
             "jumpToPush_Berlin_[0-9_]*",
-            //
             // #339
             "create2callPrecompiles_Berlin_0_[56]_0",
             "static_CallEcrecover0_0input_Berlin_0_8_0",
@@ -112,6 +111,7 @@ public class GeneralStateTests {
             "StaticcallToPrecompileFromCalledContract_Berlin_0_0_0",
             "StaticcallToPrecompileFromTransaction_Berlin_0_0_0",
             "precompsEIP2929_Berlin_0_(43|61|151|169|241|295)_0",
+            "idPrecomps_Berlin_0_[4-7]_0",
             "ecmul_.*",
             "ecadd_.*",
             "ecpairing.*",
@@ -130,10 +130,6 @@ public class GeneralStateTests {
             "undefinedOpcodeFirstByte_Berlin_0_0_0",
             "CrashingTransaction_Berlin_0_0_0",
             "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
-            "blake2B_Berlin_[0-9_]*",
-            "idPrecomps_Berlin_0_[4-7]_0",
-            "CALLBlake2f_Berlin_[0-9_]*",
-            "CALLCODEBlake2f_Berlin_[0-9_]*",
             "randomStatetest353_Berlin_0_0_0",
             "vitalikTransactionTest_Berlin_0_0_0",
             "manualCreate_Berlin_0_[012]_0",
@@ -153,7 +149,7 @@ public class GeneralStateTests {
         } else {
             Transaction tx = instance.getTransaction();
             // Construct environment
-            DafnyEvm.BlockInfo env = buildEnvironment(instance.getEnvironment());
+            DafnyEvm.BlockInfo env = StateTests.toBlockInfo(instance.getEnvironment());
             // Construct EVM
             ArrayList<Trace.Element> elements = new ArrayList<>();
             StructuredTracer tracer = new StructuredTracer(elements);
@@ -164,7 +160,7 @@ public class GeneralStateTests {
                     .sender(tx.sender)
                     .origin(tx.sender).gas(env.gasLimit).value(tx.value).data(tx.data);
             // Configure world state
-            configureWorldState(evm, tx, instance.getWorldState());
+            StateTests.configureWorldState(evm, instance.getWorldState());
             // Run the call or create
             if (tx.to != null) {
                 evm.call();
@@ -206,44 +202,6 @@ public class GeneralStateTests {
                 System.err.println("--");
                 return;
             }
-        }
-    }
-
-    /**
-     * Construct the necessary block environment from the test's environmental
-     * parameters.
-     *
-     * @param env
-     * @return
-     */
-    public DafnyEvm.BlockInfo buildEnvironment(Environment env) {
-        DafnyEvm.BlockInfo info = new DafnyEvm.BlockInfo();
-        info = info.coinBase(env.currentCoinbase);
-        info = info.timeStamp(env.currentTimestamp);
-        // NOTE: following currently replicates what Geth does (which default's to
-        // Ganache's ChainID). At some point, we'll need to fix this.
-        info = info.chainID(0x539);
-        // NOTE: following is commented out whilst trace data is generated using the
-        // "evm" tool directly, as this does not allow a block number other than zero.
-        // info = info.number(env.currentNumber);
-        info = info.number(0);
-        info = info.difficulty(env.currentDifficulty);
-        info = info.gasLimit(env.currentGasLimit);
-        return info;
-    }
-
-    /**
-     * Apply
-     *
-     * @param st
-     * @param evm
-     * @return
-     */
-    public void configureWorldState(DafnyEvm evm, Transaction tx, WorldState ws) {
-        // Initialise world statew
-        for (Map.Entry<BigInteger, evmtools.core.Account> e : ws.entrySet()) {
-            evmtools.core.Account acct = e.getValue();
-            evm.create(e.getKey(), acct.nonce, acct.balance, acct.storage, acct.code);
         }
     }
 

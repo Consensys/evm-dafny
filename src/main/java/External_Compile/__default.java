@@ -23,8 +23,10 @@ import org.web3j.crypto.Sign.SignatureData;
 
 import dafny.DafnySequence;
 import dafny.Tuple2;
+import dafnyevm.util.Bytes;
 import dafnyevm.util.Word.Uint160;
 import evmtools.util.Hex;
+import dafnyevm.crypto.Blake2b;
 
 /**
  * Provides concrete implementations for all methods defined as
@@ -153,16 +155,36 @@ public class __default {
 	}
 
 	/**
-	 * Compute the blake hash of the byte sequence.
-	 *
-	 * @param bytes
-	 * @return
-	 */
-	public static DafnySequence<Byte> blake2f(DafnySequence<? extends Byte> bytes) {
-		// FIXME: this is wrong I believe.
-		// Compute the hash
-		byte[] hash = Hash.blake2b256(bytes.toByteArray((DafnySequence) bytes));
-		// Construct an (unsigned) bigint.
-		return DafnySequence.fromBytes(hash);
+     * Compute function F from Blake2 compression algorithm defined in RFC7693. See
+     * also EIP-152.
+     *
+     * @param bytes
+     * @return
+     */
+	public static DafnySequence<Byte> blake2f(DafnySequence<? extends Byte> _bytes) {
+	    byte[] bytes = DafnySequence.toByteArray((DafnySequence) _bytes);
+	    return DafnySequence.fromBytes(blake2f(bytes));
 	}
+
+	public static byte[] blake2f(byte[] bytes) {
+        // Initial sanity checks as determined by yellow paper.
+        if(bytes.length == 213) {
+            // (f)inal block indicator flag
+            byte f = bytes[212];
+            //
+            if(f == 0 || f == 1) {
+                // Determine number of rounds.
+                long r = Bytes.fromBigEndian32(bytes, 0) & 0xFFFFFFFFL;
+                long[] h = Bytes.fromLittleEndian64s(bytes, 4, 8);
+                long[] m = Bytes.fromLittleEndian64s(bytes, 68, 16);
+                long[] t = Bytes.fromLittleEndian64s(bytes, 196, 2);
+                //
+                h = Blake2b.F(r, h, m, t, f == 1);
+                //
+                return Bytes.toLittleEndianBytes(h);
+            }
+        }
+        // Failure case
+        return new byte[0];
+    }
 }

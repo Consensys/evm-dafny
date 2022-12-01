@@ -15,13 +15,22 @@ package dafnyevm;
 
 import org.apache.commons.cli.*;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import evmtools.core.Environment;
+import evmtools.core.StateTest;
+import evmtools.core.Transaction;
+import evmtools.core.WorldState;
 import evmtools.util.Hex;
+import dafnyevm.util.StateTests;
 import dafnyevm.util.Tracers;
 import dafnyevm.DafnyEvm.Tracer;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 public class Main {
 	/**
@@ -38,7 +47,9 @@ public class Main {
 			new Option("value", true, "call value to use (default 0x0)"),
 			new Option("gas", true, "gas limit for the evm (default 0x10000000000)"),
 			new Option("gasPrice", true, "gas price to use (default 0x1)"),
-			new Option("statetest", false, "Executes the given state tests")
+			new Option("fork", true, "Specificy fork"),
+			new Option("statetest", false, "Executes the given state tests"),
+			new Option("run", false, "Execute arbitrary bytecode")
 	};
 
 	public static CommandLine parseCommandLine(String[] args) {
@@ -62,7 +73,13 @@ public class Main {
 		// Parse command-line arguments.
 		CommandLine cmd = parseCommandLine(args);
 		// Dispatch to requested command
-		runArbitraryBytecode(cmd);
+		if(cmd.hasOption("statetest")) {
+		    runStateTest(cmd);
+		} else if(cmd.hasOption("run")) {
+		    runArbitraryBytecode(cmd);
+		} else {
+		    System.out.println("error: must provide either --run or --statetest argument!");
+		}
 	}
 
 	public static void runArbitraryBytecode(CommandLine cmd) {
@@ -89,6 +106,36 @@ public class Main {
 		// Execute the EVM
 		evm.call();
 	}
+
+	/**
+     * Run a state test from the command-line. To do this, we have to load and parse
+     * the JSON file representing the state test, then setup the configuration and
+     * run the EVM.
+     *
+     * @param cmd
+	 * @throws IOException
+	 * @throws JSONException
+     */
+    public static void runStateTest(CommandLine cmd) throws IOException, JSONException {
+        String fork = cmd.getOptionValue("fork", "Berlin");
+        // Determine filename of state test
+        String filename = cmd.getArgs()[0];
+        // Read its contents as a string.
+        String contents = Files.readString(Path.of(filename));
+        // Convert contents into JSON
+        JSONObject json = new JSONObject(contents);
+        // Parse JSON into one or more StateTests
+        List<StateTest> tests = StateTest.fromJSON(json);
+        // Determine tracer to use
+        Tracer tracer = determineTracer(cmd);
+        // Iterate each individual test
+        for (StateTest t : tests) {
+            // Extract instances for specific fork
+            for (StateTest.Instance i : t.getInstances(fork)) {
+                StateTests.runInstance(i.getName(), i.getEnvironment(), i.getWorldState(), i.instantiate(), tracer);
+            }
+        }
+    }
 
 	public static Tracer determineTracer(CommandLine cmd) {
 		if (cmd.hasOption("json")) {
