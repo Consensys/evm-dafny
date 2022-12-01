@@ -338,3 +338,202 @@ What we have proved in this bytecode is:
 - if we start with enough gas (`Pre1`) there is no out of gas exception.
  
 
+# EVM Optimisations
+
+Every computation on the EVM incurs some cost measured in _gas_.
+To save on gas, some _optimisations_ can be applied to the bytecode. 
+A _correct_ optimisation of a sequence of instructions `xi` into `opt(xi)` should satisfy at least two properties:
+
+1. if executing `xi` from state `s` results in state `s'` then executing `opt(xi)` from `s` should result in `s''` that may differ from `s'` only for the values of `gas` and `pc`
+2. from _any_ state `s`, the gas cost of executing `opt(xi)` should be less than the gas cost of executing `xi`.
+
+There are several ways of optimising EVM bytecode ranging from constant propagation, detecting/replacing some patterns, etc. 
+Some optimisations may look trivial and _correct_ but there are some known bugs related to optimisations that can result in observing outdated memory states [Overly Optimistic Optimizer — Certora Bug Disclosure](https://medium.com/certora/overly-optimistic-optimizer-certora-bug-disclosure-2101e3f7994d).
+
+
+## A Simple Pattern
+
+Using our framework, we can formalise the correctness criterion above and also prove that some optimisations are correct.
+We demonstrate this on a simple example from
+[this Thesis](https://fenix.tecnico.ulisboa.pt/cursos/mma/dissertacao/1691203502343808).
+
+### The Problem
+
+Proposition 12 in [this Thesis](https://fenix.tecnico.ulisboa.pt/cursos/mma/dissertacao/1691203502343808) proposes to replace any sequence of the form `SWAPN POP^(n+1)` by `POP^(n+1)` (we use regular-language notation so `a^k` stands for `k` n times).
+
+That seems plausible as:
+1. `SWAPN` for `1 <= N <= 16` swaps the element at index `0` (top of the stack) with element at index `N`
+2. because we `POP` `N+1` times right after the `SWAPN`, the SWAP somehow does not matter: the first `N+1` elements are popped and the elements at index `N+2` and above are unchanged.
+
+We want to prove that replacing `SWAPN POP^(n+1)` by `POP^(n+1)` is _correct_, and this for any (valid) input state.
+
+### The case N = 1
+
+To build a machine-checkable proof of Proposition 12 we write a [Dafny program](https://github.com/ConsenSys/evm-dafny/blob/master/src/test/dafny/Optimisations.dfy), `Proposition12a` below, with the following features:
+
+1. we start from an arbitrary state of an EVM, `vm`, with the constraints that the stack has more than 2 elements (and less than the maximum 1024). We also require that there is enough gas in the machine. This is specified by the `requires` clauses in the Dafny code below. If these constraints are not satisfied we may reach and `INVALID` state.
+1. then we execute `SWAP1 POP POP` in _one_ EVM, `vm1`, starting from initial state `vm`;
+1. we execute `POP POP` in _another_ EVM, `vm12`, starting from the same initial state `vm`;
+1. we then assert that the states after executing `SWAP1 POP POP` and `POP POP` are the same upto the values of `gas` and `pc`.
+
+
+```dafny 
+/**
+ *  Proposition 12: n + 1 consecutive Pop  <_gas SwapN n + 1 consecutive Pop
+ *  Gas cost for POP is G_BASE and for SWAP G_VERYLOW
+ *  
+ *  @param  s   An initial stack content.
+ *  @param  g   An initial value of gas.
+ * 
+ *  @note   Case n = 1
+ */
+method Proposition12a(s: seq<u256>, g: nat)
+    /** Stack must have at least 2 elements. */
+    requires 2 <= |s| <= 1024   
+    /** Minimum gas needed. */
+    requires g >= 2 * Gas.G_BASE + Gas.G_VERYLOW
+{
+    //  Get an EVM with some gas and an arbitrary stack `s`
+    var vm := EvmBerlin.Init(gas := g, stk := s, code := []);
+
+    //  execute 2 POPs
+    var vm1 := vm;
+    vm1 := ExecuteOP(vm1, POP);
+    vm1 := ExecuteOP(vm1, POP);
+
+    //  execute SWAP1 followed by 2 POPs
+    var vm2 := vm;
+    vm2 := ExecuteOP(vm2, SWAP1);
+    vm2 := ExecuteOP(vm2, POP);
+    vm2 := ExecuteOP(vm2, POP);
+
+    //  States are the same except for gas and PC
+    assert vm1.evm.(pc := 0, gas := 0) == vm2.evm.(pc := 0, gas :=0);
+    //  Gas saved is Gas.G_VERYLOW
+    assert vm2.Gas() == vm1.Gas() - Gas.G_VERYLOW;
+    assert vm2.Gas() < vm1.Gas();
+}    
+```
+
+#### How does it work?
+
+First, we use an input parameter `s` to define the content of the EVM at the beginning.
+Because it is an input parameter it can take any _arbitrary_ value, but must satisfy the size requirements.
+The same holds for the gas value in the initial state: we require that this is more than a certain amount that corresponds to one SWAP and 2 POPS (we could actually require two different values for the two EVMs).
+
+The `assert` statements in Dafny are `verification` statements and must provably hold for any inputs.
+If you use this code in VSCode, you may change `requires 2 <= |s| <= 1024`
+into `requires 1 <= |s| <= 1024` and see the effects: Dafny cannot prove that a valid state is reached after the computations. 
+
+
+#### Results
+
+Dafny can successfully verify (without any extra proof hints) the previous `method` and what we have proved is the following: 
+
+**for _any_ state of the EVM with more than 2 elements on the stack, and enough gas,**
+
+1.  the two sequences `SWAP1 POP POP` and `POP POP` lead to the same states (except for the value of `gas` and `pc`),
+1. the sequence `POP POP` is strictly less expensive than `SWAP1 POP POP`.
+
+### General Case.
+
+The general case is more tricky as we have to prove it for any `1 <= N <= 16`. We could write separate methods
+to prove each case, but we show here how to use `loop invariants` to reason about EVM bytecode.
+
+#### Proof for `1 <= n <= 16`
+
+The Dafny `method` below specifies the proof of the general case.
+
+As for the case `N = 1`, we run the code and the optimised code in two different EVMs starting from the same state.
+What is more complicated here is that we have to `loop` and execute the `POP` n times where `n` is an input parameter of the proof.
+
+The result is that the constraint on the initial state of the EVM must satisfy some requirements that take into account the value of `n`. You can check that `n = 1` yields the constraints we had for the `Case N = 1` above.
+
+```dafny 
+/**
+ *  
+ *  Proposition 12: n + 1 consecutive Pop  <_gas SwapN n + 1 consecutive Pop
+ *  Gas cost for POP is G_BASE and for SWAP G_VERYLOW
+ *  
+ *  @param  n   As described above.
+ *  @param  s   An initial stack content.
+ *  @param  g   An initial value of gas.
+ *
+ *  @note       General case.
+ *
+ */
+method Proposition12b(n: nat, s: seq<u256>, g: nat)
+    requires 1 <= n <= 16 
+    /** Stack must have at least n + 1 elements. */
+    requires n + 1 <= |s| <= 1024
+    /** Minimum gas needed. */
+    requires g >= (n + 1) * Gas.G_BASE + Gas.G_VERYLOW
+{
+    var vm := EvmBerlin.Init(gas := g, stk := s, code := []);
+
+    //  Execute n POPs in vm1.
+    var vm1 := vm;
+    for i := 0 to n + 1
+        invariant vm1.OK?
+        invariant vm1.Gas() == g - i * Gas.G_BASE
+        invariant vm1.Operands() >= n - i
+        invariant vm1.GetStack() == vm.SlicePeek(i, |s|)
+    {
+        vm1 := ExecuteOP(vm1, POP);
+        assert vm1.OK?;
+    }
+    assert vm1.Gas() >= Gas.G_VERYLOW;
+    //  Stack after n POPs is suffix of initial stack starting at index n + 1
+    assert vm1.GetStack() == vm.SlicePeek(n + 1, |s|);
+
+    //  Execute SWAPn and then n POPs in vm2. 
+    var vm2 := vm;
+    vm2 := Swap(vm2, n).UseGas(Gas.G_VERYLOW);
+
+    for i := 0 to n + 1
+        invariant vm2.OK? 
+        invariant vm2.Gas() == g - i * Gas.G_BASE - Gas.G_VERYLOW
+        invariant vm2.Operands() >= n + 1 - i
+        invariant vm2.Operands() == vm.Operands() - i == |s| - i
+        invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)
+    {
+        vm2 := ExecuteOP(vm2, POP);
+        assert vm2.OK?;
+    }
+    assert vm2.SlicePeek(0, |s| - n - 1) == vm.SlicePeek(n + 1, |s|);
+    assert vm1.GetStack() == vm2.GetStack();
+    assert vm2.Gas() == vm1.Gas() -  Gas.G_VERYLOW;
+    assert vm2.Gas() < vm1.Gas();
+}    
+```
+
+#### How does it work?
+
+The code snippet for the first loop shows that it is a bit harder to prove that the two sequences `SWAPN POP^(n+1)` by `POP^(n+1)` are equivalent.
+First we have to prove that we can perform `n + 1` POPs, This requires us to maintain a loop invariant,  `invariant vm1.Operands() >= n - i`, that ensures that there are enough elements of the stack at each iterations on the loop.
+The same holds for gas: we have to prove that there is enough gas after each iteration, which is captured by the loop invariant `invariant vm2.Gas() == g - i * Gas.G_BASE - Gas.G_VERYLOW`.
+The other invariants `invariant vm2.OK?` specifies that at each iteration we are in non-failure state, and  
+`invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)` that:
+1.  `x.SlicePeek(l, u)` is a stack made out of the elements of `x` from index `l` to `u - 1`,
+1. the invariant specifies that, in `vm2`, the stack content after the next `n + 1 -i` elements is the same as the initial stack content in `vm`.
+
+The code snippet for  `SWAPN POP^(n+1)` is split into `SWAPN` and then a loop that pops `n + 1` times.
+The invariants for the `vm2` states are similar to the ones for `vm1`.
+
+Overall, Dafny checks that the predicate tagged with attribute `invariant` are indeed maintained by the loops, and valid on entry.
+Using the fact that the loop invariants are true after exiting the loop in conjunction with `i == n + 1` enables us to obtain the two facts:
+
+1. `assert vm1.GetStack() == vm.SlicePeek(n + 1, |s|);` from `invariant vm1.GetStack() == vm.SlicePeek(i, |s|)` and `i == n + 1`
+1.  `assert vm2.SlicePeek(0, |s| - n - 1) == vm.SlicePeek(n + 1, |s|);` from `invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)` and `i == n + 1`.
+
+If we combine them we prove that `assert vm1.GetStack() == vm2.GetStack();` i.e. the two stacks are equal after executing the sequences  `SWAPN POP^(n+1)` and `POP^(n+1)`.
+
+#### Results
+
+Dafny successfully verifies this program and we obtain the following results:
+
+**for _any_ state of the EVM with more than `n + 1` elements on the stack, and enough gas,**
+
+
+1.  the two sequences `SWAPN POP^(N + 1)` and `POP^(N + 1)` lead to the same states (except for the value of `gas` and `pc`),
+1. the sequence `POP^(N + 1)` is strictly less expensive than `SWAPN POP^(N + 1)`.

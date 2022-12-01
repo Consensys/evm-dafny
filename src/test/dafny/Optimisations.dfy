@@ -61,6 +61,7 @@ module Optimisations {
         //  States are the same except for gas and PC
         assert vm1.evm.(pc := 0, gas := 0) == vm2.evm.(pc := 0, gas :=0);
         //  Gas saved is Gas.G_VERYLOW
+        assert vm2.Gas() == vm1.Gas() - Gas.G_VERYLOW;
         assert vm2.Gas() < vm1.Gas();
     }    
 
