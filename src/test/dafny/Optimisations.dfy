@@ -86,7 +86,7 @@ module Optimisations {
     {
         var vm := EvmBerlin.Init(gas := g, stk := s, code := []);
 
-        //  Execute n POPs in vm1.
+        //  Execute n + 1 POPs in vm1.
         var vm1 := vm;
         for i := 0 to n + 1
             invariant vm1.OK?
@@ -98,7 +98,7 @@ module Optimisations {
             assert vm1.OK?;
         }
         assert vm1.Gas() >= Gas.G_VERYLOW;
-        //  Stack after n POPs is suffix of initial stack starting at index n + 1
+        //  Stack after n + 1 POPs is suffix of initial stack starting at index n + 1
         assert vm1.GetStack() == vm.SlicePeek(n + 1, |s|);
 
         //  Execute SWAPn and then n POPs in vm2. 
