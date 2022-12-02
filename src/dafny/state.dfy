@@ -167,14 +167,6 @@ module EvmState {
         }
 
         /**
-         * Determine number of operands on stack.
-         */
-        function method Operands() : nat
-        requires IsExecuting() {
-            Stack.Size(evm.stack)
-        }
-
-        /**
          * Determine remaining gas.
          */
         function method Gas(): nat
@@ -213,18 +205,11 @@ module EvmState {
         requires IsExecuting() {
             this.evm.pc
         }
-
-        /**
-         * Get the state of the internal stack.
-         */
-        function method GetStack(): Stack.Stack
-        requires IsExecuting() {
-            this.evm.stack
-        }
-
+      
         /**
          * Determine whether modifications to the world state are permitted in this
          * context (true means writes are permitted).
+         *  @todo  This should go somewhere else?
          */
         function method WritesPermitted(): bool
         requires IsExecuting() {
@@ -507,42 +492,58 @@ module EvmState {
         // =======================================================================================
 
         /**
+         * Determine number of operands on stack.
+         */
+        function method Operands() : nat
+        requires IsExecuting() {
+            evm.stack.Size()
+        }
+
+        /**
+         * Get the state of the internal stack.
+         */
+        function method GetStack(): Stack.Stack
+        requires IsExecuting() {
+            this.evm.stack
+        }
+
+        /**
          * Check capacity remaining on stack.
          */
         function method Capacity() : nat
         requires IsExecuting() {
-            Stack.Capacity(evm.stack)
+            evm.stack.Capacity()
         }
 
         /**
          * Push word onto stack.
          */
-        function method Push(v:u256) : State
+        function method Push(v: u256) : State
         requires IsExecuting()
         requires Capacity() > 0 {
-            OK(evm.(stack:=Stack.Push(evm.stack,v)))
+            OK(evm.(stack := GetStack().Push(v)))
         }
 
         /**
          * peek word from a given position on the stack, where "1" is the
          * topmost position, "2" is the next position and so on.
          */
-        function method Peek(k:nat) : u256
+        function method Peek(k: nat): u256
         requires IsExecuting()
         // Sanity check peek possible
-        requires k < Stack.Size(evm.stack) {
-            Stack.Peek(evm.stack,k)
+        requires k < Operands(){
+            GetStack().Peek(k)
         }
 
         /**
          * Peek n words from the top of the stack.  This requires there are
          * enough items on the stack.
          */
-        function method PeekN(n:nat) : (r:seq<u256>)
+        function method PeekN(n: nat): (r: seq<u256>)
         requires IsExecuting()
         // Sanity check enough items to peek
-        requires n <= Stack.Size(evm.stack) {
-            Stack.PeekN(evm.stack,n)
+        requires n <= Operands() {
+            GetStack().PeekN(n)
         }
 
         /**
@@ -554,39 +555,39 @@ module EvmState {
          */
         function SlicePeek(l: nat, u: nat): (r: Stack.Stack)
         requires IsExecuting()
-        requires l <= u <= Stack.Size(evm.stack)
-        ensures Stack.Size(r) == u - l
+        requires l <= u <= Operands()
+        ensures r.Size() == u - l
         {
-            Stack.Slice(evm.stack, l, u)
+            GetStack().Slice(l, u)
         }
 
         /**
          * Pop word from stack.
          */
-        function method Pop() : State
+        function method Pop(): State
         requires IsExecuting()
         // Cannot pop from empty stack
-        requires Stack.Size(evm.stack) >= 1 {
-            OK(evm.(stack:=Stack.Pop(evm.stack)))
+        requires Operands() >= 1 {
+            OK(evm.(stack := GetStack().Pop()))
         }
 
         /**
          * Pop n words from stack.
          */
-        function method PopN(n:nat) : State
+        function method PopN(n: nat): State
         requires IsExecuting()
         // Must be enough space!
-        requires Stack.Size(evm.stack) >= n {
-            OK(evm.(stack:=Stack.PopN(evm.stack,n)))
+        requires Operands() >= n {
+            OK(evm.(stack := GetStack().PopN(n)))
         }
 
         /**
          * Swap top item with kth item.
          */
-        function method Swap(k:nat) : State
+        function method Swap(k: nat): State
         requires IsExecuting()
         requires Operands() > k > 0 {
-            OK(evm.(stack:=Stack.Swap(evm.stack,k)))
+            OK(evm.(stack := GetStack().Swap(k)))
         }
 
         // =======================================================================================
