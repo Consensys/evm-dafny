@@ -32,7 +32,7 @@ abstract module MemoryVerif_01 {
    *  sizes.
    */
   method MSTORE_01_Proofs(vm: OKState)
-    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.Operands() >= 2
   {
     //  Compute new state
     var r := Bytecode.MStore(vm);
@@ -81,7 +81,7 @@ abstract module MemoryVerif_01 {
    *  Starting from an OKState with 2 elements on the stack.
    */
   method MSTORE_02_Proofs(vm: OKState)
-    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
   {
@@ -127,7 +127,7 @@ abstract module MemoryVerif_01 {
    *  sizes.
    */
   method MLOAD_01_Proofs(vm: OKState)
-    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.Operands() >= 2
   {
     //  Compute new state
     var r := Bytecode.MLoad(vm);
@@ -167,7 +167,7 @@ abstract module MemoryVerif_01 {
    *  Starting from an OKState with 2 elements on the stack.
    */
   method MLOAD_02_Proofs(vm: OKState)
-    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
   {
@@ -224,7 +224,7 @@ abstract module MemoryVerif_01 {
 
   //  RETURN gas cost
   method RETURN_02_Proofs(vm: OKState)
-    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
   {
@@ -267,7 +267,7 @@ abstract module MemoryVerif_01 {
 
   //  REVERT gas cost
   method REVERT_02_Proofs(vm: OKState)
-    requires Stack.Size(vm.GetStack()) >= 2
+    requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
   {

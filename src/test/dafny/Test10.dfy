@@ -103,7 +103,7 @@ module Test10 {
 
         while vm.Peek(0) > 0
             invariant vm.IsExecuting()
-            invariant Stack.Size(vm.GetStack()) > 0
+            invariant vm.Operands()> 0
             invariant count == vm.Peek(0)
             invariant vm.GetStack() == Stack.Make([count])
         {
@@ -177,7 +177,7 @@ module Test10 {
 
         while vm.Peek(0) > 0
             invariant vm.IsExecuting()
-            invariant Stack.Size(vm.GetStack()) == 2
+            invariant vm.Operands() == 2
             invariant vm.Peek(0) as nat + count as nat == c as nat  
             invariant vm.Peek(1) as nat == count as nat 
             decreases c - count 
@@ -246,7 +246,7 @@ module Test10 {
 
         while vm.Peek(0) > 0
             invariant vm.IsExecuting()
-            invariant Stack.Size(vm.GetStack()) == 2
+            invariant vm.Operands() == 2
             invariant count == vm.Peek(1)
             invariant count == vm.Peek(1) >= 0
             invariant vm.Peek(0) > 0 <==> count > 0
@@ -287,7 +287,7 @@ module Test10 {
         vm := Pop(vm);
         assert count == vm.Peek(0);
         assert count == 0;
-        assert Stack.Size(vm.GetStack()) == 1;
+        assert vm.Operands() == 1;
         assert vm.GetStack() == Stack.Make([0]);
     }
 }
