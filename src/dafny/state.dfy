@@ -65,7 +65,7 @@ module EvmState {
     datatype Raw = EVM(
         context: Context.T,
         world : WorldState.T,
-        stack   : Stack.T,
+        stack   : Stack.Stack,
         memory  : Memory.T,
         code: Code.T,
         substate: SubState.T,
@@ -217,7 +217,7 @@ module EvmState {
         /**
          * Get the state of the internal stack.
          */
-        function method GetStack(): Stack.T
+        function method GetStack(): Stack.Stack
         requires IsExecuting() {
             this.evm.stack
         }
@@ -329,7 +329,7 @@ module EvmState {
          */
         function method Load(address:u256) : u256
         requires IsExecuting() {
-            var account := evm.context.address;
+            var account := evm.context.address; 
             evm.world.Read(account,address)
         }
 
@@ -552,7 +552,7 @@ module EvmState {
          *  @param  u   An index.
          *  @returns    A stack made of the first u elements of `st` minus the first `l`.
          */
-        function SlicePeek(l: nat, u: nat): (r: Stack.T)
+        function SlicePeek(l: nat, u: nat): (r: Stack.Stack)
         requires IsExecuting()
         requires l <= u <= Stack.Size(evm.stack)
         ensures Stack.Size(r) == u - l
