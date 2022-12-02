@@ -11,6 +11,14 @@
         1. [Bytecode overview](#what-this-bytecode-is-doing)
         1. [Formal verification of the loop program](#formal-verification-of-the-loop-program)
         1. [Results](#results)
+1. [Bytecode Optimisations](#evm-optimisations)
+    1.  [Swapn Pop^n](#a-simple-pattern-problem-statement)
+        1.  [Case SWAP1](#the-case-n--1)
+            1. [How does it work?](#how-does-it-work)
+            1. [Results](#results-1)
+        1.  [General Case](#general-case)
+            1. [How does it work?](#how-does-it-work-1)
+            1. [Results](#results-2)
 
 # Verifying Bytecode
 
@@ -20,7 +28,7 @@
 
 The example below is a code snippet in [this example file](src/test/dafny/FM-paper.dfy).
 
-First some bytecode is created using the `Code.Create` function from [the EVM abstract module](src/dafny/evm.dfy).
+First some bytecode is created using the `Code.Create` function from [the EVM module](src/dafny/evm.dfy).
 ```dafny
 /** Code snippet that detects overflow in addition. */
 const OVERFLOW_CHECK := Code.Create(
@@ -70,8 +78,8 @@ What we are going to do is write a Dafny program that **verifies** that this cod
 
 ### Detecting Overflows
 
-Detecting overflows in addition modulo a given number can be done by first computing the result if an addition, and checking a property of the result against one of the inputs.
-In other words, there is a necessary and sufficient condition to detect overflows on addition.
+Detecting overflows in _addition modulo_ a given number can be done by first computing the result of an addition modulo, and then checking a property of the result against one of the inputs.
+In other words, there is a necessary and sufficient condition to detect overflows on addition modulo.
 This is formally defined in the following Dafny lemma:
 
 ```dafny
@@ -84,31 +92,31 @@ ensures  /* C1 */ x as nat + y as nat > MAX_U256
 }
 ```
 This lemma asserts (postcondition `ensures`) that the following conditions are equivalent (`<==>`):
-- C1: the sum of `x` and `y` _as if there were natural numbers_ is larger than `MAX_U256 = 2^256 - 1`,
-- C2: the sum of `x` and `y` _modulo_ `2^256` is less than `x` (`y` would work too as the `+` is symmetric).
+- C1: the addition of `x` and `y` _as if there were natural numbers_ (no modulo) is larger than `MAX_U256 = 2^256 - 1`,
+- C2: the addition of `x` and `y` _modulo_ `2^256` is less than `x` (`y` would work too as the `+` is symmetric).
 
 Dafny successfully verifies this lemma, using clever **automated reasoning** and an SMT-solver in the backend.
-What we end up with is _machine-checkable proof_ (the lemmna is written as a program, and the program is verified by Dafny) that the lemma is valid (for all inputs `x` and `y` of type `u256`).
-We can now use this fact to write an overflow checker and this exactly what  the `OVERFLOW_CHECK` code snippet does. 
+What we end up with is a _machine-checkable proof_ (the lemma is written as a program, and the program is verified by Dafny) that the lemma is valid _for all inputs `x` and `y` of type `u256`_.
+We can now use this fact to write an overflow checker and this is exactly what  the `OVERFLOW_CHECK` code snippet does. 
 
 ### Formally Verifying the Overflow Checker
 In order to verify that the overflow checker is _correct_ we need a few things:
-1. a _formal specification_ of what the correctness property is
-2. a mechanism to _reason_ about code.
+1. a _formal specification_ of what the correctness property is,
+2. a mechanism to _reason_ about the bytecode.
 
-To do so we are going to write a Dafny program (method), `OverflowCheck` (below) that captures the specification and the correctness criteria:
+To do so we are going to write a Dafny program, a `method OverflowCheck` (below) that captures the specification and the correctness criteria:
 
-- **the inputs** `x` and `y`:  there are input parameters of `OverflowCheck` together with a state `st:State` of an EVM. The inputs are arbitrary but we add some reasonable contraints on them defined by preconditions (`requires`):
+- **the inputs** `x` and `y`:  there are input parameters of `OverflowCheck` together with a state `st:State` of an EVM. The inputs can take _arbitrary_ values but we add some reasonable contraints on them defined by preconditions (`requires`):
     - `Pre0` indicates that we start in a non-failure state, with the Program Counter `PC` pointing to instruction at address `0x00`.
     - `Pre1`: we assume the amount of `gas` in the EVM is larger than a certain amount. The values used here are defined for the Berlin version of the EVM semantics and available in [the Gas module](src/dafny/gas.dfy).
-    - `Pre2`: the initial stack contains the two values `x` and `y` with `x` at the top. But `x` and `y` are **arbitrary values** of type `u256`.
-    - `Pre3`: the code that is currently executed is the `OVERFLOW_CHECK` code above.
-- **the correctness criteria**: this is captured by _postconditions_ (`ensures` in Dafny). The postconditions _formally_ and _logically_ define our correctness criteria:
+    - `Pre2`: the initial stack contains the two values `x` and `y` with `x` at the top with _`x` and `y` **arbitrary values** of type `u256`_.
+    - `Pre3`: the code that is currently executed in the EVM is the `OVERFLOW_CHECK` code above.
+- **the correctness criteria**: this is captured by _postconditions_ (`ensures`). The postconditions _formally_ and _logically_ define our correctness criteria:
     - the body **always** terminates; this is enforced by Dafny and when the body terminates, the following postconditions hold:
-    - `Post0`: the final state is either a normal stop or a revert. This excludes `out-of-gas` exception (we intend to provide enough gas in `Pre1` to ensure this postcondition).
+    - `Post0`: the final state is either a normal stop or a revert. This excludes `out-of-gas` exception (we intend to provide enough gas in `Pre1` to avoid `out-of-gas` exceptions).
     - `Post1`: the final state is a revert **if and only if** an overflow occurs. Note that overflow is defined mathematically with unbounded natural numbers (`nat`).
     - `Post2`: the final state is a normal state  **if and only if** no overflow occurs. That postcondition logically follows from `Post0` and `Post1`.
-- **the instrumented code**: to _run_ the code we use the `ExecuteN(s, k)` function in [the EVM abstract module](src/dafny/evm.dfy). This function executes (at most) `k` steps of the code in `s`. If an invalid state (e.g. stack under/overflow, out-of-gas) is encountered before the `k`-th step the execution prematurely stops and returns the invalid state. The body of the method `OverflowCheck` below somehow _monitors_ what the bytecode is doing. If executes the first 4 instructions, resulting
+- **the instrumented code**: to _run_ the code we use the `ExecuteN(s, k)` function in [the EVM module](src/dafny/evm.dfy). This function executes (at most) `k` steps of the code in `s`. If an invalid state (e.g. stack under/overflow, out-of-gas) is encountered before the `k`-th step the execution prematurely stops and returns the invalid state. The body of the method `OverflowCheck` below somehow _monitors_ what the bytecode is doing. If executes the first 4 instructions, resulting
 in state `st' == ExecuteN(st, 4)`. Depending on the result (second element of the stack `st'.Peek(1)`) of the comparison operator `LT` (semantics in [the bytecode module](src/dafny/bytecode.dfy)) what is left to execute next is: either one instruction `STOP` or the section of the code that reverts (from `0x07`). 
 The instrumentation of the execution of the bytecode with a Dafny `if-then-else` statement enables to track this two different paths. 
 
@@ -174,11 +182,11 @@ If we check the method `OverflowCheck`, the Dafny verifier indeed confirms that 
 So what have we proved with this process?
 Several interesting properties:  
 
-- first, we have proved correctness **for all inputs** (satisfying the preconditions). It is a symbolic and logical reasoning process, not a _testing_ process. This is equivalent to exhaustively testing all inputs (and there are more than `2^257` possible inputs).
+- first, we have proved correctness **for all inputs** satisfying the preconditions. It is a symbolic and logical reasoning process, not a _testing_ process. This is equivalent to exhaustively testing all inputs (and there are more than `2^257` possible inputs).
 - second, with `Post0` we have a guarantee that the code snippet never runs out of gas. Of course this is true provided there is enough gas initially, as per `Pre1` which gives us a lower bound on what is needed to avoid an out-of-gas exception.
 - third, we have proved that no exceptions related to stack under/overflow occur: otherwise we would 
 reach an `INVALID` state which is ruled out by `Post0` 
-- finally, we have proved that the code snippet correctly detects overflows in addition (`Post1` and `Post2`), and this for any values of `x` and `y` initially on the stack.
+- finally, we have proved that the code snippet correctly detects overflows in addition modulo (`Post1` and `Post2`), and this for any values of `x` and `y` initially on the stack.
 
 ## A loop program 
 
@@ -303,7 +311,8 @@ method Loopy(st: State, c: u8) returns (st': State)
 To verify that the loop iterates `c` times we use a _verification_ `ghost` variable `n` to record
 the number of times we hit the instruction at `0x08`.
 We also use a `ghost` variable `count` to keep track of the value of the loop counter which is actually on the stack.
-Te fact that we iterate the loop `c` times is specified as `assert c == n` at the end the method `Loopy`.
+Ghost variables cannot be used to influence the control flow.
+The fact that we iterate the loop `c` times is specified as `assert c == n` at the end the method `Loopy`.
 And normal termination of the bytecode is specified by postcondition `Post0`.
 
 So **How does it work?**
@@ -315,7 +324,7 @@ We can think about the instrumented code in `Loopy` as if we had two programs: t
 
 For instance, our monitor can check the value of the third element of the stack, `st'.Peek(2)` and 
 according to its value, predicts the next instruction to be executed.
-If  `st'.Peek(2)` it predicts that `PC=0x06` and the result of the `JUMPI` will be the loop body.
+If  `st'.Peek(2) > 0` it predicts that `PC=0x06` and the result of the `JUMPI` will be the loop body.
 We then execute 9 more steps.
 Otherwise it predicts that the next two steps will end the program (exit the `while` loop).
 
@@ -351,29 +360,29 @@ There are several ways of optimising EVM bytecode ranging from constant propagat
 Some optimisations may look trivial and _correct_ but there are some known bugs related to optimisations that can result in observing outdated memory states [Overly Optimistic Optimizer — Certora Bug Disclosure](https://medium.com/certora/overly-optimistic-optimizer-certora-bug-disclosure-2101e3f7994d).
 
 
-## A Simple Pattern
+## A Simple Pattern: Problem Statement
 
 Using our framework, we can formalise the correctness criterion above and also prove that some optimisations are correct.
 We demonstrate this on a simple example from
 [this Thesis](https://fenix.tecnico.ulisboa.pt/cursos/mma/dissertacao/1691203502343808).
 
-### The Problem
 
-Proposition 12 in [this Thesis](https://fenix.tecnico.ulisboa.pt/cursos/mma/dissertacao/1691203502343808) proposes to replace any sequence of the form `SWAPN POP^(n+1)` by `POP^(n+1)` (we use regular-language notation so `a^k` stands for `k` n times).
+Proposition 12 in [this Thesis](https://fenix.tecnico.ulisboa.pt/cursos/mma/dissertacao/1691203502343808) proposes to replace any sequence of the form `SWAPN POP^(n+1)` by `POP^(n+1)` (we use regular-language notation so `a^k` stands for `a` repeated `k` times).
 
 That seems plausible as:
-1. `SWAPN` for `1 <= N <= 16` swaps the element at index `0` (top of the stack) with element at index `N`
-2. because we `POP` `N+1` times right after the `SWAPN`, the SWAP somehow does not matter: the first `N+1` elements are popped and the elements at index `N+2` and above are unchanged.
+1. `SWAPN` for `1 <= N <= 16` swaps the element at index `0` (top of the stack) with the element at index `N`,
+2. because we `POP` `N+1` times right after the `SWAPN`, the SWAP somehow does not matter: the first `N+1` elements are popped and the elements at index `N+2` and above are left unchanged.
 
-We want to prove that replacing `SWAPN POP^(n+1)` by `POP^(n+1)` is _correct_, and this for any (valid) input state.
+We want to _formally_ prove that replacing `SWAPN POP^(n+1)` by `POP^(n+1)` is _correct_, and this for any (valid) input state. 
+Moreover, we provide a machine-checkable proofs of this fact.
 
 ### The case N = 1
 
 To build a machine-checkable proof of Proposition 12 we write a [Dafny program](https://github.com/ConsenSys/evm-dafny/blob/master/src/test/dafny/Optimisations.dfy), `Proposition12a` below, with the following features:
 
-1. we start from an arbitrary state of an EVM, `vm`, with the constraints that the stack has more than 2 elements (and less than the maximum 1024). We also require that there is enough gas in the machine. This is specified by the `requires` clauses in the Dafny code below. If these constraints are not satisfied we may reach and `INVALID` state.
-1. then we execute `SWAP1 POP POP` in _one_ EVM, `vm1`, starting from initial state `vm`;
-1. we execute `POP POP` in _another_ EVM, `vm12`, starting from the same initial state `vm`;
+1. we start from an arbitrary state of an EVM, `vm`, with the constraints that the stack has more than 2 elements (and less than the maximum 1024). We also require that there is enough gas in the machine. This is specified by the `requires` clauses in the Dafny code below. If these constraints are not satisfied we may reach and `INVALID` state and won't be able to prove any useful property. 
+1. we execute `POP POP` in _one_ EVM, `vm1`, starting from the initial state `vm`;
+1. then we execute `SWAP1 POP POP` in _another_ EVM, `vm2`, starting from the same initial state `vm`;
 1. we then assert that the states after executing `SWAP1 POP POP` and `POP POP` are the same upto the values of `gas` and `pc`.
 
 
@@ -418,10 +427,10 @@ method Proposition12a(s: seq<u256>, g: nat)
 #### How does it work?
 
 First, we use an input parameter `s` to define the content of the EVM at the beginning.
-Because it is an input parameter it can take any _arbitrary_ value, but must satisfy the size requirements.
+Because it is an input parameter it can take any _arbitrary_ value, but must satisfy the size requirements `2 <= |s| <= 1024 `.
 The same holds for the gas value in the initial state: we require that this is more than a certain amount that corresponds to one SWAP and 2 POPS (we could actually require two different values for the two EVMs).
 
-The `assert` statements in Dafny are `verification` statements and must provably hold for any inputs.
+Second, the `assert` statements in Dafny are _verification_ statements and must provably hold for any inputs.
 If you use this code in VSCode, you may change `requires 2 <= |s| <= 1024`
 into `requires 1 <= |s| <= 1024` and see the effects: Dafny cannot prove that a valid state is reached after the computations. 
 
@@ -433,7 +442,8 @@ Dafny can successfully verify (without any extra proof hints) the previous `meth
 **for _any_ state of the EVM with more than 2 elements on the stack, and enough gas,**
 
 1.  the two sequences `SWAP1 POP POP` and `POP POP` lead to the same states (except for the value of `gas` and `pc`),
-1. the sequence `POP POP` is strictly less expensive than `SWAP1 POP POP`.
+1. the sequence `POP POP` is strictly less expensive than `SWAP1 POP POP`,
+1.  the `method` `Proposition12a` is a machine-checkable proof.
 
 ### General Case.
 
@@ -445,7 +455,7 @@ to prove each case, but we show here how to use `loop invariants` to reason abou
 The Dafny `method` below specifies the proof of the general case.
 
 As for the case `N = 1`, we run the code and the optimised code in two different EVMs starting from the same state.
-What is more complicated here is that we have to `loop` and execute the `POP` n times where `n` is an input parameter of the proof.
+What is more complicated here is that we have to execute the `POP` n times where `n` is an input parameter of the proof.
 
 The result is that the constraint on the initial state of the EVM must satisfy some requirements that take into account the value of `n`. You can check that `n = 1` yields the constraints we had for the `Case N = 1` above.
 
@@ -471,7 +481,7 @@ method Proposition12b(n: nat, s: seq<u256>, g: nat)
 {
     var vm := EvmBerlin.Init(gas := g, stk := s, code := []);
 
-    //  Execute n POPs in vm1.
+    //  Execute n + 1 POPs in vm1.
     var vm1 := vm;
     for i := 0 to n + 1
         invariant vm1.OK?
@@ -483,10 +493,10 @@ method Proposition12b(n: nat, s: seq<u256>, g: nat)
         assert vm1.OK?;
     }
     assert vm1.Gas() >= Gas.G_VERYLOW;
-    //  Stack after n POPs is suffix of initial stack starting at index n + 1
+    //  Stack after n + 1 POPs is suffix of initial stack starting at index n + 1
     assert vm1.GetStack() == vm.SlicePeek(n + 1, |s|);
 
-    //  Execute SWAPn and then n POPs in vm2. 
+    //  Execute SWAPn and then n + 1 POPs in vm2. 
     var vm2 := vm;
     vm2 := Swap(vm2, n).UseGas(Gas.G_VERYLOW);
 
@@ -510,30 +520,34 @@ method Proposition12b(n: nat, s: seq<u256>, g: nat)
 #### How does it work?
 
 The code snippet for the first loop shows that it is a bit harder to prove that the two sequences `SWAPN POP^(n+1)` by `POP^(n+1)` are equivalent.
-First we have to prove that we can perform `n + 1` POPs, This requires us to maintain a loop invariant,  `invariant vm1.Operands() >= n - i`, that ensures that there are enough elements of the stack at each iterations on the loop.
+First we have to prove that we can perform `n + 1` POPs. 
+This requires us to maintain a loop invariant,  `invariant vm1.Operands() >= n - i`, that ensures that there are enough elements of the stack at each iteration of the loop.
 The same holds for gas: we have to prove that there is enough gas after each iteration, which is captured by the loop invariant `invariant vm2.Gas() == g - i * Gas.G_BASE - Gas.G_VERYLOW`.
-The other invariants `invariant vm2.OK?` specifies that at each iteration we are in non-failure state, and  
-`invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)` that:
+The other invariants `invariant vm2.OK?` specifies that at each iteration we are in non-failure state. 
+Second we have to show that the resulting states are the same. This requires us to prove another _loop invariant_
+`invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)` where:
 1.  `x.SlicePeek(l, u)` is a stack made out of the elements of `x` from index `l` to `u - 1`,
-1. the invariant specifies that, in `vm2`, the stack content after the next `n + 1 -i` elements is the same as the initial stack content in `vm`.
+1. the invariant specifies that, in `vm2`, the stack content after the next `n + 1 - i` elements is the same as the initial stack content in `vm`.
 
 The code snippet for  `SWAPN POP^(n+1)` is split into `SWAPN` and then a loop that pops `n + 1` times.
 The invariants for the `vm2` states are similar to the ones for `vm1`.
 
 Overall, Dafny checks that the predicate tagged with attribute `invariant` are indeed maintained by the loops, and valid on entry.
-Using the fact that the loop invariants are true after exiting the loop in conjunction with `i == n + 1` enables us to obtain the two facts:
+Using the fact that the loop invariants are true after exiting the loop, and in conjunction with the exit condition `i == n + 1`, this enables us to obtain the two facts:
 
 1. `assert vm1.GetStack() == vm.SlicePeek(n + 1, |s|);` from `invariant vm1.GetStack() == vm.SlicePeek(i, |s|)` and `i == n + 1`
 1.  `assert vm2.SlicePeek(0, |s| - n - 1) == vm.SlicePeek(n + 1, |s|);` from `invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)` and `i == n + 1`.
 
-If we combine them we prove that `assert vm1.GetStack() == vm2.GetStack();` i.e. the two stacks are equal after executing the sequences  `SWAPN POP^(n+1)` and `POP^(n+1)`.
+As ` vm2.SlicePeek(0, |s| - n - 1)` is the stack in `vm2`, 
+if we combine them we can prove that `assert vm1.GetStack() == vm2.GetStack();` i.e. the two stacks are equal after executing the sequences  `SWAPN POP^(n+1)` and `POP^(n+1)`.
 
 #### Results
 
-Dafny successfully verifies this program and we obtain the following results:
+Dafny successfully verifies this program (without any extra proof hints), and we obtain the following results:
 
 **for _any_ state of the EVM with more than `n + 1` elements on the stack, and enough gas,**
 
 
 1.  the two sequences `SWAPN POP^(N + 1)` and `POP^(N + 1)` lead to the same states (except for the value of `gas` and `pc`),
 1. the sequence `POP^(N + 1)` is strictly less expensive than `SWAPN POP^(N + 1)`.
+1.  the `method` `Proposition12b` is a machine-checkable proof.
