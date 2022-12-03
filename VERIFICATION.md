@@ -287,7 +287,7 @@ method Loopy(st: State, c: u8) returns (st': State)
         invariant st'.OK?
         invariant st'.Gas() >= count as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW) + Gas.G_HIGH
         invariant st'.PC() == 0x06 
-        invariant Stack.Size(st'.GetStack()) > 2
+        invariant st'.Operands() > 2
         invariant count == st'.Peek(2) == st'.Peek(1)
         invariant st'.Peek(0) == 0x08;
         invariant st'.evm.code == st.evm.code
