@@ -142,7 +142,7 @@ method OverflowCheck(st: State, x: u256, y: u256) returns (st': State)
     requires /* Pre2 */ st.GetStack() == Stack.Make([x, y]);
     /** The code is the snippet to detect overflow. */
     requires /* Pre3 */ st.evm.code == OVERFLOW_CHECK
-    /** The contract never runs out of gas thanls to Pre1. */
+    /** The contract never runs out of gas thanks to Pre1. */
     ensures /* Post0 */ st'.REVERTS? || st'.RETURNS?
     /** Should revert iff overflow. */
     ensures /* Post1 */ st'.REVERTS? <==> x as nat + y as nat > MAX_U256

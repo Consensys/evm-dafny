@@ -125,7 +125,7 @@ module Kontract1 {
         requires /* Pre2 */ st.GetStack() == Stack.Make([x, y]);
         /** The code is the snippet to detect overflow. */
         requires st.evm.code == OVERFLOW_CHECK
-        /** The contract never runs out of gas thanls to Pre1. */
+        /** The contract never runs out of gas thanks to Pre1. */
         ensures st'.REVERTS? || st'.RETURNS?
         /** Should revert iff overflow. */
         ensures st'.REVERTS? <==> x as nat + y as nat > MAX_U256
