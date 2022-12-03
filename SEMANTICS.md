@@ -60,23 +60,26 @@ Apart from clarity and simplicity, the Dafny-EVM semantics provides a high degre
 To illustrate this point, it is useful to look at the code of `Pop` and `Push`:
 
 ```dafny
+
+//  The following functions are part opf the State datatype
+//  An instance `this` is implicit.
 /**
  * Pop word from stack.
  */
 function method Pop(): State
-  requires IsExecuting()
+  requires this.IsExecuting()
   // Cannot pop from empty stack
-  requires Stack.Size(evm.stack) >= 1 {
-    OK(evm.(stack:=Stack.Pop(evm.stack)))
+  requires this.Operands() >= 1 {
+    OK(this.evm.(stack:= this.GetStack().Pop()))
   }
 
 /**
  * Push word onto stack.
  */
 function method Push(v:u256): State
-  requires IsExecuting()
-  requires Capacity() > 0 {
-    OK(evm.(stack:=Stack.Push(evm.stack,v)))
+  requires this.IsExecuting()
+  requires this.Capacity() > 0 {
+    OK(this.evm.(stack:= this.GetStack().Push(v)))
   }
 ```
 

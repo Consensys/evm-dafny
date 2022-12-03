@@ -48,7 +48,7 @@ module Kontract1 {
      */
     method inc_proof(st: State) returns (st': State)
         /** Initial state with PC = 0 and empty stack. */
-        requires st.OK? && st.PC() == 0 && Stack.Size(st.evm.stack) == 0
+        requires st.OK? && st.PC() == 0 && st.Operands() == 0
         /** Enough gas. */
         requires st.Gas() >= 40000
         /** Permission to write to storage. */
@@ -125,7 +125,7 @@ module Kontract1 {
         requires /* Pre2 */ st.GetStack() == Stack.Make([x, y]);
         /** The code is the snippet to detect overflow. */
         requires st.evm.code == OVERFLOW_CHECK
-        /** The contract never runs out of gas thanls to Pre1. */
+        /** The contract never runs out of gas thanks to Pre1. */
         ensures st'.REVERTS? || st'.RETURNS?
         /** Should revert iff overflow. */
         ensures st'.REVERTS? <==> x as nat + y as nat > MAX_U256
@@ -200,7 +200,7 @@ module Kontract1 {
             invariant st'.OK?
             invariant st'.Gas() >= count as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW) + Gas.G_HIGH
             invariant st'.PC() == 0x06 
-            invariant Stack.Size(st'.GetStack()) > 2
+            invariant st'.Operands() > 2
             invariant count == st'.Peek(2) == st'.Peek(1)
             invariant st'.Peek(0) == 0x08;
             invariant st'.evm.code == st.evm.code

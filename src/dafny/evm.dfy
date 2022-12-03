@@ -49,7 +49,7 @@ abstract module EVM {
     function method Create(context: Context.T, world: map<u160,WorldState.Account>, gas: nat, code: seq<u8>, st: seq<u256> := []) : State
     // Code to executed cannot exceed maximum limit.
     requires |code| <= Code.MAX_CODE_SIZE
-    requires |st| <= 1024
+    requires |st| <= Stack.CAPACITY
     // Account under which EVM is executing must exist!
     requires context.address in world {
         var stck := Stack.Make(st);

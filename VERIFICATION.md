@@ -118,7 +118,7 @@ To do so we are going to write a Dafny program, a `method OverflowCheck` (below)
     - `Post2`: the final state is a normal state  **if and only if** no overflow occurs. That postcondition logically follows from `Post0` and `Post1`.
 - **the instrumented code**: to _run_ the code we use the `ExecuteN(s, k)` function in [the EVM module](src/dafny/evm.dfy). This function executes (at most) `k` steps of the code in `s`. If an invalid state (e.g. stack under/overflow, out-of-gas) is encountered before the `k`-th step the execution prematurely stops and returns the invalid state. The body of the method `OverflowCheck` below somehow _monitors_ what the bytecode is doing. If executes the first 4 instructions, resulting
 in state `st' == ExecuteN(st, 4)`. Depending on the result (second element of the stack `st'.Peek(1)`) of the comparison operator `LT` (semantics in [the bytecode module](src/dafny/bytecode.dfy)) what is left to execute next is: either one instruction `STOP` or the section of the code that reverts (from `0x07`). 
-The instrumentation of the execution of the bytecode with a Dafny `if-then-else` statement enables to track this two different paths. 
+The instrumentation of the execution of the bytecode with a Dafny `if-then-else` statement enables to track these two different paths. 
 
 
 
@@ -142,7 +142,7 @@ method OverflowCheck(st: State, x: u256, y: u256) returns (st': State)
     requires /* Pre2 */ st.GetStack() == Stack.Make([x, y]);
     /** The code is the snippet to detect overflow. */
     requires /* Pre3 */ st.evm.code == OVERFLOW_CHECK
-    /** The contract never runs out of gas thanls to Pre1. */
+    /** The contract never runs out of gas thanks to Pre1. */
     ensures /* Post0 */ st'.REVERTS? || st'.RETURNS?
     /** Should revert iff overflow. */
     ensures /* Post1 */ st'.REVERTS? <==> x as nat + y as nat > MAX_U256
@@ -287,7 +287,7 @@ method Loopy(st: State, c: u8) returns (st': State)
         invariant st'.OK?
         invariant st'.Gas() >= count as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW) + Gas.G_HIGH
         invariant st'.PC() == 0x06 
-        invariant Stack.Size(st'.GetStack()) > 2
+        invariant st'.Operands() > 2
         invariant count == st'.Peek(2) == st'.Peek(1)
         invariant st'.Peek(0) == 0x08;
         invariant st'.evm.code == st.evm.code
