@@ -118,7 +118,7 @@ To do so we are going to write a Dafny program, a `method OverflowCheck` (below)
     - `Post2`: the final state is a normal state  **if and only if** no overflow occurs. That postcondition logically follows from `Post0` and `Post1`.
 - **the instrumented code**: to _run_ the code we use the `ExecuteN(s, k)` function in [the EVM module](src/dafny/evm.dfy). This function executes (at most) `k` steps of the code in `s`. If an invalid state (e.g. stack under/overflow, out-of-gas) is encountered before the `k`-th step the execution prematurely stops and returns the invalid state. The body of the method `OverflowCheck` below somehow _monitors_ what the bytecode is doing. If executes the first 4 instructions, resulting
 in state `st' == ExecuteN(st, 4)`. Depending on the result (second element of the stack `st'.Peek(1)`) of the comparison operator `LT` (semantics in [the bytecode module](src/dafny/bytecode.dfy)) what is left to execute next is: either one instruction `STOP` or the section of the code that reverts (from `0x07`). 
-The instrumentation of the execution of the bytecode with a Dafny `if-then-else` statement enables to track this two different paths. 
+The instrumentation of the execution of the bytecode with a Dafny `if-then-else` statement enables to track these two different paths. 
 
 
 
