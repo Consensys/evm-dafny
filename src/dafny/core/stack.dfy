@@ -13,14 +13,17 @@
  */
 include "../util/int.dfy"
 
+/** Provide a Stack and related operations. */
 module Stack {
     import opened Int
 
     // Maximum stack capcity is 1024 words.
     const CAPACITY: nat := 1024;
 
+    /** The stack has limited capcity in the EVM. */
     type ValidStackContent = xs: seq<u256> | |xs| <= CAPACITY
 
+    /** The Stack type. */
     datatype Stack = Stack(contents: ValidStackContent) 
     {
         // Get number of items currently on this Stack.
@@ -90,20 +93,18 @@ module Stack {
         {
             Stack(contents[l..u])
         }
-
     }
 
     //  The empty stack.
     const Empty := Stack(contents := [])
 
+    /** Build a stack with some content. */
     function method Make(xs: seq<u256>): Stack
         requires |xs| <= CAPACITY {
             Stack(contents := xs)
     }
 
-    function method Create(): Stack
-     {
-            Stack(contents := [])
-    }
+    /** Create an empty stack. */
+    function method Create(): Stack { Stack(contents := [])}
 
 }
