@@ -84,8 +84,10 @@ bytecode:
  * @returns     The state after executing an `ADD` or an `Error` state.
  */
 function method Add(st: State): (st': State)
-requires st.IsExecuting() 
-ensures st'.OK? <==> st.Operands() >= 2
+    requires st.IsExecuting() 
+    ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
+    ensures st'.OK? <==> st.Operands() >= 2
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
 {
     if st.Operands() >= 2
     then
