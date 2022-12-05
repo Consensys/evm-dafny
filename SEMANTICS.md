@@ -12,7 +12,7 @@ In this section, we explain how to navigate the semantics, why it is verified an
 
 The semantics of opcodes is written in a functional style in  [bytecode.dfy](https://github.com/ConsenSys/evm-dafny/blob/master/src/dafny/bytecode.dfy).
 
-For instance, the function `Add` below gives the semantics of opcode `ADD` (you can see how in the # [Executing EVM Bytecode](#executing-evm-bytecode) below):
+For instance, the function `Add` below gives the semantics of opcode `ADD`:
 
 ```dafny
 /**
@@ -22,28 +22,43 @@ For instance, the function `Add` below gives the semantics of opcode `ADD` (you 
  * @returns     The state after executing an `ADD` or an `Error` state. 
  */
 function method Add(st: State): (st': State)
-requires st.IsExecuting() 
-ensures st'.OK? <==> st.Operands() >= 2
+  requires st.IsExecuting() 
+  ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
+  ensures st'.OK? <==> st.Operands() >= 2
+  ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
 {
-    if st.Operands() >= 2
-    then
-        var lhs := st.Peek(0) as int;
-        var rhs := st.Peek(1) as int;
-        var res := (lhs + rhs) % TWO_256;
-        st.Pop().Pop().Push(res as u256).Next()
-    else
-        State.INVALID(STACK_UNDERFLOW)
+  if st.Operands() >= 2
+  then
+    var lhs := st.Peek(0) as int;
+    var rhs := st.Peek(1) as int;
+    var res := (lhs + rhs) % TWO_256;
+    st.Pop().Pop().Push(res as u256).Next()
+  else
+    State.INVALID(STACK_UNDERFLOW)
 }
 ```
-With a few simple definitions, this specification is easy to read:
-- `st.Operands()` is the size of the stack in `st`,
-- `st.Peek(k)` is the value of the k+1-th element in the stack of `st`, `0` being the `top`,
+
+Given `x: State`:
+- `x.OK?` holds when `x` (a state) is of type `OK` (non-failure), 
+- `x.Operands()` is the size of the _stack_ in `x`,
+- `x.Peek(k)` is the value of the k+1-th element in the stack of `x`, `0` being the `top`,
 - `x.Pop()` and `x.Push()`  respectively applies pop and push to `x`,
 - `x.Next()` increments the program counter in `x`. 
-- the precondition (`requires`) indicates that we can only apply this function to non-failure states,
-- the body of the function defines the next state as a composition of functions applied in sequence `Pop(), Pop(), Push(), Next()`.
-- the condition under which the opcode fails is fully captured by `st.Operands() >= 2`
-- the postcondition (`ensures`) specifies a necessary and sufficient condition for the operation `Add` to succeed.
+
+The complete semantics of `ADD` is given by the _body_ of the function `Add`.
+Note that it is defined a _pure function_ of type `State -> State` with no side effects.
+
+
+Moreover, some interesting properties of this function are captured by the pre- and postconditions:
+- the precondition (`requires`) indicates that we can only apply this function to non-failure states; as a result every time we use the `Add` function in our code, we _have_ to ensure that the state `st` satisfies `IsExecuting()` (which is essentially a non-failure state). 
+- the body of the function defines the next state as a composition of functions applied in sequence `Pop(), Pop(), Push(), Next()`. Note that some functions like `Pop(), Push()` (see below) have _preconditions_.  
+- the postconditions (`ensures`) specify some properties of `Add` that are not obvious from the code in its body:
+  - First, the result of `Add` is either an `OK` state or an `INVALID(STACK_UNDERFLOW)` state.
+  - Second, `Add` succeeds _if and only if_ `st.Operands() >= 2`.
+  - Third, if `Add` succeeds the stack size in the result state `st'` is the size in `st` minus one.
+
+This type of specifications is easy to read, and some essential properties (postconditions) can be _formally_ proved. For instance the postcondition `st'.OK? <==> st.Operands() >= 2` ensures that 
+the computation `st.Pop().Pop().Push(res as u256).Next()` in the body of `Add` does not result in a failure state (see [Verifying the Semantics](#verifying-the-semantics) below).
 
 This specification above may be contrasted to existing specifications and implementations of `Add`:
 - [KEVM semantics](https://github.com/runtimeverification/evm-semantics/blob/master/include/kframework/evm.md#expressions)
@@ -53,34 +68,49 @@ This specification above may be contrasted to existing specifications and implem
 
 # Verifying the Semantics
 
-The Dafny specification of `Add` above is  _self-contained_ and clearly identifies the cases where the `Add` function results in an `INVALID` state (the `ensures` is necessary and sufficient condition for `Add` to succeed).
+The Dafny specification of `Add` above is  _self-contained_ and clearly identifies the cases where the `Add` function results in an `INVALID` state.
 On top of that, the preconditions we provide (`requires`) _must_ hold every time the function `Add` is called. This guarantees that in our semantics defined as function composition, we never apply `Add` on a _non-executing_ (`INVALID`, `RETURNS`, etc) state.
 
 Apart from clarity and simplicity, the Dafny-EVM semantics provides a high degree of _security_.
 To illustrate this point, it is useful to look at the code of `Pop` and `Push`:
 
 ```dafny
-
-//  The following functions are part opf the State datatype
-//  An instance `this` is implicit.
 /**
  * Pop word from stack.
  */
-function method Pop(): State
-  requires this.IsExecuting()
-  // Cannot pop from empty stack
-  requires this.Operands() >= 1 {
-    OK(this.evm.(stack:= this.GetStack().Pop()))
-  }
+function method Pop(st: State): (st': State)
+  requires st.IsExecuting() 
+  ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
+  ensures st'.OK? <==> st.Operands() >= 1
+  ensures st'.OK? ==> st'.Operands() == st.Operands() - 1   
+{
+  //
+  if st.Operands() >= 1
+  then
+      st.Pop().Next()
+  else
+      State.INVALID(STACK_UNDERFLOW)
+}
 
 /**
  * Push word onto stack.
  */
-function method Push(v:u256): State
-  requires this.IsExecuting()
-  requires this.Capacity() > 0 {
-    OK(this.evm.(stack:= this.GetStack().Push(v)))
-  }
+function method Push(st: State, k: nat): (st': State)
+  requires k > 0 && k <= 32
+  requires st.IsExecuting()
+  ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
+  ensures st'.OK? <==> st.Capacity() >= 1 
+  ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
+{
+  if st.Capacity() >= 1
+  then
+    var bytes := Code.Slice(st.evm.code, (st.evm.pc+1), k);
+    assert 0 < |bytes| <= 32;
+    var k := Bytes.ConvertBytesTo256(bytes);
+    st.Push(k).Skip(|bytes|+1)
+  else
+    State.INVALID(STACK_OVERFLOW)
+}
 ```
 
 The definitions of `Pop` and `Push` requires as preconditions a non-failure state (satisfying `IsExecuting()`), and some constraints on the stack _size_ or _capacity_.
