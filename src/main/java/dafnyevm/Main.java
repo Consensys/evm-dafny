@@ -20,7 +20,6 @@ import org.json.JSONObject;
 import evmtools.core.StateTest;
 import evmtools.util.Hex;
 import dafnyevm.util.StateTests;
-import dafnyevm.util.ProofGenerator;
 import dafnyevm.util.Tracers;
 import dafnyevm.DafnyEvm.Tracer;
 
@@ -77,9 +76,7 @@ public class Main {
 		    runStateTest(cmd);
 		} else if(cmd.hasOption("run")) {
 		    runArbitraryBytecode(cmd);
-		} else if(cmd.hasOption("proof")) {
-            generateBytecodeProof(cmd);
-        } else {
+		} else {
 		    System.out.println("error: must provide either --run or --statetest or --proof argument!");
 		}
 	}
@@ -147,14 +144,5 @@ public class Main {
 		} else {
 			return DafnyEvm.DEFAULT_TRACER;
 		}
-	}
-
-	public static void generateBytecodeProof(CommandLine cmd) {
-	    // Continue processing remaining arguments.
-        String[] args = cmd.getArgs();
-        // Parse input string
-        byte[] bytes = Hex.toBytes(args[0]);
-        // Run the proof generator
-        new ProofGenerator(bytes).print();
 	}
 }
