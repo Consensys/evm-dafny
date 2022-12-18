@@ -41,10 +41,10 @@ module Bytecode {
     /**
      * Unsigned integer addition with modulo arithmetic.
      * @param   st  A state.
-     * @returns     The state after executing an `ADD` or an `Error` state. 
+     * @returns     The state after executing an `ADD` or an `Error` state.
      */
     function method Add(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -63,7 +63,7 @@ module Bytecode {
      * Unsigned integer multiplication with modulo arithmetic.
      */
     function method Mul(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -83,7 +83,7 @@ module Bytecode {
      * Unsigned integer subtraction with modulo arithmetic.
      */
     function method Sub(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -161,7 +161,7 @@ module Bytecode {
      * Unsigned integer division.
      */
     function method Div(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -181,10 +181,10 @@ module Bytecode {
      * Signed integer division.
      */
     function method SDiv(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -201,10 +201,10 @@ module Bytecode {
      * (Unsigned) Modulo remainder.
      */
     function method Mod(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -221,7 +221,7 @@ module Bytecode {
      * Signed integer remainder:
      */
     function method SMod(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -241,7 +241,7 @@ module Bytecode {
     * Unsigned integer modulo addition.
     */
     function method AddMod(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 3
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
@@ -260,11 +260,11 @@ module Bytecode {
 
     /**
      *  Unsigned integer modulo multiplication.
-     * 
+     *
      *  if Peek(2) == 0 then 0 else (Peek(0) * Peek(1)) % Peek(2)
      */
     function method MulMod(st: State) : (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 3
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
@@ -285,7 +285,7 @@ module Bytecode {
      * Exponential operation
      */
     function method Exp(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -305,10 +305,10 @@ module Bytecode {
      * Extend length of two's complement signed integer.
      */
     function method SignExtend(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -329,10 +329,10 @@ module Bytecode {
      * (Unsigned) less-than comparison.
      */
     function method Lt(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -352,10 +352,10 @@ module Bytecode {
     * (Unsigned) greater-than comparison.
     */
     function method Gt(st: State) : (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -375,10 +375,10 @@ module Bytecode {
      * Signed less-than comparison.
      */
     function method SLt(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -398,10 +398,10 @@ module Bytecode {
      * Signed greater-than comparison.
      */
     function method SGt(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -421,10 +421,10 @@ module Bytecode {
      * Equality comparison.
      */
     function method Eq(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -444,10 +444,10 @@ module Bytecode {
      * Simple not operator.
      */
     function method IsZero(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands()   
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         //
         if st.Operands() >= 1
@@ -466,10 +466,10 @@ module Bytecode {
      * Bitwise AND operation.
      */
     function method And(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -486,10 +486,10 @@ module Bytecode {
      * Bitwise OR operation.
      */
     function method Or(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -507,10 +507,10 @@ module Bytecode {
      * Bitwise XOR operation.
      */
     function method Xor(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -528,7 +528,7 @@ module Bytecode {
      * Bitwise NOT operation.
      */
     function method Not(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
     ensures st'.OK? ==> st'.Operands() == st.Operands()
@@ -547,10 +547,10 @@ module Bytecode {
      * Retrieve single byte from word.
      */
     function method Byte(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -567,10 +567,10 @@ module Bytecode {
      * Left shift operation.
      */
     function method Shl(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -587,10 +587,10 @@ module Bytecode {
      * Right shift operation.
      */
     function method Shr(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -607,10 +607,10 @@ module Bytecode {
      * Arithmetic (signed) right shift operation.
      */
     function method Sar(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 2
@@ -631,7 +631,7 @@ module Bytecode {
      * Computer Keccak256 hash.
      */
     function method Keccak256(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -653,10 +653,10 @@ module Bytecode {
     // =====================================================================
 
     function method BlockHash(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() 
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         if st.Operands() >= 1
         then
@@ -671,7 +671,7 @@ module Bytecode {
      * Get address of currently executing account.
      */
     function method Address(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
@@ -687,10 +687,10 @@ module Bytecode {
      * Get balance of the given account.
      */
     function method Balance(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands()  
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         if st.Operands() >= 1
         then
@@ -710,10 +710,10 @@ module Bytecode {
      * transaction; it is never an account with non-empty associated code.
      */
     function method Origin(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -726,10 +726,10 @@ module Bytecode {
      * Get caller address.
      */
     function method Caller(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -743,10 +743,10 @@ module Bytecode {
      * this execution.
      */
     function method CallValue(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -759,7 +759,7 @@ module Bytecode {
      * Get input data from the current environment.
      */
     function method CallDataLoad(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
     ensures st'.OK? ==> st'.Operands() == st.Operands()
@@ -779,7 +779,7 @@ module Bytecode {
      * Get size of input data in current environment.
      */
     function method CallDataSize(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
@@ -797,10 +797,10 @@ module Bytecode {
      *  Copy input data in the current environment to memory.
      */
     function method CallDataCopy(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 3
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 3  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 3
     {
         //
         if st.Operands() >= 3
@@ -822,10 +822,10 @@ module Bytecode {
      * Get size of code running in current environment.
      */
     function method CodeSize(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         //
         if st.Capacity() >= 1
@@ -839,7 +839,7 @@ module Bytecode {
      * Copy code running in current environment to memory.
      */
     function method CodeCopy(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 3
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 3
@@ -865,10 +865,10 @@ module Bytecode {
      * Get price of gas in current environment.
      */
     function method GasPrice(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -881,10 +881,10 @@ module Bytecode {
      * Get size of an account's code.
      */
     function method ExtCodeSize(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands()   
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         if st.Operands() >= 1
         then
@@ -909,10 +909,10 @@ module Bytecode {
      * Copy an account's code to memory.
      */
     function method ExtCodeCopy(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 4
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 4  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 4
     {
         //
         if st.Operands() >= 4
@@ -939,10 +939,10 @@ module Bytecode {
      * Get size of an account's code.
      */
     function method ExtCodeHash(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands()  
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         if st.Operands() >= 1
         then
@@ -966,10 +966,10 @@ module Bytecode {
      * environment.
      */
     function method ReturnDataSize(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) || st' == INVALID(MEMORY_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1 && st.evm.context.ReturnDataSize() <= MAX_U256
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1    
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -987,11 +987,11 @@ module Bytecode {
      *  Copy return data from previous call to memory.
      */
     function method ReturnDataCopy(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(RETURNDATA_OVERFLOW)
-    ensures st'.OK? <==> st.Operands() >= 3 && 
+    ensures st'.OK? <==> st.Operands() >= 3 &&
                         (st.Peek(1) as nat + st.Peek(2) as nat) <= st.evm.context.ReturnDataSize()
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 3 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 3
     {
         //
         if st.Operands() >= 3
@@ -1021,10 +1021,10 @@ module Bytecode {
      * Get the current block's beneficiay address.
      */
     function method CoinBase(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1037,10 +1037,10 @@ module Bytecode {
      * Get the current block's timestamp.
      */
     function method TimeStamp(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1   
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1053,10 +1053,10 @@ module Bytecode {
      * Get the current block's number.
      */
     function method Number(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1069,10 +1069,10 @@ module Bytecode {
      * Get the current block's difficulty.
      */
     function method Difficulty(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1   
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1085,10 +1085,10 @@ module Bytecode {
      * Get the current block's gaslimit.
      */
     function method GasLimit(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1   
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1101,10 +1101,10 @@ module Bytecode {
      * Get the chain ID.
      */
     function method ChainID(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1   
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1117,10 +1117,10 @@ module Bytecode {
      * Get balance of currently executing account.
      */
     function method SelfBalance(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1  
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1142,10 +1142,10 @@ module Bytecode {
      * Pop word from stack.
      */
     function method Pop(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1   
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
     {
         //
         if st.Operands() >= 1
@@ -1159,10 +1159,10 @@ module Bytecode {
      * Get the size of active memory in bytes.
      */
     function method MSize(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) || st' == INVALID(MEMORY_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1 && Memory.Size(st.evm.memory) <= MAX_U256
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1   
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
@@ -1192,10 +1192,10 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MLoad(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() 
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         //
         if st.Operands() >= 1
@@ -1224,10 +1224,10 @@ module Bytecode {
      *              some gas costs (charged separately).
      */
     function method MStore(st: State) : (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
-    ensures st'.OK? ==> st'.Operands() == st.Operands() - 2 
+    ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
     {
         //
         if st.Operands() >= 2
@@ -1244,7 +1244,7 @@ module Bytecode {
      * Save byte to memory.
      */
     function method MStore8(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
@@ -1264,10 +1264,10 @@ module Bytecode {
      * Get word from storage.
      */
     function method SLoad(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 1
-    ensures st'.OK? ==> st'.Operands() == st.Operands() 
+    ensures st'.OK? ==> st'.Operands() == st.Operands()
     {
         //
         if st.Operands() >= 1
@@ -1284,7 +1284,7 @@ module Bytecode {
      * Save word to storage.
      */
     function method SStore(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
     ensures st'.OK? <==> st.Operands() >= 2 && st.WritesPermitted()
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
@@ -1307,7 +1307,7 @@ module Bytecode {
      * Unconditional branch.
      */
     function method Jump(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(INVALID_JUMPDEST)
     ensures st'.OK? <==> st.Operands() >= 1 && st.IsJumpDest(st.Peek(0))
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -1330,7 +1330,7 @@ module Bytecode {
      * Unconditional branch.
      */
     function method JumpI(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(INVALID_JUMPDEST)
     ensures st'.OK? <==> st.Operands() >= 2 && (st.Peek(1) == 0 || st.IsJumpDest(st.Peek(0)))
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
@@ -1357,7 +1357,7 @@ module Bytecode {
      */
     function method Pc(st: State): (st': State)
     requires st.IsExecuting()
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
+    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1 && st.PC() <= MAX_U256
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
@@ -1374,8 +1374,8 @@ module Bytecode {
      * for the cost of this instruction.
      */
     function method Gas(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
+    requires st.IsExecuting()
+    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1 && st.Gas() <= (MAX_U256 as nat)
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
@@ -1392,8 +1392,8 @@ module Bytecode {
      *  Equivalent to SKIP instruction semantics-wise.
      */
     function method JumpDest(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.OK?    
+    requires st.IsExecuting()
+    ensures st'.OK?
     {
         st.Next()
     }
@@ -1423,8 +1423,8 @@ module Bytecode {
     function method Push(st: State, k: nat): (st': State)
     requires k > 0 && k <= 32
     requires st.IsExecuting()
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
-    ensures st'.OK? <==> st.Capacity() >= 1 
+    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
+    ensures st'.OK? <==> st.Capacity() >= 1
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
@@ -1441,50 +1441,83 @@ module Bytecode {
     /**
      * Push one byte onto stack.
      */
-    function method Push1(st: State, k: u8): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
-    ensures st'.OK? <==> st.Capacity() >= 1 
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
-    {
-        //
-        if st.Capacity() >= 1
-        then
-            st.Push(k as u256).Skip(2)
-        else
-            State.INVALID(STACK_OVERFLOW)
+    function method Push1(st: State, k: u8) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,1,k as u256)
     }
 
     /**
      * Push two bytes onto stack.
      */
-    function method Push2(st: State, k: u16): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
-    ensures st'.OK? <==> st.Capacity() >= 1 
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1 
-    {
-        //
-        if st.Capacity() >= 1
-        then
-            st.Push(k as u256).Skip(3)
-        else
-            State.INVALID(STACK_OVERFLOW)
+    function method Push2(st: State, k: u16) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,2,k as u256)
     }
 
-    /** 
-     *  Push 32 bytes on the stack.
+    /**
+     * Push three bytes onto stack.
      */
-    function method Push32(st: State, k: u256): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) 
-    ensures st'.OK? <==> st.Capacity() >= 1 
-    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1 
-    {
+    function method Push3(st: State, k: u24) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,3,k as u256)
+    }
+
+    /**
+     * Push four bytes onto stack.
+     */
+    function method Push4(st: State, k: u32) : (st': State)
+    requires st.IsExecuting(){
+        PushN(st,4,k as u256)
+    }
+
+    /**
+     * Push five bytes onto stack.
+     */
+    function method Push5(st: State, k: u40) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,5,k as u256)
+    }
+
+    /**
+     * Push six bytes onto stack.
+     */
+    function method Push6(st: State, k: u48) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,6,k as u256)
+    }
+
+    /**
+     * Push seven bytes onto stack.
+     */
+    function method Push7(st: State, k: u56) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,7,k as u256)
+    }
+
+    /**
+     * Push eight bytes onto stack.
+     */
+    function method Push8(st: State, k: u64) : (st': State)
+    requires st.IsExecuting() {
+        PushN(st,8,k as u256)
+    }
+
+    /**
+     * Push n bytes from a given word, k, onto the stack.
+     */
+    function method PushN(st: State, n:nat, k: u256) : (st': State)
+    requires st.IsExecuting()
+    // Restrict size of constant which can be pushed
+    requires 1 <= n <= 32
+    // Ensure k is within bounds
+    requires (k as nat) <= Int.MaxUnsignedN(n)
+    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
+    ensures st'.OK? <==> st.Capacity() >= 1
+    ensures st'.OK? ==> st'.Operands() == st.Operands() + 1 {
         //
         if st.Capacity() >= 1
         then
-            st.Push(k).Skip(3)
+            st.Push(k as u256).Skip(n+1)
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -1498,8 +1531,8 @@ module Bytecode {
     */
     function method Dup(st: State, k: nat): (st': State)
     requires st.IsExecuting()
-    requires k > 0 
-    ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(STACK_OVERFLOW) 
+    requires k > 0
+    ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(STACK_OVERFLOW)
     ensures st'.OK? <==> st.Capacity() >= 1 && st.Operands() >= k
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
@@ -1542,8 +1575,8 @@ module Bytecode {
      */
     function method LogN(st: State, n:nat): (st': State)
     requires st.IsExecuting()
-    requires n <= 4 
-    ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED) 
+    requires n <= 4
+    ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
     ensures st'.OK? <==> st.Operands() >= n + 2 && st.WritesPermitted()
     ensures st'.OK? ==> st'.Operands() == st.Operands() - (n + 2)
     {
@@ -1571,14 +1604,14 @@ module Bytecode {
      * Create a new account with associated code.
      */
     function method Create(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.CREATES? || st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
-    ensures st'.CREATES? <==> st.Operands() >= 3 && st.WritesPermitted() && 
+    ensures st'.CREATES? <==> st.Operands() >= 3 && st.WritesPermitted() &&
         st.evm.world.Nonce(st.evm.context.address) < MAX_U64
-    ensures st'.OK? <==> st.Operands() >= 3 && st.WritesPermitted() && 
-        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64 
+    ensures st'.OK? <==> st.Operands() >= 3 && st.WritesPermitted() &&
+        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 2
-    ensures st' == INVALID(STACK_UNDERFLOW)  <==> st.Operands() < 3 
+    ensures st' == INVALID(STACK_UNDERFLOW)  <==> st.Operands() < 3
     ensures st' == INVALID(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 3 && !st.WritesPermitted()
     {
         if st.Operands() >= 3
@@ -1617,12 +1650,12 @@ module Bytecode {
      * Message-call into an account.
      */
     function method Call(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
     ensures st'.CALLS? <==> st.Operands() >= 7 && (st.WritesPermitted() || st.Peek(2) == 0)
-    ensures st' == INVALID(STACK_UNDERFLOW)  <==> st.Operands() < 7 
-    ensures st' == INVALID(WRITE_PROTECTION_VIOLATED) <==> 
-        st.Operands() >= 7 && !st.WritesPermitted() && st.Peek(2) > 0    
+    ensures st' == INVALID(STACK_UNDERFLOW)  <==> st.Operands() < 7
+    ensures st' == INVALID(WRITE_PROTECTION_VIOLATED) <==>
+        st.Operands() >= 7 && !st.WritesPermitted() && st.Peek(2) > 0
     {
         //
         if st.Operands() >= 7
@@ -1655,10 +1688,10 @@ module Bytecode {
      * Message-call into this account with another account's code.
      */
     function method CallCode(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW) 
-    ensures st'.CALLS? <==> st.Operands() >= 7 
-    ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 7 
+    requires st.IsExecuting()
+    ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW)
+    ensures st'.CALLS? <==> st.Operands() >= 7
+    ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 7
     {
         //
         if st.Operands() >= 7
@@ -1687,10 +1720,10 @@ module Bytecode {
      * Halt execution returning output data.
      */
     function method Return(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.RETURNS? || st' == INVALID(STACK_UNDERFLOW) 
-    ensures st'.RETURNS? <==> st.Operands() >= 2 
-    ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 2 
+    requires st.IsExecuting()
+    ensures st'.RETURNS? || st' == INVALID(STACK_UNDERFLOW)
+    ensures st'.RETURNS? <==> st.Operands() >= 2
+    ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 2
     {
         //
         if st.Operands() >= 2
@@ -1711,8 +1744,8 @@ module Bytecode {
      * persisting the current values for sender and value.
      */
     function method DelegateCall(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW) 
+    requires st.IsExecuting()
+    ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.CALLS? <==> st.Operands() >= 6
     ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 6
     {
@@ -1746,14 +1779,14 @@ module Bytecode {
      * Create a new account with associated code.
      */
     function method Create2(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.CREATES? || st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
-    ensures st'.CREATES? <==> st.Operands() >= 4 && st.WritesPermitted() && 
+    ensures st'.CREATES? <==> st.Operands() >= 4 && st.WritesPermitted() &&
         st.evm.world.Nonce(st.evm.context.address) < MAX_U64
-    ensures st'.OK? <==> st.Operands() >= 4 && st.WritesPermitted() && 
-        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64 
+    ensures st'.OK? <==> st.Operands() >= 4 && st.WritesPermitted() &&
+        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 3
-    ensures st' == INVALID(STACK_UNDERFLOW)  <==> st.Operands() < 4 
+    ensures st' == INVALID(STACK_UNDERFLOW)  <==> st.Operands() < 4
     ensures st' == INVALID(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 4 && !st.WritesPermitted()
     {
         if st.Operands() >= 4
@@ -1792,8 +1825,8 @@ module Bytecode {
      * Static Message-call into an account.
      */
     function method StaticCall(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW) 
+    requires st.IsExecuting()
+    ensures st'.CALLS? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.CALLS? <==> st.Operands() >= 6
     ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 6
     {
@@ -1823,8 +1856,8 @@ module Bytecode {
      * Revert execution returning output data.
      */
     function method Revert(st: State): (st': State)
-    requires st.IsExecuting() 
-    ensures st'.REVERTS? || st' == INVALID(STACK_UNDERFLOW) 
+    requires st.IsExecuting()
+    ensures st'.REVERTS? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.REVERTS? <==> st.Operands() >= 2
     ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 2
     {
@@ -1847,7 +1880,7 @@ module Bytecode {
      * return output data.
      */
     function method SelfDestruct(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.RETURNS? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
     ensures st'.RETURNS? <==> st.Operands() >= 1 && st.WritesPermitted()
     ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 1

@@ -17,10 +17,7 @@ import org.apache.commons.cli.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import evmtools.core.Environment;
 import evmtools.core.StateTest;
-import evmtools.core.Transaction;
-import evmtools.core.WorldState;
 import evmtools.util.Hex;
 import dafnyevm.util.StateTests;
 import dafnyevm.util.Tracers;
@@ -48,8 +45,10 @@ public class Main {
 			new Option("gas", true, "gas limit for the evm (default 0x10000000000)"),
 			new Option("gasPrice", true, "gas price to use (default 0x1)"),
 			new Option("fork", true, "Specificy fork"),
-			new Option("statetest", false, "Executes the given state tests"),
-			new Option("run", false, "Execute arbitrary bytecode")
+			// Top-level commands
+            new Option("run", false, "Execute arbitrary bytecode"),
+			new Option("proof", false, "Generate Dafy proof for bytecode given as argument"),
+			new Option("statetest", false, "Executes the given state test")
 	};
 
 	public static CommandLine parseCommandLine(String[] args) {
@@ -78,7 +77,7 @@ public class Main {
 		} else if(cmd.hasOption("run")) {
 		    runArbitraryBytecode(cmd);
 		} else {
-		    System.out.println("error: must provide either --run or --statetest argument!");
+		    System.out.println("error: must provide either --run or --statetest or --proof argument!");
 		}
 	}
 

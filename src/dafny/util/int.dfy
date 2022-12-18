@@ -95,6 +95,30 @@ module Int {
         ((i/r)*r) + r
     }
 
+    // Return the maximum value representable using exactly n unsigned bytes.
+    // This is essentially computing (2^n - 1).  However, the point of doing it
+    // in this fashion is to avoid using Pow() as this is challenging for the
+    // verifier.
+    function method MaxUnsignedN(n:nat) : (r:nat)
+    requires 1 <= n <= 32 {
+        match n
+            case 1 => MAX_U8
+            case 2 => MAX_U16
+            case 3 => MAX_U24
+            case 4 => MAX_U32
+            case 5 => MAX_U40
+            case 6 => MAX_U48
+            case 7 => MAX_U56
+            case 8 => MAX_U64
+            case 16 => MAX_U128
+            case 20 => MAX_U160
+            case 32 => MAX_U256
+            // Fall back case (for now)
+            case _ =>
+                Pow(2,n) - 1
+    }
+
+
     // =========================================================
     // Exponent
     // =========================================================
@@ -102,7 +126,9 @@ module Int {
     /**
      * Compute n^k.
      */
-    function method Pow(n:nat, k:nat) : nat {
+    function method Pow(n:nat, k:nat) : (r:nat)
+    // Following needed for some proofs
+    ensures n > 0 ==> r > 0 {
         if k == 0 then 1
         else if k == 1 then n
         else
@@ -420,7 +446,7 @@ module U256 {
     lemma {:axiom} as_bv256_as_u256(v: bv256)
         ensures v as nat < TWO_256
 
-    function method Shl(lhs: u256, rhs: u256) : u256 
+    function method Shl(lhs: u256, rhs: u256) : u256
     {
         var lbv := lhs as bv256;
         // NOTE: unclear whether shifting is optimal choice here.
@@ -555,15 +581,15 @@ module I256 {
     /**
      *  Shifting 1 left less than 256 times produces a non-zero value.
      *
-     *  More generally, shifting-left 1 less than k times over k bits 
+     *  More generally, shifting-left 1 less than k times over k bits
      *  yield a non-zero number.
      *
      *  @example    over 2 bits, left-shift 1 once: 01 -> 10
      *  @example    over 4 bits, left-shift 1 3 times: 0001 -> 0010 -> 0100 -> 1000
      */
-    lemma ShiftYieldsNonZero(x: u256) 
-        requires 0 < x < 256 
-        ensures U256.Shl(1, x) > 0 
+    lemma ShiftYieldsNonZero(x: u256)
+        requires 0 < x < 256
+        ensures U256.Shl(1, x) > 0
     {
         //  Thanks Dafny.
     }
