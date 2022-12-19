@@ -205,6 +205,7 @@ function method {:verify true} Block_0x2b(st: State): (st': State)
     requires st.OK? && st.PC() == 0x2b
     requires st.evm.code == Code.Create(BYTECODE)
 	requires st.Operands() > 1 && st.Capacity() > 4
+	requires st.WritesPermitted()
     decreases EGas(st)
 {
     if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
@@ -226,6 +227,7 @@ function method {:verify true} Block_0x34(st: State): (st': State)
     requires st.OK? && st.PC() == 0x34
     requires st.evm.code == Code.Create(BYTECODE)
 	requires st.Operands() > 1 && st.Capacity() > 4
+	requires st.WritesPermitted()
     decreases EGas(st)
 {
     if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
@@ -252,6 +254,7 @@ function method {:verify true} Block_0x44(st: State): (st': State)
     requires st.OK? && st.PC() == 0x44
     requires st.evm.code == Code.Create(BYTECODE)
 	requires st.Operands() >= 2 && st.Capacity() > 4
+	requires st.WritesPermitted()
 	decreases EGas(st)
 {
     if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
@@ -277,6 +280,7 @@ function method {:verify true} Block_0x5a(st: State): (st': State)
     requires st.OK? && st.PC() == 0x5a
     requires st.evm.code == Code.Create(BYTECODE)
 	requires st.Operands() >= 3 && st.Capacity() > 1
+	requires st.WritesPermitted()
 	decreases EGas(st)
 {
 	if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
@@ -289,6 +293,7 @@ function method {:verify true} Block_0x5a(st: State): (st': State)
 		var tmp96 := st.Peek(1);
 		var st5 := JumpI(st4);
 		if st4.Peek(1) != 0 then
+			assume st5.Capacity() >= 2;
 			Block_0x64(st5.UseGas(1))
 		else 
 			var st6 := Dup(st5,3);
@@ -300,6 +305,7 @@ function method {:verify true} Block_0x64(st: State): (st': State)
     requires st.OK? && st.PC() == 0x64
     requires st.evm.code == Code.Create(BYTECODE)
 	requires st.Operands() > 2 && st.Capacity() >= 2
+	requires st.WritesPermitted()
 	decreases EGas(st)
 {
 	if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
@@ -308,7 +314,6 @@ function method {:verify true} Block_0x64(st: State): (st': State)
 		var st1 := Dup(st0,1);
 		var st2 := Dup(st1,4);
 		var st3 := SStore(st2);
-		assume st3.OK?;
 		var st4 := Dup(st3,3);
 		var st5 := Dup(st4,4);
 		Return(st5)
@@ -318,6 +323,7 @@ function method {:verify true} Block_0x6b(st: State): (st': State)
     requires st.OK? && st.PC() == 0x6b
     requires st.evm.code == Code.Create(BYTECODE)
 	requires st.Operands() >= 3 && st.Capacity() > 2
+	requires st.WritesPermitted()
 	decreases EGas(st)
 {
 	if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
