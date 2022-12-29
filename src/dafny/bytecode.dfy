@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "state.dfy"
+include "evmstate.dfy"
 include "gas.dfy"
 
 module Bytecode {
@@ -137,7 +137,7 @@ module Bytecode {
         -TWO_255 as i256
         else
         // Do not use Dafny's division operator here!
-        I256.div(lhs,rhs)
+        I256.Div(lhs,rhs)
     }
 
     /**

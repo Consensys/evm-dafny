@@ -559,7 +559,7 @@ module I256 {
     // because Dafny (unlike just about every other programming
     // language) supports Euclidean division.  This operator, therefore,
     // always divides *towards* zero.
-    function method div(lhs: i256, rhs: i256) : i256
+    function method Div(lhs: i256, rhs: i256) : i256
         // Cannot divide by zero!
         requires rhs != 0
         // Range restriction to prevent overflow

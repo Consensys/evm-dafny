@@ -1,6 +1,7 @@
 // An set of examples illustrating contract calls.
 include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy"
+include "utils.dfy"
 
 module CallExamples {
     import opened Int
@@ -10,6 +11,8 @@ module CallExamples {
     import WorldState
     import opened Bytecode
     import Bytes
+    import opened Utils
+    
 
     /** The gas loaded in the EVM before executing a program. */
     const INITGAS := 0xFFFF;
@@ -63,7 +66,10 @@ module CallExamples {
         assert vm1.Peek(0) == 0;
     }
 
-    method test_call_03() {
+
+
+
+    method {:test} test_call_03() {
         // This is another simple example of a contract call where the called
         // contract returns some return data.
         var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
@@ -88,6 +94,7 @@ module CallExamples {
         // Check return data.
         assert vm1.OK?;
         assert vm1.Peek(0) == 0x123;
+        Assert(() => vm1.Peek(0) == 0x123);
     }
 
     method contractReturns123(vm:EvmState.State) returns (vm':EvmState.State)

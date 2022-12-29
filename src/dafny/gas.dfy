@@ -13,7 +13,7 @@
  */
 include "util/int.dfy"
 include "opcodes.dfy"
-include "state.dfy"
+include "evmstate.dfy"
 include "core/memory.dfy"
 include "core/code.dfy"
 include "core/context.dfy"

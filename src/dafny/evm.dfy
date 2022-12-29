@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "state.dfy"
+include "evmstate.dfy"
 include "util/option.dfy"
 
 /**

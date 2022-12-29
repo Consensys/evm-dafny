@@ -1,4 +1,4 @@
-include "../../dafny/evm.dfy"
+//include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy"
 
 import opened Int
