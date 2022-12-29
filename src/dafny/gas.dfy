@@ -527,7 +527,7 @@ module Gas {
             then
                 var loc := st.Peek(0);
                 var newValue := st.Peek(1);
-                var currentAccount := st.evm.world.Get(st.evm.context.address).Unwrap();
+                var currentAccount := st.evm.world.GetAccount(st.evm.context.address).Unwrap();
                 var currentAccountPretransaction := st.evm.world.GetOrDefaultPretransaction(st.evm.context.address);
                 // determine if it is a cold or warm storage access and charge accordingly
                 var accessCost := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;

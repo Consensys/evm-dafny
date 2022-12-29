@@ -954,7 +954,7 @@ module Bytecode {
                 st.AccountAccessed(account).Pop().Push(0).Next()
             else
                 // Lookup account
-                var data := st.evm.world.Get(account).Unwrap();
+                var data := st.evm.world.GetAccount(account).Unwrap();
                 // Done
                 st.AccountAccessed(account).Pop().Push(data.hash).Next()
         else
