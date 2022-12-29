@@ -204,8 +204,8 @@ Some useful links:
 * the Berlin version of the [yellow paper (YP)](https://ethereum.github.io/yellowpaper/paper.pdf)
 * An complete [Introduction to the EVM](https://ethereum.org/en/developers/docs/evm/), Ethereum foundation
 * A [Tutorial on the YP specification](https://ethereum.org/sr/developers/tutorials/yellow-paper-evm/),  (Ethereum foundation)
-* the K-framework EVM semantics [KEVM, jellowpaper](https://jellopaper.org)
-* the [Main EVM semantics](https://jellopaper.org/evm/) in Jellow paper (K framework)
+* the K-framework EVM semantics [KEVM, jellopaper](https://jellopaper.org)
+* the [Main EVM semantics](https://jellopaper.org/evm/) in Jello paper (K framework)
 * A [Quick reference to EVM opcodes](https://github.com/wolflo/evm-opcodes)
 * An [Interactive reference to EVM opcodes](https://www.evm.codes)
 * The Yul intermediate representation [Yul documentation](https://docs.soliditylang.org/en/v0.8.10/yul.html)
