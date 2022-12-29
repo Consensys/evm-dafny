@@ -144,6 +144,57 @@ function method Main(context: Context.T, world: map<u160,WorldState.Account>, ga
     Block_0x00(st0)
 }
 
+function method Block_0x00_a(st: State): (st': State)
+	requires st.OK? && st.PC() == 0x00
+    requires st.evm.code == Code.Create(BYTECODE)
+	requires st.Operands() >= 0
+	requires st.Capacity() >= 4
+	requires st.WritesPermitted()
+{
+	var st0 := Push1(st, 0x80);
+	var st1 := Dup(st0,1);
+	var st2 := Push1(st1, 0x40);
+	var st3 := MStore(st2);
+	var st4 := Push1(st3, 0x4);
+	var st5 := CallDataSize(st4);
+	var st6 := Lt(st5);
+	var st7 := Push1(st6, 0x8f);
+	st7
+}
+
+function method Block_0x00_b(st: State): (st': State)
+	requires st.OK? && st.PC() == 0x0d
+    requires st.evm.code == Code.Create(BYTECODE)
+	requires st.Operands() >= 0
+	requires st.Capacity() >= 4
+{
+	var st9 := Push1(st, 0x0);
+	var st10 := Dup(st9,1);
+	var st11 := CallDataLoad(st10);
+	var st12 := Push1(st11, 0xe0);
+	var st13 := Shr(st12);
+	var st14 := Push4(st13, 0x310bd74b);
+	var st15 := Dup(st14,2);
+	var st16 := Eq(st15);
+	var st17 := Push1(st16, 0x2b);
+	SanityCheck();
+	assert BYTECODE[0x2b] == JUMPDEST;
+	st17
+}
+
+function method Block_0x00_c(st: State): (st': State)
+	requires st.OK? && st.PC() == 0x1e
+    requires st.evm.code == Code.Create(BYTECODE)
+	requires st.Operands() >= 1
+	requires st.Capacity() >= 2
+{
+	var st19 := Push4(st, 0xd4b83992); 
+	var st20 := Dup(st19,2);
+	var st21 := Eq(st20);
+	var st22 := Push1(st21, 0x6b); 
+	st22
+}
+
 function method {:verify true} Block_0x00(st: State): (st': State)
     requires st.OK? && st.PC() == 0x00
     requires st.evm.code == Code.Create(BYTECODE)
@@ -154,27 +205,12 @@ function method {:verify true} Block_0x00(st: State): (st': State)
 {
 	if st.Gas() < 1 then INVALID(INSUFFICIENT_GAS)
 	else 
-		var st0 := Push1(st, 0x80);
-		var st1 := Dup(st0,1);
-		var st2 := Push1(st1, 0x40);
-		var st3 := MStore(st2);
-		var st4 := Push1(st3, 0x4);
-		var st5 := CallDataSize(st4);
-		var st6 := Lt(st5);
-		var st7 := Push1(st6, 0x8f);
+		var st7 := Block_0x00_a(st);
 		var st8 := JumpI(st7);
 		if st7.Peek(1) != 0 then 
 			Block_0x8f(st8.UseGas(1))
 		else 
-			var st9 := Push1(st8, 0x0);
-			var st10 := Dup(st9,1);
-			var st11 := CallDataLoad(st10);
-			var st12 := Push1(st11, 0xe0);
-			var st13 := Shr(st12);
-			var st14 := Push4(st13, 0x310bd74b);
-			var st15 := Dup(st14,2);
-			var st16 := Eq(st15);
-			var st17 := Push1(st16, 0x2b);
+			var st17 := Block_0x00_b(st8);
 			SanityCheck();
 			assert BYTECODE[0x2b] == JUMPDEST;
 			var st18 := JumpI(st17);
