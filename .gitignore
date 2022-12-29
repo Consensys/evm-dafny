@@ -56,7 +56,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 src/dafny/*.mdb
-.vscode/settings.json
 model.bvd
 *.cfg
 **/tmp/**
@@ -76,3 +75,4 @@ src/dafny/refinement/cfg.dot
 src/test/dafny/**/*.runtimeconfig.json
 
 /bin/
+**/.vscode
