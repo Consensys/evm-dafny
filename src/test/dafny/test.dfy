@@ -6,7 +6,7 @@ import opened Opcode
 
 /**
  */
-module SimpleTests {
+module Test {
 
     import opened Int
     import opened Opcode
