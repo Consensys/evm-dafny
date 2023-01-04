@@ -136,10 +136,12 @@ go:
 
 ###################### MAKEFILE CLASSICS ########################
 
+all: dafny #go
+
 run: dafny_run
 
 clean:  dafny_clean #go_clean
 
-.PHONY: clean all dafny dafny_clean dafny_translate_clean dafny_verify dafny_verify_force dafny_verify_clean dafny_run dafny_test dafny_test_clean dafny_test_force
+.PHONY: clean all dafny dafny_clean dafny_translate_clean dafny_verify dafny_verify_force dafny_verify_clean dafny_run dafny_test dafny_test_clean dafny_test_force dafny_test_global dafny_test_global_clean dafny_test_global_force
 
 

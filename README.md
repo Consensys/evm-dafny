@@ -9,14 +9,18 @@
 
 # Table of Contents
 
-1. [Overview](#overview)
+1. [Table of Contents](#table-of-contents)
+2. [Overview](#overview)
    1. [Dafny](#dafny)
-   1. [Example](#semantics-example)
-1. [Getting Started](#getting-started)
-1. [Verifying Bytecode](#verifying-bytecode)
-1. [Building](#building-the-code)
-1. [Contributing](#contributing)
-1. [Resources](#resources)
+   2. [Semantics Example](#semantics-example)
+3. [Getting Started](#getting-started)
+4. [Verifying Bytecode](#verifying-bytecode)
+5. [Building the Code](#building-the-code)
+   1. [Java target](#java-target)
+      1. [Test Generation](#test-generation)
+   2. [Go target](#go-target)
+6. [Contributing](#contributing)
+7. [Resources](#resources)
 
 # Overview
 
@@ -29,7 +33,7 @@ This type of specification has several advantages:
 - it is _programming-language agnostic_ and _easily readable_: it does not require any prior knowledge of a specific programming language, but rather defines the semantics of the EVM as functions and compositions thereof. [Read more](./SEMANTICS.md#reading-and-understanding-the-semantics)
 - it is _executable_: we can run EVM bytecode, and in effect we have an _interpreter_ of EVM bytecode. [Read more](./SEMANTICS.md#executing-the-semantics)
 - it is _verified_. We guarantee that our EVM interpreter is free of runtime errors (e.g. division by zero, arithmetic under/overflow). [Read more](./SEMANTICS.md#verifying-the-semantics)
-- it is provides a _usable API_ for _formal verification_ of EVM bytecode. [Read more](./VERIFICATION.md)
+- it provides a _usable API_ for _formal verification_ of EVM bytecode. [Read more](./VERIFICATION.md)
 
 
 Developing this specification in Dafny allows us to apply [formal
@@ -116,22 +120,27 @@ Note that this postcondition is _checked_ by the Dafny verification engine at co
 # Getting Started 
 To use our code base you may follow these steps:
 
-- Install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VsCode Dafny extention](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax colouring, error reporting, etc) and the Dafny compiler code.
+- Install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VSCode Dafny extension](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax colouring, error reporting, etc) and the Dafny compiler code.
 - Clone [this repository](https://github.com/ConsenSys/evm-dafny).
 - Build the code (see below) or start with this [introductory material](SEMANTICS.md).
 
 # Verifying Bytecode 
 
 Our EVM is written in Dafny. As a result we can instrument bytecode with some reasoning features.
-Some examples are given in [the verification examples section.](./VERIFICATION.md)
+Some examples are given in [the verification examples document.](./VERIFICATION.md)
+
 # Building the Code
 
-This repository uses [`gradle`](https://gradle.org/) as the de facto
+Dafny has to be translated to a target language to be run and to access functionality not included natively in Dafny. We have currently 2 target languages: Go and Java.
+
+## Java target
+
+The Java target uses the [`gradle`](https://gradle.org/)
 build system.  To build the code, you need the following components:
 
 * **[Java 11](https://openjdk.org/)** (or greater)
 
-* **[Dafny 3.7](https://github.com/dafny-lang/dafny)** (or greater).
+* **[Dafny 3.10](https://github.com/dafny-lang/dafny)** (or greater).
 
 * **[Gradle 7](https://gradle.org)** (or greater)
 
@@ -145,7 +154,7 @@ This will verify the codebase using Dafny along with some examples,
 generate a Java implementation of the `EVM`, and run two test suites
 against it in Java.
 
-# Test Generation
+### Test Generation
 
 As the main purpose of our EVM is to reason about bytecode, we may want to have some guarantees that the proofs 
 we develop are also valid on _other_ EVM implementations: if the same code is run on another implementation then the guarantees (e.g. no stack under/overflow) that we obtain using our automated reasoning and our EVM are still valid.
@@ -189,6 +198,27 @@ tests should be included, whilst the latter identifies specific cases
 to exclude.  Finally, the trace generation process is managed by the
 [EvmTools](https://github.com/DavePearce/EvmTools) framework.
 
+## Go target
+
+The Go target uses GNU Make for its build system (preferably v4 or later).
+In macOS, it can be installed with `brew install make`, which installs it as `gmake`.
+
+The code is currently being developed with Dafny 3.10, Go 1.19; all available in `brew`.
+
+The GNUMakefile contains multiple targets to ease development:
+* `dafny` runs verification, translation and tests on the Dafny code.
+  * Each stage can be run independently with `dafny_verify`, `dafny_translate`, `dafny_test`
+  * You can add `_clean` to those to remove their products and witnesses.
+  * Or you can add `_force` instead to rerun them even if there were no changes.
+* `clean` cleans all build products and verification and test witnesses.
+* `run` builds and runs the Dafny Main entry point. You can provide arguments adding `RUN_ARGS="--gas 100"`.
+  * This is for convenience; a standard executable is nonetheless generated at `build/dafnyexec`.
+
+For example, you can run the Dafny main like this:
+```
+> gmake run RUN_ARGS="--gas 100"
+```
+
 # Contributing
 
 See the [CONTRIBUTORS](CONTRIBUTORS.md) file for more information on
@@ -199,6 +229,9 @@ guide](https://github.com/dafny-lang/dafny/blob/master/docs/StyleGuide/Style-Gui
 
 
 # Resources
+
+The architecture of our Dafny-EVM: [ARCHITECTURE.md](./ARCHITECTURE.md)
+
 Some useful links:
 
 * the Berlin version of the [yellow paper (YP)](https://ethereum.github.io/yellowpaper/paper.pdf)
