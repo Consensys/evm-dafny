@@ -27,7 +27,7 @@ task compileDafny {
     // Specify inputs
     inputs.files(fileTree('src/dafny/') { include '**/*.dfy' } )
     // Specify outputs
-    outputs.files(fileTree('evm-java') { include '**/*.java' } )
+    outputs.files(fileTree('build/evm-java') { include '**/*.java' } )
     // Enable caching
     outputs.cacheIf { true }
     // Specify actions
@@ -35,12 +35,20 @@ task compileDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args '/rlimit:100000','/verifyAllModules','/out:evm','/vcsLoad:2.0','/noExterns','/compileTarget:java','/compileVerbose:0','src/dafny/evm.dfy','src/dafny/evms/berlin.dfy'
+            args '/rlimit:100000','/verifyAllModules','/out:build/evm','/vcsLoad:2.0','/noExterns','/compileTarget:java','/compileVerbose:0','src/dafny/evm.dfy','src/dafny/evms/berlin.dfy'
         }
         // Delete general file containing extern definitions.
-        delete "evm-java/External_Compile"
+        delete "build/evm-java/External_Compile"
     }
 }
+
+task cleanDafny {
+    doLast {
+        delete "build/evm-java"
+    }
+}
+
+clean.dependsOn cleanDafny
 
 // ======================================================================
 // Dafny Tests
@@ -50,7 +58,7 @@ task testDafny {
     // Specify inputs
     inputs.files(fileTree('src') { include '**/*.dfy' } )
     // Specify outputs
-    outputs.files(fileTree('tmp-java') { include '**/*.java' } )
+    outputs.files(fileTree('build/dafny-tests-java') { include '**/*.java' } )
     // Require code gen
     dependsOn compileDafny
     // Specify actions
@@ -61,7 +69,7 @@ task testDafny {
             File file -> {
                 exec {
                     executable 'dafny'
-                    args '/runAllTests:1','/vcsLoad:2.0','/out:tmp','/noExterns','/compileTarget:java','/compile:4','/compileVerbose:0',file
+                    args '/runAllTests:1','/vcsLoad:2.0','/out:build/dafny-tests','/noExterns','/compileTarget:java','/compile:4','/compileVerbose:0',file
                 }
             }
         }
@@ -100,7 +108,7 @@ sourceSets {
     main {
         java {
             // Add Dafny output directory to Java build path.
-            srcDirs("evm-java")
+            srcDirs("build/evm-java")
         }
     }
 }
@@ -114,7 +122,7 @@ dependencies {
     implementation("org.web3j:rlp:5.0.0")
     implementation("org.web3j:crypto:5.0.0")
     implementation("org.whiley:evmtools:0.3.25")
-    implementation files('evm-java/DafnyRuntime.jar')
+    implementation files('build/evm-java/DafnyRuntime.jar')
     //
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.0")

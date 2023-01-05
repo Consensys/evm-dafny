@@ -86,7 +86,45 @@ requires forall i :: 0 <= i < |chrs| ==> IsHexDigit(chrs[i]) {
         }
     return accum;
 }
-    
+
+function method ToHexByte(high: char, low: char) : u8
+requires IsHexDigit(high) && IsHexDigit(low) {
+    (ToHexDigit(high) * 16) + ToHexDigit(low)
+}
+
+function method convertToSeqHex(chars: seq<char>) : seq<u8>
+requires |chars| % 2 == 0
+requires forall i :: 0 <= i < |chars| ==> IsHexDigit(chars[i]) {
+    // Determine number of characters
+    var n := |chars| / 2;
+    // Construct sequences
+    seq(n, i requires i >= 0 && i < n => ToHexByte(chars[i*2],chars[(i*2)+1]))
+}
+
+function method ToHex(k: u8): (c: char) 
+    requires 0 <= k <= 15
+    ensures IsHexDigit(c)
+{
+    if k <= 9 then '0' + k as char 
+    else 'a' + (k - 10) as char
+}
+
+function method u8ToHex(k: u8): (s: string)
+    ensures |s| == 2
+    ensures IsHexDigit(s[0])
+    ensures IsHexDigit(s[1])
+{
+    [ToHex(k / 16),ToHex(k % 16)] 
+}
+
+function method seqU8ToStringHex(seqU8: seq<u8>, accum: string): string
+    {
+        if seqU8 == []
+            then accum
+        else 
+            u8ToHex(seqU8[0]) + seqU8ToStringHex(seqU8[1..], accum)  
+    }
+
 type stringNat = s: string | |s| > 0 && (|s| > 1 ==> s[0] != '0') &&
                         forall i | 0 <= i < |s| :: s[i] in "0123456789"
                         witness "1"
@@ -135,96 +173,111 @@ lemma stringToNatThenNatToStringIdem(n: stringNat)
     ensures natToString(stringToNat(n)) == n
         {}
 
-/**
- *  We could have a seq for opcodes too
- */
-const opCodes: seq<string> := [
-    /* 0  */ "STOP",
-    /* 1  */ "ADD",
-    /* 2  */ "MUL", 
-    /* 3  */ "SUB", 
-    /* 4  */ "DIV", 
-    /* 5  */ "SDIV", 
-    /* 6  */ "MOD",
-    /* 7  */ "SMOD", 
-    /* 8  */ "ADDMOD",
-    /* 9  */ "MULMOD", 
-    /* 10 */ "EXP", 
-    /* 11 */ "SIGNEXTEND",
-    "", "", "", "",
-    /* 16 */ "LT",
-    /* 17 */ "GT",
-    /* 18 */ "SLT",
-    /* 19 */ "SGT",
-    /* 20 */ "EQ",
-    /* 21 */ "ISZERO",
-    /* 22 */ "AND",
-    /* 23 */ "EVMOR",
-    /* 24 */ "XOR",
-    /* 25 */ "NOT",
-    /* 26 */ "BYTE",
-    /* 27 */ "SHL",
-    /* 28 */ "SHR",
-    /* 29 */ "SAR",
-    "", "",
-    /* 32 */ "SHA3",
-    "", "", "", "", "", "" ,"", "", "", "", "", "", "", "","",
-    /* 48 */ "ADDRESS",
-    /* 49 */ "BALANCE",
-    /* 50 */ "ORIGIN",
-    /* 51 */ "CALLER",
-    /* 52 */ "CALLVALUE",
-    /* 53 */ "CALLDATALOAD",
-    /* 54 */ "CALLDATASIZE",
-    /* 55 */ "CALLDATACOPY",
-    /* 56 */ "CODESIZE",
-    /* 57 */ "CODECOPY",
-    /* 58 */ "GASPRICE",
-    /* 59 */ "EXTCODESIZE",
-    /* 60 */ "EXTCODECOPY",
-    /* 61 */ "RETURNDATASIZE", 
-    /* 62 */ "RETURNDATACOPY",
-    /* 63 */ "EXTCODEHASH",
-    /* 64 */ "BLOCKHASH",
-    /* 65 */ "COINBASE",
-    /* 66 */ "TIMESTAMP",
-    /* 67 */ "NUMBER",
-    /* 68 */ "DIFFICULTY",
-    /* 69 */ "GASLIMIT",
-    /* 70 */ "CHAINID",
-    /* 71 */ "SELFBALANCE",
-    /* 72 */ "BASEFEE",
-    /* 80 */ "POP",
-    /* 81 */ "MLOAD",
-    /* 82 */ "MSTORE",
-    /* 83 */ "MSTORE8",
-    /* 84 */ "SLOAD",
-    /* 85 */ "SSTORE",
-    /* 86 */ "JUMP",
-    /* 87 */ "JUMPI",
-    /* 88 */ "PC",
-    /* 89 */ "MSIZE",
-    /* 90 */ "GAS",
-    /* 91 */ "JUMPDEST",
-    "", "", "", "", 
-    /* 96 */ "PUSH1",
-    /* 97 */ "PUSH2",
-    /* 98 */ "PUSH3",
-    /* 99 */ "PUSH4",
-    /* 100 */ "PUSH5",
-    /* 101 */ "PUSH6",
-    /* 102 */ "PUSH7",
-    /* 103 */ "PUSH8",
-    /* 104 */ "PUSH9",
-    /* 105 */ "PUSH10",
-    /* 106 */ "PUSH12",
-    /* 107 */ "PUSH13",
-    /* 108 */ "PUSH14",
-    /* 109 */ "PUSH15",
-    /* 110 */ "PUSH16"
-]
-    
-    
+method printOpcode(seqU8: seq<u8>) returns ()
+    {
+        if seqU8 == [] {print("");}
+        var i:= 0;
+        var datasize := 0;
+        while (i + 1 < |seqU8|)
+            {
+                if seqU8[i] == 0 {print("STOP" + "\n");}
+                if seqU8[i] == 1 {print("ADD" + "\n");}
+                if seqU8[i] == 2 {print("MUL" + "\n");}
+                if seqU8[i] == 3 {print("SUB" + "\n");}
+                if seqU8[i] == 4 {print("DIV" + "\n");}
+                if seqU8[i] == 5 {print("SDIV" + "\n");}
+                if seqU8[i] == 6 {print("MOD" + "\n");}
+                if seqU8[i] == 7 {print("SMOD" + "\n");}
+                if seqU8[i] == 8 {print("ADDMOD" + "\n");}
+                if seqU8[i] == 9 {print("MULMOD" + "\n");}
+                if seqU8[i] == 10 {print("EXP" + "\n");}
+                if seqU8[i] == 11 {print("SIGNEXTEND" + "\n");}
+                if seqU8[i] == 16 {print("LT" + "\n");}
+                if seqU8[i] == 17 {print("GT" + "\n");}
+                if seqU8[i] == 18 {print("SLT" + "\n");}
+                if seqU8[i] == 19 {print("SGT" + "\n");}
+                if seqU8[i] == 20 {print("EQ" + "\n");}
+                if seqU8[i] == 21 {print("ISZERO" + "\n");}
+                if seqU8[i] == 22 {print("AND" + "\n");}
+                if seqU8[i] == 23 {print("EVMOR" + "\n");}
+                if seqU8[i] == 24 {print("XOR" + "\n");}
+                if seqU8[i] == 25 {print("NOT" + "\n");}
+                if seqU8[i] == 26 {print("BYTE" + "\n");}
+                if seqU8[i] == 27 {print("SHL" + "\n");}
+                if seqU8[i] == 28 {print("SHR" + "\n");}
+                if seqU8[i] == 29 {print("SAR" + "\n");}
+                if seqU8[i] == 32 {print("SHA3" + "\n");}
+                if seqU8[i] == 48 {print("ADDRESS" + "\n");}
+                if seqU8[i] == 49 {print("BALANCE" + "\n");}
+                if seqU8[i] == 50 {print("ORIGIN" + "\n");}
+                if seqU8[i] == 51 {print("CALLER" + "\n");}
+                if seqU8[i] == 52 {print("CALLVALUE" + "\n");}
+                if seqU8[i] == 53 {print("CALLDATALOAD" + "\n");}
+                if seqU8[i] == 54 {print("CALLDATASIZE" + "\n");}
+                if seqU8[i] == 55 {print("CALLDATACOPY" + "\n");}
+                if seqU8[i] == 56 {print("CODESIZE" + "\n");}
+                if seqU8[i] == 57 {print("CODECOPY" + "\n");}
+                if seqU8[i] == 58 {print("GASPRICE" + "\n");}
+                if seqU8[i] == 59 {print("EXTCODESIZE" + "\n");}
+                if seqU8[i] == 60 {print("EXTCODECOPY" + "\n");}
+                if seqU8[i] == 61 {print("RETURNDATASIZE" + "\n");}
+                if seqU8[i] == 62 {print("RETURNDATACOPY" + "\n");}
+                if seqU8[i] == 63 {print("EXTCODEHASH" + "\n");}
+                if seqU8[i] == 64 {print("BLOCKHASH" + "\n");}
+                if seqU8[i] == 65 {print("COINBASE" + "\n");}
+                if seqU8[i] == 66 {print("TIMESTAMP" + "\n");}
+                if seqU8[i] == 67 {print("NUMBER" + "\n");}
+                if seqU8[i] == 68 {print("DIFFICLUTY" + "\n");}
+                if seqU8[i] == 69 {print("GASLIMIT" + "\n");}
+                if seqU8[i] == 70 {print("CHAINID" + "\n");}
+                if seqU8[i] == 71 {print("SELFBALANCE" + "\n");}
+                if seqU8[i] == 72 {print("BASEFEE" + "\n");}
+                if seqU8[i] == 80 {print("POP" + "\n");}
+                if seqU8[i] == 81 {print("MLOAD" + "\n");}
+                if seqU8[i] == 82 {print("MSTORE" + "\n");}
+                if seqU8[i] == 83 {print("MSTORE8" + "\n");}
+                if seqU8[i] == 84 {print("SLOAD" + "\n");}
+                if seqU8[i] == 85 {print("SSTORE" + "\n");}
+                if seqU8[i] == 86 {print("JUMP" + "\n");}
+                if seqU8[i] == 87 {print("JUMPI" + "\n");}
+                if seqU8[i] == 88 {print("PC" + "\n");}
+                if seqU8[i] == 89 {print("MSIZE" + "\n");}
+                if seqU8[i] == 90 {print("GAS" + "\n");}
+                if seqU8[i] == 91 {print("JUMPDEST" + "\n");}
+                if seqU8[i] == 96 
+                                  {
+                                    if |seqU8| < i+2 
+                                        {
+                                            print("invalid bytecode");
+                                        }
+                                    if |seqU8| >= i+2 
+                                        {
+                                            var data:= ReadUint8([seqU8[i+1]],0) as nat;
+                                            {print("PUSH1" + natToString(data) + "\n");}
+                                            datasize := datasize + 1;
+                                        }
+                                  }
+                // if one comments out the piece of code below, Dafny's type conversion complains becomes evident //
+                                  
+                if seqU8[i] == 97 
+                                  {
+                                    if |seqU8| < i+3
+                                        {
+                                            print("invalid bytecode");
+                                        }
+                                    if |seqU8| >= i+3
+                                        {
+                                            var data:= ReadUint16(seqU8[i+1..i+3],0) as nat;
+                                            {print("PUSH1" + natToString(data) + "\n");}
+                                            datasize := datasize + 2;
+                                        }
+                                  }
+                
+                // end of the commented out part of the code //
+            i := i + 1 + datasize;        
+            }
+        
+    }
 
        // ----------------------------------------------------------------------------------------//                   
                            // stuff commented out below are to be added to above in near future //
@@ -580,18 +633,6 @@ method Implode(str: seq<char>) returns (s: string)
     return (tempo);
     assert tempo == str;
 }
-
-/*
-method sliceString(strInput: string, strOutput: string, lo: nat, hi: nat) returns (str': string) {
-    if (lo > 0) 
-    {
-        var i:= 0;
-        while (i < hi)
-            {
-                return "";
-            }
-}
-*/
 
 function method disassmAllInstr(str: string, counter: nat, accumulator: seq<string>): seq<string>  
     decreases |str| - counter
