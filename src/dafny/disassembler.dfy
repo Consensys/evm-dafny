@@ -164,39 +164,38 @@ method printOpcode(seqU8: seq<u8>) returns ()
                 if seqU8[i] == 91 {print("JUMPDEST" + "\n");}
                 if seqU8[i] == 96 
                                   {
-                                    if |seqU8| < 2 
+                                    if |seqU8| < i+2 
                                         {
                                             print("invalid bytecode");
                                         }
-                                    if |seqU8| >= 2 
+                                    if |seqU8| >= i+2 
                                         {
-                                            var data:= ReadUint8([seqU8[1]],0) as nat;
+                                            var data:= ReadUint8([seqU8[i+1]],0) as nat;
                                             {print("PUSH1" + natToString(data) + "\n");}
                                             datasize := datasize + 1;
                                         }
                                   }
                 // if one comments out the piece of code below, Dafny's type conversion complains becomes evident //
-                /*                  
+                                  
                 if seqU8[i] == 97 
                                   {
-                                    if |seqU8| < 3 
+                                    if |seqU8| < i+3
                                         {
                                             print("invalid bytecode");
                                         }
-                                    if |seqU8| >= 3 
+                                    if |seqU8| >= i+3
                                         {
-                                            var data:= ReadUint16([seqU8[1..3]],0) as nat;
+                                            var data:= ReadUint16(seqU8[i+1..i+3],0) as nat;
                                             {print("PUSH1" + natToString(data) + "\n");}
                                             datasize := datasize + 2;
                                         }
                                   }
-                */
+                
                 // end of the commented out part of the code //
             i := i + 1 + datasize;        
             }
         
     }
-
 
        // ----------------------------------------------------------------------------------------//                   
                            // stuff commented out below are to be added to above in near future //
@@ -552,18 +551,6 @@ method Implode(str: seq<char>) returns (s: string)
     return (tempo);
     assert tempo == str;
 }
-
-/*
-method sliceString(strInput: string, strOutput: string, lo: nat, hi: nat) returns (str': string) {
-    if (lo > 0) 
-    {
-        var i:= 0;
-        while (i < hi)
-            {
-                return "";
-            }
-}
-*/
 
 function method disassmAllInstr(str: string, counter: nat, accumulator: seq<string>): seq<string>  
     decreases |str| - counter
