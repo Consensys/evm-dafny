@@ -52,6 +52,26 @@ predicate method IsHexString(s: string)
  *  Usage: 
  *    dafny /noVerify /compile:4 '/Users/franck/development/evm-dafny/src/dafny/disassembler.dfy' --args "0001603a63b1c2d4f" 
  */
+method {:verify true} mMain(argv: seq<string>)
+{
+    if |argv| < 2 {
+        print "error\n";
+        print "Usage: dafny /noVerify /compile:4 progWithMain --args \"bytecode as string\"\n";
+    } else if |argv[1]| % 2 == 0  {
+        //  Check that it is an Hex String
+        if IsHexString(argv[1]) {
+            var s := Dis(argv[1]);
+            for i: nat := 0 to |s| {
+                print s[i];
+            }
+        } else {
+            print "error not hex string\n";
+        }
+    } else {
+        print "error not even number of characters\n";
+    }
+}
+
 method {:verify true} Main(argv: seq<string>)
 {
     if |argv| < 2 {
@@ -60,10 +80,13 @@ method {:verify true} Main(argv: seq<string>)
     } else if |argv[1]| % 2 == 0  {
         //  Check that it is an Hex String
         if IsHexString(argv[1]) {
-            // var s := DA("0001603a63b1c2d4ff");
-            var s := DA(argv[1]);
-            for i: nat := 0 to |s| {
-                print s[i];
+            var s := EVMProg(Dis2(argv[1]));
+            // for i: nat := 0 to |s| {
+            //     print s[i];
+            // }
+            print s.PrintAsSeq(), "\n";
+            for i: nat := 0 to |s.PrettyPrint()| {
+                print s.PrettyPrint()[i], "\n";
             }
         } else {
             print "error not hex string\n";
@@ -271,6 +294,42 @@ function method Decode(k: u8): string
         case _ => "NA"
 }
 
+datatype Item = 
+        Instr(address: nat, code: u8, args: string := "")
+    |   Data(address: nat, value: u8)
+    |   Error(address: nat, code: u8)
+    
+
+datatype EVMProg = 
+    EVMProg(p: seq<Item>)
+    {
+        /**
+         *  Pretty print to seq<u8., ready to use as `code` in the EVM.
+         */
+        function method PrintAsSeq(): seq<string> {
+            seq(|p|, i requires 0 <= i < |p| => 
+                match p[i] 
+                    case Instr(a, c, _) => Decode(c)
+                    case Data(a, v) => u8ToHex(v)
+                    case Error(a, c) => u8ToHex(c)
+            )
+        }
+
+        /**
+         *  Skip Data and Error (and use the args in the instructions to pretty print).
+         */
+        function method PrettyPrint(index: nat := 0): seq<string> 
+            decreases |p| - index
+        {
+            if index >= |p| then []
+            else 
+                (match p[index]
+                    case Instr(a, c, v) => [natToString(a) + ": " + Decode(c) + v] 
+                    case _ => []
+                ) + PrettyPrint(index + 1)
+        }
+    }
+
 /* 
 A very simple code:  0001603a63b1c2d4ff
 
@@ -287,7 +346,7 @@ Note in the result that the code after INVALID is not reachable and seems to be 
 /**
  *  Dissassemble a string.
  */
-function method {:tailrecursion true} DA(code: string): seq<string> 
+function method {:tailrecursion true} Dis(code: string): seq<string> 
     requires |code| % 2 == 0 
     requires forall i:: 0 <= i < |code| ==> IsHexDigit(code[i])
 {
@@ -296,7 +355,7 @@ function method {:tailrecursion true} DA(code: string): seq<string>
         var nextInstr := Decode(StringToHex(code[..2]));
         var numArgs := ArgSize(StringToHex(code[..2]));
         if |code[2..]| >= 2 * numArgs then 
-            [Decode(StringToHex(code[..2])) 
+            [nextInstr 
                 + 
                 (if numArgs >= 1 then 
                     " 0x" + code[2..2 + 2 * numArgs]
@@ -304,9 +363,29 @@ function method {:tailrecursion true} DA(code: string): seq<string>
                 )
                 + "\n"
             ]
-                + DA(code[2 + 2 * numArgs..])
+                + Dis(code[2 + 2 * numArgs..])
         else 
             [Decode(StringToHex(code[..2])) + "\n"] + ["Error"]
+}
+
+function method {:tailrecursion true} Dis2(code: string, pc: nat := 0): seq<Item> 
+    requires |code| % 2 == 0 
+    requires forall i:: 0 <= i < |code| ==> IsHexDigit(code[i])
+    decreases |code|
+{
+    if |code| == 0 || pc >= |code| then []
+    else 
+        var nextInstr := StringToHex(code[..2]);
+        var numArgs := ArgSize(StringToHex(code[..2]));
+       
+        if |code[2..]| >= 2 * numArgs then 
+            [Instr(pc, nextInstr, if numArgs > 0 then " 0x" + code[2..2 + 2 * numArgs] else "")]
+            + seq(numArgs, i requires 0 <= i < numArgs => 
+                Data(pc + i + 1, StringToHex(code[2..][2 * i..2 * (i + 1)])))
+            + 
+            Dis2(code[2 + 2 * numArgs..], pc + 1 + numArgs)
+        else 
+            [Error(pc, nextInstr)]
 }
 
 //  Previous version
