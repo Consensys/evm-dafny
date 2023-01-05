@@ -40,11 +40,15 @@ function method u8ToHex(k: u8): (s: string)
 
 /**
  *  Dissassemble.
+ *
+ *  Usage: 
+ *    dafny /noVerify /compile:4 '/Users/franck/development/evm-dafny/src/dafny/disassembler.dfy' --args "0001603a63b1c2d4f" 
  */
 method {:verify false} Main(argv: seq<string>)
 {
     if |argv| < 2 {
         print "error\n";
+        print "Usage: dafny /noVerify /compile:4 progWithMain --args \"bytecode as string\"\n";
     } else if |argv[1]| % 2 == 0  {
         // var s := DA("0001603a63b1c2d4ff");
         var s := DA(argv[1]);
@@ -54,8 +58,6 @@ method {:verify false} Main(argv: seq<string>)
     } else {
         print "error not even number of characters\n";
     }
-    
-
 }
 
 /**
