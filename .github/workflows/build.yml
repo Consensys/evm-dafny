@@ -34,4 +34,4 @@ jobs:
           go-version: 1.19
 
       - name: Build with the Makefile
-        run: make all
+        run: make ci
