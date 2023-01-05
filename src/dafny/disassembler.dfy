@@ -39,21 +39,34 @@ function method u8ToHex(k: u8): (s: string)
 }
 
 /**
+ *  Whether a string is made of Hex digits.
+ */
+predicate method IsHexString(s: string) 
+{
+    forall i:: 0 <= i < |s| ==> IsHexDigit(s[i])
+}
+
+/**
  *  Dissassemble.
  *
  *  Usage: 
  *    dafny /noVerify /compile:4 '/Users/franck/development/evm-dafny/src/dafny/disassembler.dfy' --args "0001603a63b1c2d4f" 
  */
-method {:verify false} Main(argv: seq<string>)
+method {:verify true} Main(argv: seq<string>)
 {
     if |argv| < 2 {
         print "error\n";
         print "Usage: dafny /noVerify /compile:4 progWithMain --args \"bytecode as string\"\n";
     } else if |argv[1]| % 2 == 0  {
-        // var s := DA("0001603a63b1c2d4ff");
-        var s := DA(argv[1]);
-        for i: nat := 0 to |s| {
-            print s[i];
+        //  Check that it is an Hex String
+        if IsHexString(argv[1]) {
+            // var s := DA("0001603a63b1c2d4ff");
+            var s := DA(argv[1]);
+            for i: nat := 0 to |s| {
+                print s[i];
+            }
+        } else {
+            print "error not hex string\n";
         }
     } else {
         print "error not even number of characters\n";
@@ -75,12 +88,11 @@ function method StringToHex(s: string): (k: u8)
  *  Number of Arguments expected by an opcode.  
  */
 function method ArgSize(k: u8): (n: nat)
-    ensures 0 <= n <= 16
+    ensures 0 <= n <= 32
 {
-     match k 
-        case 0x60 => 1
-        case 0x63 => 4
-        case _ => 0
+    if 0x60 <= k <= 0x7f then 
+        (k - 0x60) as nat + 1
+    else 0
 }
 
 /**
@@ -89,12 +101,188 @@ function method ArgSize(k: u8): (n: nat)
 function method Decode(k: u8): string
 {
     match k 
+        // 0s: Stop and Arithmetic Operations
         case 0x00 => "STOP"
         case 0x01 => "ADD"
-        case 0x60 => "PUSH1"
-        case 0x63 => "PUSH4"
+        case 0x02 => "MUL"
+        case 0x03 => "SUB"
+        case 0x04 => "DIV"
+        case 0x05 => "SDIV"
+        case 0x06 => "MOD"
+        case 0x07 => "SMOD"
+        case 0x08 => "ADDMOD"
+        case 0x09 => "MULMOD"
+        case 0x0a => "EXP"
+        case 0x0b => "SIGNEXTEND"
+
+        // 10s: Comparison & Bitwise Logic Operations
+        case 0x10 => "LT"
+        case 0x11 => "GT"
+        case 0x12 => "SLT"
+        case 0x13 => "SGT"
+        case 0x14 => "EQ"
+        case 0x15 => "ISZERO"
+        case 0x16 => "AND"
+        case 0x17 => "OR"
+        case 0x18 => "XOR"
+        case 0x19 => "NOT"
+        case 0x1a => "BYTE"
+        case 0x1b => "SHL"
+        case 0x1c => "SHR"
+        case 0x1d => "SAR"
+
+        // 20s: SHA3
+	    case 0x20 => "KECCAK256"
+
+        // 30s: Environment Information
+        case 0x30 => "ADDRESS"
+        case 0x31 => "BALANCE"
+        case 0x32 => "ORIGIN"
+        case 0x33 => "CALLER"
+        case 0x34 => "CALLVALUE"
+        case 0x35 => "CALLDATALOAD"
+        case 0x36 => "CALLDATASIZE"
+        case 0x37 => "CALLDATACOPY"
+        case  0x38 => "CODESIZE"
+        case  0x39 => "CODECOPY"
+        case  0x3a => "GASPRICE"
+        case 0x3b => "EXTCODESIZE"
+        case 0x3c => "EXTCODECOPY"
+        case 0x3d => "RETURNDATASIZE"
+        case 0x3e => "RETURNDATACOPY"
+        case 0x3f => "EXTCODEHASH"
+
+        // 40s: Block Information
+        case 0x40 => "BLOCKHASH"
+        case 0x41 => "COINBASE"
+        case 0x42 => "TIMESTAMP"
+        case 0x43 => "NUMBER"
+        case 0x44 => "DIFFICULTY"
+        case 0x45 => "GASLIMIT"
+        case 0x46 => "CHAINID"
+        case 0x47 => "SELFBALANCE"
+
+        // 50s: Stack, Memory Storage and Flow Operations
+	    case  0x50 => "POP"
+	    case  0x51 => "MLOAD"
+	    case  0x52 => "MSTORE"
+	    case  0x53 => "MSTORE8"
+	    case  0x54 => "SLOAD"
+	    case  0x55 => "SSTORE"
+	    case  0x56 => "JUMP"
+	    case  0x57 => "JUMPI"
+	    case  0x58 => "PC"
+	    case  0x59 => "MSIZE"
+	    case  0x5a => "GAS"
+	    case  0x5b => "JUMPDEST"
+
+        // 60s & 70s: Push Operations
+	    case 0x60 => "PUSH1"
+	    case 0x61 => "PUSH2"
+	    case 0x62 => "PUSH3"
+	    case 0x63 => "PUSH4"
+	    case 0x64 => "PUSH5"
+	    case 0x65 => "PUSH6"
+	    case 0x66 => "PUSH7"
+	    case 0x67 => "PUSH8"
+	    case 0x68 => "PUSH9"
+	    case 0x69 => "PUSH10"
+	    case 0x6a => "PUSH11"
+	    case 0x6b => "PUSH12"
+	    case 0x6c => "PUSH13"
+	    case 0x6d => "PUSH14"
+	    case 0x6e => "PUSH15"
+	    case 0x6f => "PUSH16"
+	    case 0x70 => "PUSH17"
+	    case 0x71 => "PUSH18"
+	    case 0x72 => "PUSH19"
+	    case 0x73 => "PUSH20"
+	    case 0x74 => "PUSH21"
+	    case 0x75 => "PUSH22"
+	    case 0x76 => "PUSH23"
+	    case 0x77 => "PUSH24"
+	    case 0x78 => "PUSH25"
+	    case 0x79 => "PUSH26"
+	    case 0x7a => "PUSH27"
+	    case 0x7b => "PUSH28"
+	    case 0x7c => "PUSH29"
+	    case 0x7d => "PUSH30"
+	    case 0x7e => "PUSH31"
+	    case 0x7f => "PUSH32"
+
+        // 80s: Duplication Operations
+	    case 0x80 => "DUP1"
+	    case 0x81 => "DUP2"
+	    case 0x82 => "DUP3"
+	    case 0x83 => "DUP4"
+	    case 0x84 => "DUP5"
+	    case 0x85 => "DUP6"
+	    case 0x86 => "DUP7"
+	    case 0x87 => "DUP8"
+	    case 0x88 => "DUP9"
+	    case 0x89 => "DUP10"
+	    case 0x8a => "DUP11"
+	    case 0x8b => "DUP12"
+	    case 0x8c => "DUP13"
+	    case 0x8d => "DUP14"
+	    case 0x8e => "DUP15"
+	    case 0x8f => "DUP16"
+
+        // 90s: Exchange Operations
+	    case 0x90 => "SWAP1"
+	    case 0x91 => "SWAP2"
+	    case 0x92 => "SWAP3"
+	    case 0x93 => "SWAP4"
+	    case 0x94 => "SWAP5"
+	    case 0x95 => "SWAP6"
+	    case 0x96 => "SWAP7"
+	    case 0x97 => "SWAP8"
+	    case 0x98 => "SWAP9"
+	    case 0x99 => "SWAP10"
+	    case 0x9a => "SWAP11"
+	    case 0x9b => "SWAP12"
+	    case 0x9c => "SWAP13"
+	    case 0x9d => "SWAP14"
+	    case 0x9e => "SWAP15"
+	    case 0x9f => "SWAP16"
+
+        // a0s: Logging Operations
+	    case 0xa0 => "LOG0"
+	    case 0xa1 => "LOG1"
+	    case 0xa2 => "LOG2"
+	    case 0xa3 => "LOG3"
+	    case 0xa4 => "LOG4"
+
+        // e0s
+        case 0xef => "EOF"
+
+        // f0s: System operations
+	    case 0xf0 => "CREATE"
+	    case 0xf1 => "CALL"
+        case 0xf2 => "CALLCODE"
+        case 0xf3 => "RETURN"
+        case 0xf4 => "DELEGATECALL"
+        case 0xf5 => "CREATE2"
+        case 0xfa => "STATICCALL"
+        case 0xfd => "REVERT"
+        case 0xfe => "INVALID"
+        case 0xff => "SELFDESTRUCT"
+
         case _ => "NA"
 }
+
+/* 
+A very simple code:  0001603a63b1c2d4ff
+
+Betting binary: [note: we have to make sure that each u8 is written with 2 chars, which means
+left padding with 0 things like c or 1]
+0x60, 0x80, 0x60, 0x40, 0x52, 0x60, 0x04, 0x36, 0x10, 0x60, 0x26, 0x57, 0x60, 0x00, 0x35, 0x60, 0xe0, 0x1c, 0x80, 0x63, 0x11, 0x61, 0x0c, 0x25, 0x14, 0x60, 0x2b, 0x57, 0x80, 0x63, 0xd4, 0xb8, 0x39, 0x92, 0x14, 0x60, 0x33, 0x57, 0x5b, 0x60, 0x00, 0x80, 0xfd, 0x5b, 0x60, 0x31, 0x60, 0x59, 0x56, 0x5b, 0x00, 0x5b, 0x34, 0x80, 0x15, 0x60, 0x3e, 0x57, 0x60, 0x00, 0x80, 0xfd, 0x5b, 0x50, 0x60, 0x47, 0x60, 0x00, 0x54, 0x81, 0x56, 0x5b, 0x60, 0x40, 0x51, 0x90, 0x81, 0x52, 0x60, 0x20, 0x01, 0x60, 0x40, 0x51, 0x80, 0x91, 0x03, 0x90, 0xf3, 0x5b, 0x60, 0x00, 0x54, 0x34, 0x11, 0x15, 0x60, 0x67, 0x57, 0x60, 0x00, 0x80, 0xfd, 0x5b, 0x60, 0x00, 0x80, 0x54, 0x34, 0x90, 0x03, 0x90, 0x55, 0x56, 0xfe, 0xa2, 0x64, 0x69, 0x70, 0x66, 0x73, 0x58, 0x22, 0x12, 0x20, 0x50, 0x22, 0x33, 0xad, 0x5c, 0x06, 0x77, 0x75, 0x8a, 0xba, 0x64, 0xa4, 0xde, 0x67, 0x63, 0xe5, 0xfe, 0x40, 0xa1, 0xb8, 0x02, 0x84, 0x8b, 0xf3, 0x61, 0xde, 0x2b, 0x86, 0x4a, 0xae, 0x24, 0x96, 0x64, 0x73, 0x6f, 0x6c, 0x63, 0x43, 0x00, 0x08, 0x11, 0x00, 0x33
+
+and as string:
+60806040526004361060265760003560e01c806311610c2514602b578063d4b83992146033575b600080fd5b60316059565b005b348015603e57600080fd5b50604760005481565b60405190815260200160405180910390f35b600054341115606757600080fd5b60008054349003905556fea2646970667358221220502233ad5c0677758aba64a4de6763e5fe40a1b802848bf361de2b864aae249664736f6c63430008110033
+
+Note in the result that the code after INVALID is not reachable and seems to be garbage.
+*/
 
 /**
  *  Dissassemble a string.
@@ -119,7 +307,6 @@ function method {:tailrecursion true} DA(code: string): seq<string>
                 + DA(code[2 + 2 * numArgs..])
         else 
             [Decode(StringToHex(code[..2])) + "\n"] + ["Error"]
-
 }
 
 //  Previous version
