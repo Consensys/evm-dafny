@@ -56,7 +56,31 @@ requires forall i :: 0 <= i < |chars| ==> IsHexDigit(chars[i]) {
     // Construct sequences
     seq(n, i requires i >= 0 && i < n => ToHexByte(chars[i*2],chars[(i*2)+1]))
 }
-    
+
+function method ToHex(k: u8): (c: char) 
+    requires 0 <= k <= 15
+    ensures IsHexDigit(c)
+{
+    if k <= 9 then '0' + k as char 
+    else 'a' + (k - 10) as char
+}
+
+function method u8ToHex(k: u8): (s: string)
+    ensures |s| == 2
+    ensures IsHexDigit(s[0])
+    ensures IsHexDigit(s[1])
+{
+    [ToHex(k / 16),ToHex(k % 16)] 
+}
+
+function method seqU8ToStringHex(seqU8: seq<u8>, accum: string): string
+    {
+        if seqU8 == []
+            then accum
+        else 
+            u8ToHex(seqU8[0]) + seqU8ToStringHex(seqU8[1..], accum)  
+    }
+
 type stringNat = s: string | |s| > 0 && (|s| > 1 ==> s[0] != '0') &&
                         forall i | 0 <= i < |s| :: s[i] in "0123456789"
                         witness "1"
