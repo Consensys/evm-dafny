@@ -18,7 +18,7 @@ ifeq ($(VERBOSE),1)
 	SILENCER :=
 endif
 
-.DEFAULT_GOAL := dafny #go
+.DEFAULT_GOAL := all
 
 BUILD_DIR:=build
 DAFNY_EXEC ?= dafny
@@ -138,7 +138,7 @@ go:
 
 all: dafny #go
 
-run: dafny_run
+run: dafny_run		#
 
 clean:  dafny_clean #go_clean
 
