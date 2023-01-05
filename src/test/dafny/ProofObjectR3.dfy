@@ -368,7 +368,7 @@ function method {:verify true} Block_0x6b(st: State): (st': State)
 		var st1 := Dup(st0,1);
 		var st2 := Dup(st1,4);
 		var st3 := SStore(st2);
-		assume st3.OK?;
+		// assume st3.OK?;
 		var st4 := Dup(st3,3);
 		var st5 := Dup(st4,4);
 		Return(st5)
