@@ -42,6 +42,20 @@ requires forall i :: 0 <= i < |chrs| ==> IsHexDigit(chrs[i]) {
         }
     return accum;
 }
+
+function method ToHexByte(high: char, low: char) : u8
+requires IsHexDigit(high) && IsHexDigit(low) {
+    (ToHexDigit(high) * 16) + ToHexDigit(low)
+}
+
+function method convertToSeqHex(chars: seq<char>) : seq<u8>
+requires |chars| % 2 == 0
+requires forall i :: 0 <= i < |chars| ==> IsHexDigit(chars[i]) {
+    // Determine number of characters
+    var n := |chars| / 2;
+    // Construct sequences
+    seq(n, i requires i >= 0 && i < n => ToHexByte(chars[i*2],chars[(i*2)+1]))
+}
     
 type stringNat = s: string | |s| > 0 && (|s| > 1 ==> s[0] != '0') &&
                         forall i | 0 <= i < |s| :: s[i] in "0123456789"
