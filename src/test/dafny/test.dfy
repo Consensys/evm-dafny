@@ -1,4 +1,4 @@
-include "../../dafny/evm.dfy"
+//include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy"
 
 import opened Int
@@ -6,7 +6,7 @@ import opened Opcode
 
 /**
  */
-module SimpleTests {
+module Test {
 
     import opened Int
     import opened Opcode

@@ -101,7 +101,7 @@ module WorldState {
          * Get the account associated with a given address.  If no such account
          * exists, none is returned.
          */
-        function method Get(account:u160) : Option<Account> {
+        function method GetAccount(account:u160) : Option<Account> {
             if account in accounts
             then
                 Some(accounts[account])

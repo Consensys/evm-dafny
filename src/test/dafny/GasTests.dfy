@@ -2,7 +2,7 @@
 include "../../dafny/evm.dfy"
 include "../../dafny/evms/berlin.dfy"
 
-module CallExamples {
+module GasTests {
     import opened Int
     import EvmBerlin
     import Bytecode
