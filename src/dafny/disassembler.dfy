@@ -16,15 +16,9 @@ function method IsHexDigit(c: char) : bool {
     '0' <= c <= '9' || 'a' <= c <= 'f'
 }
 
-method test1() {
-    assert IsHexDigit('a');
-    assert IsHexDigit('b');
-    assert IsHexDigit('c');
-    assert IsHexDigit('d');
-    assert IsHexDigit('e');
-    assert IsHexDigit('f');
-}
-
+/**
+ *  Convert an integer [0,15] to a Hex.
+ */
 function method ToHex(k: u8): (c: char) 
     requires 0 <= k <= 15
     ensures IsHexDigit(c)
@@ -33,6 +27,9 @@ function method ToHex(k: u8): (c: char)
     else 'a' + (k - 10) as char
 }
 
+/**
+ *  Convert a u8 to 2-char string.
+ */
 function method u8ToHex(k: u8): (s: string)
     ensures |s| == 2
     ensures IsHexDigit(s[0])
@@ -41,13 +38,89 @@ function method u8ToHex(k: u8): (s: string)
     [ToHex(k / 16), ToHex(k % 16)] 
 }
 
-
-method {:verify true} Main() 
+/**
+ *  Dissassemble.
+ */
+method {:verify false} Main(argv: seq<string>)
 {
-    for i: nat := 0 to 256 {
-        print "Hex(", i as u8, ")= 0x", u8ToHex(i as u8),"\n";
+    if |argv| < 2 {
+        print "error\n";
+    } else if |argv[1]| % 2 == 0  {
+        // var s := DA("0001603a63b1c2d4ff");
+        var s := DA(argv[1]);
+        for i: nat := 0 to |s| {
+            print s[i];
+        }
+    } else {
+        print "error not even number of characters\n";
     }
+    
+
 }
+
+/**
+ *  Convert a 2-char string to u8.
+ */
+function method StringToHex(s: string): (k: u8) 
+    requires |s| == 2
+    requires IsHexDigit(s[0])
+    requires IsHexDigit(s[1])
+{
+    ToHexDigit(s[0]) * 16 + ToHexDigit(s[1])
+}
+
+/**
+ *  Number of Arguments expected by an opcode.  
+ */
+function method ArgSize(k: u8): (n: nat)
+    ensures 0 <= n <= 16
+{
+     match k 
+        case 0x60 => 1
+        case 0x63 => 4
+        case _ => 0
+}
+
+/**
+ *  Decode an opcode.
+ */
+function method Decode(k: u8): string
+{
+    match k 
+        case 0x00 => "STOP"
+        case 0x01 => "ADD"
+        case 0x60 => "PUSH1"
+        case 0x63 => "PUSH4"
+        case _ => "NA"
+}
+
+/**
+ *  Dissassemble a string.
+ */
+function method {:tailrecursion true} DA(code: string): seq<string> 
+    requires |code| % 2 == 0 
+    requires forall i:: 0 <= i < |code| ==> IsHexDigit(code[i])
+{
+    if |code| == 0 then []
+    else 
+        var nextInstr := Decode(StringToHex(code[..2]));
+        var numArgs := ArgSize(StringToHex(code[..2]));
+        if |code[2..]| >= 2 * numArgs then 
+            [Decode(StringToHex(code[..2])) 
+                + 
+                (if numArgs >= 1 then 
+                    " 0x" + code[2..2 + 2 * numArgs]
+                 else ""
+                )
+                + "\n"
+            ]
+                + DA(code[2 + 2 * numArgs..])
+        else 
+            [Decode(StringToHex(code[..2])) + "\n"] + ["Error"]
+
+}
+
+//  Previous version
 
 /**
  *  Convert a Hex Digit to a u8.
@@ -99,22 +172,6 @@ requires forall i :: 0 <= i < |chars| ==> IsHexDigit(chars[i]) {
     var n := |chars| / 2;
     // Construct sequences
     seq(n, i requires i >= 0 && i < n => ToHexByte(chars[i*2],chars[(i*2)+1]))
-}
-
-function method ToHex(k: u8): (c: char) 
-    requires 0 <= k <= 15
-    ensures IsHexDigit(c)
-{
-    if k <= 9 then '0' + k as char 
-    else 'a' + (k - 10) as char
-}
-
-function method u8ToHex(k: u8): (s: string)
-    ensures |s| == 2
-    ensures IsHexDigit(s[0])
-    ensures IsHexDigit(s[1])
-{
-    [ToHex(k / 16),ToHex(k % 16)] 
 }
 
 function method seqU8ToStringHex(seqU8: seq<u8>, accum: string): string
