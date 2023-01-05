@@ -7,8 +7,6 @@ import opened Opcode
 import opened Int
 import opened Bytes
 
-newtype{:nativeType "byte"} u8 = i:int    | 0 <= i <= 255
-
 function method IsHexDigit(c: char) : bool {
     '0' <= c <= '9' || 'a' <= c <= 'f'
 }
@@ -93,7 +91,7 @@ lemma stringToNatThenNatToStringIdem(n: stringNat)
     ensures natToString(stringToNat(n)) == n
         {}
 
-method printOpcode(seqU8: seq<Int.u8>) returns ()
+method printOpcode(seqU8: seq<u8>) returns ()
     {
         if seqU8 == [] {print("");}
         var i:= 0;
@@ -290,34 +288,6 @@ method printOpcode(seqU8: seq<Int.u8>) returns ()
             }
     }
 */
-
-method testing() {
-    assert "520051"[..6] == "520051";
-    assert "52005100"[..8] == "52005100";
-    //var tempo2 := disassmAllInstr("f2000000000000000201f1209300000000000000000201f1", 0, []);
-    //var tempo3:= run_disassembleAllInstr("f2000000000000000201f1209300000000000000000201f1f2000000000000000201f1209300000000000000000201f1f2000000000000000201f1209300000000000000000201f1");
-    assert |"f2000000000000000201f1209300000000000000000201f1f2000000000000000201f1209300000000000000000201f1f2000000000000000201f1209300000000000000000201f1"| == 96 + 48;
-    //assert tempo2 == ["CALLCODE","STOP","STOP","STOP","STOP","STOP","STOP","STOP","MUL","ADD", "CALL", "KECCAK256", "SWAP4","STOP","STOP","STOP","STOP",
-    //                  "STOP","STOP","STOP","STOP","MUL","ADD", "CALL"];
-    //var tempo3 := disassmAllInstr("6080", 0, []);
-    //assert |tempo3| == 2;
-    //assert tempo3 == ["PUSH1", "INVALID"];
-    assert "80"[0..2] == ['8', '0'];
-    //assert implode (['8', '0'],[]) == "80";
-    assert ["PUSH1"] + ["80"] == ["PUSH1", "80"];
-    //assert tempo3[0] == CALLCODE;
-    assert |""| == 0;
-    assert ['m','i'] == "mi";
-    assert "dali" + ['m'] == "dalim";
-    assert ["CALLCODE","STOP", ['0','1','1']] == ["CALLCODE","STOP", "011"];
-    assert (('b' - 'a') as u8) == 1;
-    assert ToHexDigit('b') == 11;
-    assert convert("6001") == [96,1];
-    assert natToString(1206873614569786477612345334) 
-           == "1206873614569786477612345334";
-    expect convert("000102030405060708090a000102030405060708090a000102030405060708090a000102030405060708090a") == [0,1,2,3,4,5,6,7,8,9,10,0,1,2,3,4,5,6,7,8,9,10,0,1,2,3,4,5,6,7,8,9,10,0,1,2,3,4,5,6,7,8,9,10];
-}
-
 
 // ----------------------------------------------------------------------------------------------------//
 //-----------------------------------------------------------------------------------------------------//
