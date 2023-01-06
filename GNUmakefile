@@ -159,7 +159,7 @@ dafny_translate_global: $(DAFNY_OUT_FILENAME_CI)
 $(DAFNY_OUT_FILENAME_CI) : $(DAFNY_SRC_FILES)
 	@echo Verifying and translating Dafny
 	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /out:$(DAFNY_OUT_ARG_CI) $(DAFNY_SRC_FILES) /compile:4 $(NO_VERIFY)
-	$(SILENCER)touch $(DAFNY_VERIFY_WITNESS_GLOBAL)
+	$(SILENCER)mkdir -p $(shell dirname $(DAFNY_VERIFY_WITNESS_GLOBAL)) && touch $(DAFNY_VERIFY_WITNESS_GLOBAL)
 
 dafny_translate_global_clean:
 	@echo Removing Dafny products
