@@ -8,8 +8,10 @@ SHELL := bash
 .DELETE_ON_ERROR:
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 #each target has its own parallelism too, so keep a low number of jobs
-MAKEFLAGS += -j 2 --output-sync
+MAKEFLAGS += -j 2 #--output-sync
 RUN_ARGS ?=
+# A escape hatch in case we want to disable verification (like in CI when Gradle has just run verification too)
+NO_VERIFY ?=
 
 #silent by default
 SILENCER := @
@@ -64,7 +66,9 @@ dafny_verify_individuals: $(DAFNY_VERIFY_WITNESSES)
 
 $(DAFNY_OUT_DIR)/%.verified : $(DAFNY_SRC_DIR)/%.dfy
 	@echo Verifying $<
-	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 $< && mkdir -p $(shell dirname $@) && touch $@
+	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 $<
+	$(SILENCER)mkdir -p $(shell dirname $@)
+	$(SILENCER)touch $@
 
 dafny_verify_individuals_clean:
 	@echo Removing verification witnesses
@@ -77,7 +81,7 @@ dafny_verify_individuals_force: dafny_verify_individuals_clean
 
 ###################### DAFNY TRANSLATE INDIVIDUAL ########################
 # Dafny can't really translate individual files, but we can approximate it.
-# Translate (but don't verify) all the Dafny sources, using build product as witness.
+# Translate (but do NOT verify) all the Dafny sources, using build product as witness.
 # Checks that the individual verification was done already.
 
 dafny_translate_individuals: $(DAFNY_OUT_FILENAME) $(DAFNY_VERIFY_WITNESSES)
@@ -109,7 +113,7 @@ dafny_test_individuals: $(DAFNY_TEST_WITNESSES)
 #TODO probably tests should refer to the main build instead of rebuilding it
 $(DAFNY_TEST_OUT_DIR)/.%-go : $(DAFNY_TEST_DIR)/%.dfy $(DAFNY_SRC_FILES)
 	@echo Testing Dafny: $<
-	$(SILENCER)$(DAFNY_EXEC) /runAllTests:1 /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/$* $<
+	$(SILENCER)$(DAFNY_EXEC) /runAllTests:1 /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/$* $< $(NO_VERIFY)
 	$(SILENCER)touch $@
 
 dafny_test_individuals_clean:
@@ -129,7 +133,8 @@ DAFNY_TEST_WITNESS_GLOBAL:=$(DAFNY_TEST_OUT_DIR)/.last_global_test
 dafny_test_global: $(DAFNY_TEST_WITNESS_GLOBAL)
 
 $(DAFNY_TEST_WITNESS_GLOBAL): $(DAFNY_TEST_FILES) $(DAFNY_SRC_FILES)
-	$(SILENCER)$(DAFNY_EXEC)  /vcsLoad:2  /compileTarget:go /compile:3 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/global $(DAFNY_TEST_FILES) /runAllTests:1 # /noVerify /compile:4
+	@echo 'Testing Dafny (all)'
+	$(SILENCER)$(DAFNY_EXEC)  /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/global $(DAFNY_TEST_FILES) /runAllTests:1 $(NO_VERIFY)
 	$(SILENCER)touch $@
 
 dafny_test_global_clean:
@@ -149,11 +154,11 @@ DAFNY_OUT_ARG_CI:=$(BUILD_DIR)/$(DAFNY_OUT_NAME_CI)
 DAFNY_OUT_DIR_CI:=$(DAFNY_OUT_ARG_CI)-go
 DAFNY_OUT_FILENAME_CI:=$(DAFNY_OUT_DIR_CI)/src/$(DAFNY_OUT_NAME_CI).go
 
-dafny_translate_global: $(DAFNY_OUT_FILENAME_CI) $(DAFNY_VERIFY_WITNESS_GLOBAL)
+dafny_translate_global: $(DAFNY_OUT_FILENAME_CI)
 
 $(DAFNY_OUT_FILENAME_CI) : $(DAFNY_SRC_FILES)
 	@echo Verifying and translating Dafny
-	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /compile:4 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /out:$(DAFNY_OUT_ARG_CI) $(DAFNY_SRC_FILES)
+	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /out:$(DAFNY_OUT_ARG_CI) $(DAFNY_SRC_FILES) /compile:4 $(NO_VERIFY)
 	$(SILENCER)touch $(DAFNY_VERIFY_WITNESS_GLOBAL)
 
 dafny_translate_global_clean:
@@ -179,9 +184,14 @@ dafny_test_clean : dafny_test_individuals_clean
 dafny_clean: dafny_translate_individuals_clean dafny_test_clean dafny_verify_clean
 
 ###################### CI ########################
-# For CI we can process all files at once. Also as sanity check vs the individual file hacks.
+# For CI we can process all files at once. It's faster and is also a sanity check vs the individual file build hacks.
 
 ci: dafny_translate_global dafny_test_global
+
+ci_noVerify : NO_VERIFY := /noVerify
+ci_noVerify : ci
+
+ci_clean: dafny_translate_global_clean dafny_test_global_clean
 
 ###################### GO ########################
 
