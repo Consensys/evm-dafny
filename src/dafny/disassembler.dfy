@@ -318,7 +318,7 @@ datatype EVMProg =
         /**
          *  Skip Data and Error (and use the args in the instructions to pretty print).
          */
-        function method PrettyPrint(index: nat := 0): seq<string> 
+        function method {:tailrecursion true} PrettyPrint(index: nat := 0): seq<string> 
             decreases |p| - index
         {
             if index >= |p| then []
