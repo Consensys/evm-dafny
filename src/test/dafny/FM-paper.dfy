@@ -13,7 +13,7 @@
  */
 
 include "../../dafny/evms/berlin.dfy"
-include "../../dafny/state.dfy"
+include "../../dafny/evmstate.dfy"
 
 /** 
  *  Provide some tests to check some qualitative properties of bytecode.

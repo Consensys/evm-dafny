@@ -1,11 +1,12 @@
 # Table of Contents
 
-1. [Overview](#overview)
-1. [Architecture](#repoArch)
-1. [Source Files](#sourceFilesi)
-	1. [High Level](#top)
-	1. [Mid Level](#mid)
-	1. [Low Level](#low)
+1. [Table of Contents](#table-of-contents)
+2. [Overview](#overview)
+3. [Architecture](#architecture)
+4. [Source Files](#source-files)
+	1. [High Level](#high-level)
+	2. [Mid Level](#mid-level)
+	3. [Low Level](#low-level)
 
 
 # Overview
@@ -50,7 +51,7 @@ The source files including our formalisation of the EVM semantics, the state, ga
 
 - [`evm.dfy`](src/dafny/evm.dfy) provides a generic mechanism for building extensions on our EVM based on a hardfork of users' choice.
 
-- [`state.dfy`](src/dafny/state.dfy) specifies various EVM states and how to perform operations on them.
+- [`evmstate.dfy`](src/dafny/evmstate.dfy) specifies various EVM states and how to perform operations on them.
 
 - [`bytecode.dfy`](src/dafny/bytecode.dfy) includes the implementation of the EVM opcodes' semantics.
 
