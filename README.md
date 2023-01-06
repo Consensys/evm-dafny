@@ -219,6 +219,8 @@ For example, you can run the Dafny main like this:
 > gmake run RUN_ARGS="--gas 100"
 ```
 
+NOTE: By default the Makefile processes files one by one, which minimizes turnaround time during development. There is another "global" mode which is useful for CI.
+
 # Contributing
 
 See the [CONTRIBUTORS](CONTRIBUTORS.md) file for more information on
