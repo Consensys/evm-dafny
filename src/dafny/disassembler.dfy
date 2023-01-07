@@ -373,7 +373,7 @@ function method {:tailrecursion true} Dis2(code: string, pc: nat := 0): seq<Item
     requires forall i:: 0 <= i < |code| ==> IsHexDigit(code[i])
     decreases |code|
 {
-    if |code| == 0 || pc >= |code| then []
+    if |code| == 0 then []
     else 
         var nextInstr := StringToHex(code[..2]);
         var numArgs := ArgSize(StringToHex(code[..2]));
