@@ -415,7 +415,8 @@ function method {:verify true} Block_0x8c(st: State): State
     else 
 		var st0 := JumpDest(st);
 		var st1 := Pop(st0);
-		Pop(st1)
+		var st2 := Pop(st1);
+		Block_0x8f(st2)
 }
 
 function method {:verify true} Block_0x8f(st: State): State
