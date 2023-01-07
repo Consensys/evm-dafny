@@ -22,6 +22,22 @@ module Dissassembler {
     import opened StringHelper
     import Opcode 
 
+    type ListofInstr =  x: seq<Item> | forall i :: 0 <= i < |x| ==> x[i].Instr?
+
+    // datatype Terminator = 
+    //         CallBlock()
+    //     |   Revert()
+    //     |   Return()
+
+    /**
+     *  A proof object.
+     */
+    datatype ProofObj = 
+        |   CallBlock(xs:ListofInstr)
+        |   Revert(xs:ListofInstr)
+        |   Return(xs:ListofInstr)
+        |   IfThenElse(xs:ListofInstr, ifB: ProofObj, thenB: ProofObj)
+
     /**
      *  Items that can be in bytecode.
      */
@@ -32,32 +48,32 @@ module Dissassembler {
         
 
     datatype EVMProg = EVMProg(p: seq<Item>)
-        {
-            /**
-            *  Pretty print to seq<u8., ready to use as `code` in the EVM.
-            */
-            function method PrintAsSeq(): seq<string> {
-                seq(|p|, i requires 0 <= i < |p| => 
-                    match p[i] 
-                        case Instr(a, c, _) => Opcode.Decode(c)
-                        case Data(a, v) => U8ToHex(v)
-                        case Error(a, c) => U8ToHex(c)
-                )
-            }
+    {
+        /**
+        *  Pretty print to seq<u8., ready to use as `code` in the EVM.
+        */
+        function method PrintAsSeq(): seq<string> {
+            seq(|p|, i requires 0 <= i < |p| => 
+                match p[i] 
+                    case Instr(a, c, _) => Opcode.Decode(c)
+                    case Data(a, v) => U8ToHex(v)
+                    case Error(a, c) => U8ToHex(c)
+            )
+        }
 
-            /**
-            *  Skip Data and Error (and use the args in the instructions to pretty print).
-            */
-            function method {:tailrecursion true} PrettyPrint(index: nat := 0): seq<string> 
-                decreases |p| - index
-            {
-                if index >= |p| then []
-                else 
-                    (match p[index]
-                        case Instr(a, c, v) => ["0x" + NatToHex(a) + ": " + Opcode.Decode(c) + v] 
-                        case _ => []
-                    ) + PrettyPrint(index + 1)
-            }
+        /**
+        *  Skip Data and Error (and use the args in the instructions to pretty print).
+        */
+        function method {:tailrecursion true} PrettyPrint(index: nat := 0): seq<string> 
+            decreases |p| - index
+        {
+            if index >= |p| then []
+            else 
+                (match p[index]
+                    case Instr(a, c, v) => ["0x" + NatToHex(a) + ": " + Opcode.Decode(c) + v] 
+                    case _ => []
+                ) + PrettyPrint(index + 1)
+        }
         }
 
     /**
