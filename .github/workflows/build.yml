@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  build:
+  build-java:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -28,10 +28,24 @@ jobs:
       - name: Run Gradle Build
         run: gradle build
 
+  build-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Dafny
+        uses: dafny-lang/setup-dafny-action@v1
+        with:
+          dafny-version: "3.10.0"
+
+      - name: Z3 version
+        continue-on-error: true
+        run: $HOME/dafny/z3/bin/z3 --version
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
 
       - name: Build with the Makefile
-        run: make ci_noVerify
+        run: make ci

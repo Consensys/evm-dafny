@@ -27,7 +27,7 @@
 In this project we develop the **Dafny-EVM**, a _functional specification_ of
 the [Ethereum Virtual
 Machine](https://ethereum.org/en/developers/docs/evm/) in
-[Dafny](https://github.com/dafny-lang/dafny).  
+[Dafny](https://github.com/dafny-lang/dafny).
 
 This type of specification has several advantages:
 - it is _programming-language agnostic_ and _easily readable_: it does not require any prior knowledge of a specific programming language, but rather defines the semantics of the EVM as functions and compositions thereof. [Read more](./SEMANTICS.md#reading-and-understanding-the-semantics)
@@ -62,7 +62,7 @@ solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)
 like [Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover)).  This
 means Dafny can prove a program is **correct** with respect to its
 _specification_.  To do this, Dafny requires the developer to provide
-annotations in the form of 
+annotations in the form of
 [preconditions](https://en.wikipedia.org/wiki/Precondition) and
 [postconditions](https://en.wikipedia.org/wiki/Postcondition) where
 appropriate, and/or [loop
@@ -88,7 +88,7 @@ bytecode:
  * @returns     The state after executing an `ADD` or an `Error` state.
  */
 function method Add(st: State): (st': State)
-    requires st.IsExecuting() 
+    requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW)
     ensures st'.OK? <==> st.Operands() >= 2
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 1
@@ -105,26 +105,26 @@ function method Add(st: State): (st': State)
 ```
 
 This tells us that `ADD` requires _two operands_ on the stack to be performed,
-otherwise, the exceptional state `INVALID(STACK_UNDERFLOW)` state is reached.  
-When more than two operands are on the stack, 
+otherwise, the exceptional state `INVALID(STACK_UNDERFLOW)` state is reached.
+When more than two operands are on the stack,
 addition employs _modulo arithmetic_ (hence, overflows wrap around)
 and the final result (of the addition modulo) is pushed onto the stack after the operands
 are popped, and then the program counter is advanced by 1.
 
 The postcondition `ensures st'.OK? <==> st.Operands() >= 2` specifies a _strong guarantee_ on the code in the body of
-function: **for any** input state `st`, `Add` returns an `OK` state (non-failure) _if and only if_ 
+function: **for any** input state `st`, `Add` returns an `OK` state (non-failure) _if and only if_
 the stack in the input state `st` has at least two elements (`Operands()`).
 Note that this postcondition is _checked_ by the Dafny verification engine at compile-time not at runtime.
 
 
-# Getting Started 
+# Getting Started
 To use our code base you may follow these steps:
 
 - Install a recent version of [Dafny](https://github.com/dafny-lang/dafny). We recommend installing the [VSCode Dafny extension](https://marketplace.visualstudio.com/items?itemName=dafny-lang.ide-vscode) as it bundles the editor interface (syntax colouring, error reporting, etc) and the Dafny compiler code.
 - Clone [this repository](https://github.com/ConsenSys/evm-dafny).
 - Build the code (see below) or start with this [introductory material](SEMANTICS.md).
 
-# Verifying Bytecode 
+# Verifying Bytecode
 
 Our EVM is written in Dafny. As a result we can instrument bytecode with some reasoning features.
 Some examples are given in [the verification examples document.](./VERIFICATION.md)
@@ -156,9 +156,9 @@ against it in Java.
 
 ### Test Generation
 
-As the main purpose of our EVM is to reason about bytecode, we may want to have some guarantees that the proofs 
+As the main purpose of our EVM is to reason about bytecode, we may want to have some guarantees that the proofs
 we develop are also valid on _other_ EVM implementations: if the same code is run on another implementation then the guarantees (e.g. no stack under/overflow) that we obtain using our automated reasoning and our EVM are still valid.
-This requires to prove that the other implementation produces exactly the same computations as our EVM on all inputs and for all programs. 
+This requires to prove that the other implementation produces exactly the same computations as our EVM on all inputs and for all programs.
 It is not practical to formally prove this kind of equivalence.
 
 However we can _compare_ the results of the execution of some bytecode on different implementations.
