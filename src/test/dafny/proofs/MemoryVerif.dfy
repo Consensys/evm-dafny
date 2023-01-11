@@ -12,8 +12,8 @@
  * under the License.
  */
 
-include "../../dafny/bytecode.dfy"
-include "../../dafny/gas.dfy"
+include "../../../dafny/bytecode.dfy"
+include "../../../dafny/gas.dfy"
 
 /**
  *  Provide some verification for properties of Memory opcodes.

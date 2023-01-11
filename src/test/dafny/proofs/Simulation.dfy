@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../../dafny/evms/berlin.dfy"
+include "../../../dafny/evms/berlin.dfy"
 
 /**
  *  Provide some simple simulation checks.

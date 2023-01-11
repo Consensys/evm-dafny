@@ -1,5 +1,5 @@
-include "../../dafny/util/bytes.dfy"
-include "utils.dfy"
+include "../../../dafny/util/bytes.dfy"
+include "../utils.dfy"
 
 module ByteTests{
     import opened Bytes

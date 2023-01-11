@@ -1,5 +1,5 @@
-include "../../dafny/util/int.dfy"
-include "utils.dfy"
+include "../../../dafny/util/int.dfy"
+include "../utils.dfy"
 
 module IntTests {
     import opened Int

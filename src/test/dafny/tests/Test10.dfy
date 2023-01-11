@@ -12,7 +12,8 @@
  * under the License.
  */
 
-include "../../dafny/evms/berlin.dfy"
+include "../../../dafny/evms/berlin.dfy"
+include "../utils.dfy"
 
 /** Provide some tests to check some qualitative properties of bytecode.
  *
@@ -27,6 +28,7 @@ module Test10 {
     import opened EvmState
     import opened Opcode
     import Stack
+    import opened Utils
 
     /**
      *   A very simple linear program manipulating the stack.
@@ -46,7 +48,7 @@ module Test10 {
         vm := Push1(vm, b);
         vm := Add(vm);
 
-        assert vm.Peek(0) as nat == (a + b) as nat;
+        Assert (() => vm.Peek(0) as nat == (a + b) as nat);
 
         vm := Pop(vm);
         assert vm.GetStack() == st;
@@ -57,7 +59,7 @@ module Test10 {
      *
      *  @param  c   The number of times to iterate the loop.
      */
-    method main2(c: u8)
+    method {:test} main2(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -87,7 +89,7 @@ module Test10 {
     *
     *  @param  c   The number of times to iterate the loop.
     */
-    method main3(c: u8)
+    method {:test} main3(c: u8)
     {
         var a: u8 := 0x01;
         var b : u8 := 0x02;
@@ -127,7 +129,7 @@ module Test10 {
      *
      *  @param  c   The number of times to iterate the loop.
      */
-    method main4a(c: u8)
+    method {:test} main4a(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -147,7 +149,7 @@ module Test10 {
     }
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
-    method main4b(v: EvmState.State) returns (v': EvmState.State)
+    method {:test} main4b(v: EvmState.State) returns (v': EvmState.State)
         requires v.IsExecuting()
         requires v.Capacity() >= 2
         ensures v'.IsExecuting()
@@ -158,6 +160,7 @@ module Test10 {
         v' := Push1(v', 0x2);
         v' := Add(v');
         v' := Pop(v');
+
     }
 
     /**
@@ -166,7 +169,7 @@ module Test10 {
      *
      *  @param  c   The number of times to iterate the loop.
      */
-    method main4aa(c: u8)
+    method {:test} main4aa(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -193,11 +196,11 @@ module Test10 {
             count := count + 1;
         }
         vm := Pop(vm);
-        assert vm.Peek(0) as nat == c as nat;
+        Assert (() => vm.Peek(0) as nat == c as nat);
     }
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
-    method main4bb(v: EvmState.State) returns (v': EvmState.State)
+    method {:test} main4bb(v: EvmState.State) returns (v': EvmState.State)
         requires v.IsExecuting()
         requires v.Capacity() >= 2
         ensures v'.IsExecuting()
@@ -216,7 +219,7 @@ module Test10 {
     *
     *  @param  c   The number of times to iterate the loop.
     */
-    method main5(c: u8)
+    method {:test} main5(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -287,7 +290,7 @@ module Test10 {
         vm := Pop(vm);
         assert count == vm.Peek(0);
         assert count == 0;
-        assert vm.Operands() == 1;
-        assert vm.GetStack() == Stack.Make([0]);
+        Assert (() => vm.Operands() == 1);
+        Assert (() => vm.GetStack() == Stack.Make([0]));
     }
 }

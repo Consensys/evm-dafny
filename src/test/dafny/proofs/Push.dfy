@@ -1,5 +1,5 @@
-include "../../dafny/evm.dfy"
-include "../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
+include "../../../dafny/evms/berlin.dfy"
 
 import opened EvmState
 import opened Code

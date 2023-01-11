@@ -1,6 +1,6 @@
 // Some tests related to gas.
-include "../../dafny/evm.dfy"
-include "../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
+include "../../../dafny/evms/berlin.dfy"
 
 module GasTests {
     import opened Int

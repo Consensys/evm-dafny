@@ -12,8 +12,8 @@
  * under the License.
  */
 
-include "../../dafny/evms/berlin.dfy"
-include "../../dafny/evmstate.dfy"
+include "../../../dafny/evms/berlin.dfy"
+include "../../../dafny/evmstate.dfy"
 
 /** 
  *  Provide some tests to check some qualitative properties of bytecode.

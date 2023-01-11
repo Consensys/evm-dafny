@@ -8,8 +8,8 @@
 // stop()
 //
 // One sequence was generated with optimisation enabled, and the other was not.
-include "../../dafny/evm.dfy"
-include "../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
+include "../../../dafny/evms/berlin.dfy"
 
 import opened Int
 import opened Opcode

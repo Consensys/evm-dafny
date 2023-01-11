@@ -1,7 +1,7 @@
 // An set of examples illustrating contract calls.
-include "../../dafny/evm.dfy"
-include "../../dafny/evms/berlin.dfy"
-include "utils.dfy"
+include "../../../dafny/evm.dfy"
+include "../../../dafny/evms/berlin.dfy"
+include "../utils.dfy"
 
 module CallExamples {
     import opened Int
@@ -17,7 +17,7 @@ module CallExamples {
     /** The gas loaded in the EVM before executing a program. */
     const INITGAS := 0xFFFF;
 
-    method test_call_01() {
+    method {:test} test_call_01() {
         // This is an absolutely minimal example of a contract call where the
         // called contract just stops.  Since the called contract stopped
         // successfully, we can at least check the exit code.
@@ -37,12 +37,12 @@ module CallExamples {
             vm1 := vm1.CallReturn(vm2);
         }
         // <<< Contract call ends here
-        assert vm1.OK?;
+        Assert (() => vm1.OK?);
         // Check exit code loaded correctly.
-        assert vm1.Peek(0) == 1;
+        Assert (() => vm1.Peek(0) == 1);
     }
 
-    method test_call_02() {
+    method {:test} test_call_02() {
         // This is another simple example of a contract call where the called
         // contract raises an exception.
         var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
@@ -61,9 +61,9 @@ module CallExamples {
             vm1 := vm1.CallReturn(vm2);
         }
         // <<< Contract call ends here
-        assert vm1.OK?;
+        Assert (() => vm1.OK?);
         // Check exit code loaded correctly.
-        assert vm1.Peek(0) == 0;
+        Assert (() => vm1.Peek(0) == 0);
     }
 
 
@@ -87,17 +87,17 @@ module CallExamples {
             vm1 := vm1.CallReturn(vm2);
         } // <<< Contract call ends here
         // Check exit code loaded correctly.
-        assert vm1.Peek(0) == 1;
+        Assert (() => vm1.Peek(0) == 1);
         // Extract return data
         vm1 := Push1(vm1,0x00);
         vm1 := MLoad(vm1);
         // Check return data.
-        assert vm1.OK?;
-        assert vm1.Peek(0) == 0x123;
+        Assert (() => vm1.OK?);
+        Assert (() => vm1.Peek(0) == 0x123);
         Assert(() => vm1.Peek(0) == 0x123);
     }
 
-    method contractReturns123(vm:EvmState.State) returns (vm':EvmState.State)
+    method {:test} contractReturns123(vm:EvmState.State) returns (vm':EvmState.State)
     requires vm.OK?
     requires vm.Capacity() > 3 && vm.MemSize() == 0
     // Returns exactly 32 bytes of data
@@ -113,5 +113,6 @@ module CallExamples {
         vm' := Push1(vm',0x20);
         vm' := Push1(vm',0x00);
         vm' := Return(vm'); // force return
+        Assert (() => U256.Read(vm'.data,0) == 0x123);
     }
 }
