@@ -37,9 +37,9 @@ module CallExamples {
             vm1 := vm1.CallReturn(vm2);
         }
         // <<< Contract call ends here
-        Assert (() => vm1.OK?);
+        AssertAndExpect (() => vm1.OK?);
         // Check exit code loaded correctly.
-        Assert (() => vm1.Peek(0) == 1);
+        AssertAndExpect (() => vm1.Peek(0) == 1);
     }
 
     method {:test} test_call_02() {
@@ -61,9 +61,9 @@ module CallExamples {
             vm1 := vm1.CallReturn(vm2);
         }
         // <<< Contract call ends here
-        Assert (() => vm1.OK?);
+        AssertAndExpect (() => vm1.OK?);
         // Check exit code loaded correctly.
-        Assert (() => vm1.Peek(0) == 0);
+        AssertAndExpect (() => vm1.Peek(0) == 0);
     }
 
 
@@ -87,14 +87,14 @@ module CallExamples {
             vm1 := vm1.CallReturn(vm2);
         } // <<< Contract call ends here
         // Check exit code loaded correctly.
-        Assert (() => vm1.Peek(0) == 1);
+        AssertAndExpect (() => vm1.Peek(0) == 1);
         // Extract return data
         vm1 := Push1(vm1,0x00);
         vm1 := MLoad(vm1);
         // Check return data.
-        Assert (() => vm1.OK?);
-        Assert (() => vm1.Peek(0) == 0x123);
-        Assert(() => vm1.Peek(0) == 0x123);
+        AssertAndExpect (() => vm1.OK?);
+        AssertAndExpect (() => vm1.Peek(0) == 0x123);
+        AssertAndExpect(() => vm1.Peek(0) == 0x123);
     }
 
     method contractReturns123(vm:EvmState.State) returns (vm':EvmState.State) 
@@ -114,6 +114,6 @@ module CallExamples {
         vm' := Push1(vm',0x20);
         vm' := Push1(vm',0x00);
         vm' := Return(vm'); // force return
-        Assert (() => U256.Read(vm'.data,0) == 0x123);
+        AssertAndExpect (() => U256.Read(vm'.data,0) == 0x123);
     }
 }

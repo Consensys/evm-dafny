@@ -48,7 +48,7 @@ module Test10 {
         vm := Push1(vm, b);
         vm := Add(vm);
 
-        Assert (() => vm.Peek(0) as nat == (a + b) as nat);
+        AssertAndExpect (() => vm.Peek(0) as nat == (a + b) as nat);
 
         vm := Pop(vm);
         assert vm.GetStack() == st;
@@ -196,7 +196,7 @@ module Test10 {
             count := count + 1;
         }
         vm := Pop(vm);
-        Assert (() => vm.Peek(0) as nat == c as nat);
+        AssertAndExpect (() => vm.Peek(0) as nat == c as nat);
     }
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
@@ -290,7 +290,7 @@ module Test10 {
         vm := Pop(vm);
         assert count == vm.Peek(0);
         assert count == 0;
-        Assert (() => vm.Operands() == 1);
-        Assert (() => vm.GetStack() == Stack.Make([0]));
+        AssertAndExpect (() => vm.Operands() == 1);
+        AssertAndExpect (() => vm.GetStack() == Stack.Make([0]));
     }
 }
