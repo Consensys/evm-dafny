@@ -97,7 +97,8 @@ module CallExamples {
         Assert(() => vm1.Peek(0) == 0x123);
     }
 
-    method {:test} contractReturns123(vm:EvmState.State) returns (vm':EvmState.State)
+    method contractReturns123(vm:EvmState.State) returns (vm':EvmState.State) 
+    //can not be a test because it returns a non-failure-compatible type
     requires vm.OK?
     requires vm.Capacity() > 3 && vm.MemSize() == 0
     // Returns exactly 32 bytes of data

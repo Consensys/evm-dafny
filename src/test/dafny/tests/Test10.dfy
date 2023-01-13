@@ -59,7 +59,7 @@ module Test10 {
      *
      *  @param  c   The number of times to iterate the loop.
      */
-    method {:test} main2(c: u8)
+    method  main2(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -89,7 +89,7 @@ module Test10 {
     *
     *  @param  c   The number of times to iterate the loop.
     */
-    method {:test} main3(c: u8)
+    method main3(c: u8)
     {
         var a: u8 := 0x01;
         var b : u8 := 0x02;
@@ -129,7 +129,7 @@ module Test10 {
      *
      *  @param  c   The number of times to iterate the loop.
      */
-    method {:test} main4a(c: u8)
+    method main4a(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -149,7 +149,7 @@ module Test10 {
     }
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
-    method {:test} main4b(v: EvmState.State) returns (v': EvmState.State)
+    method main4b(v: EvmState.State) returns (v': EvmState.State)
         requires v.IsExecuting()
         requires v.Capacity() >= 2
         ensures v'.IsExecuting()
@@ -169,7 +169,7 @@ module Test10 {
      *
      *  @param  c   The number of times to iterate the loop.
      */
-    method {:test} main4aa(c: u8)
+    method main4aa(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
@@ -200,7 +200,7 @@ module Test10 {
     }
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
-    method {:test} main4bb(v: EvmState.State) returns (v': EvmState.State)
+    method main4bb(v: EvmState.State) returns (v': EvmState.State)
         requires v.IsExecuting()
         requires v.Capacity() >= 2
         ensures v'.IsExecuting()
@@ -219,7 +219,7 @@ module Test10 {
     *
     *  @param  c   The number of times to iterate the loop.
     */
-    method {:test} main5(c: u8)
+    method main5(c: u8)
     {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
