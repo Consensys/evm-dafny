@@ -57,7 +57,7 @@ towards this.
 
 [Dafny](https://github.com/dafny-lang/dafny) supports automated
 software verification by leveraging the power of state-of-the-art
-automated theorem provers (e.g with [SMT
+automated theorem provers (e.g. with [SMT
 solvers](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)
 like [Z3](https://en.wikipedia.org/wiki/Z3_Theorem_Prover)).  This
 means Dafny can prove a program is **correct** with respect to its
@@ -219,7 +219,6 @@ For example, you can run the Dafny main like this:
 > gmake run RUN_ARGS="--gas 100"
 ```
 
-NOTE: By default the Makefile processes files one by one, which minimizes turnaround time during development. There is another "global" mode which is useful for CI.
 
 # Contributing
 
