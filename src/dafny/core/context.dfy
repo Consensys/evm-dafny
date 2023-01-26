@@ -89,8 +89,9 @@ module Context {
          * Determine the size (in bytes) of the return data from the previous call
          * associated with this context.
          */
-        function method ReturnDataSize() : nat {
-            |this.returnData|
+        function method ReturnDataSize() : u256
+        requires |this.returnData| < TWO_256 {
+            |this.returnData| as u256
         }
 
         /**
@@ -113,7 +114,7 @@ module Context {
 
     }
 
-    type T = c:Raw | |c.callData| <= MAX_U256
+    type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
     witness Context(0,0,0,0,[],[],true,0,Info(0,0,0,0,0,0))
 
     /**

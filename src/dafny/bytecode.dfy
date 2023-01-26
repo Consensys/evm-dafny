@@ -967,18 +967,14 @@ module Bytecode {
      */
     function method ReturnDataSize(st: State): (st': State)
     requires st.IsExecuting()
-    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW) || st' == INVALID(MEMORY_OVERFLOW)
-    ensures st'.OK? <==> st.Capacity() >= 1 && st.evm.context.ReturnDataSize() <= MAX_U256
+    ensures st'.OK? || st' == INVALID(STACK_OVERFLOW)
+    ensures st'.OK? <==> st.Capacity() >= 1
     ensures st'.OK? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1
         then
             var len := st.evm.context.ReturnDataSize();
-            if len <= MAX_U256
-            then
-                st.Push(len as u256).Next()
-            else
-                State.INVALID(MEMORY_OVERFLOW)
+            st.Push(len).Next()
         else
             State.INVALID(STACK_OVERFLOW)
     }
@@ -990,7 +986,7 @@ module Bytecode {
     requires st.IsExecuting()
     ensures st'.OK? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(RETURNDATA_OVERFLOW)
     ensures st'.OK? <==> st.Operands() >= 3 &&
-                        (st.Peek(1) as nat + st.Peek(2) as nat) <= st.evm.context.ReturnDataSize()
+                         (st.Peek(1) as nat + st.Peek(2) as nat) <= st.evm.context.ReturnDataSize() as nat
     ensures st'.OK? ==> st'.Operands() == st.Operands() - 3
     {
         //
@@ -999,7 +995,7 @@ module Bytecode {
             var m_loc := st.Peek(0) as nat;
             var d_loc := st.Peek(1) as nat;
             var len := st.Peek(2) as nat;
-            if (d_loc + len) <= st.evm.context.ReturnDataSize()
+            if (d_loc + len) <= (st.evm.context.ReturnDataSize() as nat)
             then
                 // Slice bytes out of return data (with padding as needed)
                 var data := st.evm.context.ReturnDataSlice(d_loc,len);
