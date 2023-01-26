@@ -205,7 +205,7 @@ module EvmState {
         requires IsExecuting() {
             this.evm.pc
         }
-      
+
         /**
          * Determine whether modifications to the world state are permitted in this
          * context (true means writes are permitted).
@@ -314,7 +314,7 @@ module EvmState {
          */
         function method Load(address:u256) : u256
         requires IsExecuting() {
-            var account := evm.context.address; 
+            var account := evm.context.address;
             evm.world.Read(account,address)
         }
 
@@ -642,9 +642,12 @@ module EvmState {
          * a contract.
          */
         function method CallReturn(vm:State) : (nst:State)
+        // Can only return when nested call has terminated
         requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
+        // Can only return to a continuation (i.e. a parent call)
         requires this.CALLS?
-        requires this.MemSize() >= (outOffset + outSize)
+        // Must have enough memory for return data (if any)
+        requires outSize == 0 || this.MemSize() >= (outOffset + outSize)
         // Contract address of executing account must still exist.
         requires vm.RETURNS? ==> vm.world.Exists(evm.context.address) {
             // copy over return data, etc.
