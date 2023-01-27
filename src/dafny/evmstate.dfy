@@ -47,6 +47,14 @@ module EvmState {
     const G_CODEDEPOSIT: nat := 200;
 
     /**
+     * A fixed size array which is bounded by the maximum word size.  Thus, it
+     * represents an array (e.g. of bytes) which could appear as part of the EVM
+     * state (e.g. CALLDATA or RETURDATA).  Thus, the length of the array can be
+     * reasonably turned into a u256 and (for example) loaded on the stack.
+     */
+    type Array<T> = arr:seq<T> | |arr| < TWO_256
+
+    /**
      *  A normal state.
      *
      *  @param  context     An execution context (initiator, etc)
@@ -148,8 +156,8 @@ module EvmState {
             salt: Option<u256>  // optional salt
         )
         | INVALID(Error)
-        | RETURNS(gas:nat,data:seq<u8>,world: WorldState.T,substate:SubState.T)
-        | REVERTS(gas:nat,data:seq<u8>){
+        | RETURNS(gas:nat,data: Array<u8>,world: WorldState.T,substate:SubState.T)
+        | REVERTS(gas:nat,data: Array<u8>){
 
         /**
          * Check whether EVM is in an execution state or not (e.g. because its
@@ -614,7 +622,8 @@ module EvmState {
          * Update the return data associated with this state.
          */
         function method SetReturnData(data: seq<u8>) : State
-        requires IsExecuting() {
+        requires IsExecuting()
+        requires |data| < TWO_256 {
             OK(evm.(context:=evm.context.SetReturnData(data)))
         }
 
