@@ -1879,6 +1879,11 @@ module Bytecode {
     requires st.IsExecuting()
     ensures st'.RETURNS? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
     ensures st'.RETURNS? <==> st.Operands() >= 1 && st.WritesPermitted()
+    ensures st'.RETURNS? ==> 
+        var a := st.evm.context.address;
+        a in st'.world.accounts 
+        && st'.world.accounts[a] == st.evm.world.accounts[a].(balance := 0)
+        && a in st'.substate.selfDestruct
     ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 1
     ensures st' == INVALID(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 1 && !st.WritesPermitted()
     {
