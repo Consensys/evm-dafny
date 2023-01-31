@@ -1896,7 +1896,7 @@ module Bytecode {
                 // Determine account to send remaining any remaining funds.
                 var r := ((st.Peek(0) as nat) % TWO_160) as u160;
                 // Register contract deletion in substate!
-                var ss := st.evm.substate.AccountAccessed(r);
+                var ss := st.evm.substate.AccountAccessed(r).AccountDestructed(address);
                 // Apply refund
                 var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
                     // Refund balance to r
