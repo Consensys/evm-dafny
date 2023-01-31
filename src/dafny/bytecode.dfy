@@ -1879,6 +1879,11 @@ module Bytecode {
     requires st.IsExecuting()
     ensures st'.RETURNS? || st' == INVALID(STACK_UNDERFLOW) || st' == INVALID(WRITE_PROTECTION_VIOLATED)
     ensures st'.RETURNS? <==> st.Operands() >= 1 && st.WritesPermitted()
+    ensures st'.RETURNS? ==> 
+        var a := st.evm.context.address;
+        a in st'.world.accounts 
+        && st'.world.accounts[a] == st.evm.world.accounts[a].(balance := 0)
+        && a in st'.substate.selfDestruct
     ensures st' == INVALID(STACK_UNDERFLOW) <==> st.Operands() < 1
     ensures st' == INVALID(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 1 && !st.WritesPermitted()
     {
@@ -1896,13 +1901,13 @@ module Bytecode {
                 // Determine account to send remaining any remaining funds.
                 var r := ((st.Peek(0) as nat) % TWO_160) as u160;
                 // Register contract deletion in substate!
-                var ss := st.evm.substate.AccountAccessed(r);
+                var ss := st.evm.substate.AccountAccessed(r).AccountDestructed(address);
                 // Apply refund
                 var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
                     // Refund balance to r
-                    then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
+                    then st.evm.world.EnsureAccount(r).Transfer(address, r, balance)
                     // Otherwise reset balance to zero
-                    else st.evm.world.Withdraw(address,balance);
+                    else st.evm.world.Withdraw(address, balance);
                 //
                 State.RETURNS(gas:=st.Gas(),data:=[],world:=w,substate:=ss)
         else
