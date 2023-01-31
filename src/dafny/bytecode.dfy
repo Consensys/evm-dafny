@@ -1900,9 +1900,9 @@ module Bytecode {
                 // Apply refund
                 var w := if address != r && (!st.Exists(r) || st.evm.world.CanDeposit(r,balance))
                     // Refund balance to r
-                    then st.evm.world.EnsureAccount(r).Transfer(address,r,balance)
+                    then st.evm.world.EnsureAccount(r).Transfer(address, r, balance)
                     // Otherwise reset balance to zero
-                    else st.evm.world.Withdraw(address,balance);
+                    else st.evm.world.Withdraw(address, balance);
                 //
                 State.RETURNS(gas:=st.Gas(),data:=[],world:=w,substate:=ss)
         else
