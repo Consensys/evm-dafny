@@ -56,7 +56,7 @@ module EvmBerlin refines EVM {
      */
     function method OpGas(op: u8, s: State): State {
         match s
-            case OK(_) => Gas.GasBerlin(op, s)
+            case EXECUTING(_) => Gas.GasBerlin(op, s)
             case _ => s
     }
 
@@ -71,7 +71,7 @@ module EvmBerlin refines EVM {
      */
     function method OpSem(op: u8, s: State): State {
         match s
-            case OK(st) =>
+            case EXECUTING(st) =>
                 (
                     match op
                         case STOP =>  Bytecode.Stop(s)

@@ -618,7 +618,7 @@ module Gas {
      *
      *  see H.1 page 29, BERLIN VERSION 3078285 – 2022-07-13.
      */
-    function method GasBerlin(op: u8, s: OKState): State
+    function method GasBerlin(op: u8, s: ExecutingState): State
     {
         match op
             case STOP => s.UseGas(G_ZERO)

@@ -28,7 +28,7 @@ const OPT_CODE := [PUSH1,0x01,PUSH1,0x00,SLOAD,ADD,DUP1,ISZERO,PUSH1,0x0f,JUMPI,
 // cannot use full equality because we expect some differences (e.g. the PC
 // maybe at a different point, and the code itself will differ, etc).
 function equiv(l: State, r: State) : bool {
-    if l.OK? && r.OK?
+    if l.EXECUTING? && r.EXECUTING?
     then
         l.evm.memory == r.evm.memory &&
         l.evm.world == r.evm.world &&
