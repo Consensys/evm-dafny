@@ -107,12 +107,12 @@ module Bytecode {
     }
 
     /**
-    * Unsigned integer remainder with handling for zero.
-    */
+     * Unsigned integer remainder with handling for zero.
+     */
     function method ModWithZero(lhs:u256, rhs:u256) : u256 {
         if rhs == 0 then 0 as u256
         else
-        (lhs % rhs) as u256
+            (lhs % rhs) as u256
     }
 
     /**

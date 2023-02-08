@@ -131,8 +131,7 @@ module Gas {
      * @param locSlot Stack slot containing the location to be accessed.
      * @param length  Number of bytes to read.
      */
-    function method CostExpandBytes(st: State, nOperands: nat, locSlot: nat, length: nat) : nat
-    requires st.IsExecuting()
+    function method CostExpandBytes(st: ExecutingState, nOperands: nat, locSlot: nat, length: nat) : nat
     requires nOperands > locSlot {
         if st.Operands() >= nOperands
         then
@@ -154,8 +153,7 @@ module Gas {
      * @param locSlot Stack slot containing the location to be accessed.
      * @param lenSlot Stack slot containing the number of bytes to access.
      */
-    function method CostExpandRange(st: State, nOperands: nat, locSlot: nat, lenSlot: nat) : nat
-    requires st.IsExecuting()
+    function method CostExpandRange(st: ExecutingState, nOperands: nat, locSlot: nat, lenSlot: nat) : nat
     requires nOperands > locSlot && nOperands > lenSlot {
         if st.Operands() >= nOperands
         then
@@ -181,8 +179,7 @@ module Gas {
      * @param bLocSlot Stack slot containing location to be accessed (for second range).
      * @param bLenSlot Stack slot containing the number of bytes to access (for second range).
      */
-    function method CostExpandDoubleRange(st: State, nOperands: nat, aLocSlot: nat, aLenSlot: nat, bLocSlot: nat, bLenSlot: nat) : nat
-    requires st.IsExecuting()
+    function method CostExpandDoubleRange(st: ExecutingState, nOperands: nat, aLocSlot: nat, aLenSlot: nat, bLocSlot: nat, bLenSlot: nat) : nat
     requires nOperands > aLocSlot && nOperands > aLenSlot
     requires nOperands > bLocSlot && nOperands > bLenSlot {
         if st.Operands() >= nOperands
@@ -201,8 +198,7 @@ module Gas {
      * slot containing the copy length is provided as an argument as this
      * differs between bytecodes (e.g. EXTCODECOPY vs CODECOPY).
      */
-    function method CostCopy(st: State, lenSlot: nat) : nat
-        requires st.IsExecuting()
+    function method CostCopy(st: ExecutingState, lenSlot: nat) : nat
     {
         if st.Operands() > lenSlot
         then
@@ -217,8 +213,7 @@ module Gas {
      * Compute gas cost for CREATE2 bytecode.
      * @param st    A non-failure state.
      */
-    function method CostCreate2(st: State) : nat
-        requires st.IsExecuting()
+    function method CostCreate2(st: ExecutingState) : nat
     {
         if st.Operands() >= 4
         then
@@ -233,8 +228,7 @@ module Gas {
      * Compute gas cost for KECCAK256 bytecode.
      * @param st    A non-failure state.
      */
-    function method CostKeccak256(st: State) : nat
-        requires st.IsExecuting()
+    function method CostKeccak256(st: ExecutingState) : nat
     {
         if st.Operands() >= 2
         then
@@ -250,8 +244,7 @@ module Gas {
      * @param st    A non-failure state.
      * @param n     The number of topics being logged.
      */
-    function method CostLog(st: State, n: nat) : nat
-        requires st.IsExecuting()
+    function method CostLog(st: ExecutingState, n: nat) : nat
     {
         if st.Operands() >= 2
         then
@@ -270,8 +263,8 @@ module Gas {
      * @param st A non-failure state
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method CallCost(st: State) : nat
-    requires st.IsExecuting() {
+    function method CallCost(st: ExecutingState) : nat
+    {
         if st.Operands() >= 7
             then
                 var value := st.Peek(2) as nat;
@@ -287,8 +280,8 @@ module Gas {
      * @param st A non-failure state
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method CallCodeCost(st: State) : nat
-    requires st.IsExecuting() {
+    function method CallCodeCost(st: ExecutingState) : nat
+    {
         if st.Operands() >= 7
             then
                 var value := st.Peek(2) as nat;
@@ -307,8 +300,8 @@ module Gas {
      * @param st A non-failure state
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method DelegateCallCost(st: State) : nat
-    requires st.IsExecuting() {
+    function method DelegateCallCost(st: ExecutingState) : nat
+    {
         if st.Operands() >= 6
             then
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
@@ -325,8 +318,8 @@ module Gas {
      * @param st A non-failure state
      * @param nOperands number of operands in total required for this bytecode.
      */
-    function method StaticCallCost(st: State) : nat
-    requires st.IsExecuting() {
+    function method StaticCallCost(st: ExecutingState) : nat
+    {
         if st.Operands() >= 6
             then
                 var to := ((st.Peek(1) as int) % TWO_160) as u160;
@@ -338,8 +331,8 @@ module Gas {
     /**
      * Determine amount of gas which should be supplied to the caller.
      */
-    function method CallGas(st: State, gas: nat, value: u256) : (r:nat)
-    requires st.IsExecuting() {
+    function method CallGas(st: ExecutingState, gas: nat, value: u256) : (r:nat)
+    {
         CallGasCap(st,gas) + CallStipend(value)
     }
 
@@ -354,16 +347,16 @@ module Gas {
      * Determine amount of gas which can be supplied to the caller.  Observe
      * that this cannot exceed the amount of available gas!
      */
-    function method CallGasCap(st: State, gas: nat) : (r:nat)
-    requires st.IsExecuting() {
+    function method CallGasCap(st: ExecutingState, gas: nat) : (r:nat)
+    {
         Min(L(st.Gas()),gas)
     }
 
     /**
      * Determine amount of gas which should be provide for a create.
      */
-    function method CreateGasCap(st: State) : (r:nat)
-    requires st.IsExecuting() {
+    function method CreateGasCap(st: ExecutingState) : (r:nat)
+    {
         L(st.Gas())
     }
 
@@ -374,8 +367,8 @@ module Gas {
      * Determine any additional costs that apply (this is C_extra in the yellow
      * paper)
      */
-    function method CostCallExtra(st: State, to: u160, value: nat) : nat
-    requires st.IsExecuting() {
+    function method CostCallExtra(st: ExecutingState, to: u160, value: nat) : nat
+    {
         CostAccess(st,to) + CostCallXfer(value) + CostCallNew(st,to,value)
     }
 
@@ -391,8 +384,8 @@ module Gas {
      * Determine cost for creating an account if applicable (this is C_new in
      * the yellow paper).
      */
-    function method CostCallNew(st: State, to: u160, value: nat) : nat
-    requires st.IsExecuting() {
+    function method CostCallNew(st: ExecutingState, to: u160, value: nat) : nat
+    {
         // if the account is DEAD (which is the default account) or does not
         // exists, then charge G_newaccount amount of gas
         if  st.IsDead(to) && (value != 0)
@@ -404,8 +397,8 @@ module Gas {
     /**
      * Determine cost for accessing a given contract address.
      */
-    function method CostExtAccount(st: State) : nat
-    requires st.IsExecuting() {
+    function method CostExtAccount(st: ExecutingState) : nat
+    {
         if st.Operands() >= 1
         then
             // Extract contract account
@@ -420,8 +413,8 @@ module Gas {
      * Determine cost for accessing a given contract address (this is C_access
      * in the yellow paper).
      */
-    function method CostAccess(st: State, x: u160) : nat
-    requires st.IsExecuting() {
+    function method CostAccess(st: ExecutingState, x: u160) : nat
+    {
         if st.WasAccountAccessed(x) then G_WARMACCESS else G_COLDACCOUNTACCESS
     }
 
@@ -429,8 +422,8 @@ module Gas {
      * Determine cost for load a given storage location in the currently
      * executing account.
      */
-    function method CostSLoad(st: State) : nat
-    requires st.IsExecuting()  {
+    function method CostSLoad(st: ExecutingState) : nat
+    {
         if st.Operands() >= 1
         then
             var loc := st.Peek(0);
@@ -520,41 +513,38 @@ module Gas {
      * @returns     a tuple where the first component of the tuple computes the amount of gas to be charged
                     and the second component the amount of wei to be refunded to the originator of the call
      */
-    function method CostSSTOREChargeRefund(st: State) : (nat, int)
-    requires st.IsExecuting()
-        {
-            if st.Operands() >= 2 && (st.evm.world.Exists(st.evm.context.address))
-            then
-                var loc := st.Peek(0);
-                var newValue := st.Peek(1);
-                var currentAccount := st.evm.world.GetAccount(st.evm.context.address).Unwrap();
-                var currentAccountPretransaction := st.evm.world.GetOrDefaultPretransaction(st.evm.context.address);
-                // determine if it is a cold or warm storage access and charge accordingly
-                var accessCost := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
-                var currentValue := Storage.Read(currentAccount.storage, loc);
-                var originalValue := Storage.Read(currentAccountPretransaction.storage, loc);
-                // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
-                if currentValue == newValue
-                    then
+    function method CostSSTOREChargeRefund(st: ExecutingState) : (nat, int)
+    {
+        if st.Operands() >= 2 && (st.evm.world.Exists(st.evm.context.address))
+        then
+            var loc := st.Peek(0);
+            var newValue := st.Peek(1);
+            var currentAccount := st.evm.world.GetAccount(st.evm.context.address).Unwrap();
+            var currentAccountPretransaction := st.evm.world.GetOrDefaultPretransaction(st.evm.context.address);
+            // determine if it is a cold or warm storage access and charge accordingly
+            var accessCost := if st.WasKeyAccessed(loc) then 0 else G_COLDSLOAD;
+            var currentValue := Storage.Read(currentAccount.storage, loc);
+            var originalValue := Storage.Read(currentAccountPretransaction.storage, loc);
+            // if the current value equals the new value, WARM_STORAGE_READ_COST (which amounts to 100 based on EIP2929) is deducted
+            if currentValue == newValue
+                then
                         (G_WARMACCESS + accessCost, 0)
-                else
-                    if originalValue == currentValue
-                        then
-                            if newValue == 0
-                                then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, R_SCLEAR)
-                            else
-                                (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
-
-                    else
-                        (G_WARMACCESS + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
-
             else
-                (G_ZERO, G_ZERO)
-        }
+                if originalValue == currentValue
+                then
+                    if newValue == 0
+                    then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, R_SCLEAR)
+                    else
+                        (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
+
+                else
+                    (G_WARMACCESS + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
+        else
+            (G_ZERO, G_ZERO)
+    }
 
     // returns the amount of gas to charge upon the execution of SSTORE
-    function method CostSSTORE(st: State): nat
-    requires st.IsExecuting() {
+    function method CostSSTORE(st: ExecutingState): nat {
         if st.Gas() <= G_CALLSTIPEND
         then
             // NOTE: The following forces an out-of-gas exception if the stipend
@@ -565,8 +555,7 @@ module Gas {
     }
 
     // sets in the refund component of the substate the refund amount computed upon the execution of SSTORE
-    function method PutRefund(st: State): State
-    requires st.IsExecuting() {
+    function method PutRefund(st: ExecutingState): State {
         var computeRefund := CostSSTOREChargeRefund(st).1;
         st.ModifyRefundCounter(computeRefund)
         }
@@ -574,8 +563,7 @@ module Gas {
     /**
      * Determine cost for deleting a given account.
      */
-    function method CostSelfDestruct(st: State) : nat
-    requires st.IsExecuting()  {
+    function method CostSelfDestruct(st: ExecutingState) : nat {
         if st.Operands() >= 1
         then
             var r := (st.Peek(0) as nat % TWO_160) as u160;
@@ -585,21 +573,18 @@ module Gas {
             G_ZERO
     }
 
-    function method CostSelfDestructAccess(st: State, r: u160) : nat
-    requires st.IsExecuting()  {
+    function method CostSelfDestructAccess(st: ExecutingState, r: u160) : nat {
         if st.WasAccountAccessed(r) then 0 else G_COLDACCOUNTACCESS
     }
 
-    function method CostSelfDestructNewAccount(st: State, r: u160) : nat
-    requires st.IsExecuting()  {
+    function method CostSelfDestructNewAccount(st: ExecutingState, r: u160) : nat {
         // Extract our address
         var Ia := st.evm.context.address;
         // Check whether refund can happen (or not)
         if st.evm.world.IsDead(r) && st.evm.world.Balance(Ia) != 0 then G_NEWACCOUNT else 0
     }
 
-    function method CostExp(st: State) : nat
-    requires st.IsExecuting()  {
+    function method CostExp(st: ExecutingState) : nat {
         if st.Operands() >= 2
         then
             var exp := st.Peek(1);

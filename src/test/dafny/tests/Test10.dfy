@@ -71,7 +71,7 @@ module Test10 {
         ghost var g := vm.GetStack();
 
         while count > 0
-            invariant vm.IsExecuting()
+            invariant vm.EXECUTING?
             invariant vm.GetStack() == g
         {
             vm := Push1(vm, a);
@@ -104,7 +104,7 @@ module Test10 {
         assert count == vm.Peek(0);
 
         while vm.Peek(0) > 0
-            invariant vm.IsExecuting()
+            invariant vm.EXECUTING?
             invariant vm.Operands()> 0
             invariant count == vm.Peek(0)
             invariant vm.GetStack() == Stack.Make([count])
@@ -139,7 +139,7 @@ module Test10 {
         ghost var g := vm.GetStack();
 
         while count > 0
-            invariant vm.IsExecuting()
+            invariant vm.EXECUTING?
             invariant vm.GetStack() == g
         {
             vm := main4b(vm);
@@ -150,9 +150,9 @@ module Test10 {
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
     method main4b(v: EvmState.State) returns (v': EvmState.State)
-        requires v.IsExecuting()
+        requires v.EXECUTING?
         requires v.Capacity() >= 2
-        ensures v'.IsExecuting()
+        ensures v'.EXECUTING?
         ensures v'.GetStack() == v.GetStack()
     {
         v':= v;
@@ -174,23 +174,23 @@ module Test10 {
         // Initialise VM
         var vm := EvmBerlin.InitEmpty(0);
         ghost var count: u8 := 0;
-        
+
         vm := Push1(vm, 0); //  [0]
         vm := Push1(vm, c); //  [c, 0]
 
         while vm.Peek(0) > 0
-            invariant vm.IsExecuting()
+            invariant vm.EXECUTING?
             invariant vm.Operands() == 2
-            invariant vm.Peek(0) as nat + count as nat == c as nat  
-            invariant vm.Peek(1) as nat == count as nat 
-            decreases c - count 
+            invariant vm.Peek(0) as nat + count as nat == c as nat
+            invariant vm.Peek(1) as nat == count as nat
+            decreases c - count
         {   //  stack is [v,count] with v == c - count
             vm := Push1(vm, 1); //  [1,v,count]
             vm := Dup(vm, 3);   //  [count,1,v,count]
             vm := Add(vm);      //  [count+1,v,count]
             vm := Swap(vm, 2);  //  [count,v,count+1]
             vm := Pop(vm);      //  [v,count+1]
-            vm := Push1(vm, 1); //  [1,v,count+1]  
+            vm := Push1(vm, 1); //  [1,v,count+1]
             vm := Swap(vm,1);   //  [v,1,count+1]
             vm := Sub(vm);      //  [v-1,count+1]
             count := count + 1;
@@ -201,9 +201,9 @@ module Test10 {
 
     /** This method performs  an addition 0x1 + 0x2 and leaves the stack unchanged.  */
     method main4bb(v: EvmState.State) returns (v': EvmState.State)
-        requires v.IsExecuting()
+        requires v.EXECUTING?
         requires v.Capacity() >= 2
-        ensures v'.IsExecuting()
+        ensures v'.EXECUTING?
         ensures v'.GetStack() == v.GetStack()
     {
         v':= v;
@@ -248,7 +248,7 @@ module Test10 {
         assert count == vm.Peek(1);
 
         while vm.Peek(0) > 0
-            invariant vm.IsExecuting()
+            invariant vm.EXECUTING?
             invariant vm.Operands() == 2
             invariant count == vm.Peek(1)
             invariant count == vm.Peek(1) >= 0

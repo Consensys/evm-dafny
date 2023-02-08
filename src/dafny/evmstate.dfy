@@ -114,7 +114,7 @@ module EvmState {
     /**
      * The type for terminated states.
      */
-    type TerminatedState = s:State | s.RETURNS? || s.REVERTS? || s.INVALID?
+    type TerminatedState = s:State | (s.RETURNS? || s.REVERTS? || s.INVALID?)
     witness INVALID(INSUFFICIENT_GAS)
 
     /**
@@ -139,30 +139,22 @@ module EvmState {
 
     /**
      * Captures the possible state of the machine.  Normal execution is
-     * indicated by OK (with the current machine data).  An exceptional halt is
-     * indicated by INVALID (e.g. insufficient gas, insufficient stack operands,
-     * etc). Finally, a RETURN or REVERT with return data are indicated
-     * accordingly (along with any gas returned).
+     * indicated by EXECUTING (with the current machine data).  An exceptional
+     * halt is indicated by INVALID (e.g. insufficient gas, insufficient stack
+     * operands, etc). Finally, a RETURN or REVERT with return data are
+     * indicated accordingly (along with any gas returned).
      */
-    datatype State =
-          EXECUTING(evm:T)
+    datatype State = EXECUTING(evm:T)
         | INVALID(Error)
         | RETURNS(gas:nat,data: Array<u8>,world: WorldState.T,substate:SubState.T)
         | REVERTS(gas:nat,data: Array<u8>)
         | CONTINUING(Continuation) {
 
         /**
-         * Check whether EVM is in an execution state or not (e.g. because its
-         * in a RETURNS or REVERTS state, or has failed due to an exception,
-         * etc).
-         */
-        predicate method IsExecuting() { this.EXECUTING? }
-
-        /**
          * Extract underlying raw state.
          */
         function method Unwrap(): T
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             this.evm
         }
 
@@ -180,7 +172,7 @@ module EvmState {
 
         /** Use some gas if possible. */
         function method UseGas(k: nat): State
-            requires IsExecuting()
+        requires this.EXECUTING?
         {
             if this.Gas() < k as nat then
                 INVALID(INSUFFICIENT_GAS)
@@ -192,7 +184,7 @@ module EvmState {
          * Refund gas (e.g. after a call)
          */
         function method Refund(k: nat): State
-            requires IsExecuting()
+        requires this.EXECUTING?
         {
             EXECUTING(evm.(gas := this.Gas() + k as nat))
         }
@@ -201,7 +193,7 @@ module EvmState {
          * Determine current PC value.
          */
         function method PC(): nat
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             this.evm.pc
         }
 
@@ -211,7 +203,7 @@ module EvmState {
          *  @todo  This should go somewhere else?
          */
         function method WritesPermitted(): bool
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             this.evm.context.writePermission
         }
 
@@ -234,7 +226,7 @@ module EvmState {
          *                  e.g. begin less then `MAX_U256`.
          */
         function method Expand(address: nat, len: nat): (s': ExecutingState)
-        requires IsExecuting()
+        requires this.EXECUTING?
         ensures MemSize() <= s'.MemSize()
         //  If last byte read is in range, no need to expand.
         ensures address + len < MemSize() ==> evm.memory == s'.evm.memory
@@ -251,7 +243,7 @@ module EvmState {
          *  Get the size of the memory.
          */
         function method MemSize(): nat
-        requires IsExecuting()
+        requires this.EXECUTING?
         {
             Memory.Size(evm.memory)
         }
@@ -260,7 +252,7 @@ module EvmState {
          * Read word from byte address in memory.
          */
         function method Read(address:nat) : u256
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires address + 31 < Memory.Size(evm.memory) {
             Memory.ReadUint256(evm.memory,address)
         }
@@ -269,7 +261,7 @@ module EvmState {
          * Write word to byte address in memory.
          */
         function method Write(address:nat, val: u256) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires address + 31 < Memory.Size(evm.memory) {
             EXECUTING(evm.(memory:=Memory.WriteUint256(evm.memory,address,val)))
         }
@@ -278,7 +270,7 @@ module EvmState {
          * Write byte to byte address in memory.
          */
         function method Write8(address:nat, val: u8) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires address < Memory.Size(evm.memory) {
             EXECUTING(evm.(memory := Memory.WriteUint8(evm.memory,address,val)))
         }
@@ -288,7 +280,7 @@ module EvmState {
          * that overflow are dropped.
          */
         function method Copy(address:nat, data: seq<u8>) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires |data| == 0 || address + |data| <= Memory.Size(evm.memory)
         {
             EXECUTING(evm.(memory:=Memory.Copy(evm.memory,address,data)))
@@ -302,7 +294,7 @@ module EvmState {
          * Write word to storage
          */
         function method Store(address:u256, val: u256) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             var account := evm.context.address;
             EXECUTING(evm.(world:=evm.world.Write(account,address,val)))
         }
@@ -311,7 +303,7 @@ module EvmState {
          * Read word from storage
          */
         function method Load(address:u256) : u256
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             var account := evm.context.address;
             evm.world.Read(account,address)
         }
@@ -320,7 +312,7 @@ module EvmState {
          * Determine whether or not an account is considered to be "empty".
          */
         function method IsEmpty(account:u160) : bool
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires account in evm.world.accounts
         {
             var data := evm.world.accounts[account];
@@ -331,7 +323,7 @@ module EvmState {
          * An account is dead when its account state is non-existent or empty.
          */
         function method IsDead(account:u160) : bool
-        requires IsExecuting(){
+        requires this.EXECUTING?{
             !(account in evm.world.accounts) || IsEmpty(account)
         }
 
@@ -339,7 +331,7 @@ module EvmState {
          * Check whether a given account exists.
          */
         function method Exists(account: u160) : bool
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             // Perform the check
             evm.world.Exists(account)
         }
@@ -348,7 +340,7 @@ module EvmState {
          * Increment the nonce associated with the currently executing account.
          */
         function method IncNonce() : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         // The nonce cannot overflow
         requires evm.world.Nonce(evm.context.address) < MAX_U64 {
             EXECUTING(evm.(world:=evm.world.IncNonce(evm.context.address)))
@@ -359,7 +351,7 @@ module EvmState {
          * exists, none is returned.
          */
         function method GetAccount(account:u160) : Option<WorldState.Account>
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             if account in evm.world.accounts
             then
                 Some(evm.world.accounts[account])
@@ -372,7 +364,7 @@ module EvmState {
          * cannot already exist at the given address.
          */
         function method CreateAccount(address:u160, nonce:nat, balance: u256, storage: map<u256,u256>, code: seq<u8>) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires !evm.world.Exists(address)
         requires |code| <= Code.MAX_CODE_SIZE {
             var data := WorldState.CreateAccount(nonce,balance,Storage.Create(storage),Code.Create(code));
@@ -383,7 +375,7 @@ module EvmState {
          * Mark a given account as having been "accessed".
          */
         function method AccountAccessed(account: u160) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             // Mark address within this account as accessed
             EXECUTING(evm.(substate:=evm.substate.AccountAccessed(account)))
         }
@@ -392,7 +384,7 @@ module EvmState {
          * increment/decrement the refund counter of the substate for a given address.
          */
         function method ModifyRefundCounter(k: int) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             EXECUTING(evm.(substate:=evm.substate.ModifyRefundCounter(k)))
         }
 
@@ -400,7 +392,7 @@ module EvmState {
          * Check whether a given account was previously accessed (or not).
          */
         function method WasAccountAccessed(account: u160) : bool
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             // Perform the check
             evm.substate.WasAccountAccessed(account)
         }
@@ -410,7 +402,7 @@ module EvmState {
          * as having been "accessed" (i.e. read or written).
          */
         function method KeyAccessed(address: u256) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             // Determine executing account
             var account := evm.context.address;
             // Mark address within this account as accessed
@@ -422,7 +414,7 @@ module EvmState {
          * account was previously accessed or not.
          */
         function method WasKeyAccessed(address: u256) : bool
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             // Determine executing account
             var account := evm.context.address;
             // Perform the check
@@ -434,7 +426,7 @@ module EvmState {
          * call.
          */
         function method Merge(world: WorldState.T, substate: SubState.T) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         // Contract address for this account must exist.
         requires world.Exists(evm.context.address) {
             EXECUTING(evm.(world:=world,substate:=substate))
@@ -448,14 +440,14 @@ module EvmState {
          * Decode next opcode from machine.
          */
         function method Decode() : u8
-        requires IsExecuting() { Code.DecodeUint8(evm.code,evm.pc as nat) }
+        requires this.EXECUTING? { Code.DecodeUint8(evm.code,evm.pc as nat) }
 
         /**
          * Decode next opcode from machine.
          */
         function method OpDecode() : Option<u8>
         {
-            if this.IsExecuting()
+            if this.EXECUTING?
             then Some(Code.DecodeUint8(evm.code,evm.pc as nat))
             else None
         }
@@ -464,7 +456,7 @@ module EvmState {
          * Move program counter to a given location.
          */
         function method Goto(k:u256) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             EXECUTING(evm.(pc := k as nat))
         }
 
@@ -472,7 +464,7 @@ module EvmState {
          * Move program counter to next instruction.
          */
         function method Next() : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             EXECUTING(evm.(pc := evm.pc + 1))
         }
 
@@ -480,7 +472,7 @@ module EvmState {
         * Move program counter over k instructions / operands.
         */
         function method Skip(k:nat) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             var pc_k := (evm.pc as nat) + k;
             EXECUTING(evm.(pc := pc_k))
         }
@@ -493,7 +485,7 @@ module EvmState {
          * Determine number of operands on stack.
          */
         function method Operands() : nat
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             evm.stack.Size()
         }
 
@@ -501,7 +493,7 @@ module EvmState {
          * Get the state of the internal stack.
          */
         function method GetStack(): Stack.Stack
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             this.evm.stack
         }
 
@@ -509,7 +501,7 @@ module EvmState {
          * Check capacity remaining on stack.
          */
         function method Capacity() : nat
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             evm.stack.Capacity()
         }
 
@@ -517,7 +509,7 @@ module EvmState {
          * Push word onto stack.
          */
         function method Push(v: u256) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires Capacity() > 0 {
             EXECUTING(evm.(stack := GetStack().Push(v)))
         }
@@ -527,7 +519,7 @@ module EvmState {
          * topmost position, "2" is the next position and so on.
          */
         function method Peek(k: nat): u256
-        requires IsExecuting()
+        requires this.EXECUTING?
         // Sanity check peek possible
         requires k < Operands(){
             GetStack().Peek(k)
@@ -538,7 +530,7 @@ module EvmState {
          * enough items on the stack.
          */
         function method PeekN(n: nat): (r: seq<u256>)
-        requires IsExecuting()
+        requires this.EXECUTING?
         // Sanity check enough items to peek
         requires n <= Operands() {
             GetStack().PeekN(n)
@@ -552,7 +544,7 @@ module EvmState {
          *  @returns    A stack made of the first u elements of `st` minus the first `l`.
          */
         function SlicePeek(l: nat, u: nat): (r: Stack.Stack)
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires l <= u <= Operands()
         ensures r.Size() == u - l
         {
@@ -563,7 +555,7 @@ module EvmState {
          * Pop word from stack.
          */
         function method Pop(): ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         // Cannot pop from empty stack
         requires Operands() >= 1 {
             EXECUTING(evm.(stack := GetStack().Pop()))
@@ -573,7 +565,7 @@ module EvmState {
          * Pop n words from stack.
          */
         function method PopN(n: nat): ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         // Must be enough space!
         requires Operands() >= n {
             EXECUTING(evm.(stack := GetStack().PopN(n)))
@@ -583,7 +575,7 @@ module EvmState {
          * Swap top item with kth item.
          */
         function method Swap(k: nat): ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires Operands() > k > 0 {
             EXECUTING(evm.(stack := GetStack().Swap(k)))
         }
@@ -596,7 +588,7 @@ module EvmState {
          * Append zero or more log entries.
          */
         function method Log(entries: seq<SubState.LogEntry>) : ExecutingState
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             EXECUTING(evm.(substate:=evm.substate.Append(entries)))
         }
 
@@ -604,7 +596,7 @@ module EvmState {
          * Check how many code operands are available.
          */
         function method CodeOperands() : int
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             (Code.Size(evm.code) as nat) - ((evm.pc as nat) + 1)
         }
 
@@ -612,7 +604,7 @@ module EvmState {
          * Update the return data associated with this state.
          */
         function method SetReturnData(data: seq<u8>) : ExecutingState
-        requires IsExecuting()
+        requires this.EXECUTING?
         requires |data| < TWO_256 {
             EXECUTING(evm.(context:=evm.context.SetReturnData(data)))
         }
@@ -623,7 +615,7 @@ module EvmState {
          *  returns STOP.
          */
         function CodeAtIndex(index: nat): u8
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             if index < Code.Size(evm.code) as nat then
                 Code.CodeAt(evm.code, index)
             else
@@ -631,13 +623,13 @@ module EvmState {
         }
 
         function CodeAtPC(): u8
-        requires IsExecuting() { CodeAtIndex(PC()) }
+        requires this.EXECUTING? { CodeAtIndex(PC()) }
 
         /**
          * Check whether a given Program Counter location holds the JUMPDEST bytecode.
          */
         predicate method IsJumpDest(pc: u256)
-        requires IsExecuting() {
+        requires this.EXECUTING? {
             pc < Code.Size(evm.code) && Code.DecodeUint8(evm.code,pc as nat) == Opcode.JUMPDEST
         }
     }
@@ -778,9 +770,7 @@ module EvmState {
          * Process a return from a nested call to either an end-user account or
          * a contract.
          */
-        function method CallReturn(vm:State) : (nst:State)
-        // Can only return when nested call has terminated
-        requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
+        function method CallReturn(vm:TerminatedState) : (nst:State)
         // Can only return to a continuation (i.e. a parent call)
         requires this.CALLS?
         // Must have enough memory for return data (if any)
@@ -836,8 +826,10 @@ module EvmState {
          * address is loaded onto the stack (if successful), or zero is loaded
          * (otherwise).
          */
-        function method CreateReturn(vm:State, address: u160) : (nst:State)
-        requires vm.RETURNS? || vm.REVERTS? || vm.INVALID?
+        function method CreateReturn(vm:TerminatedState, address: u160) : (nst:State)
+        // Following line should not be required?
+        requires vm.RETURNS? || vm.REVERTS?|| vm.INVALID?
+        // Can only return to a continuation (i.e. a parent create)
         requires this.CREATES?
         // Contract address of executing account must still exist.
         requires vm.RETURNS? ==> vm.world.Exists(evm.context.address)

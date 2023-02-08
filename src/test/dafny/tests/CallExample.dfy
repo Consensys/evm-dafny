@@ -12,7 +12,7 @@ module CallExamples {
     import opened Bytecode
     import Bytes
     import opened Utils
-    
+
 
     /** The gas loaded in the EVM before executing a program. */
     const INITGAS := 0xFFFF;
@@ -29,15 +29,15 @@ module CallExamples {
         vm1 := Dup(vm1,1);     // Call value
         vm1 := Push2(vm1,0xccc); // To address
         vm1 := Push1(vm1,0x3); // Gas
-        vm1 := Call(vm1);
         // >>> Contract call starts here
+        var CONTINUING(cc) := Call(vm1);
         {
-            var vm2 := vm1.CallEnter(1);
+            var vm2 := cc.CallEnter(1);
             vm2 := Stop(vm2);
-            vm1 := vm1.CallReturn(vm2);
+            vm1 := cc.CallReturn(vm2);
         }
         // <<< Contract call ends here
-        AssertAndExpect (() => vm1.OK?);
+        AssertAndExpect (() => vm1.EXECUTING?);
         // Check exit code loaded correctly.
         AssertAndExpect (() => vm1.Peek(0) == 1);
     }
@@ -53,15 +53,15 @@ module CallExamples {
         vm1 := Dup(vm1,1);     // Call value
         vm1 := Push2(vm1,0xccc); // To address
         vm1 := Push1(vm1,0x3); // Gas
-        vm1 := Call(vm1);
         // >>> Contract call starts here
+        var CONTINUING(cc) := Call(vm1);
         {
-            var vm2 := vm1.CallEnter(1);
+            var vm2 := cc.CallEnter(1);
             vm2 := Pop(vm2); // force exception
-            vm1 := vm1.CallReturn(vm2);
+            vm1 := cc.CallReturn(vm2);
         }
         // <<< Contract call ends here
-        AssertAndExpect (() => vm1.OK?);
+        AssertAndExpect (() => vm1.EXECUTING?);
         // Check exit code loaded correctly.
         AssertAndExpect (() => vm1.Peek(0) == 0);
     }
@@ -80,11 +80,12 @@ module CallExamples {
         vm1 := Dup(vm1,1);       // Call value
         vm1 := Push2(vm1,0xccc); // To address
         vm1 := Push1(vm1,0xFF);   // Gas
-        vm1 := Call(vm1);
-        { // >>> Contract call starts here
-            var vm2 := vm1.CallEnter(1);
+        // >>> Contract call starts here
+        var CONTINUING(cc) := Call(vm1);
+        {
+            var vm2 := cc.CallEnter(1);
             vm2 := contractReturns123(vm2);
-            vm1 := vm1.CallReturn(vm2);
+            vm1 := cc.CallReturn(vm2);
         } // <<< Contract call ends here
         // Check exit code loaded correctly.
         AssertAndExpect (() => vm1.Peek(0) == 1);
@@ -92,14 +93,13 @@ module CallExamples {
         vm1 := Push1(vm1,0x00);
         vm1 := MLoad(vm1);
         // Check return data.
-        AssertAndExpect (() => vm1.OK?);
+        AssertAndExpect (() => vm1.EXECUTING?);
         AssertAndExpect (() => vm1.Peek(0) == 0x123);
         AssertAndExpect(() => vm1.Peek(0) == 0x123);
     }
 
-    method contractReturns123(vm:EvmState.State) returns (vm':EvmState.State) 
+    method contractReturns123(vm:EvmState.ExecutingState) returns (vm':EvmState.State)
     //can not be a test because it returns a non-failure-compatible type
-    requires vm.OK?
     requires vm.Capacity() > 3 && vm.MemSize() == 0
     // Returns exactly 32 bytes of data
     ensures vm'.RETURNS? && |vm'.data| == 32

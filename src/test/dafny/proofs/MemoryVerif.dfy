@@ -28,10 +28,10 @@ abstract module MemoryVerif_01 {
 
   /**
    *  Check MSTORE.
-   *  Starting from an OKState with 2 elements on the stack, check expansion
+   *  Starting from an ExecutingState with 2 elements on the stack, check expansion
    *  sizes.
    */
-  method MSTORE_01_Proofs(vm: OKState)
+  method MSTORE_01_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
   {
     //  Compute new state
@@ -40,11 +40,11 @@ abstract module MemoryVerif_01 {
 
     //  address + 31 bytes fit in memory iff Store is successful.
     assert address + 31 < MAX_U256 ==>
-      r.IsExecuting() && U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
+      r.EXECUTING? && U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
 
     //  address + 31 bytes are already in memory. New state should be OK.
     if address + 31 < vm.MemSize() <= MAX_U256 {
-      assert r.IsExecuting();
+      assert r.EXECUTING?;
       //  Size is unchanged
       assert r.MemSize() == vm.MemSize();
       //  only chunk impacted is  r.evm.memory.contents[address..address + 31]
@@ -78,9 +78,9 @@ abstract module MemoryVerif_01 {
 
   /**
    *  Check gas consumption of MSTORE.
-   *  Starting from an OKState with 2 elements on the stack.
+   *  Starting from an ExecutingState with 2 elements on the stack.
    */
-  method MSTORE_02_Proofs(vm: OKState)
+  method MSTORE_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
@@ -123,10 +123,10 @@ abstract module MemoryVerif_01 {
 
   /**
    *  Check MLOAD.
-   *  Starting from an OKState with 2 elements on the stack, check expansion
+   *  Starting from an ExecutingState with 2 elements on the stack, check expansion
    *  sizes.
    */
-  method MLOAD_01_Proofs(vm: OKState)
+  method MLOAD_01_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
   {
     //  Compute new state
@@ -135,11 +135,11 @@ abstract module MemoryVerif_01 {
 
     //  address + 31 bytes fit in memory if load is successful.
     assert address + 31 < MAX_U256 ==>
-      r.IsExecuting() && r.Peek(0) == U256.Read(r.evm.memory.contents, address);
+      r.EXECUTING? && r.Peek(0) == U256.Read(r.evm.memory.contents, address);
 
     //  address + 31 bytes are already in memory. New state should be OK.
     if address + 31 < vm.MemSize() <= MAX_U256 {
-      assert r.IsExecuting();
+      assert r.EXECUTING?;
       //  Size is unchanged
       assert r.MemSize() == vm.MemSize();
       //  Memory is unchanged
@@ -159,14 +159,14 @@ abstract module MemoryVerif_01 {
 
   /**
    *  Check MLOAD.
-   *  Starting from an OKState with 2 elements on the stack.
+   *  Starting from an ExecutingState with 2 elements on the stack.
    */
 
   /**
    *  Check gas consumption of MLOAD.
-   *  Starting from an OKState with 2 elements on the stack.
+   *  Starting from an ExecutingState with 2 elements on the stack.
    */
-  method MLOAD_02_Proofs(vm: OKState)
+  method MLOAD_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
@@ -223,7 +223,7 @@ abstract module MemoryVerif_01 {
   }
 
   //  RETURN gas cost
-  method RETURN_02_Proofs(vm: OKState)
+  method RETURN_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;
@@ -266,7 +266,7 @@ abstract module MemoryVerif_01 {
   }
 
   //  REVERT gas cost
-  method REVERT_02_Proofs(vm: OKState)
+  method REVERT_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW;

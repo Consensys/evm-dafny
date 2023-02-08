@@ -90,7 +90,7 @@ module Optimisations {
         var vm1 := vm;
         for i := 0 to n + 1
             invariant vm1.EXECUTING?
-            invariant vm1.Gas() == g - i * Gas.G_BASE
+            invariant vm1.Gas() == g - (i * Gas.G_BASE)
             invariant vm1.Operands() >= n - i
             invariant vm1.GetStack() == vm.SlicePeek(i, |s|)
         {
@@ -98,6 +98,7 @@ module Optimisations {
             assert vm1.EXECUTING?;
         }
         assert vm1.Gas() >= Gas.G_VERYLOW;
+        assert vm1.Gas() == g - ((n+1) * Gas.G_BASE);
         //  Stack after n + 1 POPs is suffix of initial stack starting at index n + 1
         assert vm1.GetStack() == vm.SlicePeek(n + 1, |s|);
 
@@ -106,11 +107,11 @@ module Optimisations {
         vm2 := Swap(vm2, n).UseGas(Gas.G_VERYLOW);
 
         for i := 0 to n + 1
-            invariant vm2.EXECUTING?
-            invariant vm2.Gas() == g - i * Gas.G_BASE - Gas.G_VERYLOW
-            invariant vm2.Operands() >= n + 1 - i
-            invariant vm2.Operands() == vm.Operands() - i == |s| - i
-            invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)
+        invariant vm2.EXECUTING?
+        invariant vm2.Gas() == g - (i * Gas.G_BASE)  - Gas.G_VERYLOW
+        invariant vm2.Operands() >= n + 1 - i
+        invariant vm2.Operands() == vm.Operands() - i == |s| - i
+        invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)
         {
             vm2 := ExecuteOP(vm2, POP);
             assert vm2.EXECUTING?;

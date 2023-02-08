@@ -31,7 +31,7 @@ abstract module EVM {
      *  @note       If an opcode is not supported, or there is not enough gas
      *              the returned state is INVALID.
      */
-    function method OpSem(op: u8, s: State): State
+    function method OpSem(op: u8, st: ExecutingState): State
 
     /** The gas cost semantics of an opcode.
      *
@@ -40,7 +40,7 @@ abstract module EVM {
      *  @returns    The new state obtained having consumed the gas that corresponds to
      *              the cost of `opcode` is `s`.
      */
-    function method OpGas(op: u8, s: State): State
+    function method OpGas(op: u8, st: ExecutingState): State
 
     /**
      * Create a fresh EVM to execute a given sequence of bytecode instructions.
@@ -68,16 +68,19 @@ abstract module EVM {
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
-    function method Execute(st: State): State
+    function method Execute(st: ExecutingState): State
     {
         match st.OpDecode()
-          case Some(opcode) => OpSem(opcode, OpGas(opcode, st))
-          case None => State.INVALID(INVALID_OPCODE)
+            case Some(op) => ExecuteOP(st,op)
+            case None => State.INVALID(INVALID_OPCODE)
     }
 
-    function method ExecuteOP(st: State, op: u8): State
-    {
-          OpSem(op, OpGas(op, st))
+    function method ExecuteOP(st: ExecutingState, op: u8): State {
+        match OpGas(op,st)
+            // Not out of gas
+            case EXECUTING(vm) => OpSem(op,EXECUTING(vm))
+            // Out of gas (or invalid opcode)
+            case s => s
     }
 
     /**
@@ -86,7 +89,7 @@ abstract module EVM {
      *  @note       If the opcode semantics/gas is not implemented, the next
      *              state is INVALID.
      */
-    function method ExecuteN(st:State, steps: nat := 1): State
+    function method {:tailrecursion true} ExecuteN(st:ExecutingState, steps: nat := 1): State
     decreases steps
     requires steps > 0
     {

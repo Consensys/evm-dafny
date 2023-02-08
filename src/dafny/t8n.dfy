@@ -133,7 +133,7 @@ include "evms/berlin.dfy"
     method TracerStep(depth: int, st: EvmState.State ) {
         //TODO
         match st
-        case OK(_) | CALLS(_,_,_,_,_,_,_,_,_,_,_)  => print "PC:", st.evm.pc, " OP:", st.Decode(), " GAS:", st.Gas(), "\n";
+        case EXECUTING(_)  => print "PC:", st.evm.pc, " OP:", st.Decode(), " GAS:", st.Gas(), "\n";
         case _ => print "not running\n";
     }
 
@@ -149,23 +149,25 @@ include "evms/berlin.dfy"
 
     method {:verify false} Run(depth: nat, st0: EvmState.State) returns (st: EvmState.State) {
         st := st0;
-        while (st.OK?){
+        while (st.EXECUTING?){
             TracerStep(depth, st);
             st := EvmBerlin.Execute(st);
-            if st.CALLS? {
-                st := CallContinue(depth, st);
-            } else if st.CREATES? {
-                st := CreateContinue(depth, st);
+            if st.CONTINUING? {
+                if st.cc.CALLS? {
+                    st := CallContinue(depth, st.cc);
+                } else if st.cc.CREATES? {
+                    st := CreateContinue(depth, st.cc);
+                }
             }
         }
         TracerStep(depth, st);
     }
 
-    method {:verify false} CallContinue(depth: nat, cc: EvmState.State) returns (st: EvmState.State)
+    method {:verify false} CallContinue(depth: nat, cc: EvmState.Continuation) returns (st: EvmState.State)
         requires cc.CALLS?
         requires |cc.callData| <= MAX_U256
         // World state must contain this account
-        requires cc.Exists(cc.sender)
+        requires cc.evm.world.Exists(cc.sender)
     {
         st := cc.CallEnter(depth);
         if ! st.INVALID? {
@@ -174,7 +176,7 @@ include "evms/berlin.dfy"
         return cc.CallReturn(st);
     }
 
-    method {:verify false} CreateContinue(depth: nat, cc: EvmState.State) returns (st: EvmState.State)
+    method {:verify false} CreateContinue(depth: nat, cc: EvmState.Continuation) returns (st: EvmState.State)
         requires cc.CREATES? {
         var sender := cc.evm.context.address;
         var acct := cc.evm.world.accounts[sender];
