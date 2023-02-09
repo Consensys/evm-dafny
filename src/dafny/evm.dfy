@@ -59,7 +59,7 @@ abstract module EVM {
         var sub := SubState.Create();
         var evm := EVM(stack:=stck,memory:=mem,world:=wld,context:=context,code:=cod,substate:=sub,gas:=gas,pc:=0);
         // Off we go!
-        State.EXECUTING(evm)
+        EXECUTING(evm)
     }
 
     /**
@@ -72,7 +72,7 @@ abstract module EVM {
     {
         match st.OpDecode()
             case Some(op) => ExecuteOP(st,op)
-            case None => State.INVALID(INVALID_OPCODE)
+            case None => INVALID(INVALID_OPCODE)
     }
 
     function method ExecuteOP(st: ExecutingState, op: u8): State {

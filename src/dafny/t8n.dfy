@@ -152,13 +152,15 @@ include "evms/berlin.dfy"
         while (st.EXECUTING?){
             TracerStep(depth, st);
             st := EvmBerlin.Execute(st);
-            if st.CONTINUING? {
-                if st.cc.CALLS? {
-                    st := CallContinue(depth, st.cc);
-                } else if st.cc.CREATES? {
-                    st := CreateContinue(depth, st.cc);
+            match st
+                case CONTINUING(cc) => {
+                    if cc.CALLS? {
+                        st := CallContinue(depth, cc);
+                    } else if cc.CREATES? {
+                        st := CreateContinue(depth, cc);
+                    }
                 }
-            }
+                case _ => { }
         }
         TracerStep(depth, st);
     }

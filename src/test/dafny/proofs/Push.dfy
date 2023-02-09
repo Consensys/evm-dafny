@@ -6,7 +6,7 @@ import opened Code
 import opened Int
 // Some simple sanity tests to check equivalence of Push bytecodes.
 
-method test_1(s1: ExecutingState, k:u8)
+method test_1(s1: ExecutingState, k:Int.u8)
 requires s1.CodeOperands() >= 1
 requires DecodeUint8(s1.evm.code,s1.evm.pc+1) == k {
     var s2 := Bytecode.Push1(s1,k);
