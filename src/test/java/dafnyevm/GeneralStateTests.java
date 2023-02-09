@@ -316,7 +316,7 @@ public class GeneralStateTests {
         }
 
         @Override
-        public void step(DafnyEvm.State.Ok state) {
+        public void step(DafnyEvm.State.Executing state) {
             int pc = state.getPC().intValueExact();
             int op = state.getOpcode();
             int depth = state.getDepth();

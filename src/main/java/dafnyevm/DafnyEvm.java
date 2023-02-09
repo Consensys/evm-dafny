@@ -28,10 +28,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import EvmState_Compile.State_CALLS;
-import EvmState_Compile.State_CREATES;
+import EvmState_Compile.Continuation_CALLS;
+import EvmState_Compile.Continuation_CREATES;
+import EvmState_Compile.State_CONTINUING;
 import EvmState_Compile.State_INVALID;
-import EvmState_Compile.State_OK;
+import EvmState_Compile.State_EXECUTING;
 import EvmState_Compile.State_RETURNS;
 import EvmState_Compile.State_REVERTS;
 import WorldState_Compile.Account;
@@ -416,14 +417,17 @@ public class DafnyEvm {
 	 */
 	protected static EvmState_Compile.State run(int depth, Tracer tracer, EvmState_Compile.State st) {
 		// Continue whilst the EVM is happy.
-		while (st instanceof State_OK) {
+		while (st.is_EXECUTING()) {
 			tracer.step(depth, st);
 			st = Execute(st);
 			// Manage continuations
-			if (st instanceof State_CALLS) {
-				st = callContinue(depth, tracer, (State_CALLS) st);
-			} else if(st instanceof State_CREATES){
-				st = createContinue(depth, tracer, (State_CREATES) st);
+			if (st.is_CONTINUING()) {
+			    EvmState_Compile.Continuation cc = ((State_CONTINUING)st)._a0;
+			    if (cc.is_CALLS()) {
+			        st = callContinue(depth, tracer, (Continuation_CALLS) cc);
+			    } else {
+			        st = createContinue(depth, tracer, (Continuation_CREATES) cc);
+			    }
 			}
 		}
 		// Final step
@@ -441,9 +445,9 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.State_CALLS cc) {
+	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.Continuation_CALLS cc) {
 	    // Sanity check precondition for CallEnter
-        if(!cc.Exists(cc._sender)) {
+        if(!cc.dtor_evm().dtor_world().Exists(cc._sender)) {
             throw new IllegalArgumentException("Non-existent sender account!");
         }
 	    //
@@ -469,7 +473,7 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static EvmState_Compile.State createContinue(int depth, Tracer tracer, EvmState_Compile.State_CREATES cc) {
+	private static EvmState_Compile.State createContinue(int depth, Tracer tracer, EvmState_Compile.Continuation_CREATES cc) {
 		// Determine sender
 		BigInteger sender = cc.dtor_evm().dtor_context().dtor_address();
 		// Construct new account
@@ -619,8 +623,8 @@ public class DafnyEvm {
 		public static State<?> from(int depth, Tracer tracer, EvmState_Compile.State state) {
 			if (state instanceof State_INVALID) {
 				return new State.Invalid(tracer, (State_INVALID) state, depth);
-			} else if (state instanceof State_OK) {
-				return new State.Ok(tracer, (State_OK) state, depth);
+			} else if (state instanceof State_EXECUTING) {
+				return new State.Executing(tracer, (State_EXECUTING) state, depth);
 			} else if (state instanceof State_REVERTS) {
 				return new State.Revert(tracer, (State_REVERTS) state, depth);
 			} else if (state instanceof State_RETURNS) {
@@ -736,8 +740,8 @@ public class DafnyEvm {
 		 * @author David J. Pearce
 		 *
 		 */
-		public static class Ok extends Running<State_OK> {
-			public Ok(Tracer tracer, State_OK state, int depth) {
+		public static class Executing extends Running<State_EXECUTING> {
+			public Executing(Tracer tracer, State_EXECUTING state, int depth) {
 				super(tracer, state, depth);
 			}
 
@@ -1086,8 +1090,8 @@ public class DafnyEvm {
 	public static abstract class TraceAdaptor implements Tracer {
 		@Override
 		public final void step(int depth, EvmState_Compile.State st) {
-			if (st instanceof State_OK) {
-				step(new State.Ok(this, (State_OK) st, depth));
+			if (st instanceof State_EXECUTING) {
+				step(new State.Executing(this, (State_EXECUTING) st, depth));
 			} else if (st instanceof State_RETURNS) {
 				end(new State.Return(this, (State_RETURNS) st, depth));
 			} else if (st instanceof State_REVERTS) {
@@ -1099,7 +1103,7 @@ public class DafnyEvm {
 			}
 		}
 
-		public abstract void step(State.Ok state);
+		public abstract void step(State.Executing state);
 
 		public abstract void end(State.Return state);
 

@@ -33,7 +33,7 @@ public class Tracers {
 	public static class Debug extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(DafnyEvm.State.Ok state) {
+		public void step(DafnyEvm.State.Executing state) {
 			final String p = state.getPC().toString();
 			final String o = Bytecodes.toString(state.getOpcode());
 			final String m = Hex.toAbbreviatedHexString(state.getMemory());
@@ -77,7 +77,7 @@ public class Tracers {
 	public static class JSON extends DafnyEvm.TraceAdaptor {
 
 		@Override
-		public void step(DafnyEvm.State.Ok state) {
+		public void step(DafnyEvm.State.Executing state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
