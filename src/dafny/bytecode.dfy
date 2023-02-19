@@ -52,7 +52,7 @@ module Bytecode {
             var lhs := st.Peek(0) as int;
             var rhs := st.Peek(1) as int;
             var res := (lhs + rhs) % TWO_256;
-            st.Pop().Pop().Push(res as u256).Next()
+            st.Pop(2).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -70,7 +70,7 @@ module Bytecode {
             var lhs := st.Peek(0) as int;
             var rhs := st.Peek(1) as int;
             var res := (lhs * rhs) % TWO_256;
-            st.Pop().Pop().Push(res as u256).Next()
+            st.Pop(2).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -88,7 +88,7 @@ module Bytecode {
             var lhs := st.Peek(0) as int;
             var rhs := st.Peek(1) as int;
             var res := (lhs - rhs) % TWO_256;
-            st.Pop().Pop().Push(res as u256).Next()
+            st.Pop(2).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -165,7 +165,7 @@ module Bytecode {
             var lhs := st.Peek(0);
             var rhs := st.Peek(1);
             var res := DivWithZero(lhs,rhs) as u256;
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -184,7 +184,7 @@ module Bytecode {
             var lhs := Word.asI256(st.Peek(0));
             var rhs := Word.asI256(st.Peek(1));
             var res := Word.fromI256(SDivWithZero(lhs,rhs));
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -203,7 +203,7 @@ module Bytecode {
             var lhs := st.Peek(0);
             var rhs := st.Peek(1);
             var res := ModWithZero(lhs,rhs) as u256;
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -222,7 +222,7 @@ module Bytecode {
             var lhs := Word.asI256(st.Peek(0));
             var rhs := Word.asI256(st.Peek(1));
             var res := Word.fromI256(SModWithZero(lhs,rhs));
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -242,7 +242,7 @@ module Bytecode {
             var rhs := st.Peek(1) as int;
             var rem := st.Peek(2) as int;
             var res := if rem == 0 then 0 else(lhs + rhs) % rem;
-            st.Pop().Pop().Pop().Push(res as u256).Next()
+            st.Pop(3).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -264,7 +264,7 @@ module Bytecode {
             var rhs := st.Peek(1) as int;
             var rem := st.Peek(2) as int;
             var res := if rem == 0 then 0 else(lhs * rhs) % rem;
-            st.Pop().Pop().Pop().Push(res as u256).Next()
+            st.Pop(3).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -283,7 +283,7 @@ module Bytecode {
             var base := st.Peek(0) as int;
             var power := st.Peek(1) as int;
             var res := Int.Pow(base,power) % TWO_256;
-            st.Pop().Pop().Push(res as u256).Next()
+            st.Pop(2).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -302,7 +302,7 @@ module Bytecode {
             var width := st.Peek(0);
             var item := st.Peek(1);
             var res := U256.SignExtend(item,width as nat);
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -326,9 +326,9 @@ module Bytecode {
             var rhs := st.Peek(1);
             if lhs < rhs
                 then
-                st.Pop().Pop().Push(1).Next()
+                st.Pop(2).Push(1).Next()
             else
-                st.Pop().Pop().Push(0).Next()
+                st.Pop(2).Push(0).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -348,9 +348,9 @@ module Bytecode {
             var rhs := st.Peek(1);
             if lhs > rhs
                 then
-                st.Pop().Pop().Push(1).Next()
+                st.Pop(2).Push(1).Next()
             else
-                st.Pop().Pop().Push(0).Next()
+                st.Pop(2).Push(0).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -370,9 +370,9 @@ module Bytecode {
             var rhs := Word.asI256(st.Peek(1));
             if lhs < rhs
                 then
-                st.Pop().Pop().Push(1).Next()
+                st.Pop(2).Push(1).Next()
             else
-                st.Pop().Pop().Push(0).Next()
+                st.Pop(2).Push(0).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -392,9 +392,9 @@ module Bytecode {
             var rhs := Word.asI256(st.Peek(1));
             if lhs > rhs
                 then
-                st.Pop().Pop().Push(1).Next()
+                st.Pop(2).Push(1).Next()
             else
-                st.Pop().Pop().Push(0).Next()
+                st.Pop(2).Push(0).Next()
         else
                 INVALID(STACK_UNDERFLOW)
     }
@@ -414,9 +414,9 @@ module Bytecode {
         var rhs := st.Peek(1);
         if lhs == rhs
             then
-            st.Pop().Pop().Push(1).Next()
+            st.Pop(2).Push(1).Next()
         else
-            st.Pop().Pop().Push(0).Next()
+            st.Pop(2).Push(0).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -456,7 +456,7 @@ module Bytecode {
             var lhs := st.Peek(0) as bv256;
             var rhs := st.Peek(1) as bv256;
             var res := (lhs & rhs) as u256;
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -476,7 +476,7 @@ module Bytecode {
             var rhs := st.Peek(1) as bv256;
             U256.as_bv256_as_u256(lhs | rhs);
             var res := (lhs | rhs) as u256;
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -496,7 +496,7 @@ module Bytecode {
             var rhs := st.Peek(1) as bv256;
             U256.as_bv256_as_u256(lhs ^ rhs);
             var res := (lhs ^ rhs) as u256;
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -533,7 +533,7 @@ module Bytecode {
             var val := st.Peek(1);
             var k := st.Peek(0) as nat;
             var res := if k < 32 then U256.NthUint8(val,k) else 0 as u8;
-            st.Pop().Pop().Push(res as u256).Next()
+            st.Pop(2).Push(res as u256).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -552,7 +552,7 @@ module Bytecode {
             var rhs := st.Peek(0);
             var lhs := st.Peek(1);
             var res := U256.Shl(lhs,rhs);
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -571,7 +571,7 @@ module Bytecode {
             var rhs := st.Peek(0);
             var lhs := st.Peek(1);
             var res := U256.Shr(lhs,rhs);
-            st.Pop().Pop().Push(res).Next()
+            st.Pop(2).Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -590,7 +590,7 @@ module Bytecode {
             var rhs := st.Peek(0);
             var lhs := Word.asI256(st.Peek(1));
             var res := I256.Sar(lhs,rhs);
-            st.Pop().Pop().Push(Word.fromI256(res)).Next()
+            st.Pop(2).Push(Word.fromI256(res)).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -614,7 +614,7 @@ module Bytecode {
             var len := st.Peek(1) as nat;
             var bytes := Memory.Slice(st.evm.memory, loc, len);
             var hash := External.sha3(bytes);
-            st.Expand(loc,len).Pop().Pop().Push(hash).Next()
+            st.Expand(loc,len).Pop(2).Push(hash).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -775,7 +775,7 @@ module Bytecode {
             // Sanity check
             assert |data| == len;
             // Copy slice into memory
-            st.Expand(m_loc as nat, len as nat).Pop().Pop().Pop().Copy(m_loc,data).Next()
+            st.Expand(m_loc as nat, len as nat).Pop(3).Copy(m_loc,data).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -816,7 +816,7 @@ module Bytecode {
             // Sanity check
             assert |data| == len;
             // Copy slice into memory
-            st.Expand(m_loc as nat, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
+            st.Expand(m_loc as nat, len).Pop(3).Copy(m_loc,data).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -887,7 +887,7 @@ module Bytecode {
             // Sanity check
             assert |data| == len;
             // Copy slice into memory
-            st.AccountAccessed(account).Expand(m_loc as nat, len).Pop().Pop().Pop().Pop().Copy(m_loc,data).Next()
+            st.AccountAccessed(account).Expand(m_loc as nat, len).Pop(4).Copy(m_loc,data).Next()
          else
             INVALID(STACK_UNDERFLOW)
     }
@@ -956,7 +956,7 @@ module Bytecode {
                 // Sanity check
                 assert |data| == len;
                 // Copy slice into memory
-                st.Expand(m_loc, len).Pop().Pop().Pop().Copy(m_loc,data).Next()
+                st.Expand(m_loc, len).Pop(3).Copy(m_loc,data).Next()
             else
                 INVALID(RETURNDATA_OVERFLOW)
         else
@@ -1174,7 +1174,7 @@ module Bytecode {
             var loc := st.Peek(0) as nat;
             var val := st.Peek(1);
             // Write big endian order
-            st.Expand(loc,32).Pop().Pop().Write(loc,val).Next()
+            st.Expand(loc,32).Pop(2).Write(loc,val).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1193,7 +1193,7 @@ module Bytecode {
             var loc := st.Peek(0) as nat;
             var val := (st.Peek(1) % 256) as u8;
             // Write byte
-            st.Expand(loc, 1).Pop().Pop().Write8(loc,val).Next()
+            st.Expand(loc, 1).Pop(2).Write8(loc,val).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1234,7 +1234,7 @@ module Bytecode {
                 var loc := st.Peek(0);
                 var val := st.Peek(1);
                 // Store word
-                st.Pop().Pop().Store(loc,val).KeyAccessed(loc).Next()
+                st.Pop(2).Store(loc,val).KeyAccessed(loc).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1275,11 +1275,11 @@ module Bytecode {
             var pc := st.Peek(0);
             var val := st.Peek(1);
             // Check branch taken or not
-            if val == 0 then st.Pop().Pop().Next()
+            if val == 0 then st.Pop(2).Next()
             // Check valid branch target
             else if st.IsJumpDest(pc)
             then
-                st.Pop().Pop().Goto(pc)
+                st.Pop(2).Goto(pc)
             else
                 INVALID(INVALID_JUMPDEST)
         else
@@ -1507,7 +1507,7 @@ module Bytecode {
                 // Construct log entry.
                 var entry := (st.PeekN(n+2)[2..],Memory.Slice(st.evm.memory, m_loc, len));
                 // Done
-                st.Expand(m_loc,len).Log([entry]).PopN(n+2).Next()
+                st.Expand(m_loc,len).Log([entry]).Pop(n+2).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1541,7 +1541,7 @@ module Bytecode {
             // Calculate available gas
             var gascap := GasCalc.CreateGasCap(st);
             // Apply everything
-            var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Next();
+            var nst := st.Expand(codeOffset,codeSize).Pop(3).Next();
             // Check if the permission for writing has been given
             if !st.WritesPermitted()
             then
@@ -1591,7 +1591,7 @@ module Bytecode {
                 // Extract address of this account
                 var address := st.evm.context.address;
                 // Compute the continuation (i.e. following) state.
-                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+                var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop(7).Next();
                 // Pass back continuation.
                 CONTINUING(CALLS(nst.evm, address, to, to, callgas, value, value, calldata, st.evm.context.writePermission,outOffset:=outOffset, outSize:=outSize))
         else
@@ -1622,7 +1622,7 @@ module Bytecode {
             // Extract address of this account
             var address := st.evm.context.address;
             // Compute the continuation (i.e. following) state.
-            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Pop().Next();
+            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop(7).Next();
             // Pass back continuation.
             CONTINUING(CALLS(nst.evm, address, address, to, callgas, value, value, calldata,nst.evm.context.writePermission,outOffset:=outOffset, outSize:=outSize))
         else
@@ -1679,7 +1679,7 @@ module Bytecode {
             // Extract address of this account
             var address := st.evm.context.address;
             // Compute the continuation (i.e. following) state.
-            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop(6).Next();
             // Pass back continuation.
             CONTINUING(CALLS(nst.evm, sender, address, to, callgas, 0, callValue, calldata, nst.evm.context.writePermission,outOffset:=outOffset, outSize:=outSize))
         else
@@ -1716,7 +1716,7 @@ module Bytecode {
                     // Calculate available gas
                     var gascap := GasCalc.CreateGasCap(st);
                     // Apply everything
-                    var nst := st.Expand(codeOffset,codeSize).Pop().Pop().Pop().Pop().Next();
+                    var nst := st.Expand(codeOffset,codeSize).Pop(4).Next();
                     // Sanity check nonce
                     if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
                        then
@@ -1754,7 +1754,7 @@ module Bytecode {
             // Extract address of this account
             var address := st.evm.context.address;
             // Compute the continuation (i.e. following) state.
-            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop().Pop().Pop().Pop().Pop().Pop().Next();
+            var nst := st.AccountAccessed(to).UseGas(gascap).Expand(inOffset,inSize).Expand(outOffset,outSize).Pop(6).Next();
             // Pass back continuation.
             CONTINUING(CALLS(nst.evm, address, to, to, callgas, 0, 0, calldata,false,outOffset:=outOffset, outSize:=outSize))
         else

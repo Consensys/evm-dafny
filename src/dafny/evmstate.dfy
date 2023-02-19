@@ -552,20 +552,12 @@ module EvmState {
         }
 
         /**
-         * Pop word from stack.
-         */
-        function method Pop(): ExecutingState
-        requires this.EXECUTING?
-        // Cannot pop from empty stack
-        requires Operands() >= 1 {
-            EXECUTING(evm.(stack := GetStack().Pop()))
-        }
-
-        /**
          * Pop n words from stack.
          */
-        function method PopN(n: nat): ExecutingState
+        function method Pop(n: nat := 1): ExecutingState
         requires this.EXECUTING?
+        // Must pop something
+        requires n >= 1
         // Must be enough space!
         requires Operands() >= n {
             EXECUTING(evm.(stack := GetStack().PopN(n)))
