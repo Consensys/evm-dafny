@@ -435,9 +435,9 @@ module Bytecode {
             var mhs := st.Peek(0);
             if mhs == 0
                 then
-                st.Pop(1).Push(1).Next()
+                st.Pop().Push(1).Next()
             else
-                st.Pop(1).Push(0).Next()
+                st.Pop().Push(0).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -514,7 +514,7 @@ module Bytecode {
         then
             var mhs := st.Peek(0) as bv256;
             var res := (!mhs) as u256;
-            st.Pop(1).Push(res).Next()
+            st.Pop().Push(res).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -632,7 +632,7 @@ module Bytecode {
         then
             // FIXME: what to do here?
             var n := st.Peek(0);
-            st.Pop(1).Push(0).Next()
+            st.Pop().Push(0).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -668,7 +668,7 @@ module Bytecode {
             var balance := if st.evm.world.Exists(account)
                 then st.evm.world.Balance(account) else 0;
             // Push balance!
-            st.AccountAccessed(account).Pop(1).Push(balance).Next()
+            st.AccountAccessed(account).Pop().Push(balance).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -734,7 +734,7 @@ module Bytecode {
             var loc := st.Peek(0);
             var val := if loc >= st.evm.context.CallDataSize() then 0
                 else st.evm.context.CallDataRead(loc);
-            st.Pop(1).Push(val).Next()
+            st.Pop().Push(val).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -851,14 +851,14 @@ module Bytecode {
             // Sanity check aliveness
             if st.IsDead(account)
             then
-                st.AccountAccessed(account).Pop(1).Push(0).Next()
+                st.AccountAccessed(account).Pop().Push(0).Next()
             else
                 // Lookup account
                 var data := st.evm.world.GetOrDefault(account);
                 // Determine its code size
                 var size := |data.code.contents| as u256;
                 // Done
-                st.AccountAccessed(account).Pop(1).Push(size).Next()
+                st.AccountAccessed(account).Pop().Push(size).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -907,12 +907,12 @@ module Bytecode {
             // Sanity check aliveness
             if st.IsDead(account)
             then
-                st.AccountAccessed(account).Pop(1).Push(0).Next()
+                st.AccountAccessed(account).Pop().Push(0).Next()
             else
                 // Lookup account
                 var data := st.evm.world.GetAccount(account).Unwrap();
                 // Done
-                st.AccountAccessed(account).Pop(1).Push(data.hash).Next()
+                st.AccountAccessed(account).Pop().Push(data.hash).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1092,7 +1092,7 @@ module Bytecode {
         //
         if st.Operands() >= 1
         then
-            st.Pop(1).Next()
+            st.Pop().Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1144,7 +1144,7 @@ module Bytecode {
             // Break out expanded state
             var nst := st.Expand(loc,32);
             // Read from expanded state
-            nst.Pop(1).Push(nst.Read(loc)).Next()
+            nst.Pop().Push(nst.Read(loc)).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1212,7 +1212,7 @@ module Bytecode {
             var loc := st.Peek(0);
             var val := st.Load(loc);
             // Push word
-            st.Pop(1).Push(val).KeyAccessed(loc).Next()
+            st.Pop().Push(val).KeyAccessed(loc).Next()
         else
             INVALID(STACK_UNDERFLOW)
     }
@@ -1254,7 +1254,7 @@ module Bytecode {
             // Check valid branch target
             if st.IsJumpDest(pc)
             then
-                st.Pop(1).Goto(pc)
+                st.Pop().Goto(pc)
             else
                 INVALID(INVALID_JUMPDEST)
         else
