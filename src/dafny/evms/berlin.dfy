@@ -25,7 +25,7 @@ module EvmBerlin refines EVM {
      *  @param  gas     The gas loaded in this EVM.
      *  @returns        An ready-to-use EVM.
      */
-    function method InitEmpty(gas: nat, code: seq<u8> := []) : (st:ExecutingState)
+    function InitEmpty(gas: nat, code: seq<u8> := []) : (st:ExecutingState)
     requires |code| <= Code.MAX_CODE_SIZE
     {
         var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
@@ -37,7 +37,7 @@ module EvmBerlin refines EVM {
      *  @param  gas     The gas loaded in this EVM.
      *  @returns        An ready-to-use EVM.
      */
-    function method Init(gas: nat, stk: seq<u256> := [], code: seq<u8> := []) : (st:ExecutingState)
+    function Init(gas: nat, stk: seq<u256> := [], code: seq<u8> := []) : (st:ExecutingState)
     requires |code| <= Code.MAX_CODE_SIZE
     requires |stk| <= 1024
     {
@@ -52,7 +52,7 @@ module EvmBerlin refines EVM {
      *  @returns    The new state obtained having consumed the gas that corresponds to
      *              the cost of `opcode` is `s`.
      */
-    function method OpGas(op: u8, st: ExecutingState): State {
+    function OpGas(op: u8, st: ExecutingState): State {
         Gas.GasBerlin(op, st)
     }
 
@@ -65,7 +65,7 @@ module EvmBerlin refines EVM {
      *  @note       If an opcode is not supported, or there is not enough gas
      *              the returned state is INVALID.
      */
-    function method OpSem(op: u8, st: ExecutingState): State {
+    function OpSem(op: u8, st: ExecutingState): State {
         match op
             case STOP => Bytecode.Stop(st)
             case ADD => Bytecode.Add(st)

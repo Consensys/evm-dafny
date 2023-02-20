@@ -46,28 +46,28 @@ module SubState {
         /**
          * Append zero or more entries onto the current log.
          */
-        function method Append(entries: seq<LogEntry>) : Raw {
+        function Append(entries: seq<LogEntry>) : Raw {
             this.(log := this.log + entries)
         }
 
         /**
          * Register an account for self destruction.
          */
-        function method AccountDestructed(account: u160) : Raw {
+        function AccountDestructed(account: u160) : Raw {
             this.(selfDestruct := this.selfDestruct + {account})
         }
 
         /**
          * Check whether a given account was previously accessed or not.
          */
-        function method WasAccountAccessed(account: u160) : bool {
+        function WasAccountAccessed(account: u160) : bool {
             account in accessedAccounts
         }
 
         /**
          * Mark a particular account as having been "accessed".
          */
-        function method AccountAccessed(account: u160) : Raw {
+        function AccountAccessed(account: u160) : Raw {
             var naccessed := accessedAccounts + {account};
             this.(accessedAccounts := naccessed)
         }
@@ -75,19 +75,19 @@ module SubState {
         /**
          * Check whether a given storage location was previously accessed or not.
          */
-        function method WasKeyAccessed(account: u160, address: u256) : bool {
+        function WasKeyAccessed(account: u160, address: u256) : bool {
             (account,address) in accessedKeys
         }
 
         /**
          * Mark a particular storage location as having been "accessed".
          */
-        function method KeyAccessed(account: u160, address: u256) : Raw {
+        function KeyAccessed(account: u160, address: u256) : Raw {
             var naccessed := accessedKeys + {(account,address)};
             this.(accessedKeys := naccessed)
         }
 
-        function method ModifyRefundCounter(k: int): Raw {
+        function ModifyRefundCounter(k: int): Raw {
             this.(refund := this.refund + k)
         }
 
@@ -103,7 +103,7 @@ module SubState {
     /**
      * Create an initially empty substate.  This is "A_0" in the yellow paper.
      */
-    function method Create() : T {
+    function Create() : T {
         SubState({},[],{},0,{1,2,3,4,5,6,7,8,9},{})
     }
 }

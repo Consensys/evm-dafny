@@ -35,7 +35,7 @@ module Code {
   /**
    * Create a code segment from an initial sequence of words.
    */
-  function method Create(contents:seq<u8>) : T
+  function Create(contents:seq<u8>) : T
     requires |contents| <= MAX_CODE_SIZE {
         Code(contents:=contents)
   }
@@ -43,15 +43,15 @@ module Code {
   /**
    * Get the size of this code segment.
    */
-  function method Size(c:T) : u256 { |c.contents| as u256 }
+  function Size(c:T) : u256 { |c.contents| as u256 }
 
-  function method DecodeUint8(c:T, address:nat) : u8 {
+  function DecodeUint8(c:T, address:nat) : u8 {
     // Read word at given location
     if address < |c.contents| then c.contents[address]
     else 0 // Opcodes.STOP
   }
 
-  function method CodeAt(c: T, index: nat): u8
+  function CodeAt(c: T, index: nat): u8
   requires 0 <= index < Size(c) as nat {
     c.contents[index]
   }
@@ -61,7 +61,7 @@ module Code {
    * If the requested subsequence overflows available memory,
    * it is padded out with zeros.
    */
-  function method Slice(c:T, address:nat, len:nat) : seq<u8> {
+  function Slice(c:T, address:nat, len:nat) : seq<u8> {
     Bytes.Slice(c.contents,address,len)
   }
 }

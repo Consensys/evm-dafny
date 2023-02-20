@@ -27,7 +27,7 @@ module Precompiled {
     import External
     import Bytes
 
-    function method Call(address: u160, data: seq<u8>) : Option<(seq<u8>,nat)>
+    function Call(address: u160, data: seq<u8>) : Option<(seq<u8>,nat)>
     requires address >= 1 && address <= 9 {
         match address
         case 1 => CallEcdsaRecover(data)
@@ -52,7 +52,7 @@ module Precompiled {
     /**
      * Key recovery.
      */
-    function method CallEcdsaRecover(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallEcdsaRecover(data: seq<u8>) : Option<(seq<u8>,nat)> {
         var h := Bytes.Slice(data,0,32);
         var v := Bytes.ReadUint256(data,32);
         var r := Bytes.ReadUint256(data,64);
@@ -74,14 +74,14 @@ module Precompiled {
     /**
      * SHA256
      */
-    function method CallSha256(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallSha256(data: seq<u8>) : Option<(seq<u8>,nat)> {
         Some((External.sha256(data),CostSha256(data)))
     }
 
     /**
      * Gas cost for sha256.
      */
-    function method CostSha256(data: seq<u8>) : nat {
+    function CostSha256(data: seq<u8>) : nat {
         // Determine number of words required to cover data.
         var d := (Int.RoundUp(|data|,32)/32);
         // Done
@@ -95,14 +95,14 @@ module Precompiled {
     /**
      * RipEmd160
      */
-    function method CallRipEmd160(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallRipEmd160(data: seq<u8>) : Option<(seq<u8>,nat)> {
         Some((External.ripEmd160(data), CostRipEmd160(data)))
     }
 
     /**
      * Gas cost for sha256.
      */
-    function method CostRipEmd160(data: seq<u8>) : nat {
+    function CostRipEmd160(data: seq<u8>) : nat {
         // Determine number of words required to cover data.
         var d := (Int.RoundUp(|data|,32)/32);
         // Done
@@ -116,14 +116,14 @@ module Precompiled {
     /**
      * The identify function just returns what it is given.
      */
-    function method CallID(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallID(data: seq<u8>) : Option<(seq<u8>,nat)> {
         Some((data, CostID(data)))
     }
 
     /**
      * Gas calculation for the identity function.
      */
-    function method CostID(data: seq<u8>) : nat {
+    function CostID(data: seq<u8>) : nat {
         // Determine number of words required to cover data.
         var d := (Int.RoundUp(|data|,32)/32);
         // Done
@@ -140,7 +140,7 @@ module Precompiled {
      * we compue B^E % M.  All words are unsigned integers in big endian format.
      * See also EIP-2565.
      */
-    function method CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallModExp(data: seq<u8>) : Option<(seq<u8>,nat)> {
         // Length of B
         var lB := Bytes.ReadUint256(data,0) as nat;
         // Length of E
@@ -166,7 +166,7 @@ module Precompiled {
     /**
      * Function "f" from the yellow paper.
      */
-    function method f(x: nat) : nat {
+    function f(x: nat) : nat {
         var xd8 := Int.RoundUp(x,8) / 8;
         xd8 * xd8
     }
@@ -175,7 +175,7 @@ module Precompiled {
      * Calculation for "LenEp" (the Length of E primed) as stated in the yellow
      * paper.
      */
-    function method LenEp(lB: nat, E: seq<u8>, data: seq<u8>) : nat {
+    function LenEp(lB: nat, E: seq<u8>, data: seq<u8>) : nat {
         var lE := |E|;
         //
         if lE <= 32 then
@@ -198,7 +198,7 @@ module Precompiled {
 
     const G_BNADD := 150;
 
-    function method CallBnAdd(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallBnAdd(data: seq<u8>) : Option<(seq<u8>,nat)> {
         Some((data, G_BNADD))
     }
 
@@ -208,7 +208,7 @@ module Precompiled {
 
     const G_BNMUL := 6000;
 
-    function method CallBnMul(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallBnMul(data: seq<u8>) : Option<(seq<u8>,nat)> {
         Some((data, G_BNMUL))
     }
 
@@ -216,11 +216,11 @@ module Precompiled {
     // (8) Pairing
     // ========================================================================
 
-    function method CallSnarkV(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallSnarkV(data: seq<u8>) : Option<(seq<u8>,nat)> {
         Some((data, CostSnarkV(data)))
     }
 
-    function method CostSnarkV(data: seq<u8>) : nat {
+    function CostSnarkV(data: seq<u8>) : nat {
         ((34000 * |data|) / 192) + 45000
     }
 
@@ -228,7 +228,7 @@ module Precompiled {
     // (9) Blake2f
     // ========================================================================
 
-    function method CallBlake2f(data: seq<u8>) : Option<(seq<u8>,nat)> {
+    function CallBlake2f(data: seq<u8>) : Option<(seq<u8>,nat)> {
         if |data| == 213 && data[212] in {0,1}
         then
             var r := U32.Read(data,0) as nat;

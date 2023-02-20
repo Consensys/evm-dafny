@@ -35,7 +35,7 @@ task compileDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args '/rlimit:100000','/verifyAllModules','/out:build/evm','/vcsLoad:2.0','/noExterns','/compileTarget:java','/compileVerbose:0','/functionSyntax:migration3to4','src/dafny/evm.dfy','src/dafny/evms/berlin.dfy'
+            args '/rlimit:100000','/verifyAllModules','/out:build/evm','/vcsLoad:2.0','/noExterns','/compileTarget:java','/compileVerbose:0','/functionSyntax:4','src/dafny/evm.dfy','src/dafny/evms/berlin.dfy'
         }
         // Delete general file containing extern definitions.
         delete "build/evm-java/External_Compile"
@@ -69,7 +69,7 @@ task testDafny {
             File file -> {
                 exec {
                     executable 'dafny'
-                    args '/runAllTests:1','/vcsLoad:2.0','/out:build/dafny-tests','/noExterns','/compileTarget:java','/compile:4','/compileVerbose:0','/functionSyntax:migration3to4',file
+                    args '/runAllTests:1','/vcsLoad:2.0','/out:build/dafny-tests','/noExterns','/compileTarget:java','/compile:4','/compileVerbose:0','/functionSyntax:4',file
                 }
             }
         }

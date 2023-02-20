@@ -64,7 +64,7 @@ module Context {
          * Determine the size (in bytes) of the call data associated with this
          * context.
          */
-        function method CallDataSize() : u256
+        function CallDataSize() : u256
         requires |this.callData| < TWO_256  {
             |this.callData| as u256
         }
@@ -72,7 +72,7 @@ module Context {
         /**
          * Read a word from the call data associated with this context.
          */
-        function method CallDataRead(loc: u256) : u256 {
+        function CallDataRead(loc: u256) : u256 {
             Bytes.ReadUint256(this.callData,loc as nat)
         }
 
@@ -80,7 +80,7 @@ module Context {
          * Slice a sequence of bytes from the call data associated with this
          * context.
          */
-        function method CallDataSlice(loc: u256, len: nat) : (data:seq<u8>)
+        function CallDataSlice(loc: u256, len: nat) : (data:seq<u8>)
         ensures |data| == len {
             Bytes.Slice(this.callData,loc as nat, len)
         }
@@ -89,7 +89,7 @@ module Context {
          * Determine the size (in bytes) of the return data from the previous call
          * associated with this context.
          */
-        function method ReturnDataSize() : u256
+        function ReturnDataSize() : u256
         requires |this.returnData| < TWO_256 {
             |this.returnData| as u256
         }
@@ -98,7 +98,7 @@ module Context {
          * Slice a sequence of bytes from the return data from the previous call
          * associated with this context.
          */
-        function method ReturnDataSlice(loc: nat, len: nat) : (data:seq<u8>)
+        function ReturnDataSlice(loc: nat, len: nat) : (data:seq<u8>)
         // Return data cannot overflow.
         requires (loc + len) <= |this.returnData|
         ensures |data| == len {
@@ -108,7 +108,7 @@ module Context {
         /**
          * Update the return data associated with this state.
          */
-        function method SetReturnData(data: seq<u8>) : Raw {
+        function SetReturnData(data: seq<u8>) : Raw {
            this.(returnData:=data)
         }
 
@@ -120,7 +120,7 @@ module Context {
     /**
      * Create an initial context from various components.
      */
-    function method Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,writePermission:bool,gasPrice:u256, block: Block) : T
+    function Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,writePermission:bool,gasPrice:u256, block: Block) : T
     requires |callData| <= MAX_U256 {
         Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writePermission:=writePermission,gasPrice:=gasPrice,block:=block)
     }

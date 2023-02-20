@@ -27,7 +27,7 @@ const OPT_CODE := [PUSH1,0x01,PUSH1,0x00,SLOAD,ADD,DUP1,ISZERO,PUSH1,0x0f,JUMPI,
 // This defines a notion of equivalence between two states.  Observe that we
 // cannot use full equality because we expect some differences (e.g. the PC
 // maybe at a different point, and the code itself will differ, etc).
-function method equiv(l: State, r: State) : bool {
+function equiv(l: State, r: State) : bool {
     if l.EXECUTING? && r.EXECUTING?
     then
         l.evm.memory == r.evm.memory &&

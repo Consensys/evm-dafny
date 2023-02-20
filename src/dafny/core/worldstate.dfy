@@ -36,7 +36,7 @@ module WorldState {
     /**
      * Create a new account.  This automatically constructs the appropriate code hash.
      */
-    function method CreateAccount(nonce:nat, balance: u256, storage: Storage.T, code: Code.T) : Account {
+    function CreateAccount(nonce:nat, balance: u256, storage: Storage.T, code: Code.T) : Account {
         // Generate code hash
         var hash := External.sha3(code.contents);
         // Done
@@ -46,7 +46,7 @@ module WorldState {
     /**
      * Create a default account.  This has zero balance, empty storage and no code.
      */
-    function method DefaultAccount() : Account {
+    function DefaultAccount() : Account {
         CreateAccount(0,0,Storage.Create(map[]),Code.Create([]))
     }
 
@@ -57,7 +57,7 @@ module WorldState {
         /**
          * Determine whether or not a given account exists.
          */
-        function method Exists(account:u160) : bool {
+        function Exists(account:u160) : bool {
             account in accounts
         }
 
@@ -66,7 +66,7 @@ module WorldState {
            The rules here say that, in some cases, when an account already
            exists at that address then you cannot overwrite it.
          */
-        function method CanOverwrite(account:u160) : bool
+        function CanOverwrite(account:u160) : bool
         requires account in accounts {
             var data := accounts[account];
             |data.code.contents| == 0 && data.nonce == 0
@@ -76,7 +76,7 @@ module WorldState {
         /**
          * Determine whether or not a given acount is an end-user account.
          */
-        function method isEndUser(account:u160) : bool
+        function isEndUser(account:u160) : bool
         requires account in accounts {
             Code.Size(accounts[account].code) == 0
         }
@@ -84,7 +84,7 @@ module WorldState {
         /**
          * Determine whether or not an account is considered to be "empty".
          */
-        function method IsEmpty(account:u160) : bool
+        function IsEmpty(account:u160) : bool
         requires account in accounts {
             var data := accounts[account];
             Code.Size(data.code) == 0 && data.nonce == 0 && data.balance == 0
@@ -93,7 +93,7 @@ module WorldState {
         /**
          * An account is dead when its account state is non-existent or empty.
          */
-        function method IsDead(account:u160) : bool {
+        function IsDead(account:u160) : bool {
             !(account in accounts) || IsEmpty(account)
         }
 
@@ -101,7 +101,7 @@ module WorldState {
          * Get the account associated with a given address.  If no such account
          * exists, none is returned.
          */
-        function method GetAccount(account:u160) : Option<Account> {
+        function GetAccount(account:u160) : Option<Account> {
             if account in accounts
             then
                 Some(accounts[account])
@@ -113,7 +113,7 @@ module WorldState {
          * Get the account associated with a given address.  If no such account
          * exists, a default (i.e. empty) account is returned.
          */
-        function method GetOrDefault(account:u160) : Account {
+        function GetOrDefault(account:u160) : Account {
             if account in accounts
             then
                 accounts[account]
@@ -125,7 +125,7 @@ module WorldState {
          * Get the account associated with a given address in the world state prior to the transaction execution.  If no such account
          * exists, a default (i.e. empty) account is returned.
          */
-        function method GetOrDefaultPretransaction(account:u160) : Account {
+        function GetOrDefaultPretransaction(account:u160) : Account {
             if account in pretransactionaccounts
             then
                 pretransactionaccounts[account]
@@ -136,7 +136,7 @@ module WorldState {
         /**
          * Put a given account into the world state at a given address.
          */
-        function method Put(account:u160, data: Account) : T {
+        function Put(account:u160, data: Account) : T {
             this.(accounts:=this.accounts[account:=data])
         }
 
@@ -144,7 +144,7 @@ module WorldState {
          * Ensure an account exists at a given address in the world state.  If
            it doesn't, then a default one is created.
          */
-        function method EnsureAccount(address: u160) :T {
+        function EnsureAccount(address: u160) :T {
             if Exists(address) then this
             else
                 // Configure default account
@@ -154,7 +154,7 @@ module WorldState {
         /**
          * Determine balance of a given account.
          */
-        function method Balance(account:u160) : u256
+        function Balance(account:u160) : u256
         // Account must be valid!
         requires account in this.accounts {
             accounts[account].balance
@@ -163,7 +163,7 @@ module WorldState {
         /**
          * Check whether we can deposit without causing an overflow.
          */
-        function method CanDeposit(account:u160, value: u256) : bool
+        function CanDeposit(account:u160, value: u256) : bool
         // Account must be valid!
         requires account in this.accounts {
             (MAX_U256 as u256 - accounts[account].balance) >= value
@@ -172,7 +172,7 @@ module WorldState {
         /**
          * Check whether we can withdraw without causing an underflow.
          */
-        function method CanWithdraw(account:u160, value: u256) : bool
+        function CanWithdraw(account:u160, value: u256) : bool
         // Account must be valid!
         requires account in this.accounts {
             accounts[account].balance >= value
@@ -181,7 +181,7 @@ module WorldState {
         /**
          * Withdraw a given amount of Wei into this account.
          */
-        function method Withdraw(account:u160, value: u256) : T
+        function Withdraw(account:u160, value: u256) : T
         // Account must be valid!
         requires account in this.accounts
         // Ensure balance does not overflow!
@@ -197,7 +197,7 @@ module WorldState {
         /**
          * Deposit a given amount of Wei into this account.
          */
-        function method Deposit(account:u160, value: u256) : T
+        function Deposit(account:u160, value: u256) : T
         // Account must be valid!
         requires account in this.accounts
         // Ensure balance does not overflow!
@@ -213,7 +213,7 @@ module WorldState {
         /**
          * Transfer a given amount of Wei from one account to another.
          */
-        function method Transfer(from:u160, to: u160, value: u256) : T
+        function Transfer(from:u160, to: u160, value: u256) : T
         // Both accounts must be valid
         requires from in this.accounts && to in this.accounts
         // Ensure balance does not overflow!
@@ -225,7 +225,7 @@ module WorldState {
         /**
          * Set the code associated with a given contract account.
          */
-        function method SetCode(account:u160, code: seq<u8>) : T
+        function SetCode(account:u160, code: seq<u8>) : T
         // Account must be valid!
         requires account in this.accounts
         // Code must be valid size.
@@ -241,7 +241,7 @@ module WorldState {
         /**
          * Get the current nonce value for an account.  The account must exist.
          */
-        function method Nonce(account:u160) : nat
+        function Nonce(account:u160) : nat
         // Account must be valid!
         requires account in this.accounts {
             accounts[account].nonce
@@ -250,7 +250,7 @@ module WorldState {
         /**
          * Increment the nonce associated with a given account.
          */
-        function method IncNonce(account:u160) : T
+        function IncNonce(account:u160) : T
         // Account must be valid!
         requires account in this.accounts
         // Ensure the nonce cannot overflow
@@ -264,7 +264,7 @@ module WorldState {
         /**
          * Write into the storage of a given account.
          */
-        function method Write(account:u160, address: u256, value: u256) : T
+        function Write(account:u160, address: u256, value: u256) : T
         // Account must be valid!
         requires account in this.accounts {
             // Extract account data
@@ -280,7 +280,7 @@ module WorldState {
         /**
          * Read a value from the storage of a given account.
          */
-        function method Read(account:u160, address: u256) : u256
+        function Read(account:u160, address: u256) : u256
         // Account must be valid!
         requires account in this.accounts {
             // Extract account data
@@ -293,7 +293,7 @@ module WorldState {
     /**
      * Create world state from an initial mapping of addresses to accounts, and thread through a copy of the pre-transaction world.
      */
-    function method Create(accounts:map<u160,Account>) : T {
+    function Create(accounts:map<u160,Account>) : T {
         // Initially all accessed / modified flags are cleared.
         WorldState(accounts, accounts)
     }
