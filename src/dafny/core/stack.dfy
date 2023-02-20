@@ -24,7 +24,7 @@ module Stack {
     type ValidStackContent = xs: seq<u256> | |xs| <= CAPACITY
 
     /** The Stack type. */
-    datatype Stack = Stack(contents: ValidStackContent) 
+    datatype Stack = Stack(contents: ValidStackContent)
     {
         // Get number of items currently on this Stack.
         function method Size(): nat { |contents| }
@@ -88,8 +88,8 @@ module Stack {
          *  @param  u   An index.
          *  @returns    The stack made of the first u elements minus the first l.
          */
-        function Slice(l: nat, u: nat): (r: Stack)
-            requires l <= u <= this.Size()
+        function method Slice(l: nat, u: nat): (r: Stack)
+        requires l <= u <= this.Size()
         {
             Stack(contents[l..u])
         }

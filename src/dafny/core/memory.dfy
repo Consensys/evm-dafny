@@ -271,7 +271,7 @@ module Memory {
     /**
      * Everything is the same, except for those bytes within the given region.
      */
-    predicate EqualsExcept(lhs:T, rhs:T, address:nat, length: nat)
+    predicate method EqualsExcept(lhs:T, rhs:T, address:nat, length: nat)
     // Data region must be within available memory
     requires address + length <= |lhs.contents| {
         // Memory sizes are the same

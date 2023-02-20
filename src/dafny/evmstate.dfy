@@ -543,7 +543,7 @@ module EvmState {
          *  @param  u   An index.
          *  @returns    A stack made of the first u elements of `st` minus the first `l`.
          */
-        function SlicePeek(l: nat, u: nat): (r: Stack.Stack)
+        function method SlicePeek(l: nat, u: nat): (r: Stack.Stack)
         requires this.EXECUTING?
         requires l <= u <= Operands()
         ensures r.Size() == u - l
@@ -606,7 +606,7 @@ module EvmState {
          *  Following the EVM convention, if index is outside the range of code,
          *  returns STOP.
          */
-        function CodeAtIndex(index: nat): u8
+        function method CodeAtIndex(index: nat): u8
         requires this.EXECUTING? {
             if index < Code.Size(evm.code) as nat then
                 Code.CodeAt(evm.code, index)
@@ -614,7 +614,7 @@ module EvmState {
                 Opcode.STOP
         }
 
-        function CodeAtPC(): u8
+        function method CodeAtPC(): u8
         requires this.EXECUTING? { CodeAtIndex(PC()) }
 
         /**

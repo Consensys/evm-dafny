@@ -51,7 +51,7 @@ module Code {
     else 0 // Opcodes.STOP
   }
 
-  function CodeAt(c: T, index: nat): u8
+  function method CodeAt(c: T, index: nat): u8
   requires 0 <= index < Size(c) as nat {
     c.contents[index]
   }

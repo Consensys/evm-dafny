@@ -29,7 +29,7 @@ module SimulationChecks {
      *  Compare two VMs states. Equality is wrt to all state components except code and PC.
      *  @note   Gas can be ignored too if needed.
      */
-    predicate equivVMs(e1: State, e2: State, ignoreGas: bool := false)
+    predicate method equivVMs(e1: State, e2: State, ignoreGas: bool := false)
     {
         if e1.EXECUTING? && e2.EXECUTING? then
             //  e1 and e2 are equal except possible for the Code field.
