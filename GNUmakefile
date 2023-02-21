@@ -56,7 +56,7 @@ dafny_verify_global: $(DAFNY_VERIFY_WITNESS_GLOBAL)
 
 $(DAFNY_VERIFY_WITNESS_GLOBAL) : $(DAFNY_SRC_FILES)
 	@echo Verifying Dafny
-	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 $(DAFNY_SRC_FILES) $(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 /functionSyntax:4 /quantifierSyntax:4 $(DAFNY_SRC_FILES) $(DAFNY_ARGS)
 #	$(SILENCER)$(DAFNY_EXEC) verify --cores 4 -rlimit:100000 $(DAFNY_SRC_FILES)
 	$(SILENCER)mkdir -p $(DAFNY_OUT_DIR)
 	$(SILENCER)touch $@
@@ -71,14 +71,15 @@ dafny_verify_global_force: dafny_verify_global_clean
 
 ###################### DAFNY TEST INDIVIDUAL ########################
 # Verify & run Dafny tests file by file, using each build output as a witness.
+# Useful when developing a new test.
 # Tests should be the root of their verification dependency tree, so they should be safe to verify one by one.
 
 dafny_test_individuals: $(DAFNY_TEST_WITNESSES)
 
-#TODO probably tests should refer to the main build instead of rebuilding it
+#TODO probably tests should refer to the main build instead of rebuilding it (once the Dafny toolchain supports it)
 $(DAFNY_TEST_OUT_DIR)/.%-go : $(DAFNY_TEST_DIR)/%.dfy $(DAFNY_SRC_FILES)
 	@echo Testing Dafny: $<
-	$(SILENCER)$(DAFNY_EXEC) /runAllTests:1 /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/$* $< $(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /runAllTests:1 /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/$* $< $(DAFNY_ARGS)
 	$(SILENCER)touch $@
 
 dafny_test_individuals_clean:
@@ -92,14 +93,16 @@ dafny_test_individuals_force: dafny_test_individuals_clean
 
 ###################### DAFNY TEST GLOBAL ########################
 # Verify & run all changed tests together, dropping a dotfile witness.
+#
 
 DAFNY_TEST_WITNESS_GLOBAL:=$(DAFNY_TEST_OUT_DIR)/.last_global_test
 
 dafny_test_global: $(DAFNY_TEST_WITNESS_GLOBAL) $(DAFNY_VERIFY_WITNESS_GLOBAL)
 
+#TODO probably tests should refer to the main build instead of rebuilding it (once the Dafny toolchain supports it)
 $(DAFNY_TEST_WITNESS_GLOBAL): $(DAFNY_TEST_FILES)
-	@echo 'Testing Dafny (all changed)'
-	$(SILENCER)$(DAFNY_EXEC)  /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/global $? /runAllTests:1  /warnShadowing /deprecation:2 $(DAFNY_ARGS)
+	@echo Testing Dafny : `echo $? | wc -w` files
+	$(SILENCER)$(DAFNY_EXEC)  /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /functionSyntax:4 /quantifierSyntax:4 /out:$(DAFNY_TEST_OUT_DIR)/global $? /runAllTests:1  /warnShadowing /deprecation:2 $(DAFNY_ARGS)
 	$(SILENCER)touch $@
 
 dafny_test_global_clean:
@@ -118,7 +121,7 @@ dafny_translate: $(DAFNY_OUT_FILENAME) $(DAFNY_TEST_WITNESS_GLOBAL)
 
 $(DAFNY_OUT_FILENAME) : $(DAFNY_SRC_FILES)
 	@echo Translating Dafny
-	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 $(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /functionSyntax:4 /quantifierSyntax:4 /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 $(DAFNY_ARGS)
 
 dafny_translate_clean:
 	@echo Removing Dafny products
