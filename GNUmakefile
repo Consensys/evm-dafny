@@ -1,8 +1,8 @@
 # Dafny doesn't give dependency information, so we need to do it our own way.
 # In general,
 #    Dafny "core" needs to be verified following deps (or all at once, of course).
-#    Dafny tests are independent, but are faster if done together, and depend on the core.
-#    Dafny "main"s need to be compiled independently and depend on the core.
+#    Dafny tests depend on the core, are independent of each other, and are done faster all at once.
+#    Dafny "main" entry points depend on the core and need to be compiled separately from tests and from each other.
 
 ifneq (VERSION4.X, $(patsubst 4.%,VERSION4.X,$(MAKE_VERSION)))
   $(warning For best results, use GNU Make v4 or later!)
@@ -16,7 +16,7 @@ MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 #each target has its own parallelism too, so keep a low number of jobs
 MAKEFLAGS += -j 2 #--output-sync
 RUN_ARGS ?=
-DAFNY_ARGS ?=
+DAFNY_ARGS := --function-syntax 4 --quantifier-syntax 4  --cores 50%
 
 #silent by default
 SILENCER := @
@@ -44,7 +44,6 @@ DAFNY_TEST_DIR:=src/test/dafny
 DAFNY_TEST_FILES:= $(shell find $(DAFNY_TEST_DIR) -type f -name '*.dfy')
 DAFNY_TEST_OUT_DIR:=$(BUILD_DIR)/dafny-tests
 #DAFNY_TEST_PRODS_DIR:=$(DAFNY_TEST_OUT_ARG)-go
-DAFNY_TEST_WITNESSES:=$(patsubst $(DAFNY_TEST_DIR)/%.dfy,$(DAFNY_TEST_OUT_DIR)/.%-go,$(DAFNY_TEST_FILES))
 
 
 ###################### DAFNY VERIFY GLOBAL ########################
@@ -56,8 +55,8 @@ dafny_verify_global: $(DAFNY_VERIFY_WITNESS_GLOBAL)
 
 $(DAFNY_VERIFY_WITNESS_GLOBAL) : $(DAFNY_SRC_FILES)
 	@echo Verifying Dafny
-	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 /functionSyntax:4 /quantifierSyntax:4 $(DAFNY_SRC_FILES) $(DAFNY_ARGS)
-#	$(SILENCER)$(DAFNY_EXEC) verify --cores 4 -rlimit:100000 $(DAFNY_SRC_FILES)
+#	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 /functionSyntax:4 /quantifierSyntax:4 $(DAFNY_ARGS) $(DAFNY_SRC_FILES)
+	$(SILENCER)$(DAFNY_EXEC) verify $(DAFNY_ARGS) --verify-included-files --resource-limit 100000 $(DAFNY_SRC_FILES)
 	$(SILENCER)mkdir -p $(DAFNY_OUT_DIR)
 	$(SILENCER)touch $@
 
@@ -69,31 +68,9 @@ dafny_verify_global_force: dafny_verify_global_clean
 	$(SILENCER)$(MAKE) dafny_verify_global
 
 
-###################### DAFNY TEST INDIVIDUAL ########################
-# Verify & run Dafny tests file by file, using each build output as a witness.
-# Useful when developing a new test.
-# Tests should be the root of their verification dependency tree, so they should be safe to verify one by one.
-
-dafny_test_individuals: $(DAFNY_TEST_WITNESSES)
-
-#TODO probably tests should refer to the main build instead of rebuilding it (once the Dafny toolchain supports it)
-$(DAFNY_TEST_OUT_DIR)/.%-go : $(DAFNY_TEST_DIR)/%.dfy $(DAFNY_SRC_FILES)
-	@echo Testing Dafny: $<
-	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /runAllTests:1 /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/$* $< $(DAFNY_ARGS)
-	$(SILENCER)touch $@
-
-dafny_test_individuals_clean:
-	@echo Removing test witnesses
-	$(SILENCER)$(RM) -rf $(DAFNY_TEST_OUT_DIR)
-
-dafny_test_individuals_force: dafny_test_individuals_clean
-	$(SILENCER)$(MAKE) dafny_test
-
-
-
-###################### DAFNY TEST GLOBAL ########################
+###################### DAFNY TEST  ########################
 # Verify & run all changed tests together, dropping a dotfile witness.
-#
+# Only re-does test files newer than the witness. Depends on the global verification.
 
 DAFNY_TEST_WITNESS_GLOBAL:=$(DAFNY_TEST_OUT_DIR)/.last_global_test
 
@@ -102,7 +79,9 @@ dafny_test_global: $(DAFNY_TEST_WITNESS_GLOBAL) $(DAFNY_VERIFY_WITNESS_GLOBAL)
 #TODO probably tests should refer to the main build instead of rebuilding it (once the Dafny toolchain supports it)
 $(DAFNY_TEST_WITNESS_GLOBAL): $(DAFNY_TEST_FILES)
 	@echo Testing Dafny : `echo $? | wc -w` files
-	$(SILENCER)$(DAFNY_EXEC)  /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /functionSyntax:4 /quantifierSyntax:4 /out:$(DAFNY_TEST_OUT_DIR)/global $? /runAllTests:1  /warnShadowing /deprecation:2 $(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC)  /vcsLoad:2  /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /functionSyntax:4 /quantifierSyntax:4 /out:$(DAFNY_TEST_OUT_DIR)/global $? /runAllTests:1  /warnShadowing /deprecation:2 #$(DAFNY_ARGS)
+#	Dafny v4 new CLI: test doesn't seem to work
+#	$(SILENCER)$(DAFNY_EXEC) test $(DAFNY_ARGS) --test-assumptions Externs  --target go --warn-shadowing  --resource-limit 100000  $< # --output $(DAFNY_TEST_OUT_DIR)/$*
 	$(SILENCER)touch $@
 
 dafny_test_global_clean:
@@ -121,7 +100,9 @@ dafny_translate: $(DAFNY_OUT_FILENAME) $(DAFNY_TEST_WITNESS_GLOBAL)
 
 $(DAFNY_OUT_FILENAME) : $(DAFNY_SRC_FILES)
 	@echo Translating Dafny
-	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /functionSyntax:4 /quantifierSyntax:4 /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 $(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /functionSyntax:4 /quantifierSyntax:4 /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 #$(DAFNY_ARGS)
+#	Dafny v4 new CLI: missing --deprecation and --noExterns
+#	$(SILENCER)$(DAFNY_EXEC) build $(DAFNY_ARGS) --no-verify --target go --warn-shadowing --test-assumptions Externs --output:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) #--deprecation 2  -noExterns
 
 dafny_translate_clean:
 	@echo Removing Dafny products
