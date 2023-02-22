@@ -179,7 +179,7 @@ module WorldState {
         }
 
         /**
-         * Withdraw a given amount of Wei into this account.
+         * Withdraw a given amount of Wei from this account.
          */
         function Withdraw(account:u160, value: u256) : T
         // Account must be valid!

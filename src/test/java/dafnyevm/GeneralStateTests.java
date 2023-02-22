@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import dafnyevm.DafnyEvm.State;
 import dafnyevm.util.StateTests;
+import evmtools.core.LegacyTransaction;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
@@ -153,32 +154,24 @@ public class GeneralStateTests {
             // Construct EVM
             ArrayList<Trace.Element> elements = new ArrayList<>();
             StructuredTracer tracer = new StructuredTracer(elements);
-            // FIXME: following contains a workaround for an issue with the trace output,
-            // whereby traces are used the _block's gas limit_ rather than the
-            // _transaction's gas limit_. #245
-            DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).blockInfo(env).to(tx.to)
-                    .sender(tx.sender)
-                    .origin(tx.sender).gas(env.gasLimit).value(tx.value).data(tx.data);
+            DafnyEvm evm = new DafnyEvm().tracer(tracer).blockInfo(env);
             // Configure world state
             StateTests.configureWorldState(evm, instance.getWorldState());
             // Run the call or create
-            if (tx.to != null) {
-                evm.call();
-            } else {
-                evm.create();
-            }
+            DafnyEvm.State<?> outcome = evm.execute((LegacyTransaction) tx);
             //
             Trace actual = new Trace(elements);
             Trace expected = instance.getTrace();
             //
-            if (!expected.equals(actual)) {
+            if (!expected.equals(actual) || instance.getException() != outcome.toExpectation()) {
                 // NOTE: the following is really just to help provide additional debugging
                 // support when running tests from e.g. gradle on the command line.
-                System.err.println(pair);
+                System.err.println(pair + " ==> " + outcome);
                 printTraceDiff(expected, actual);
             }
             // Finally check for equality.
             assertEquals(expected, actual);
+            assertEquals(instance.getException(),outcome.toExpectation());
         }
     }
 
@@ -349,7 +342,7 @@ public class GeneralStateTests {
         }
 
         @Override
-        public void exception(State.Invalid state) {
+        public void exception(State.Exception state) {
             Trace.Exception.Error code = toErrorCode(state.getErrorCode());
             if (state.depth != 0 && !ignored(code)) {
                 out.add(new Trace.Exception(code));
