@@ -11,10 +11,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+include "../util/arrays.dfy"
 include "../util/int.dfy"
 include "../util/bytes.dfy"
 
 module Context {
+    import opened Arrays
     import opened Int
     import Bytes
 
@@ -40,7 +42,7 @@ module Context {
     // Transaction Context
     // =============================================================================
 
-    datatype Raw = Context(
+    datatype T = Context(
         // Address of account responsible for this execution.
         sender: u160,
         // Address of original transaction.
@@ -50,9 +52,9 @@ module Context {
         // Value deposited by instruction / transaction responsible for this execution.
         callValue: u256,
         // Input data associated with this call.
-        callData:seq<u8>,
+        callData: Array<u8>,
         // Return data from last contract call.
-        returnData: seq<u8>,
+        returnData: Array<u8>,
         // Write permission (true means allowed)
         writePermission: bool,
         // Price of gas in current environment.
@@ -64,8 +66,7 @@ module Context {
          * Determine the size (in bytes) of the call data associated with this
          * context.
          */
-        function CallDataSize() : u256
-        requires |this.callData| < TWO_256  {
+        function CallDataSize() : u256 {
             |this.callData| as u256
         }
 
@@ -89,8 +90,7 @@ module Context {
          * Determine the size (in bytes) of the return data from the previous call
          * associated with this context.
          */
-        function ReturnDataSize() : u256
-        requires |this.returnData| < TWO_256 {
+        function ReturnDataSize() : u256 {
             |this.returnData| as u256
         }
 
@@ -108,20 +108,19 @@ module Context {
         /**
          * Update the return data associated with this state.
          */
-        function SetReturnData(data: seq<u8>) : Raw {
+        function SetReturnData(data: Array<u8>) : T {
            this.(returnData:=data)
         }
 
     }
 
-    type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
-    witness Context(0,0,0,0,[],[],true,0,Info(0,0,0,0,0,0))
+    // type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
+    // witness Context(0,0,0,0,[],[],true,0,Info(0,0,0,0,0,0))
 
     /**
      * Create an initial context from various components.
      */
-    function Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:seq<u8>,writePermission:bool,gasPrice:u256, block: Block) : T
-    requires |callData| <= MAX_U256 {
+    function Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:Array<u8>,writePermission:bool,gasPrice:u256, block: Block) : T {
         Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writePermission:=writePermission,gasPrice:=gasPrice,block:=block)
     }
 }

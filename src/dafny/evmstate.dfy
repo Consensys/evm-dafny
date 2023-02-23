@@ -19,6 +19,7 @@ include "core/code.dfy"
 include "core/storage.dfy"
 include "core/substate.dfy"
 include "core/worldstate.dfy"
+include "util/arrays.dfy"
 include "util/extern.dfy"
 include "util/option.dfy"
 include "util/int.dfy"
@@ -29,6 +30,7 @@ include "opcodes.dfy"
  */
 module EvmState {
     import opened Int
+    import opened Arrays
     import Stack
     import Memory
     import Storage
@@ -45,14 +47,6 @@ module EvmState {
      * this is far from ideal.  See #327.
      */
     const G_CODEDEPOSIT: nat := 200;
-
-    /**
-     * A fixed size array which is bounded by the maximum word size.  Thus, it
-     * represents an array (e.g. of bytes) which could appear as part of the EVM
-     * state (e.g. CALLDATA or RETURDATA).  Thus, the length of the array can be
-     * reasonably turned into a u256 and (for example) loaded on the stack.
-     */
-    type Array<T> = arr:seq<T> | |arr| < TWO_256
 
     /**
      *  A normal state.
