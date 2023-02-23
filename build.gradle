@@ -29,7 +29,6 @@ final DAFNY_BASE_FLAGS = [
     '/functionSyntax:4',
     '/noExterns',
     '/quantifierSyntax:4',
-    '/rlimit:100000',
     '/vcsLoad:2.0'
 ]
 
