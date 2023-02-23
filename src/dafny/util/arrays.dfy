@@ -11,26 +11,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+include "int.dfy"
 
-module Optional {
-
-    datatype Option<T> = Some(v: T) | None {
-        /**
-         * Extract the value contained within this option.
-         */
-        function Unwrap() : T
-        requires this.Some? {
-            this.v
-        }
-
-        /**
-         * Returns the contained value (if it exists) or the default value
-         * (otherwise).
-         */
-        function UnwrapOr(default: T) : T {
-            match this
-            case Some(v) => v
-            case none => default
-        }
-    }
+module Arrays {
+    import opened Int
+    /**
+     * A fixed size array which is bounded by the maximum word size.  Thus, it
+     * represents an array (e.g. of bytes) which could appear as part of the EVM
+     * state (e.g. CALLDATA or RETURDATA).  Thus, the length of the array can be
+     * reasonably turned into a u256 and (for example) loaded on the stack.
+     */
+    type Array<T> = arr:seq<T> | |arr| < TWO_256
 }

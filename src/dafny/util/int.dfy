@@ -78,17 +78,17 @@ module Int {
 
 
     // Determine maximum of two u256 integers.
-    function method Max(i1: int, i2: int) : int {
+    function Max(i1: int, i2: int) : int {
         if i1 >= i2 then i1 else i2
     }
 
     // Determine maximum of two u256 integers.
-    function method Min(i1: int, i2: int) : int {
+    function Min(i1: int, i2: int) : int {
         if i1 < i2 then i1 else i2
     }
 
     // Round up a given number (i) by a given multiple (r).
-    function method RoundUp(i: int, r: nat) : int
+    function RoundUp(i: int, r: nat) : int
     requires r > 0 {
         if (i % r) == 0 then i
         else
@@ -99,7 +99,7 @@ module Int {
     // This is essentially computing (2^n - 1).  However, the point of doing it
     // in this fashion is to avoid using Pow() as this is challenging for the
     // verifier.
-    function method MaxUnsignedN(n:nat) : (r:nat)
+    function MaxUnsignedN(n:nat) : (r:nat)
     requires 1 <= n <= 32 {
         match n
             case 1 => MAX_U8
@@ -126,7 +126,7 @@ module Int {
     /**
      * Compute n^k.
      */
-    function method Pow(n:nat, k:nat) : (r:nat)
+    function Pow(n:nat, k:nat) : (r:nat)
     // Following needed for some proofs
     ensures n > 0 ==> r > 0 {
         if k == 0 then 1
@@ -158,7 +158,7 @@ module Int {
     // because Dafny (unlike just about every other programming
     // language) supports Euclidean division.  This operator, therefore,
     // always divides *towards* zero.
-    function method Div(lhs: int, rhs: int) : int
+    function Div(lhs: int, rhs: int) : int
     requires rhs != 0 {
         if lhs >= 0 then lhs / rhs
         else
@@ -170,7 +170,7 @@ module Int {
     // language) supports Euclidean division.  Observe that this is a
     // true Remainder operator, and not a modulus operator.  For
     // emxaple, this means the result can be negative.
-    function method Rem(lhs: int, rhs: int) : int
+    function Rem(lhs: int, rhs: int) : int
     requires rhs != 0 {
         if lhs >= 0 then (lhs % rhs)
         else
@@ -185,7 +185,7 @@ module Int {
 module U8 {
     import opened Int
     // Compute the log of a value at base 2 where the result is rounded down.
-    function method Log2(v:u8) : (r:nat)
+    function Log2(v:u8) : (r:nat)
     ensures r < 8 {
         // Split 4 bits
         if v <= 15 then
@@ -216,7 +216,7 @@ module U16 {
 
     // Read nth 8bit word (i.e. byte) out of this u16, where 0
     // identifies the most significant byte.
-    function method NthUint8(v:u16, k: nat) : u8
+    function NthUint8(v:u16, k: nat) : u8
         // Cannot read more than two words!
     requires k < 2 {
         if k == 0
@@ -228,7 +228,7 @@ module U16 {
     /**
      * Compute the log of a value at base 2 where the result is rounded down.
      */
-    function method Log2(v:u16) : (r:nat)
+    function Log2(v:u16) : (r:nat)
     ensures r < 16 {
         var low := (v % (TWO_8 as u16)) as u8;
         var high := (v / (TWO_8 as u16)) as u8;
@@ -238,7 +238,7 @@ module U16 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log256(v:u16) : (r:nat)
+    function Log256(v:u16) : (r:nat)
     ensures r <= 1 {
         var low := (v % (TWO_8 as u16)) as u8;
         var high := (v / (TWO_8 as u16)) as u8;
@@ -248,14 +248,14 @@ module U16 {
     /**
      * Convert a u16 into a sequence of 2 bytes (in big endian representation).
      */
-    function method ToBytes(v:u16) : (r:seq<u8>)
+    function ToBytes(v:u16) : (r:seq<u8>)
     ensures |r| == 2 {
         var low := (v % (TWO_8 as u16)) as u8;
         var high := (v / (TWO_8 as u16)) as u8;
         [high,low]
     }
 
-    function method Read(bytes: seq<u8>, address:nat) : u16
+    function Read(bytes: seq<u8>, address:nat) : u16
     requires (address+1) < |bytes| {
         var b1 := bytes[address] as u16;
         var b2 := bytes[address+1] as u16;
@@ -272,7 +272,7 @@ module U32 {
 
     // Read nth 16bit word out of this u32, where 0 identifies the most
     // significant word.
-    function method NthUint16(v:u32, k: nat) : u16
+    function NthUint16(v:u32, k: nat) : u16
         // Cannot read more than two words!
     requires k < 2 {
         if k == 0
@@ -284,7 +284,7 @@ module U32 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log2(v:u32) : (r:nat)
+    function Log2(v:u32) : (r:nat)
     ensures r < 32 {
         var low := (v % (TWO_16 as u32)) as u16;
         var high := (v / (TWO_16 as u32)) as u16;
@@ -294,7 +294,7 @@ module U32 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log256(v:u32) : (r:nat)
+    function Log256(v:u32) : (r:nat)
     ensures r <= 3 {
         var low := (v % (TWO_16 as u32)) as u16;
         var high := (v / (TWO_16 as u32)) as u16;
@@ -304,14 +304,14 @@ module U32 {
     /**
      * Convert a u32 into a sequence of 4 bytes (in big endian representation).
      */
-    function method ToBytes(v:u32) : (r:seq<u8>)
+    function ToBytes(v:u32) : (r:seq<u8>)
     ensures |r| == 4 {
         var low := (v % (TWO_16 as u32)) as u16;
         var high := (v / (TWO_16 as u32)) as u16;
         U16.ToBytes(high) + U16.ToBytes(low)
     }
 
-    function method Read(bytes: seq<u8>, address:nat) : u32
+    function Read(bytes: seq<u8>, address:nat) : u32
     requires (address+3) < |bytes| {
         var b1 := U16.Read(bytes, address) as u32;
         var b2 := U16.Read(bytes, address+2) as u32;
@@ -328,7 +328,7 @@ module U64 {
 
     // Read nth 32bit word out of this u64, where 0 identifies the most
     // significant word.
-    function method NthUint32(v:u64, k: nat) : u32
+    function NthUint32(v:u64, k: nat) : u32
         // Cannot read more than two words!
     requires k < 2 {
         if k == 0
@@ -340,7 +340,7 @@ module U64 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log2(v:u64) : (r:nat)
+    function Log2(v:u64) : (r:nat)
     ensures r < 64 {
         var low := (v % (TWO_32 as u64)) as u32;
         var high := (v / (TWO_32 as u64)) as u32;
@@ -350,7 +350,7 @@ module U64 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log256(v:u64) : (r:nat)
+    function Log256(v:u64) : (r:nat)
     ensures r <= 7 {
         var low := (v % (TWO_32 as u64)) as u32;
         var high := (v / (TWO_32 as u64)) as u32;
@@ -360,14 +360,14 @@ module U64 {
     /**
      * Convert a u64 into a sequence of 8bytes (in big endian representation).
      */
-    function method ToBytes(v:u64) : (r:seq<u8>)
+    function ToBytes(v:u64) : (r:seq<u8>)
     ensures |r| == 8 {
         var low := (v % (TWO_32 as u64)) as u32;
         var high := (v / (TWO_32 as u64)) as u32;
         U32.ToBytes(high) + U32.ToBytes(low)
     }
 
-    function method Read(bytes: seq<u8>, address:nat) : u64
+    function Read(bytes: seq<u8>, address:nat) : u64
     requires (address+7) < |bytes| {
         var b1 := U32.Read(bytes, address) as u64;
         var b2 := U32.Read(bytes, address+4) as u64;
@@ -384,7 +384,7 @@ module U128 {
 
     // Read nth 64bit word out of this u128, where 0 identifies the most
     // significant word.
-    function method NthUint64(v:u128, k: nat) : u64
+    function NthUint64(v:u128, k: nat) : u64
         // Cannot read more than two words!
     requires k < 2 {
         if k == 0
@@ -396,7 +396,7 @@ module U128 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log2(v:u128) : (r:nat)
+    function Log2(v:u128) : (r:nat)
     ensures r < 128 {
         var low := (v % (TWO_64 as u128)) as u64;
         var high := (v / (TWO_64 as u128)) as u64;
@@ -406,7 +406,7 @@ module U128 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log256(v:u128) : (r:nat)
+    function Log256(v:u128) : (r:nat)
     ensures r <= 15 {
         var low := (v % (TWO_64 as u128)) as u64;
         var high := (v / (TWO_64 as u128)) as u64;
@@ -416,14 +416,14 @@ module U128 {
     /**
      * Convert a u128 into a sequence of 16bytes (in big endian representation).
      */
-    function method ToBytes(v:u128) : (r:seq<u8>)
+    function ToBytes(v:u128) : (r:seq<u8>)
     ensures |r| == 16 {
         var low := (v % (TWO_64 as u128)) as u64;
         var high := (v / (TWO_64 as u128)) as u64;
         U64.ToBytes(high) + U64.ToBytes(low)
     }
 
-    function method Read(bytes: seq<u8>, address:nat) : u128
+    function Read(bytes: seq<u8>, address:nat) : u128
     requires (address+15) < |bytes| {
         var b1 := U64.Read(bytes, address) as u128;
         var b2 := U64.Read(bytes, address+8) as u128;
@@ -446,7 +446,7 @@ module U256 {
     lemma {:axiom} as_bv256_as_u256(v: bv256)
         ensures v as nat < TWO_256
 
-    function method Shl(lhs: u256, rhs: u256) : u256
+    function Shl(lhs: u256, rhs: u256) : u256
     {
         var lbv := lhs as bv256;
         // NOTE: unclear whether shifting is optimal choice here.
@@ -455,7 +455,7 @@ module U256 {
         res as u256
     }
 
-    function method Shr(lhs: u256, rhs: u256) : u256 {
+    function Shr(lhs: u256, rhs: u256) : u256 {
         var lbv := lhs as bv256;
         // NOTE: unclear whether shifting is optimal choice here.
         var res := if rhs < 256 then (lbv >> rhs) else 0;
@@ -467,7 +467,7 @@ module U256 {
      * Compute the log of a value at base 2, where the result in rounded down.
      * This effectively determines the position of the highest on bit.
      */
-    function method Log2(v:u256) : (r:nat)
+    function Log2(v:u256) : (r:nat)
     ensures r < 256 {
         var low := (v % (TWO_128 as u256)) as u128;
         var high := (v / (TWO_128 as u256)) as u128;
@@ -477,7 +477,7 @@ module U256 {
     /**
      * Compute the log of a value at base 256 where the result is rounded down.
      */
-    function method Log256(v:u256) : (r:nat)
+    function Log256(v:u256) : (r:nat)
     ensures r <= 31 {
         var low := (v % (TWO_128 as u256)) as u128;
         var high := (v / (TWO_128 as u256)) as u128;
@@ -486,7 +486,7 @@ module U256 {
 
     // Read nth 128bit word out of this u256, where 0 identifies the most
     // significant word.
-    function method NthUint128(v:u256, k: nat) : u128
+    function NthUint128(v:u256, k: nat) : u128
         // Cannot read more than two words!
         requires k < 2 {
         if k == 0
@@ -497,7 +497,7 @@ module U256 {
 
     // Read nth byte out of this u256, where 0 identifies the most
     // significant byte.
-    function method NthUint8(v:u256, k: nat) : u8
+    function NthUint8(v:u256, k: nat) : u8
     // Cannot read more than 32bytes!
     requires k < 32 {
         // This is perhaps a tad ugly.  Happy to take suggestions on
@@ -509,7 +509,7 @@ module U256 {
         U16.NthUint8(w16,k%2)
     }
 
-    function method Read(bytes: seq<u8>, address:nat) : u256
+    function Read(bytes: seq<u8>, address:nat) : u256
     requires (address+31) < |bytes| {
         var b1 := U128.Read(bytes, address) as u256;
         var b2 := U128.Read(bytes, address+16) as u256;
@@ -519,7 +519,7 @@ module U256 {
     /**
      * Convert a u256 into a sequence of 32bytes in big endian representation.
      */
-    function method ToBytes(v:u256) : (r:seq<u8>)
+    function ToBytes(v:u256) : (r:seq<u8>)
     ensures |r| == 32 {
         var low := (v % (TWO_128 as u256)) as u128;
         var high := (v / (TWO_128 as u256)) as u128;
@@ -529,7 +529,7 @@ module U256 {
     /**
      *
      */
-    function method SignExtend(v: u256, k: nat) : u256 {
+    function SignExtend(v: u256, k: nat) : u256 {
         if k >= 31 then v
         else
             // Reinterpret k as big endian
@@ -559,7 +559,7 @@ module I256 {
     // because Dafny (unlike just about every other programming
     // language) supports Euclidean division.  This operator, therefore,
     // always divides *towards* zero.
-    function method Div(lhs: i256, rhs: i256) : i256
+    function Div(lhs: i256, rhs: i256) : i256
         // Cannot divide by zero!
         requires rhs != 0
         // Range restriction to prevent overflow
@@ -572,7 +572,7 @@ module I256 {
     // language) supports Euclidean division.  Observe that this is a
     // true Remainder operator, and not a modulus operator.  For
     // emxaple, this means the result can be negative.
-    function method Rem(lhs: i256, rhs: i256) : i256
+    function Rem(lhs: i256, rhs: i256) : i256
         // Cannot divide by zero!
         requires rhs != 0 {
         Int.Rem(lhs as int, rhs as int) as i256
@@ -596,7 +596,7 @@ module I256 {
 
     // Shift Arithmetic Right.  This implementation follows the Yellow Paper quite
     // accurately.
-    function method Sar(lhs: i256, rhs: u256): i256 {
+    function Sar(lhs: i256, rhs: u256): i256 {
         if rhs == 0 then lhs
         else if rhs < 256
         then
@@ -617,7 +617,7 @@ module Word {
   // its important to note that this does not mean the value in
   // question represents an unsigned 256 bit integer.  Rather, it is a
   // signed integer encoded into an unsigned integer.
-  function method asI256(w: u256) : i256 {
+  function asI256(w: u256) : i256 {
     if w > (MAX_I256 as u256)
     then
       var v := 1 + MAX_U256 - (w as int);
@@ -631,7 +631,7 @@ module Word {
   // its important to note that this does not mean the value in
   // question represents an unsigned 256 bit integer.  Rather, it is a
   // signed integer encoded into an unsigned integer.
-  function method fromI256(w: Int.i256) : u256 {
+  function fromI256(w: Int.i256) : u256 {
     if w < 0
     then
       var v := 1 + MAX_U256 + (w as int);

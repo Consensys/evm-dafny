@@ -342,7 +342,7 @@ public class DafnyEvm {
 			create(sender,DEFAULT_BALANCE);
 		}
 		// Construct the transaction context for the call.
-		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
+		Context_Compile.T ctx = Context_Compile.__default.Create(sender, origin, recipient, value,
 				DafnySequence.fromBytes(callData), true, gasPrice, blockInfo.toDafny());
 		// Construct world state
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
@@ -379,7 +379,7 @@ public class DafnyEvm {
 		// calculated *before* the sender's nonce is incremented.
 		BigInteger address = addr(sender,nonce);
 		// Construct the transaction context for the call.
-		Context_Compile.Raw ctx = Context_Compile.__default.Create(sender, origin, address, value,
+		Context_Compile.T ctx = Context_Compile.__default.Create(sender, origin, address, value,
 				data, true, gasPrice, blockInfo.toDafny());
 		// Construct world state
 		WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);

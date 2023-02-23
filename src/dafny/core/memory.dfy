@@ -31,14 +31,14 @@ module Memory {
     /**
      * Create a memory from an initial sequence of words.
      */
-    function method Create() : T {
+    function Create() : T {
         Memory(contents:=[])
     }
 
     /**
      * Return size of memory (in bytes).
      */
-    function method Size(mem:T) : nat { |mem.contents| }
+    function Size(mem:T) : nat { |mem.contents| }
 
     /** Expand memory size if needed.
      *
@@ -50,7 +50,7 @@ module Memory {
      *  @note           At the end, `address` should be a valid index of `r`
      *                  i.e. in 0..(r.size - 1).
      */
-    function method Expand(mem: T, address: nat) : (r: T)
+    function Expand(mem: T, address: nat) : (r: T)
       ensures |r.contents| > address
       ensures address >= |mem.contents| ==>
         (|r.contents| % 32 == 0 &&  |r.contents| - 32 <= address)
@@ -63,7 +63,7 @@ module Memory {
     }
 
     /** Smallest number multiple of 32 that is larger than k. */
-    function method SmallestLarg32(k: nat): (x:nat)
+    function SmallestLarg32(k: nat): (x:nat)
       ensures x > k
       ensures x % 32 == 0
       ensures (x - 32) <= k
@@ -85,7 +85,7 @@ module Memory {
      *                  first that the extended chunk satisfies some constraints,
      *                  e.g. begin less then `MAX_U256`.
      */
-    function method ExpandMem(mem: T, address: nat, len: nat): (r: T)
+    function ExpandMem(mem: T, address: nat, len: nat): (r: T)
     requires len > 0
     {
         Expand(mem, address + len - 1)
@@ -99,7 +99,7 @@ module Memory {
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
-    function method ReadUint8(mem:T, address:nat) : u8 {
+    function ReadUint8(mem:T, address:nat) : u8 {
         // Read location
         if address < |mem.contents|
         then
@@ -112,7 +112,7 @@ module Memory {
      * Read a 16bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method ReadUint16(mem:T, address:nat) : u16
+    function ReadUint16(mem:T, address:nat) : u16
       requires address + 1 < |mem.contents| {
         var w1 := ReadUint8(mem,address) as u16;
         var w2 := ReadUint8(mem,address+1) as u16;
@@ -123,7 +123,7 @@ module Memory {
      * Read a 32bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method ReadUint32(mem:T, address:nat) : u32
+    function ReadUint32(mem:T, address:nat) : u32
       requires address + 3 < |mem.contents| {
         var w1 := ReadUint16(mem,address) as u32;
         var w2 := ReadUint16(mem,address+2) as u32;
@@ -134,7 +134,7 @@ module Memory {
      * Read a 64bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method ReadUint64(mem:T, address:nat) : u64
+    function ReadUint64(mem:T, address:nat) : u64
       requires address + 7 < |mem.contents| {
         var w1 := ReadUint32(mem,address) as u64;
         var w2 := ReadUint32(mem,address+4) as u64;
@@ -145,7 +145,7 @@ module Memory {
      * Read a 128bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method ReadUint128(mem:T, address:nat) : u128
+    function ReadUint128(mem:T, address:nat) : u128
       requires address + 15 < |mem.contents| {
         var w1 := ReadUint64(mem,address) as u128;
         var w2 := ReadUint64(mem,address+8) as u128;
@@ -156,7 +156,7 @@ module Memory {
      * Read a 256bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method ReadUint256(mem:T, address:nat) : u256
+    function ReadUint256(mem:T, address:nat) : u256
       requires address + 31 < |mem.contents| {
         var w1 := ReadUint128(mem,address) as u256;
         var w2 := ReadUint128(mem,address+16) as u256;
@@ -167,7 +167,7 @@ module Memory {
      * Write a byte to a given address in Memory.
      */
 
-    function method WriteUint8(mem:T, address:nat, val:u8) : T
+    function WriteUint8(mem:T, address:nat, val:u8) : T
         requires address < |mem.contents| {
         // Update size calc.
         // Write location
@@ -178,7 +178,7 @@ module Memory {
      * Write a 16bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method WriteUint16(mem:T, address:nat, val:u16) : T
+    function WriteUint16(mem:T, address:nat, val:u16) : T
     requires address + 1 < |mem.contents| {
       var w1 := val / (TWO_8 as u16);
       var w2 := val % (TWO_8 as u16);
@@ -190,7 +190,7 @@ module Memory {
      * Write a 32bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method WriteUint32(mem:T, address:nat, val:u32) : T
+    function WriteUint32(mem:T, address:nat, val:u32) : T
     requires address + 3 < |mem.contents| {
       var w1 := val / (TWO_16 as u32);
       var w2 := val % (TWO_16 as u32);
@@ -202,7 +202,7 @@ module Memory {
      * Write a 64bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method WriteUint64(mem:T, address:nat, val:u64) : T
+    function WriteUint64(mem:T, address:nat, val:u64) : T
     requires address + 7 < |mem.contents| {
       var w1 := val / (TWO_32 as u64);
       var w2 := val % (TWO_32 as u64);
@@ -214,7 +214,7 @@ module Memory {
      * Write a 128bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method WriteUint128(mem:T, address:nat, val:u128) : T
+    function WriteUint128(mem:T, address:nat, val:u128) : T
     requires address + 15 < |mem.contents| {
       var w1 := val / (TWO_64 as u128);
       var w2 := val % (TWO_64 as u128);
@@ -226,7 +226,7 @@ module Memory {
      * Write a 256bit word to a given address in Memory using
      * big-endian addressing.
      */
-    function method WriteUint256(mem:T, address:nat, val:u256) : (mem':T)
+    function WriteUint256(mem:T, address:nat, val:u256) : (mem':T)
     requires address + 31 < |mem.contents|
     ensures EqualsExcept(mem,mem',address,32) {
       var w1 := val / (TWO_128 as u256);
@@ -238,7 +238,7 @@ module Memory {
     /**
      * Slice out a section of memory.
      */
-    function method Slice(mem:T, address:nat, len:nat) : seq<u8>
+    function Slice(mem:T, address:nat, len:nat) : seq<u8>
       ensures |Slice(mem, address, len)| == len
     {
       Bytes.Slice(mem.contents,address,len)
@@ -249,7 +249,7 @@ module Memory {
      * a decomposition technique (rather than the obvious iterative technique)
      * as the former seems to improve verification performance.
      */
-    function method Copy(mem:T, address:nat, data:seq<u8>) : (mem':T)
+    function Copy(mem:T, address:nat, data:seq<u8>) : (mem':T)
     // Must have sufficient memory for copy.
     requires |data| == 0 || (address + |data|) <= |mem.contents|
     // Following inductive invariant is required.

@@ -28,7 +28,7 @@ module Storage {
     /**
      * Create some storage from an initial sequence of words.
      */
-    function method Create(contents:map<u256,u256>) : T {
+    function Create(contents:map<u256,u256>) : T {
         Storage(contents:=contents)
     }
 
@@ -36,7 +36,7 @@ module Storage {
      * Read the value at a given address in Storage.  If the given location
      * has not been initialised, then zero is returned as default.
      */
-    function method Read(mem:T, address:u256) : u256 {
+    function Read(mem:T, address:u256) : u256 {
       if address in mem.contents
         then
         mem.contents[address]
@@ -47,7 +47,7 @@ module Storage {
     /**
      * Write a value to a given address in Storage.
      */
-    function method Write(mem:T, address:u256, val:u256) : T {
+    function Write(mem:T, address:u256, val:u256) : T {
         Storage(contents:=mem.contents[address:=val])
     }
 }

@@ -20,6 +20,52 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 // ======================================================================
+// Constants (Dafny 3)
+// ======================================================================
+
+final DAFNY_BASE_FLAGS = [
+    '/compileVerbose:0',
+    '/compileTarget:java',
+    '/functionSyntax:4',
+    '/noExterns',
+    '/quantifierSyntax:4',
+    '/vcsLoad:2.0'
+]
+
+final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
+    '/verifyAllModules',
+    '/out:build/evm'
+]
+
+final DAFNY_TEST_FLAGS = DAFNY_BASE_FLAGS + [
+    '/runAllTests:1',
+    '/out:build/dafny-tests',
+    '/compile:4'
+]
+
+// ======================================================================
+// Constants (Dafny 4)
+// ======================================================================
+
+final DAFNY4_BASE_FLAGS = [
+    '--target','java',
+    '--cores','4',
+    '--function-syntax','4',
+    '--quantifier-syntax','4'
+]
+
+final DAFNY4_BUILD_FLAGS = [
+    'translate',
+    '--output','build/evm',
+    '--include-runtime',
+    '--verify-included-files'
+] + DAFNY4_BASE_FLAGS
+
+final DAFNY4_TEST_FLAGS = [
+    'test'
+] + DAFNY4_BASE_FLAGS
+
+// ======================================================================
 // Dafny Build
 // ======================================================================
 
@@ -35,7 +81,7 @@ task compileDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args '/rlimit:100000','/verifyAllModules','/out:build/evm','/vcsLoad:2.0','/noExterns','/compileTarget:java','/compileVerbose:0','src/dafny/evm.dfy','src/dafny/evms/berlin.dfy'
+            args DAFNY_BUILD_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
         // Delete general file containing extern definitions.
         delete "build/evm-java/External_Compile"
@@ -69,7 +115,7 @@ task testDafny {
             File file -> {
                 exec {
                     executable 'dafny'
-                    args '/runAllTests:1','/vcsLoad:2.0','/out:build/dafny-tests','/noExterns','/compileTarget:java','/compile:4','/compileVerbose:0',file
+                    args DAFNY_TEST_FLAGS + [file]
                 }
             }
         }

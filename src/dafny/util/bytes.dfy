@@ -20,7 +20,7 @@ module Bytes {
      * Read the byte at a given address in Memory.  If the given location
      * has not been initialised, then zero is returned as default.
      */
-    function method ReadUint8(mem:seq<u8>, address:nat) : u8 {
+    function ReadUint8(mem:seq<u8>, address:nat) : u8 {
         // Read location
         if address < |mem|
         then
@@ -34,7 +34,7 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method ReadUint16(mem:seq<u8>, address:nat) : u16 {
+    function ReadUint16(mem:seq<u8>, address:nat) : u16 {
         var w1 := ReadUint8(mem,address) as u16;
         var w2 := ReadUint8(mem,address+1) as u16;
         (w1 * (TWO_8 as u16)) + w2
@@ -44,7 +44,7 @@ module Bytes {
      * Read a 32bit word from a given address in Memory assuming
      * big-endian addressing.
      */
-    function method ReadUint32(mem:seq<u8>, address:nat) : u32 {
+    function ReadUint32(mem:seq<u8>, address:nat) : u32 {
         var w1 := ReadUint16(mem,address) as u32;
         var w2 := ReadUint16(mem,address+2) as u32;
         (w1 * (TWO_16 as u32)) + w2
@@ -55,7 +55,7 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method ReadUint64(mem:seq<u8>, address:nat) : u64 {
+    function ReadUint64(mem:seq<u8>, address:nat) : u64 {
         var w1 := ReadUint32(mem,address) as u64;
         var w2 := ReadUint32(mem,address+4) as u64;
         (w1 * (TWO_32 as u64)) + w2
@@ -66,7 +66,7 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method ReadUint128(mem:seq<u8>, address:nat) : u128 {
+    function ReadUint128(mem:seq<u8>, address:nat) : u128 {
         var w1 := ReadUint64(mem,address) as u128;
         var w2 := ReadUint64(mem,address+8) as u128;
         (w1 * (TWO_64 as u128)) + w2
@@ -77,7 +77,7 @@ module Bytes {
      * big-endian addressing.  If the read overflows the available
      * data, then it is padded with zeros.
      */
-    function method ReadUint256(mem:seq<u8>, address:nat) : u256 {
+    function ReadUint256(mem:seq<u8>, address:nat) : u256 {
         var w1 := ReadUint128(mem,address) as u256;
         var w2 := ReadUint128(mem,address+16) as u256;
         (w1 * (TWO_128 as u256)) + w2
@@ -88,7 +88,7 @@ module Bytes {
      * If the requested subsequence overflows available memory,
      * it is padded out with zeros.
      */
-    function method Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8>
+    function Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8>
       ensures |Slice(mem, address, len)| == len
     {
       var n := address + len;
@@ -100,14 +100,14 @@ module Bytes {
     }
 
     /** Converts a sequence of bytes into a u256.
-     *  
+     *
      *  @param  bytes   A sequence of bytes.
      *  @returns        The big-endian and 0-left-padded value on 256 bits.
      */
-    function method ConvertBytesTo256(bytes: seq<u8>): u256 
+    function ConvertBytesTo256(bytes: seq<u8>): u256
         requires 0 < |bytes| <= 32
     {
-        if |bytes| == 1 then (bytes[0] as u256) 
+        if |bytes| == 1 then (bytes[0] as u256)
         else if |bytes| == 2 then (ReadUint16(bytes,0) as u256)
         else if |bytes| <= 4 then (ReadUint32(LeftPad(bytes,4),0) as u256)
         else if |bytes| <= 8 then (ReadUint64(LeftPad(bytes,8),0) as u256)
@@ -118,7 +118,7 @@ module Bytes {
     /**
      * Construct a sequence of an arbitrary sized padded out with zeros.
      */
-    function method Padding(n:nat) : seq<u8>
+    function Padding(n:nat) : seq<u8>
     ensures |Padding(n)| == n
     {
         seq(n, i => 0)
@@ -128,7 +128,7 @@ module Bytes {
      * Pad an array of bytes with zeros in the low addresses upto a given
      * size n.
      */
-    function method LeftPad(bytes:seq<u8>, n:nat) : seq<u8>
+    function LeftPad(bytes:seq<u8>, n:nat) : seq<u8>
     requires |bytes| <= n {
         // Calculate padding required
         var k := n - |bytes|;
