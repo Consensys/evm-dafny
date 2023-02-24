@@ -40,9 +40,9 @@ import dafny.DafnySequence;
 import dafny.Tuple2;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
-import evmtools.core.Transaction.Outcome;
 import evmtools.util.Hex;
 import dafnyevm.util.Errors;
+import dafnyevm.util.Precompiles;
 import dafnyevm.util.Word.Uint160;
 import dafnyevm.util.Word.Uint256;
 
@@ -83,6 +83,13 @@ public class DafnyEvm {
 	 * Current block information.
 	 */
 	private BlockInfo blockInfo = new BlockInfo();
+
+	public DafnyEvm() {
+        // Link the Java-side precompile implementations. This is necessary to override
+        // the default implementations which are used for compiling Dafny (but which are
+        // broken).
+	    External_Compile.__default.bundle = new Precompiles.Bundle();
+	}
 
 	/**
 	 * Set the tracer to use during execution of this EVM. Tracers provide a

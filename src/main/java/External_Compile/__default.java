@@ -15,18 +15,8 @@ package External_Compile;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.bouncycastle.crypto.digests.RIPEMD160Digest;
-import org.web3j.crypto.ECDSASignature;
-import org.web3j.crypto.Hash;
-import org.web3j.crypto.Sign;
-import org.web3j.crypto.Sign.SignatureData;
 
 import dafny.DafnySequence;
-import dafny.Tuple2;
-import dafnyevm.util.Bytes;
-import dafnyevm.util.Word.Uint160;
-import evmtools.util.Hex;
-import dafnyevm.crypto.Blake2b;
 
 /**
  * Provides concrete implementations for all methods defined as
@@ -37,154 +27,81 @@ import dafnyevm.crypto.Blake2b;
  */
 public class __default {
     /**
-     * Compute the ECDSA key recovery procedure for a given byte sequence.
-     *
-     * @param h Hash of transaction
-     * @param v recovery identifier (assumed to be one byte)
-     * @param r
-     * @param s
-     * @return
+     * Initialise the bundle with our default implementations.
      */
-    public static DafnySequence<Byte> ECDSARecover(DafnySequence<? extends Byte> _h, byte v, BigInteger r, BigInteger s) {
-        byte[] h = DafnySequence.toByteArray((DafnySequence) _h);
-//        System.out.println("ECDSARecover(" + Hex.toAbbreviatedHexString(h) + "," + v + "," + r + "," + s + ")");
-        ECDSASignature sig = new ECDSASignature(r,s);
-        // Recover Key
-        try {
-            BigInteger key = Sign.recoverFromSignature(v-27, sig, h);
-            // Sanity checks
-            if(key != null && !key.equals(BigInteger.ZERO)) {
-                // Compute KEC
-                byte[] hash = Hash.sha3(key.toByteArray());
-                // Split out bytes 12--31
-                hash = Arrays.copyOfRange(hash, 12, hash.length);
-                // Done
-                return DafnySequence.fromBytes(leftPad(hash,32));
-            }
-        } catch(IllegalArgumentException e) {
-            // This indicates key recovery was impossible. Therefore, according to the
-            // Yellow Paper, we simply return the empty byte sequence.
+    public static PrecompileBundle bundle = new PrecompileBundle();
+
+    /**
+     * This provides a default set of implementations which is not intended to be
+     * used in practice, but is required when compiling the Dafny generated source
+     * code. This is really an artifact of the way that Dafny generates code, for
+     * which there are currently no easy work arounds.
+     *
+     * @author David J. Pearce
+     *
+     */
+    public static class PrecompileBundle {
+        public byte[] ECDSARecover(byte[] h, byte v, BigInteger r, BigInteger s) {
+            return new byte[0];
         }
-        //
-        return DafnySequence.fromBytes(new byte[0]);
+
+        public BigInteger sha3(byte[] bytes) {
+            // A very poor mans implementation of sha3 :)
+            return BigInteger.valueOf(Arrays.hashCode(bytes));
+        }
+
+        public byte[] sha256(byte[] bytes) {
+            // A very poor mans implementation of sha256 :)
+            return new byte[0];
+        }
+
+        public byte[] ripEmd160(byte[] bytes) {
+            return new byte[0];
+        }
+
+        public byte[] modExp(byte[] B, byte[] E, byte[] M) {
+            return new byte[0];
+        }
+        public byte[] blake2f(byte[] bytes) {
+            return new byte[0];
+        }
     }
 
-	/**
-	 * Compute the Keccak256 hash of the byte sequence.
-	 *
-	 * @param bytes
-	 * @return
-	 */
-	public static BigInteger sha3(DafnySequence<? extends Byte> bytes) {
-		// Compute the hash
-		byte[] hash = Hash.sha3(bytes.toByteArray((DafnySequence) bytes));
-		// Construct an (unsigned) bigint.
-		return new BigInteger(1, hash);
-	}
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public static DafnySequence<Byte> ECDSARecover(DafnySequence<? extends Byte> _h, byte v, BigInteger r, BigInteger s) {
+        byte[] h = DafnySequence.toByteArray((DafnySequence) _h);
+        return DafnySequence.fromBytes(bundle.ECDSARecover(h, v, r, s));
+    }
 
-	/**
-	 * Compute the Sha256 hash of the byte sequence.
-	 *
-	 * @param bytes
-	 * @return
-	 */
-	public static DafnySequence<Byte> sha256(DafnySequence<? extends Byte> bytes) {
-		// Compute the hash
-		byte[] hash = Hash.sha256(bytes.toByteArray((DafnySequence) bytes));
-		// Construct an (unsigned) bigint.
-		return DafnySequence.fromBytes(hash);
-	}
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public static BigInteger sha3(DafnySequence<? extends Byte> bytes) {
+        return bundle.sha3(DafnySequence.toByteArray((DafnySequence) bytes));
+    }
 
-	/**
-	 * Compute the RIPEMD160 digest.
-	 *
-	 * @param bytes
-	 * @return
-	 */
-	public static DafnySequence<Byte> ripEmd160(DafnySequence<? extends Byte> _bytes) {
-		byte[] bytes = DafnySequence.toByteArray((DafnySequence) _bytes);
-		// Compute the hash
-		RIPEMD160Digest digest = new RIPEMD160Digest();
-		digest.update(bytes, 0, bytes.length);
-		byte[] out = new byte[32];
-		digest.doFinal(out, 12);
-		// Construct an (unsigned) bigint.
-		return DafnySequence.fromBytes(out);
-	}
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public static DafnySequence<Byte> sha256(DafnySequence<? extends Byte> bytes) {
+        byte[] hash = bundle.sha256(DafnySequence.toByteArray((DafnySequence) bytes));
+        return DafnySequence.fromBytes(hash);
+    }
 
-	/**
-	 * Compute arbitrary precision exponentiation under modulo.  Specifically,
-     * we compue B^E % M.  All words are unsigned integers in big endian format.
-	 *
-	 * @param bytes
-	 * @return
-	 */
-	public static DafnySequence<? extends Byte> modExp(DafnySequence<? extends Byte> _B,
-			DafnySequence<? extends Byte> _E, DafnySequence<? extends Byte> _M) {
-		BigInteger B = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _B));
-		byte[] Ebytes = DafnySequence.toByteArray((DafnySequence) _E);
-		BigInteger E = new BigInteger(1, Ebytes);
-		BigInteger M = new BigInteger(1, DafnySequence.toByteArray((DafnySequence) _M));
-//		System.out.println("MODEXP(" + B + "," + E + "," + M + ")");
-		BigInteger r;
-		if (M.equals(BigInteger.ZERO)) {
-			r = BigInteger.ZERO;
-		} else {
-			r = B.modPow(E, M);
-		}
-		return DafnySequence.fromBytes(leftPad(r.toByteArray(),_M.length()));
-	}
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public static DafnySequence<Byte> ripEmd160(DafnySequence<? extends Byte> bytes) {
+        byte[] tmp = bundle.ripEmd160(DafnySequence.toByteArray((DafnySequence) bytes));
+        return DafnySequence.fromBytes(tmp);
+    }
 
-	/**
-	 * Pad out a given byte sequence with zeros (to the left) upto a given length.
-	 *
-	 * @param bytes
-	 * @param length
-	 * @return
-	 */
-	private static byte[] leftPad(byte[] bytes, int length) {
-	    if(length == bytes.length) {
-	        return bytes;
-	    } else if(length < bytes.length) {
-	        return Arrays.copyOfRange(bytes,0,length);
-	    } else {
-	        byte[] output = new byte[length];
-	        System.arraycopy(bytes, 0, output, output.length - bytes.length, bytes.length);
-	        return output;
-	    }
-	}
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public static DafnySequence<? extends Byte> modExp(DafnySequence<? extends Byte> _B,
+            DafnySequence<? extends Byte> _E, DafnySequence<? extends Byte> _M) {
+        byte[] B = DafnySequence.toByteArray((DafnySequence) _B);
+        byte[] E = DafnySequence.toByteArray((DafnySequence) _E);
+        byte[] M = DafnySequence.toByteArray((DafnySequence) _M);
+        return DafnySequence.fromBytes(bundle.modExp(B,E,M));
+    }
 
-	/**
-     * Compute function F from Blake2 compression algorithm defined in RFC7693. See
-     * also EIP-152.
-     *
-     * @param bytes
-     * @return
-     */
-	public static DafnySequence<Byte> blake2f(DafnySequence<? extends Byte> _bytes) {
-	    byte[] bytes = DafnySequence.toByteArray((DafnySequence) _bytes);
-	    return DafnySequence.fromBytes(blake2f(bytes));
-	}
-
-	public static byte[] blake2f(byte[] bytes) {
-        // Initial sanity checks as determined by yellow paper.
-        if(bytes.length == 213) {
-            // (f)inal block indicator flag
-            byte f = bytes[212];
-            //
-            if(f == 0 || f == 1) {
-                // Determine number of rounds.
-                long r = Bytes.fromBigEndian32(bytes, 0) & 0xFFFFFFFFL;
-                long[] h = Bytes.fromLittleEndian64s(bytes, 4, 8);
-                long[] m = Bytes.fromLittleEndian64s(bytes, 68, 16);
-                long[] t = Bytes.fromLittleEndian64s(bytes, 196, 2);
-                //
-                h = Blake2b.F(r, h, m, t, f == 1);
-                //
-                return Bytes.toLittleEndianBytes(h);
-            }
-        }
-        // Failure case
-        return new byte[0];
+    public static DafnySequence<Byte> blake2f(DafnySequence<? extends Byte> _bytes) {
+        @SuppressWarnings({"unchecked","rawtypes"})
+        byte[] bytes = DafnySequence.toByteArray((DafnySequence) _bytes);
+        return DafnySequence.fromBytes(bundle.blake2f(bytes));
     }
 }

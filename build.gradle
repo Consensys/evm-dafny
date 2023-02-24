@@ -111,8 +111,6 @@ task compileDafny {
             executable 'dafny'
             args DAFNY_BUILD_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
-        // Delete general file containing extern definitions.
-        delete "build/evm-java/External_Compile"
     }
 }
 
