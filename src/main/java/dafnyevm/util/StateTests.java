@@ -75,9 +75,7 @@ public class StateTests {
         DafnyEvm.BlockInfo info = new DafnyEvm.BlockInfo();
         info = info.coinBase(env.currentCoinbase);
         info = info.timeStamp(env.currentTimestamp);
-        // NOTE: following currently replicates what Geth does (which default's to
-        // Ganache's ChainID). At some point, we'll need to fix this.
-        info = info.chainID(0x539);
+        info = info.chainID(1);
         info = info.number(env.currentNumber);
         info = info.difficulty(env.currentDifficulty);
         info = info.gasLimit(env.currentGasLimit);

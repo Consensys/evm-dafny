@@ -834,7 +834,7 @@ module EvmState {
                     // Check code within permitted bounds
                     if |vm.data| > Code.MAX_CODE_SIZE then st.Push(0)
                     // Enforce EIP-3541 "Reject new contract code starting with the 0xEF byte"
-                    else if |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0)
+                    // else if |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0)
                     // Check sufficient gas for deposit
                     else if vm.gas < depositcost then st.Push(0)
                     else
