@@ -41,8 +41,9 @@ import dafny.DafnySequence;
 import dafny.Tuple2;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
-import evmtools.core.Transaction.Exception;
+import evmtools.core.Transaction.Outcome;
 import evmtools.util.Hex;
+import dafnyevm.util.Errors;
 import dafnyevm.util.Word.Uint160;
 import dafnyevm.util.Word.Uint256;
 
@@ -61,7 +62,16 @@ public class DafnyEvm {
 	/**
 	 * A default tracer which does nothing.
 	 */
-	public static final Tracer DEFAULT_TRACER = (d,st) -> {};
+	public static final Tracer DEFAULT_TRACER = new Tracer() {
+        @Override
+        public void step(int depth, EvmState_Compile.State_EXECUTING st) {}
+
+        @Override
+        public void enter(EvmState_Compile.State st) {}
+
+        @Override
+        public void leave(int depth, EvmState_Compile.State st) {}
+	};
 	/**
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
@@ -169,9 +179,9 @@ public class DafnyEvm {
 	    BigInteger gasPrice;
 
 	    if (tx.gasLimit().compareTo(intrinsic) < 0) {
-            return new State.Invalid(tracer,Transaction.Exception.IntrinsicGas);
+            return new State.Invalid(tracer,Transaction.Outcome.INTRINSIC_GAS);
         } else if(!(tx instanceof LegacyTransaction)) {
-            return new State.Invalid(tracer,Transaction.Exception.TypeNotSupported);
+            return new State.Invalid(tracer,Transaction.Outcome.TYPE_NOT_SUPPORTED);
         } else {
             LegacyTransaction ltx = (LegacyTransaction) tx;
             gasPrice = ltx.gasPrice();
@@ -179,7 +189,7 @@ public class DafnyEvm {
             BigInteger balance = worldState.get(ltx.sender()).dtor_balance();
             //
             if(cost.compareTo(balance) > 0) {
-                return new State.Invalid(tracer,Transaction.Exception.NoFunds);
+                return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
             } else {
                 // Pay for transaction execution
                 ws = ws.Withdraw(ltx.sender(), cost);
@@ -216,19 +226,19 @@ public class DafnyEvm {
 	        st = EvmState_Compile.__default.Create(ws, ctx, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
-	    st = run(0, tracer, st);
-	    // Sanity check returned contract code (for contract creation)
-	    if (tx.to() == null && st.is_RETURNS()) {
-	        State_RETURNS rst = (State_RETURNS) st;
-	        // Sanity check contract size
-	        if (rst.dtor_data().length() > MAX_CODE_SIZE) {
-	            // Contract being created is too large.
-	            EvmState_Compile.Error err = EvmState_Compile.Error.create_CODESIZE__EXCEEDED();
-	            st = EvmState_Compile.State.create_INVALID(err);
+	    if(st instanceof State_EXECUTING) {
+	        st = run(tx, 0, tracer, (State_EXECUTING) st);
+	        // Sanity check returned contract code (for contract creation)
+	        if (tx.to() == null && st.is_RETURNS()) {
+	            State_RETURNS rst = (State_RETURNS) st;
+	            // Sanity check contract size
+	            if (rst.dtor_data().length() > MAX_CODE_SIZE) {
+	                // Contract being created is too large.
+	                EvmState_Compile.Error err = EvmState_Compile.Error.create_CODESIZE__EXCEEDED();
+	                st = EvmState_Compile.State.create_INVALID(err);
+	            }
 	        }
 	    }
-	    // Outermost trace step
-	    tracer.step(-1,st);
 	    // NOTE: should refund unused gas?
 	    // Convert back into the Java API
 	    return State.from(0,tracer,st);
@@ -242,26 +252,28 @@ public class DafnyEvm {
 	 * @param state   Current DafnyEvm state.
 	 * @return
 	 */
-	protected static EvmState_Compile.State run(int depth, Tracer tracer, EvmState_Compile.State st) {
-		// Continue whilst the EVM is happy.
-		while (st.is_EXECUTING()) {
-			tracer.step(depth, st);
-			st = Execute(st);
-			// Manage continuations
-			if (st.is_CONTINUING()) {
-			    EvmState_Compile.Continuation cc = ((State_CONTINUING)st)._a0;
-			    if (cc.is_CALLS()) {
-			        st = callContinue(depth, tracer, (Continuation_CALLS) cc);
-			    } else {
-			        st = createContinue(depth, tracer, (Continuation_CREATES) cc);
-			    }
-			}
-		}
-		// Final step
-		tracer.step(depth, st);
-		//
-		return st;
-	}
+    protected static EvmState_Compile.State run(Transaction tx, int depth, Tracer tracer, State_EXECUTING _st) {
+        EvmState_Compile.State st = _st;
+        tracer.enter(st);
+        // Continue whilst the EVM is happy.
+        while (st.is_EXECUTING()) {
+            tracer.step(depth, (EvmState_Compile.State_EXECUTING) st);
+            st = Execute(st);
+            // Manage continuations
+            if (st.is_CONTINUING()) {
+                EvmState_Compile.Continuation cc = ((State_CONTINUING) st)._a0;
+                if (cc.is_CALLS()) {
+                    st = callContinue(tx, depth, tracer, (Continuation_CALLS) cc);
+                } else {
+                    st = createContinue(tx, depth, tracer, (Continuation_CREATES) cc);
+                }
+            }
+        }
+        // Final step
+        tracer.leave(depth, st);
+        //
+        return st;
+    }
 
 	/**
 	 * Manage a nested contract call. This creates a child EVM to execute the
@@ -272,7 +284,7 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static EvmState_Compile.State callContinue(int depth, Tracer tracer, EvmState_Compile.Continuation_CALLS cc) {
+	private static EvmState_Compile.State callContinue(Transaction tx, int depth, Tracer tracer, EvmState_Compile.Continuation_CALLS cc) {
 	    // Sanity check precondition for CallEnter
         if(!cc.dtor_evm().dtor_world().Exists(cc._sender)) {
             throw new IllegalArgumentException("Non-existent sender account!");
@@ -280,17 +292,12 @@ public class DafnyEvm {
 	    //
 		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth));
 		//
-		if(st instanceof State_INVALID) {
-            // NOTE: this is in place to work around an issue with the way in which Geth
-            // reports errors for immediate failures in a contract call. Its unclear to me
-            // whether there is a better work around at this stage. See issue #374.
-	        return cc.CallReturn(st);
-		} else {
+		if(st instanceof State_EXECUTING) {
 		    // Run code within recursive call.
-		    st = run(depth + 1, tracer, st);
-		    // Return from call.
-		    return cc.CallReturn(st);
+		    st = run(tx, depth + 1, tracer, (State_EXECUTING) st);
 		}
+	    // Return from call.
+	    return cc.CallReturn(st);
 	}
 
 	/**
@@ -300,7 +307,7 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static EvmState_Compile.State createContinue(int depth, Tracer tracer, EvmState_Compile.Continuation_CREATES cc) {
+	private static EvmState_Compile.State createContinue(Transaction tx, int depth, Tracer tracer, EvmState_Compile.Continuation_CREATES cc) {
 		// Determine sender
 		BigInteger sender = cc.dtor_evm().dtor_context().dtor_address();
 		// Construct new account
@@ -315,7 +322,9 @@ public class DafnyEvm {
 		// Begin the recursive call.
 		EvmState_Compile.State st = cc.CreateEnter(BigInteger.valueOf(depth), address, cc.dtor_initcode());
 		// Run init code for recursive call.
-		st = run(depth + 1, tracer, st);
+		if(st instanceof State_EXECUTING) {
+		    st = run(tx, depth + 1, tracer, (State_EXECUTING) st);
+		}
 		// Return from creation
 		return cc.CreateReturn(st, address);
 	}
@@ -426,16 +435,9 @@ public class DafnyEvm {
 			this.depth = depth;
 		}
 
-		public byte[] getReturnData() { return null; }
+		public abstract byte[] getReturnData();
 
-		/**
-         * Get the transaction expectation which this state corresponds to.
-         *
-         * @return
-         */
-		public Transaction.Exception toExpectation() {
-		    return null;
-		}
+		public abstract Transaction.Outcome getOutcome();
 
         /**
          * Get gas remaining.
@@ -596,6 +598,16 @@ public class DafnyEvm {
 				// FIXME: might want to add more stuff here at some point!
 				return "OK(" + ws + ")";
 			}
+
+            @Override
+            public byte[] getReturnData() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Transaction.Outcome getOutcome() {
+                throw new UnsupportedOperationException();
+            }
 		}
 
 		/**
@@ -627,6 +639,11 @@ public class DafnyEvm {
             public BigInteger getGas() {
 				return state.dtor_gas();
 			}
+
+            @Override
+            public Transaction.Outcome getOutcome() {
+                return Transaction.Outcome.REVERT;
+            }
 		}
 
 		/**
@@ -662,6 +679,10 @@ public class DafnyEvm {
 				return toWorldState(state.dtor_world());
 			}
 
+            @Override
+            public Transaction.Outcome getOutcome() {
+                return Transaction.Outcome.RETURN;
+            }
 			/**
 			 * Get the log returned from this running the call.
 			 *
@@ -697,21 +718,26 @@ public class DafnyEvm {
          *
          */
 		public static class Invalid extends State<State_INVALID> {
-		    private final Transaction.Exception cause;
+		    private final Transaction.Outcome cause;
 
-		    public Invalid(Tracer tracer, Transaction.Exception cause) {
+		    public Invalid(Tracer tracer, Transaction.Outcome cause) {
 		        super(tracer,null,0);
 		        this.cause = cause;
 		    }
 
             @Override
-            public Transaction.Exception toExpectation() {
+            public Transaction.Outcome getOutcome() {
                 return cause;
             }
 
             @Override
             public BigInteger getGas() {
                 throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public byte[] getReturnData() {
+                return new byte[0];
             }
 		}
 
@@ -732,14 +758,20 @@ public class DafnyEvm {
 			 *
 			 * @return
 			 */
-			public EvmState_Compile.Error getErrorCode() {
-				return state._a0;
-			}
+            @Override
+            public Transaction.Outcome getOutcome() {
+                return Errors.toErrorCode(state._a0);
+            }
 
 			@Override
             public BigInteger getGas() {
 				return BigInteger.ZERO;
 			}
+
+			@Override
+            public byte[] getReturnData() {
+                return new byte[0];
+            }
 
 			@Override
 			public String toString() {
@@ -932,13 +964,21 @@ public class DafnyEvm {
 	 *
 	 */
 	public interface Tracer {
+	    /**
+	     * Enter a new subtrace (i.e. contract call)
+	     */
+	    public void enter(EvmState_Compile.State st);
+	    /**
+         * Enter a new subtrace (i.e. contract call)
+         */
+        public void leave(int depth, EvmState_Compile.State st);
 		/**
 		 * Identifies that the EVM has taken a single step of execution (i.e. executed a
 		 * bytecode).
 		 *
 		 * @param evm
 		 */
-		public void step(int depth, EvmState_Compile.State st);
+		public void step(int depth, EvmState_Compile.State_EXECUTING st);
 	}
 
 	/**
@@ -950,20 +990,30 @@ public class DafnyEvm {
 	 *
 	 */
 	public static abstract class TraceAdaptor implements Tracer {
+	    @Override
+        public final void enter(EvmState_Compile.State st) {
+	        this.enter();
+	    }
+
 		@Override
-		public final void step(int depth, EvmState_Compile.State st) {
-			if (st instanceof State_EXECUTING) {
-				step(new State.Executing(this, (State_EXECUTING) st, depth));
-			} else if (st instanceof State_RETURNS) {
-				end(new State.Return(this, (State_RETURNS) st, depth));
-			} else if (st instanceof State_REVERTS) {
-				revert(new State.Revert(this, (State_REVERTS) st, depth));
-			} else if (st instanceof State_INVALID) {
-				exception(new State.Exception(this, (State_INVALID) st, depth));
-			} else  {
-				throw new IllegalArgumentException("invalid state encountered (" + st.getClass().getName() + ")");
-			}
+		public final void step(int depth, EvmState_Compile.State_EXECUTING st) {
+			step(new State.Executing(this, (State_EXECUTING) st, depth));
 		}
+
+		@Override
+        public final void leave(int depth, EvmState_Compile.State st) {
+            if (st instanceof State_RETURNS) {
+                end(new State.Return(this, (State_RETURNS) st, depth));
+            } else if (st instanceof State_REVERTS) {
+                revert(new State.Revert(this, (State_REVERTS) st, depth));
+            } else if (st instanceof State_INVALID) {
+                exception(new State.Exception(this, (State_INVALID) st, depth));
+            } else  {
+                throw new IllegalArgumentException("invalid state encountered (" + st.getClass().getName() + ")");
+            }
+        }
+
+		public abstract void enter();
 
 		public abstract void step(State.Executing state);
 

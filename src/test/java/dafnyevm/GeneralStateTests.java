@@ -14,6 +14,7 @@
 package dafnyevm;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,7 +42,6 @@ import evmtools.core.LegacyTransaction;
 import evmtools.core.Trace;
 import evmtools.core.TraceTest;
 import evmtools.core.Transaction;
-import evmtools.core.WorldState;
 
 /**
  * A test runner for executing the <code>GeneralStateTests</code> provided as
@@ -122,6 +123,15 @@ public class GeneralStateTests {
             // #455
             "MSTORE_Bounds2_Berlin_(0|1)_0_0",
             "modexp_Berlin_[0123]_(2|28|29|30|36|37)_0", // int overflow
+            // #531
+            "CREATE_ContractRETURNBigOffset_Berlin_0_(0|1|2|3)_0",
+            "codesizeOOGInvalidSize_Berlin_0_(0|1)_0",
+            "randomStatetest643_Berlin_0_0_0",
+            // #532
+            "multiOwnedConstructionNotEnoughGasPartial_Berlin_0_0_0",
+            "multiOwnedConstructionNotEnoughGas_Berlin_0_0_0",
+            "walletConstructionOOG_Berlin_0_0_0",
+            "dayLimitConstructionOOG_Berlin_0_0_0",
             // Performance
             "exp_Berlin_0_(1|2|9)_0",
             "expPower256Of256_Berlin_0_0_0",
@@ -148,22 +158,20 @@ public class GeneralStateTests {
             // Force test to be ignored.
             assumeTrue(false);
         } else {
-            Transaction tx = instance.getTransaction();
+            TraceTest.Tx tx = instance.getTransaction();
             // Construct environment
             DafnyEvm.BlockInfo env = StateTests.toBlockInfo(instance.getEnvironment());
             // Construct EVM
-            ArrayList<Trace.Element> elements = new ArrayList<>();
-            StructuredTracer tracer = new StructuredTracer(elements);
+            StructuredTracer tracer = new StructuredTracer();
             DafnyEvm evm = new DafnyEvm().tracer(tracer).blockInfo(env);
             // Configure world state
             StateTests.configureWorldState(evm, instance.getWorldState());
             // Run the call or create
-            DafnyEvm.State<?> outcome = evm.execute((LegacyTransaction) tx);
+            DafnyEvm.State<?> outcome = evm.execute((LegacyTransaction) tx.getTransaction());
+            Trace actual = tracer.toTrace();
+            Trace expected = tx.getTrace();
             //
-            Trace actual = new Trace(elements);
-            Trace expected = instance.getTrace();
-            //
-            if (!expected.equals(actual) || instance.getException() != outcome.toExpectation()) {
+            if (!Objects.equals(expected,actual)) {
                 // NOTE: the following is really just to help provide additional debugging
                 // support when running tests from e.g. gradle on the command line.
                 System.err.println(pair + " ==> " + outcome);
@@ -171,7 +179,17 @@ public class GeneralStateTests {
             }
             // Finally check for equality.
             assertEquals(expected, actual);
-            assertEquals(instance.getException(),outcome.toExpectation());
+            // Check outcome matches
+            if (tx.getOutcome() == Transaction.Outcome.UNKNOWN && outcome.getOutcome() != Transaction.Outcome.RETURN) {
+                // NOTE: we ignore the case here where the expected outcome is an unknown error,
+                // and we have an error being reported. This is just a workaround for Geth
+                // which, in some cases, does not provide accurate error reporting for reasons
+                // unknown.
+            } else {
+                assertEquals(tx.getOutcome(), outcome.getOutcome());
+            }
+            // Sanity check return data matches as well
+            assertArrayEquals(tx.getData(),outcome.getReturnData());
         }
     }
 
@@ -181,19 +199,25 @@ public class GeneralStateTests {
      * @param expected
      * @param actual
      */
-    private static void printTraceDiff(Trace _expected, Trace _actual) {
-        List<Trace.Element> expected = _expected.getElements();
-        List<Trace.Element> actual = _actual.getElements();
-        //
-        int n = Math.min(expected.size(), actual.size());
-        for (int i = 0; i != n; ++i) {
-            Trace.Element eith = expected.get(i);
-            Trace.Element aith = actual.get(i);
-            if (!eith.equals(aith)) {
-                System.err.println("(expected) " + eith);
-                System.err.println("(actual)   " + aith);
-                System.err.println("--");
-                return;
+    private static void printTraceDiff(Trace traceExpected, Trace traceActual) {
+        if(traceExpected == null || traceActual == null) {
+            System.err.println("(expected) " + traceExpected);
+            System.err.println("(actual)   " + traceActual);
+        } else {
+            List<Trace.Element> expected = traceExpected.getElements();
+            List<Trace.Element> actual = traceActual.getElements();
+            //
+            int n = Math.min(expected.size(), actual.size());
+            for (int i = 0; i != n; ++i) {
+                Trace.Element eith = expected.get(i);
+                Trace.Element aith = actual.get(i);
+                // FIXME: handle nested traces here
+                if (!eith.equals(aith)) {
+                    System.err.println("(expected) " + eith);
+                    System.err.println("(actual)   " + aith);
+                    System.err.println("--");
+                    return;
+                }
             }
         }
     }
@@ -291,6 +315,7 @@ public class GeneralStateTests {
                 return instances.stream();
             } catch (Throwable e) {
                 System.out.println("*** Error reading file \"" + f + "\" (" + e.getMessage() + ")");
+                e.printStackTrace();
                 return null;
             }
         });
@@ -302,10 +327,23 @@ public class GeneralStateTests {
          * needs to agree with the number used to generate the trace files, otherwise
          * things will fail.
          */
-        private final List<Trace.Element> out;
+        private final ArrayList<List<Trace.Element>> stack;
+        /**
+         * The final trace ready for reading.
+         */
+        private Trace trace;
 
-        public StructuredTracer(List<Trace.Element> out) {
-            this.out = out;
+        public StructuredTracer() {
+            this.stack = new ArrayList<>();
+        }
+
+        public Trace toTrace() {
+            return trace;
+        }
+
+        @Override
+        public void enter() {
+            this.stack.add(new ArrayList<>());
         }
 
         @Override
@@ -322,76 +360,42 @@ public class GeneralStateTests {
             // Trim the stack
             BigInteger[] trimmed = evmtools.util.Arrays.trimFront(STACK_LIMIT, stack);
             //
-            out.add(new Trace.Step(pc, op, depth, gas, stack.length, trimmed, memory, storage));
+            add(new Trace.Step(pc, op, depth, gas, stack.length, trimmed, memory, storage));
         }
 
         @Override
         public void end(State.Return state) {
-            if (state.depth < 0) {
-                // Unfortunately, Geth only reports RETURNS on the outermost contract call.
-                out.add(new Trace.Returns(state.getReturnData()));
-            }
+            done(Transaction.Outcome.RETURN,state.getReturnData());
         }
 
         @Override
         public void revert(State.Revert state) {
-            if (state.depth < 0) {
-                // Unfortunately, Geth only reports REVERTS on the outermost contract call.
-                out.add(new Trace.Reverts(state.getReturnData()));
-            }
+            done(Transaction.Outcome.REVERT,state.getReturnData());
         }
 
         @Override
         public void exception(State.Exception state) {
-            Trace.Exception.Error code = toErrorCode(state.getErrorCode());
-            if (state.depth != 0 && !ignored(code)) {
-                out.add(new Trace.Exception(code));
-            }
+            done(state.getOutcome(),null);
         }
 
-        /**
-         * Several exception types are, for whatever reason, not reported by Geth.
-         *
-         * @param code
-         * @return
-         */
-        private static boolean ignored(Trace.Exception.Error code) {
-            switch (code) {
-                case ACCOUNT_COLLISION:
-                    return true;
-                default:
-                    return false;
-            }
+        private void add(Trace.Element element) {
+            int last = stack.size() - 1;
+            stack.get(last).add(element);
         }
-    }
 
-    public static Trace.Exception.Error toErrorCode(EvmState_Compile.Error err) {
-        if (err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
-            return Trace.Exception.Error.INSUFFICIENT_GAS;
-        } else if (err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
-            return Trace.Exception.Error.INVALID_OPCODE;
-        } else if (err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
-            return Trace.Exception.Error.INVALID_JUMPDEST;
-        } else if (err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
-            return Trace.Exception.Error.STACK_OVERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
-            return Trace.Exception.Error.STACK_UNDERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
-            return Trace.Exception.Error.MEMORY_OVERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_RETURNDATA__OVERFLOW) {
-            return Trace.Exception.Error.RETURNDATA_OVERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_INSUFFICIENT__FUNDS) {
-            return Trace.Exception.Error.INSUFFICIENT_FUNDS;
-        } else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
-            return Trace.Exception.Error.CALLDEPTH_EXCEEDED;
-        } else if (err instanceof EvmState_Compile.Error_CODESIZE__EXCEEDED) {
-            return Trace.Exception.Error.CODESIZE_EXCEEDED;
-        } else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
-            return Trace.Exception.Error.ACCOUNT_COLLISION;
-        } else if (err instanceof EvmState_Compile.Error_WRITE__PROTECTION__VIOLATED) {
-            return Trace.Exception.Error.WRITE_PROTECTION;
-        } else {
-            return Trace.Exception.Error.UNKNOWN;
+        private void done(Transaction.Outcome outcome, byte[] data) {
+            int last = stack.size() - 1;
+            List<Trace.Element> elements = stack.get(last);
+            stack.remove(last);
+            // This mirrors Geth, which makes it hard to e.g. identify a revert when no code
+            // was executed.
+            Trace t = new Trace(elements, outcome, data);
+            if (stack.size() == 0) {
+                trace = t;
+                stack.clear(); // for sanity checking
+            } else if (stack.size() > 0 && elements.size() > 0) {
+                add(new Trace.SubTrace(t));
+            }
         }
     }
 }

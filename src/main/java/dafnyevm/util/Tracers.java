@@ -69,6 +69,11 @@ public class Tracers {
 			}
 			return s.toString();
 		}
+
+        @Override
+        public void enter() {
+
+        }
 	}
 
 	/**
@@ -154,6 +159,11 @@ public class Tracers {
 			}
 			return arr;
 		}
+
+        @Override
+        public void enter() {
+
+        }
 	}
 
 }

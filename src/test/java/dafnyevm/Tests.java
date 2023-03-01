@@ -32,7 +32,6 @@ import dafnyevm.DafnyEvm.State;
 import evmtools.util.Hex;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Trace;
-import evmtools.core.Trace.Exception.Error;
 import evmtools.core.Transaction;
 
 import static evmtools.util.Bytecodes.*;
@@ -1103,7 +1102,7 @@ public class Tests {
 	@Test
 	public void test_returndatacopy_01() {
 		// Copying return data can overflow!
-		invalidCall(Error.RETURNDATA_OVERFLOW,
+		invalidCall(Transaction.Outcome.RETURNDATA_OVERFLOW,
 				new int[] { PUSH1, 0x20, PUSH1, 0x0, DUP1, RETURNDATACOPY, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 	}
 
@@ -1205,7 +1204,7 @@ public class Tests {
 	@Test
 	public void test_pop_invalid_01() {
 		// Insufficient operands
-		invalidCall(Error.STACK_UNDERFLOW, new int[] { POP });
+		invalidCall(Transaction.Outcome.STACK_UNDERFLOW, new int[] { POP });
 	}
 
 	@Test
@@ -1351,13 +1350,13 @@ public class Tests {
 	@Test
 	public void test_jump_invalid_01() {
 		// Invalid destination
-		invalidCall(Error.INVALID_JUMPDEST, new int[] { PUSH1, 0x3, JUMP });
+		invalidCall(Transaction.Outcome.INVALID_JUMPDEST, new int[] { PUSH1, 0x3, JUMP });
 	}
 
 	@Test
 	public void test_jump_invalid_02() {
 		// JUMPDEST required
-		invalidCall(Error.INVALID_JUMPDEST, new int[] { PUSH1, 0x3, JUMP, STOP });
+		invalidCall(Transaction.Outcome.INVALID_JUMPDEST, new int[] { PUSH1, 0x3, JUMP, STOP });
 	}
 
 	@Test
@@ -1387,13 +1386,13 @@ public class Tests {
 	@Test
 	public void test_jumpi_invalid_01() {
 		// Condition branch (taken) hits invalid
-		invalidCall(Error.INVALID_OPCODE, new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, INVALID, JUMPDEST, STOP });
+		invalidCall(Transaction.Outcome.INVALID_OPCODE, new int[] { PUSH1, 0x00, PUSH1, 0x6, JUMPI, INVALID, JUMPDEST, STOP });
 	}
 
 	@Test
 	public void test_jumpi_invalid_02() {
 		// Condition branch (not taken) hits invalid
-		invalidCall(Error.INVALID_OPCODE, new int[] { PUSH1, 0x01, PUSH1, 0x6, JUMPI, STOP, JUMPDEST, INVALID });
+		invalidCall(Transaction.Outcome.INVALID_OPCODE, new int[] { PUSH1, 0x01, PUSH1, 0x6, JUMPI, STOP, JUMPDEST, INVALID });
 	}
 
 	@Test
@@ -2371,7 +2370,7 @@ public class Tests {
 	@Test
 	public void test_recursive_call_01() {
 		// Recursive contract call
-		invalidCall(Error.INVALID_OPCODE, new int[] {
+		invalidCall(Transaction.Outcome.INVALID_OPCODE, new int[] {
 				// Make recursive contract call to myself with gas 0xffff.
 				PUSH1, 0x00, DUP1, DUP1, DUP1, DUP1, ADDRESS, PUSH2, 0xff, 0xff, CALL,
 				// Succeed if call succeeded
@@ -2634,7 +2633,7 @@ public class Tests {
 
 	@Test
 	public void test_invalid_01() {
-		invalidCall(Error.INVALID_OPCODE, new int[] { INVALID });
+		invalidCall(Transaction.Outcome.INVALID_OPCODE, new int[] { INVALID });
 	}
 
 	@Test
@@ -2728,14 +2727,14 @@ public class Tests {
 	 * @param code
 	 * @param bytes
 	 */
-	private void invalidCall(Trace.Exception.Error err, int[] words) {
+	private void invalidCall(Transaction.Outcome err, int[] words) {
 		byte[] code = toBytes(words);
 		LegacyTransaction tx = (LegacyTransaction) defaultTxCall();
 		State<?> r = defaultDafnyEvm().create(DEFAULT_RECEIVER, code).execute(tx);
 		// Check exception was thrown as expected.
 		assert r instanceof State.Exception;
 		// FIXME: this is quite ugly
-		assert GeneralStateTests.toErrorCode(((State.Exception) r).getErrorCode()).equals(err);
+		assert r.getOutcome().equals(err);
 	}
 
 	private DafnyEvm defaultDafnyEvm() {
