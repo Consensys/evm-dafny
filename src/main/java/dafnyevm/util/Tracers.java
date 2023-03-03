@@ -53,12 +53,6 @@ public class Tracers {
 			System.out.println(Hex.toHexString(state.getReturnData()));
 		}
 
-		@Override
-		public void revert(DafnyEvm.State.Revert state) {
-			System.out.println(Hex.toHexString(state.getReturnData()));
-			System.out.println("error: execution reverted");
-		}
-
 		private String toStackString(BigInteger[] stack) {
 			StringBuilder s = new StringBuilder();
 			for(int i=0;i<stack.length;++i) {
@@ -111,21 +105,6 @@ public class Tracers {
 				JSONWriter obj = json.object();
 				obj.key("output").value(Hex.toAbbreviatedHexString(state.getReturnData()));
 				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
-				System.out.println(obj.endObject().toString());
-			} catch (JSONException e) {
-				// In principle, this should never happen!
-				throw new RuntimeException(e);
-			}
-		}
-
-		@Override
-		public void revert(DafnyEvm.State.Revert state) {
-			JSONStringer json = new JSONStringer();
-			try {
-				JSONWriter obj = json.object();
-				obj.key("output").value(Hex.toAbbreviatedHexString(state.getReturnData()));
-				obj.key("gasUsed").value(Hex.toHexString(state.getGas()));
-				obj.key("error").value("execution reverted");
 				System.out.println(obj.endObject().toString());
 			} catch (JSONException e) {
 				// In principle, this should never happen!

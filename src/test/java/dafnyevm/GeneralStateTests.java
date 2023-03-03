@@ -369,13 +369,8 @@ public class GeneralStateTests {
         }
 
         @Override
-        public void revert(State.Revert state) {
-            done(Transaction.Outcome.REVERT,state.getReturnData());
-        }
-
-        @Override
         public void exception(State.Exception state) {
-            done(state.getOutcome(),null);
+            done(state.getOutcome(),state.getReturnData());
         }
 
         private void add(Trace.Element element) {

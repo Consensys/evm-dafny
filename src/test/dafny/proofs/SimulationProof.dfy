@@ -37,7 +37,7 @@ function equiv(l: State, r: State) : bool {
     else if l.RETURNS? && r.RETURNS?
     then
         l.data == r.data && l.world == r.world
-    else if l.REVERTS? && r.REVERTS?
+    else if l.ERROR? && r.ERROR?
     then
         l.data == r.data
     else
@@ -55,17 +55,19 @@ requires context.address in world {
     //
     st1 := ExecuteN(st1,7); // PUSH1 0x01,PUSH1 0x00,SLOAD,ADD,PUSH1 0x00,DUP2,SUB
     st2 := ExecuteN(st2,6); // PUSH1 0x01,PUSH1 0x00,SLOAD,ADD,DUP1,ISZERO
+    assert st1.EXECUTING? && st1.PC() == 0xa;
+    assert st2.EXECUTING? && st2.PC() == 0x8;
     assert (st1.Peek(0) as nat) == (x+1) % TWO_256;
     //
     st1 := ExecuteN(st1,2); // PUSH1 0x11, JUMPI
     st2 := ExecuteN(st2,2); // PUSH1 0xf, JUMPI
     //
     if (x+1) == TWO_256 {
-        assert st1.PC() == 0xd;
-        assert st2.PC() == 0xf;
+        assert st1.EXECUTING? && st1.PC() == 0xd;
+        assert st2.EXECUTING? && st2.PC() == 0xf;
         st1 := ExecuteN(st1,3);
         st2 := ExecuteN(st2,4);
-        assert st1.REVERTS?;
+        assert st1.IsRevert();
         assert equiv(st1,st2);
     } else {
         assert st1.PC() == 0x11;
@@ -80,5 +82,4 @@ requires context.address in world {
         assert st1.RETURNS? && st2.RETURNS?;
         assert equiv(st1,st2);
     }
-
 }

@@ -218,6 +218,6 @@ module EvmBerlin refines EVM {
             case STATICCALL => Bytecode.StaticCall(st)
             case REVERT => Bytecode.Revert(st)
             case SELFDESTRUCT => Bytecode.SelfDestruct(st)
-            case _ => INVALID(INVALID_OPCODE)
+            case _ => ERROR(INVALID_OPCODE)
     }
 }

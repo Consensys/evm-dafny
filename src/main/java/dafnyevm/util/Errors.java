@@ -17,7 +17,9 @@ import evmtools.core.Transaction;
 
 public class Errors {
     public static Transaction.Outcome toErrorCode(EvmState_Compile.Error err) {
-        if (err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
+        if (err instanceof EvmState_Compile.Error_REVERTS) {
+            return Transaction.Outcome.REVERT;
+        } else if (err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
             return Transaction.Outcome.OUT_OF_GAS;
         } else if (err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
             return Transaction.Outcome.INVALID_OPCODE;
