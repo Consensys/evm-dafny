@@ -17,6 +17,7 @@ import org.apache.commons.cli.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import evmtools.core.LegacyTransaction;
 import evmtools.core.StateTest;
 import evmtools.util.Hex;
 import dafnyevm.util.StateTests;
@@ -85,25 +86,27 @@ public class Main {
 		// Extract transaction sender.
 		BigInteger sender = Hex.toBigInt(cmd.getOptionValue("sender", "0xabc"));
 		// Extract transaction receiver.
-		BigInteger receiver = Hex.toBigInt(cmd.getOptionValue("receiver", "0xdef"));
+		BigInteger receiver = Hex.toBigInt(cmd.getOptionValue("receiver", null));
 		// Extract call value (if applicable)
-		BigInteger callValue = Hex.toBigInt(cmd.getOptionValue("value", "0x0"));
+		BigInteger value = Hex.toBigInt(cmd.getOptionValue("value", "0x0"));
 		// Extract call data (if applicable)
-		byte[] calldata = Hex.toBytes(cmd.getOptionValue("input", "0x"));
+		byte[] data = Hex.toBytes(cmd.getOptionValue("input", "0x"));
 		//
 		BigInteger gas = Hex.toBigInt(cmd.getOptionValue("gas", "0x10000000000"));
 		//
 		BigInteger gasPrice = Hex.toBigInt(cmd.getOptionValue("gasPrice", "0x1"));
+		//
+		BigInteger nonce = BigInteger.ONE;
 		// Continue processing remaining arguments.
 		String[] args = cmd.getArgs();
 		//
 		// Parse input string
 		byte[] bytes = Hex.toBytes(args[0]);
 		// Construct EVM
-		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).gasPrice(gasPrice).create(receiver, bytes)
-				.to(receiver).sender(sender).origin(sender).gas(gas).data(calldata).value(callValue);
+		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).create(receiver, bytes);
+		LegacyTransaction tx = new LegacyTransaction(sender,null,receiver,nonce,gas,value,data,gasPrice);
 		// Execute the EVM
-		evm.call();
+		evm.execute(tx);
 	}
 
 	/**

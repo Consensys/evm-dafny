@@ -44,7 +44,7 @@ public class Tracers {
 		}
 
 		@Override
-		public void exception(DafnyEvm.State.Invalid state) {
+		public void exception(DafnyEvm.State.Exception state) {
 			System.out.println("error");
 		}
 
@@ -69,6 +69,11 @@ public class Tracers {
 			}
 			return s.toString();
 		}
+
+        @Override
+        public void enter() {
+
+        }
 	}
 
 	/**
@@ -129,7 +134,7 @@ public class Tracers {
 		}
 
 		@Override
-		public void exception(DafnyEvm.State.Invalid state) {
+		public void exception(DafnyEvm.State.Exception state) {
 			JSONStringer json = new JSONStringer();
 			try {
 				JSONWriter obj = json.object();
@@ -154,6 +159,11 @@ public class Tracers {
 			}
 			return arr;
 		}
+
+        @Override
+        public void enter() {
+
+        }
 	}
 
 }

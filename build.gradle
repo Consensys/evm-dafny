@@ -137,7 +137,7 @@ test {
     // Ensure can see stdout
     testLogging.showStandardStreams = true
     // Ensure enough memory
-    jvmArgs '-Xmx2G'
+    jvmArgs '-Xmx2G','-Xss4m'
     //
     useJUnitPlatform()
     filter {
@@ -167,7 +167,7 @@ dependencies {
     implementation("org.web3j:utils:5.0.0")
     implementation("org.web3j:rlp:5.0.0")
     implementation("org.web3j:crypto:5.0.0")
-    implementation("org.whiley:evmtools:0.3.25")
+    implementation("org.whiley:evmtools:0.3.26")
     implementation files('build/evm-java/DafnyRuntime.jar')
     //
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
@@ -192,6 +192,8 @@ task testgen(type: JavaExec) {
     // Specify actions
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'evmtools.Main'
+    // Ensure enough memory
+    jvmArgs '-Xmx2G','-Xss4m'
     // arguments to pass to the application
     args '-incremental'
     args '-fork'

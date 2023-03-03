@@ -32,6 +32,7 @@ import java.util.Map;
 import dafnyevm.DafnyEvm;
 import dafnyevm.DafnyEvm.Tracer;
 import evmtools.core.Environment;
+import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
 import evmtools.core.WorldState;
 
@@ -55,20 +56,12 @@ public class StateTests {
      */
     public static void runInstance(String name, Environment env, WorldState state, Transaction tx, Tracer tracer) {
         DafnyEvm.BlockInfo blk = toBlockInfo(env);
-        // FIXME: following contains a workaround for an issue with the trace output,
-        // whereby traces are used the _block's gas limit_ rather than the
-        // _transaction's gas limit_. #245
-        DafnyEvm evm = new DafnyEvm().tracer(tracer).gasPrice(tx.gasPrice).blockInfo(blk).to(tx.to)
-                .sender(tx.sender)
-                .origin(tx.sender).gas(blk.gasLimit).value(tx.value).data(tx.data);
+        //
+        DafnyEvm evm = new DafnyEvm().tracer(tracer).blockInfo(blk);
         // Set the world state
         configureWorldState(evm,state);
-        // Run call or create
-        if (tx.to != null) {
-            evm.call();
-        } else {
-            evm.create();
-        }
+        // Run transaction
+        evm.execute((LegacyTransaction) tx);
     }
 
     /**
@@ -82,13 +75,8 @@ public class StateTests {
         DafnyEvm.BlockInfo info = new DafnyEvm.BlockInfo();
         info = info.coinBase(env.currentCoinbase);
         info = info.timeStamp(env.currentTimestamp);
-        // NOTE: following currently replicates what Geth does (which default's to
-        // Ganache's ChainID). At some point, we'll need to fix this.
-        info = info.chainID(0x539);
-        // NOTE: following is commented out whilst trace data is generated using the
-        // "evm" tool directly, as this does not allow a block number other than zero.
-        // info = info.number(env.currentNumber);
-        info = info.number(0);
+        info = info.chainID(1);
+        info = info.number(env.currentNumber);
         info = info.difficulty(env.currentDifficulty);
         info = info.gasLimit(env.currentGasLimit);
         return info;
