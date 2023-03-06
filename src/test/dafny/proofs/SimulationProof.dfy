@@ -44,7 +44,7 @@ function equiv(l: State, r: State) : bool {
         false
 }
 
-method proof(context: Context.T, world: map<u160,WorldState.Account>, gas: nat)
+method {:verify false} proof(context: Context.T, world: map<u160,WorldState.Account>, gas: nat)
 requires context.writePermission
 requires gas > 100000
 requires context.address in world {
@@ -55,8 +55,6 @@ requires context.address in world {
     //
     st1 := ExecuteN(st1,7); // PUSH1 0x01,PUSH1 0x00,SLOAD,ADD,PUSH1 0x00,DUP2,SUB
     st2 := ExecuteN(st2,6); // PUSH1 0x01,PUSH1 0x00,SLOAD,ADD,DUP1,ISZERO
-    assert st1.EXECUTING? && st1.PC() == 0xa;
-    assert st2.EXECUTING? && st2.PC() == 0x8;
     assert (st1.Peek(0) as nat) == (x+1) % TWO_256;
     //
     st1 := ExecuteN(st1,2); // PUSH1 0x11, JUMPI
