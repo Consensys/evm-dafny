@@ -172,7 +172,7 @@ include "evms/berlin.dfy"
         requires cc.evm.world.Exists(cc.sender)
     {
         st := cc.CallEnter(depth);
-        if ! st.INVALID? {
+        if !st.ERROR? || st.IsRevert() {
             st := Run(depth+1, st);
         }
         return cc.CallReturn(st);
