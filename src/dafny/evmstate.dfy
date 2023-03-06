@@ -108,15 +108,16 @@ module EvmState {
     /**
      * The type for terminated states.
      */
-    type TerminatedState = s:State | (s.RETURNS? || s.REVERTS? || s.INVALID?)
-    witness INVALID(INSUFFICIENT_GAS)
+    type TerminatedState = s:State | (s.RETURNS? || s.ERROR?)
+    witness ERROR(INSUFFICIENT_GAS)
 
     /**
      * Identifiers the reason that an exceptional (i.e. INVALID) state was
      * reached. This is not strictly part of the EVM specification (as per the
      * Yellow Paper), but it does provide useful debugging information.
      */
-    datatype Error = INSUFFICIENT_GAS
+    datatype Error = REVERTS
+        | INSUFFICIENT_GAS
         | INSUFFICIENT_FUNDS
         | INVALID_OPCODE
         | STACK_UNDERFLOW
@@ -139,9 +140,8 @@ module EvmState {
      * indicated accordingly (along with any gas returned).
      */
     datatype State = EXECUTING(evm:T)
-        | INVALID(Error)
+        | ERROR(error:Error,gas:nat := 0, data: Array<u8> := [])
         | RETURNS(gas:nat,data: Array<u8>,world: WorldState.T,substate:SubState.T)
-        | REVERTS(gas:nat,data: Array<u8>)
         | CONTINUING(Continuation) {
 
         /**
@@ -153,14 +153,21 @@ module EvmState {
         }
 
         /**
+         * Determine whether this state indicates a user-specified REVERT has
+         * occurred or not.
+         */
+        function IsRevert() : bool {
+            this.ERROR? && this.error == REVERTS
+        }
+
+        /**
          * Determine remaining gas.
          */
-        function Gas(): nat
-        requires !this.INVALID? {
+        function Gas(): nat {
             match this
                 case EXECUTING(evm) => evm.gas
                 case RETURNS(g, _, _, _) => g
-                case REVERTS(g, _) => g
+                case ERROR(_, g, _) => g
                 case CONTINUING(cc) => cc.evm.gas
         }
 
@@ -169,7 +176,7 @@ module EvmState {
         requires this.EXECUTING?
         {
             if this.Gas() < k as nat then
-                INVALID(INSUFFICIENT_GAS)
+                ERROR(INSUFFICIENT_GAS)
             else
                 EXECUTING(evm.(gas := this.Gas() - k as nat))
         }
@@ -637,12 +644,12 @@ module EvmState {
         var address := ctx.address;
         // Check call depth & available balance.  Note there isn't an off-by-one
         // error here (even though it looks like it).
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then REVERTS(gas, [])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then ERROR(REVERTS, gas, [])
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(address);
             // Sanity check deposit won't overflow
-            if !w.CanDeposit(address,value) then INVALID(BALANCE_OVERFLOW)
+            if !w.CanDeposit(address,value) then ERROR(BALANCE_OVERFLOW)
             // Sanity check sufficient funds
             else
                 // Transfer wei
@@ -652,10 +659,10 @@ module EvmState {
                 then
                     // Execute precompiled contract
                     match Precompiled.Call(codeAddress,ctx.callData)
-                    case None => INVALID(INVALID_PRECONDITION)
+                    case None => ERROR(INVALID_PRECONDITION,0,[])
                     case Some((data,gascost)) => if gas >= gascost
                         then RETURNS(gas - gascost, data, nw, substate)
-                        else INVALID(INSUFFICIENT_GAS)
+                        else ERROR(INSUFFICIENT_GAS,0,[])
                 // Check for end-user account
                 else
                     // Extract contract code
@@ -685,9 +692,9 @@ module EvmState {
         var endowment := ctx.callValue;
         // Check call depth & available balance. Note there isn't an off-by-one
         // error here (even though it looks like it).
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writePermission then REVERTS(gas,[])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writePermission then ERROR(REVERTS,gas,[])
         // Sanity checks for existing account
-        else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then INVALID(ACCOUNT_COLLISION)
+        else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then ERROR(ACCOUNT_COLLISION,0,[])
         else
             var storage := Storage.Create(map[]); // empty
             var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]));
@@ -770,7 +777,7 @@ module EvmState {
                 // Calculate the exitcode
                 var exitCode := if vm.RETURNS? then 1 else 0;
                 // Extract return data (if applicable)
-                if vm.INVALID? then st.Push(0).SetReturnData([])
+                if vm.ERROR? && vm.error != REVERTS then st.Push(0).SetReturnData([])
                 else
                     // Determine amount of data to actually return
                     var m := Min(|vm.data|,outSize);
@@ -778,12 +785,10 @@ module EvmState {
                     var data := vm.data[0..m];
                     // Thread through world state and substate
                     var nst := if vm.RETURNS? then st.Merge(vm.world,vm.substate) else st;
-                    // Compute the gas refund (if any)
-                    var refund := if vm.RETURNS?||vm.REVERTS? then vm.gas else 0;
                     // Done
-                    nst.Push(exitCode).Refund(refund).SetReturnData(vm.data).Copy(outOffset,data)
+                    nst.Push(exitCode).Refund(vm.gas).SetReturnData(vm.data).Copy(outOffset,data)
             else
-                INVALID(STACK_OVERFLOW)
+                ERROR(STACK_OVERFLOW)
         }
 
 
@@ -813,8 +818,6 @@ module EvmState {
          * (otherwise).
          */
         function CreateReturn(vm:TerminatedState, address: u160) : (nst:State)
-        // Following line should not be required?
-        requires vm.RETURNS? || vm.REVERTS?|| vm.INVALID?
         // Can only return to a continuation (i.e. a parent create)
         requires this.CREATES?
         // Contract address of executing account must still exist.
@@ -825,10 +828,14 @@ module EvmState {
             var st := EXECUTING(evm);
             if st.Capacity() >= 1
             then
-                // Extract return data (if applicable)
-                if vm.INVALID? then st.AccountAccessed(address).Push(0)
-                else if vm.RETURNS?
+                if vm.ERROR?
                 then
+                    var nst := st.AccountAccessed(address).Push(0);
+                    // NOTE: only in the event of a REVERT should the return data be passed back.
+                    if vm.IsRevert() then nst.Refund(vm.gas).SetReturnData(vm.data)
+                    else nst
+                else
+                    assert vm.world.Exists(evm.context.address);
                     // Calculate the deposit cost
                     var depositcost := G_CODEDEPOSIT * |vm.data|;
                     // Check code within permitted bounds
@@ -843,12 +850,8 @@ module EvmState {
                         var nvm := vm.substate.AccountAccessed(address);
                         // Thread world state through
                         st.Refund(vm.gas - depositcost).Merge(nworld,nvm).Push(address as u256).SetReturnData([])
-                else
-                    // NOTE: in the event of a revert, the return data is
-                    // provided back.
-                    st.Refund(vm.gas).AccountAccessed(address).Push(0).SetReturnData(vm.data)
             else
-                INVALID(STACK_OVERFLOW)
+                ERROR(STACK_OVERFLOW)
         }
     }
 }

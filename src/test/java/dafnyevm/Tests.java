@@ -2713,7 +2713,8 @@ public class Tests {
 		LegacyTransaction tx = defaultTxCall();
 		State<?> r = defaultDafnyEvm().create(DEFAULT_RECEIVER, code).execute(tx);
 		// Check we have reverted as expected
-		assertTrue(r instanceof State.Revert);
+		assertTrue(r instanceof State.Exception);
+		assertTrue(((State.Exception) r).getOutcome() == Transaction.Outcome.REVERT);
 		// Check something was returned
 		assertNotNull(r.getReturnData());
 		// Ok!

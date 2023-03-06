@@ -56,7 +56,7 @@ module Kontract1 {
         /** Code is INC_CONTRACT. */
         requires st.evm.code == INC_CONTRACT
         /** The contract never runs out of gas. */
-        ensures st'.REVERTS? || st'.RETURNS?
+        ensures (st'.ERROR? && st'.error == REVERTS) || st'.RETURNS?
         /** It terminates normally iff storage at loc 0 is < MAX_U256. */
         ensures st'.RETURNS? <==> (st.Load(0) as nat) < MAX_U256
         /** The world state's accounts do not change. */
@@ -70,7 +70,7 @@ module Kontract1 {
         if st'.Peek(0) == 0 {
             assert st'.PC() == 0xa;
             st' := ExecuteN(st',3);
-            assert st'.REVERTS?;
+            assert (st'.ERROR? && st'.error == REVERTS);
         } else {
             assert st'.PC() == 0xf;
             st' := ExecuteN(st',4);
@@ -126,9 +126,9 @@ module Kontract1 {
         /** The code is the snippet to detect overflow. */
         requires st.evm.code == OVERFLOW_CHECK
         /** The contract never runs out of gas thanks to Pre1. */
-        ensures st'.REVERTS? || st'.RETURNS?
+        ensures (st'.ERROR? && st'.error == REVERTS) || st'.RETURNS?
         /** Should revert iff overflow. */
-        ensures st'.REVERTS? <==> x as nat + y as nat > MAX_U256
+        ensures (st'.ERROR? && st'.error == REVERTS) <==> x as nat + y as nat > MAX_U256
         /** Normal termination iff no overflow. */
         ensures st'.RETURNS? <==> x as nat + y as nat <= MAX_U256
     {
@@ -144,7 +144,7 @@ module Kontract1 {
             st':= Execute(st');
             assert st'.PC() == 0x07;
             st' := ExecuteN(st',4);
-            assert st'.REVERTS?;
+            assert st'.ERROR? && st'.error == REVERTS;
         }
     }
 

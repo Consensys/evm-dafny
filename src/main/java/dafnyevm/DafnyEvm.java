@@ -31,10 +31,9 @@ import java.util.Map;
 import EvmState_Compile.Continuation_CALLS;
 import EvmState_Compile.Continuation_CREATES;
 import EvmState_Compile.State_CONTINUING;
-import EvmState_Compile.State_INVALID;
+import EvmState_Compile.State_ERROR;
 import EvmState_Compile.State_EXECUTING;
 import EvmState_Compile.State_RETURNS;
-import EvmState_Compile.State_REVERTS;
 import WorldState_Compile.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
@@ -235,7 +234,7 @@ public class DafnyEvm {
 	            if (rst.dtor_data().length() > MAX_CODE_SIZE) {
 	                // Contract being created is too large.
 	                EvmState_Compile.Error err = EvmState_Compile.Error.create_CODESIZE__EXCEEDED();
-	                st = EvmState_Compile.State.create_INVALID(err);
+	                st = EvmState_Compile.State.create_ERROR(err, BigInteger.ZERO, DafnySequence.fromBytes(new byte[0]));
 	            }
 	        }
 	    }
@@ -459,12 +458,10 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public static State<?> from(int depth, Tracer tracer, EvmState_Compile.State state) {
-			if (state instanceof State_INVALID) {
-				return new State.Exception(tracer, (State_INVALID) state, depth);
+			if (state instanceof State_ERROR) {
+				return new State.Exception(tracer, (State_ERROR) state, depth);
 			} else if (state instanceof State_EXECUTING) {
 				return new State.Executing(tracer, (State_EXECUTING) state, depth);
-			} else if (state instanceof State_REVERTS) {
-				return new State.Revert(tracer, (State_REVERTS) state, depth);
 			} else if (state instanceof State_RETURNS) {
 				return new State.Return(tracer, (State_RETURNS) state, depth);
 			} else {
@@ -611,42 +608,6 @@ public class DafnyEvm {
 		}
 
 		/**
-		 * Indicates a <code>REVERT</code> occurred producing zero or more bytes of
-		 * return data.
-		 *
-		 * @author David J. Pearce
-		 *
-		 */
-		public static class Revert extends State<State_REVERTS> {
-			public Revert(Tracer tracer, State_REVERTS state, int depth) {
-				super(tracer, state, depth);
-			}
-
-			/**
-			 * Get any return data from this contract call.
-			 *
-			 * @return
-			 */
-			@SuppressWarnings("unchecked")
-			@Override
-			public byte[] getReturnData() {
-				@SuppressWarnings("rawtypes")
-				DafnySequence data = (DafnySequence) state.dtor_data();
-				return DafnySequence.toByteArray(data);
-			}
-
-			@Override
-            public BigInteger getGas() {
-				return state.dtor_gas();
-			}
-
-            @Override
-            public Transaction.Outcome getOutcome() {
-                return Transaction.Outcome.REVERT;
-            }
-		}
-
-		/**
 		 * Indicates a <code>RETURN</code> occurred producing zero or more bytes of
 		 * return data.
 		 *
@@ -717,7 +678,7 @@ public class DafnyEvm {
          * @author David J. Pearce
          *
          */
-		public static class Invalid extends State<State_INVALID> {
+		public static class Invalid extends State<State_ERROR> {
 		    private final Transaction.Outcome cause;
 
 		    public Invalid(Tracer tracer, Transaction.Outcome cause) {
@@ -748,8 +709,8 @@ public class DafnyEvm {
 		 * @author David J. Pearce
 		 *
 		 */
-		public static class Exception extends State<State_INVALID> {
-			public Exception(Tracer tracer, State_INVALID state, int depth) {
+		public static class Exception extends State<State_ERROR> {
+			public Exception(Tracer tracer, State_ERROR state, int depth) {
 				super(tracer, state, depth);
 			}
 
@@ -760,22 +721,30 @@ public class DafnyEvm {
 			 */
             @Override
             public Transaction.Outcome getOutcome() {
-                return Errors.toErrorCode(state._a0);
+                return Errors.toErrorCode(state.dtor_error());
             }
 
-			@Override
-            public BigInteger getGas() {
-				return BigInteger.ZERO;
-			}
-
-			@Override
+            /**
+             * Get any return data from this contract call.
+             *
+             * @return
+             */
+            @SuppressWarnings("unchecked")
+            @Override
             public byte[] getReturnData() {
-                return new byte[0];
+                @SuppressWarnings("rawtypes")
+                DafnySequence data = (DafnySequence) state.dtor_data();
+                return DafnySequence.toByteArray(data);
+            }
+
+            @Override
+            public BigInteger getGas() {
+                return state.dtor_gas();
             }
 
 			@Override
 			public String toString() {
-				return "Invalid(" + state._a0.getClass().getSimpleName() + ")";
+				return "Invalid(" + state.dtor_error().getClass().getSimpleName() + ")";
 			}
 		}
 
@@ -1004,10 +973,8 @@ public class DafnyEvm {
         public final void leave(int depth, EvmState_Compile.State st) {
             if (st instanceof State_RETURNS) {
                 end(new State.Return(this, (State_RETURNS) st, depth));
-            } else if (st instanceof State_REVERTS) {
-                revert(new State.Revert(this, (State_REVERTS) st, depth));
-            } else if (st instanceof State_INVALID) {
-                exception(new State.Exception(this, (State_INVALID) st, depth));
+            } else if (st instanceof State_ERROR) {
+                exception(new State.Exception(this, (State_ERROR) st, depth));
             } else  {
                 throw new IllegalArgumentException("invalid state encountered (" + st.getClass().getName() + ")");
             }
@@ -1018,8 +985,6 @@ public class DafnyEvm {
 		public abstract void step(State.Executing state);
 
 		public abstract void end(State.Return state);
-
-		public abstract void revert(State.Revert state);
 
 		public abstract void exception(State.Exception state);
 	}
