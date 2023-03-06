@@ -14,11 +14,13 @@
 include "../evm.dfy"
 include "../bytecode.dfy"
 include "../gas.dfy"
+include "../core/precompiled.dfy"
 
 module EvmBerlin refines EVM {
     import opened Opcode
     import Bytecode
     import Gas
+    import Precompiled
 
     /** An empty VM, with some gas.
      *
@@ -28,7 +30,7 @@ module EvmBerlin refines EVM {
     function InitEmpty(gas: nat, code: seq<u8> := []) : (st:ExecutingState)
     requires |code| <= Code.MAX_CODE_SIZE
     {
-        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
+        var tx := Context.DEFAULT;
         Create(tx, map[0:=WorldState.DefaultAccount()], gas, code)
     }
 
@@ -41,7 +43,7 @@ module EvmBerlin refines EVM {
     requires |code| <= Code.MAX_CODE_SIZE
     requires |stk| <= 1024
     {
-        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
+        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0), Precompiled.DEFAULT);
         Create(tx, map[0:=WorldState.DefaultAccount()], gas, code, stk)
     }
 

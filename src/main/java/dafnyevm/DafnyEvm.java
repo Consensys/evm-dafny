@@ -34,6 +34,7 @@ import EvmState_Compile.State_CONTINUING;
 import EvmState_Compile.State_ERROR;
 import EvmState_Compile.State_EXECUTING;
 import EvmState_Compile.State_RETURNS;
+import Optional_Compile.Option;
 import WorldState_Compile.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
@@ -75,6 +76,11 @@ public class DafnyEvm {
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
 	private Tracer tracer = DEFAULT_TRACER;
+
+	/**
+	 * Native implementation of precompiled contracts.
+	 */
+	private Precompiled_Compile.Dispatcher NATIVE_PRECOMPILES;
 	/**
 	 * World state to use for this call.
 	 */
@@ -83,13 +89,6 @@ public class DafnyEvm {
 	 * Current block information.
 	 */
 	private BlockInfo blockInfo = new BlockInfo();
-
-	public DafnyEvm() {
-        // Link the Java-side precompile implementations. This is necessary to override
-        // the default implementations which are used for compiling Dafny (but which are
-        // broken).
-	    External_Compile.__default.bundle = new Precompiles.Bundle();
-	}
 
 	/**
 	 * Set the tracer to use during execution of this EVM. Tracers provide a
@@ -164,7 +163,8 @@ public class DafnyEvm {
 	public DafnyEvm create(BigInteger address, BigInteger nonce, BigInteger endowment, Map<BigInteger, BigInteger> storage, byte[] bytecode) {
 		DafnyMap<BigInteger,BigInteger> store = new DafnyMap<BigInteger,BigInteger>(storage);
 		DafnySequence<Byte> code = DafnySequence.fromBytes(bytecode);
-		WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store,code);
+		BigInteger hash = Precompiles.sha3(code);
+		WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store, code, hash);
 		this.worldState = DafnyMap.update(worldState, address, acct);
 		return this;
 	}
@@ -211,7 +211,7 @@ public class DafnyEvm {
 	    if(tx.to() != null) {
 	        // Contract call
 	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), tx.to(), tx.value(),
-	                callData, true, gasPrice, blockInfo.toDafny());
+	                callData, true, gasPrice, blockInfo.toDafny(), NATIVE_PRECOMPILES);
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
@@ -227,7 +227,7 @@ public class DafnyEvm {
 	        BigInteger address = addr(tx.sender(),nonce);
 	        // Construct the transaction context for the call.
 	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
-	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
+	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny(), NATIVE_PRECOMPILES);
 	        // Begin the call.
 	        st = EvmState_Compile.__default.Create(ws, ctx, ss, callData, gas, BigInteger.ONE);
 	    }

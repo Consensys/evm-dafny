@@ -36,10 +36,7 @@ module WorldState {
     /**
      * Create a new account.  This automatically constructs the appropriate code hash.
      */
-    function CreateAccount(nonce:nat, balance: u256, storage: Storage.T, code: Code.T) : Account {
-        // Generate code hash
-        var hash := External.sha3(code.contents);
-        // Done
+    function CreateAccount(nonce:nat, balance: u256, storage: Storage.T, code: Code.T, hash: u256) : Account {
         Account(nonce,balance,storage,code,hash)
     }
 
@@ -47,7 +44,7 @@ module WorldState {
      * Create a default account.  This has zero balance, empty storage and no code.
      */
     function DefaultAccount() : Account {
-        CreateAccount(0,0,Storage.Create(map[]),Code.Create([]))
+        CreateAccount(0,0,Storage.Create(map[]),Code.Create([]),0)
     }
 
     /**
@@ -225,15 +222,13 @@ module WorldState {
         /**
          * Set the code associated with a given contract account.
          */
-        function SetCode(account:u160, code: seq<u8>) : T
+        function SetCode(account:u160, code: seq<u8>, hash: u256) : T
         // Account must be valid!
         requires account in this.accounts
         // Code must be valid size.
         requires |code| <= Code.MAX_CODE_SIZE {
             // Extract account data
             var entry := accounts[account];
-            // Generate code hash
-            var hash := External.sha3(code);
             // Write it back
             this.(accounts:=this.accounts[account:=entry.(code:=Code.Create(code),hash:=hash)])
         }

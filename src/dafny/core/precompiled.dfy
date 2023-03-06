@@ -29,18 +29,43 @@ module Precompiled {
     import External
     import Bytes
 
-    function Call(address: u160, data: Array<u8>) : Option<(Array<u8>,nat)>
-    requires address >= 1 && address <= 9 {
-        match address
-        case 1 => CallEcdsaRecover(data)
-        case 2 => CallSha256(data)
-        case 3 => CallRipEmd160(data)
-        case 4 => CallID(data)
-        case 5 => CallModExp(data)
-        case 6 => CallBnAdd(data)
-        case 7 => CallBnMul(data)
-        case 8 => CallSnarkV(data)
-        case 9 => CallBlake2f(data)
+    const DEFAULT : Dispatcher := Dispatcher(
+        // (1) ECDSA Recover
+        (data,v,r,s)=>(data),
+        // (2) SHA256
+        data=>(data)
+    )
+
+    // The type for an external ECDSA recover implementation, where we have v, r
+    // and s as the last three parameters.
+    type EcdsaRecoverFn = (Array<u8>, u8, u256, u256)->Array<u8>
+    // The type for an external Sha256 implementation.
+    type Sha256Fn = Array<u8> -> Array<u8>
+
+    // Define the type of the precompiled dispatch function.  This accepts an
+    // address and an array of input data, and returns either nothing (in the
+    // event of a failure) or an array of output data and a gas cost.
+    datatype Dispatcher = Dispatcher(ecdsa: EcdsaRecoverFn, sha256: Sha256Fn) {
+        // Call a precompiled contract.  This function is marked opaque to
+        // ensure that, when verifying against this function, no assumptions are
+        // made about the possible return values.
+        function {:opaque} Call(address: u160, data: Array<u8>) : Option<(Array<u8>,nat)> {
+            match address
+            case 1 => CallEcdsaRecover(ecdsa,data)
+            case 2 => CallSha256(sha256,data)
+            // case 3 => CallRipEmd160(data)
+            // case 4 => CallID(data)
+            // case 5 => CallModExp(data)
+            // case 6 => CallBnAdd(data)
+            // case 7 => CallBnMul(data)
+            // case 8 => CallSnarkV(data)
+            // case 9 => CallBlake2f(data)
+            case _ => None
+        }
+
+        function {:opaque} Sha3(data: Array<u8>) : u256 {
+            0 // FOR NOW
+        }
     }
 
     // ========================================================================
@@ -54,7 +79,7 @@ module Precompiled {
     /**
      * Key recovery.
      */
-    function CallEcdsaRecover(data: Array<u8>) : Option<(Array<u8>,nat)> {
+    function CallEcdsaRecover(fn: EcdsaRecoverFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
         var h := Bytes.Slice(data,0,32);
         var v := Bytes.ReadUint256(data,32);
         var r := Bytes.ReadUint256(data,64);
@@ -64,7 +89,7 @@ module Precompiled {
         then
             []
         else
-            External.ECDSARecover(h,v as u8,r,s);
+            fn(h,v as u8,r,s);
         //
         Some((key, G_ECDSA))
     }
@@ -76,8 +101,8 @@ module Precompiled {
     /**
      * SHA256
      */
-    function CallSha256(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        Some((External.sha256(data),CostSha256(data)))
+    function CallSha256(fn: Sha256Fn, data: Array<u8>) : Option<(Array<u8>,nat)> {
+        Some((fn(data),CostSha256(data)))
     }
 
     /**
@@ -98,7 +123,8 @@ module Precompiled {
      * RipEmd160
      */
     function CallRipEmd160(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        Some((External.ripEmd160(data), CostRipEmd160(data)))
+        //Some((External.ripEmd160(data), CostRipEmd160(data)))
+        None
     }
 
     /**
@@ -155,14 +181,15 @@ module Precompiled {
         var E := Bytes.Slice(data,96+lB,lE);
         // Extract M(odulo)
         var M := Bytes.Slice(data,96+lB+lE,lM);
-        // Compute modexp
-        var modexp := External.modExp(B,E,M);
-        // Compute lEp
-        var lEp := LenEp(lB,E,data);
-        // Gas calculation
-        var gascost := Int.Max(200, (f(Int.Max(lM,lB)) * Int.Max(lEp,1)) / G_QUADDIVISOR);
-        // Done
-        Some((modexp,gascost))
+        // // Compute modexp
+        // var modexp := External.modExp(B,E,M);
+        // // Compute lEp
+        // var lEp := LenEp(lB,E,data);
+        // // Gas calculation
+        // var gascost := Int.Max(200, (f(Int.Max(lM,lB)) * Int.Max(lEp,1)) / G_QUADDIVISOR);
+        // // Done
+        // Some((modexp,gascost))
+        None
     }
 
     /**
@@ -231,12 +258,13 @@ module Precompiled {
     // ========================================================================
 
     function CallBlake2f(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        if |data| == 213 && data[212] in {0,1}
-        then
-            var r := U32.Read(data,0) as nat;
-            // FIXME: pull out stuff!
-            Some((External.blake2f(data),r))
-        else
-            None
+        // if |data| == 213 && data[212] in {0,1}
+        // then
+        //     var r := U32.Read(data,0) as nat;
+        //     // FIXME: pull out stuff!
+        //     Some((External.blake2f(data),r))
+        // else
+        //     None
+        None
     }
 }
