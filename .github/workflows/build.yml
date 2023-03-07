@@ -28,6 +28,9 @@ jobs:
       - name: Run Gradle Build
         run: gradle build
 
+      - name: Run Dafny Report Generator
+        run: dafny-reportgenerator summarize-csv-results --max-resource-count 500000 .
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:

@@ -27,8 +27,10 @@ final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
     '/compileTarget:java',
     '/noExterns',
+    '/randomSeedIterations:5',
     '/arith:2', // Makes a difference!?
-    '/timeLimit:240'
+    '/timeLimit:240',
+    '/verificationLogger:csv'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
