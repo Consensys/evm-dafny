@@ -28,7 +28,7 @@ final DAFNY_BASE_FLAGS = [
     '/compileTarget:java',
     '/noExterns',
     '/arith:2', // Makes a difference!?
-    '/timeLimit:120'
+    '/timeLimit:240'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
