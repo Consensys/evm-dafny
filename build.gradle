@@ -26,10 +26,9 @@ apply plugin: 'application'
 final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
     '/compileTarget:java',
-    '/functionSyntax:4',
     '/noExterns',
-    '/quantifierSyntax:4',
-    '/vcsLoad:2.0'
+    '/arith:2', // Makes a difference!?
+    '/timeLimit:240'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
@@ -49,7 +48,7 @@ final DAFNY_TEST_FLAGS = DAFNY_BASE_FLAGS + [
 
 final DAFNY4_BASE_FLAGS = [
     '--target','java',
-    '--cores','4',
+    '--cores','0', // 0 = auto
     '--function-syntax','4',
     '--quantifier-syntax','4'
 ]
