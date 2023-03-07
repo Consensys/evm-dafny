@@ -32,9 +32,9 @@ public class Precompiles {
 
 
     @SuppressWarnings({"unchecked","rawtypes"})
-    public static DafnySequence<Byte> ECDSARecover(DafnySequence<? extends Byte> _h, byte v, BigInteger r, BigInteger s) {
+    public static DafnySequence<Byte> ecdsaRecover(DafnySequence<? extends Byte> _h, byte v, BigInteger r, BigInteger s) {
         byte[] h = DafnySequence.toByteArray((DafnySequence) _h);
-        return DafnySequence.fromBytes(ECDSARecover(h, v, r, s));
+        return DafnySequence.fromBytes(ecdsaRecover(h, v, r, s));
     }
 
     /**
@@ -46,7 +46,7 @@ public class Precompiles {
      * @param s
      * @return
      */
-    public static byte[] ECDSARecover(byte[] h, byte v, BigInteger r, BigInteger s) {
+    public static byte[] ecdsaRecover(byte[] h, byte v, BigInteger r, BigInteger s) {
         ECDSASignature sig = new ECDSASignature(r, s);
         // Recover Key
         try {

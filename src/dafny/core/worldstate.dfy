@@ -28,6 +28,9 @@ module WorldState {
     import Storage
     import External
 
+    // Sha3 hash of the empty sequence.
+    const HASH_EMPTYCODE : u256 := 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+
     /**
      * Account state associated with a given contract address.
      */
@@ -44,7 +47,7 @@ module WorldState {
      * Create a default account.  This has zero balance, empty storage and no code.
      */
     function DefaultAccount() : Account {
-        CreateAccount(0,0,Storage.Create(map[]),Code.Create([]),0)
+        CreateAccount(0,0,Storage.Create(map[]),Code.Create([]),HASH_EMPTYCODE)
     }
 
     /**

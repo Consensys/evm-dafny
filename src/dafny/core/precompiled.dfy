@@ -29,7 +29,7 @@ module Precompiled {
     import External
     import Bytes
 
-    const DEFAULT : Dispatcher := Dispatcher(
+    const DEFAULT : T := Dispatcher(
         // (1) ECDSA Recover
         (data,v,r,s)=>(data),
         // (2) SHA256
@@ -61,7 +61,7 @@ module Precompiled {
     // Define the type of the precompiled dispatch function.  This accepts an
     // address and an array of input data, and returns either nothing (in the
     // event of a failure) or an array of output data and a gas cost.
-    datatype Dispatcher = Dispatcher(ecdsa: EcdsaRecoverFn, sha256: Sha256Fn, ripemd160: RipEmd160Fn, modexp: ModExpFn, blake2f: Blake2Fn, sha3: Sha3Fn) {
+    datatype T = Dispatcher(ecdsa: EcdsaRecoverFn, sha256: Sha256Fn, ripemd160: RipEmd160Fn, modexp: ModExpFn, blake2f: Blake2Fn, sha3: Sha3Fn) {
         // Call a precompiled contract.  This function is marked opaque to
         // ensure that, when verifying against this function, no assumptions are
         // made about the possible return values.
@@ -72,9 +72,9 @@ module Precompiled {
             case 3 => CallRipEmd160(ripemd160,data)
             case 4 => CallID(data)
             case 5 => CallModExp(modexp,data)
-            // case 6 => CallBnAdd(data)
-            // case 7 => CallBnMul(data)
-            // case 8 => CallSnarkV(data)
+            case 6 => CallBnAdd(data)
+            case 7 => CallBnMul(data)
+            case 8 => CallSnarkV(data)
             case 9 => CallBlake2f(blake2f,data)
             case _ => None
         }

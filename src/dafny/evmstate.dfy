@@ -66,7 +66,7 @@ module EvmState {
      */
     datatype Raw = EVM(
         context: Context.T,
-        precompiled: Precompiled.Dispatcher,
+        precompiled: Precompiled.T,
         world : WorldState.T,
         stack   : Stack.Stack,
         memory  : Memory.T,
@@ -637,7 +637,7 @@ module EvmState {
      * @param depth The current call depth.
      * @param opcode The opcode causing this call.
      */
-    function Call(world: WorldState.T, ctx: Context.T, precompiled: Precompiled.Dispatcher, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
+    function Call(world: WorldState.T, ctx: Context.T, precompiled: Precompiled.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
     // Sender account must exist
     requires world.Exists(ctx.sender)  {
         // Address of called contract
@@ -686,7 +686,7 @@ module EvmState {
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
      */
-    function Create(world: WorldState.T, ctx: Context.T, precompiled: Precompiled.Dispatcher, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
+    function Create(world: WorldState.T, ctx: Context.T, precompiled: Precompiled.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
     requires |initcode| <= Code.MAX_CODE_SIZE
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
@@ -697,7 +697,7 @@ module EvmState {
         else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then ERROR(ACCOUNT_COLLISION,0,[])
         else
             var storage := Storage.Create(map[]); // empty
-            var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]),0);
+            var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]),WorldState.HASH_EMPTYCODE);
             // Create initial account
             var w := world.Put(ctx.address,account);
             // Deduct wei

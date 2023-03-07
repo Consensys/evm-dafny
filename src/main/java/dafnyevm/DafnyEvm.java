@@ -77,10 +77,12 @@ public class DafnyEvm {
 	 */
 	private Tracer tracer = DEFAULT_TRACER;
 
+
 	/**
 	 * Native implementation of precompiled contracts.
 	 */
-	private Precompiled_Compile.Dispatcher NATIVE_PRECOMPILES;
+    private Precompiled_Compile.T NATIVE_PRECOMPILES = Precompiled_Compile.T.create(Precompiles::ecdsaRecover,
+            Precompiles::sha256, Precompiles::ripEmd160, Precompiles::modExp, Precompiles::blake2f, Precompiles::sha3);
 	/**
 	 * World state to use for this call.
 	 */
@@ -211,12 +213,12 @@ public class DafnyEvm {
 	    if(tx.to() != null) {
 	        // Contract call
 	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), tx.to(), tx.value(),
-	                callData, true, gasPrice, blockInfo.toDafny(), NATIVE_PRECOMPILES);
+	                callData, true, gasPrice, blockInfo.toDafny());
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
 	        // Begin the call.
-	        st = EvmState_Compile.__default.Call(ws, ctx, ss, tx.to(), tx.value(), gas,
+	        st = EvmState_Compile.__default.Call(ws, ctx, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
 	    } else {
 	        // Contract creation
@@ -227,9 +229,9 @@ public class DafnyEvm {
 	        BigInteger address = addr(tx.sender(),nonce);
 	        // Construct the transaction context for the call.
 	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
-	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny(), NATIVE_PRECOMPILES);
+	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
 	        // Begin the call.
-	        st = EvmState_Compile.__default.Create(ws, ctx, ss, callData, gas, BigInteger.ONE);
+	        st = EvmState_Compile.__default.Create(ws, ctx, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
 	    if(st instanceof State_EXECUTING) {
