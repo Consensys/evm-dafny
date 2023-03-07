@@ -25,18 +25,26 @@ apply plugin: 'application'
 
 final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
-    '/compileTarget:java',
     '/noExterns',
-    '/arith:2', // Makes a difference!?
+    '/arith:2',
     '/timeLimit:240'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
-    '/verifyAllModules',
+    '/compileTarget:java',
+    '/compile:2',
+    '/noVerify',
     '/out:build/evm'
 ]
 
+final DAFNY_VERIFY_FLAGS = DAFNY_BASE_FLAGS + [
+    '/verifyAllModules',
+    '/verificationLogger:csv;LogFileName=build/logs/verify.csv'
+]
+
+
 final DAFNY_TEST_FLAGS = DAFNY_BASE_FLAGS + [
+    '/compileTarget:java',
     '/runAllTests:1',
     '/out:build/dafny-tests',
     '/compile:4'
@@ -68,11 +76,32 @@ final DAFNY4_TEST_FLAGS = [
 // Dafny Build
 // ======================================================================
 
+// Verify the DafnyEVM, whilst producing suitable logs
+task verifyDafny {
+    // Specify inputs
+    inputs.files(fileTree('src/dafny/').include('**/*.dfy'))
+    // Specify outputs
+    outputs.files(fileTree('build/logs/').include('verify.csv'))
+    // Enable caching
+    outputs.cacheIf { true }
+    // Specify actions
+    doLast {
+        // Create build directory (Dafny doesn't do this for us)
+        mkdir "build/logs"
+        // Generate Dafny Source
+        exec {
+            executable 'dafny'
+            args DAFNY_VERIFY_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+        }
+    }
+}
+
+// Translate Dafny source into Java source
 task compileDafny {
     // Specify inputs
-    inputs.files(fileTree('src/dafny/') { include '**/*.dfy' } )
+    inputs.files(fileTree('src/dafny/').include('**/*.dfy'))
     // Specify outputs
-    outputs.files(fileTree('build/evm-java') { include '**/*.java' } )
+    outputs.files(fileTree('build/evm-java').include('**/*.java'))
     // Enable caching
     outputs.cacheIf { true }
     // Specify actions
@@ -101,20 +130,24 @@ clean.dependsOn cleanDafny
 
 task testDafny {
     // Specify inputs
-    inputs.files(fileTree('src') { include '**/*.dfy' } )
+    inputs.files(fileTree('src').include('**/*.dfy'))
     // Specify outputs
-    outputs.files(fileTree('build/dafny-tests-java') { include '**/*.java' } )
+    outputs.files(fileTree('build/test-java').include('**/*.java') + fileTree('build/logs').include('**/test_*.csv'))
     // Require code gen
-    dependsOn compileDafny
+    dependsOn verifyDafny
     // Specify actions
     doLast {
         // Verify and execute all Dafny tests found in the test
         // directory.
         fileTree("src/test/dafny").include('**/*.dfy').each {
             File file -> {
+                // Construct logging option
+                def name = file.name.take(file.name.lastIndexOf('.'))
+                def logging = '/verificationLogger:csv;LogFileName=build/logs/test_' + name + '.csv'
+                // Run test
                 exec {
                     executable 'dafny'
-                    args DAFNY_TEST_FLAGS + [file]
+                    args DAFNY_TEST_FLAGS + [logging,file]
                 }
             }
         }
@@ -131,8 +164,9 @@ repositories {
 }
 
 test {
+    dependsOn testDafny
     // Specify inputs
-    inputs.files(fileTree('tests') { include '**/*.json' } )
+    inputs.files(fileTree('tests').include('**/*.json'))
     // Ensure can see stdout
     testLogging.showStandardStreams = true
     // Ensure enough memory
@@ -147,7 +181,7 @@ test {
 
 // Specify that should run compileDafny before compileJava.
 // Otherwise, the Java compiler cannot find up-to-date Dafny tests!
-compileJava.dependsOn testDafny
+compileJava.dependsOn compileDafny
 
 sourceSets {
     main {
@@ -183,9 +217,9 @@ dependencies {
 task testgen(type: JavaExec) {
     // Specify inputs
     inputs.files("tests/includes.txt", "tests/excludes.txt",
-        fileTree('fixtures/') { include '**/*.json' } )
+                 fileTree('fixtures/').include('**/*.json'))
     // Specify outputs
-    outputs.files(fileTree('tests') { include '**/*.json' } )
+    outputs.files(fileTree('tests').include('**/*.json'))
     // Enable caching
     outputs.cacheIf { true }
     // Specify actions
@@ -205,6 +239,18 @@ task testgen(type: JavaExec) {
     args 'tests/includes.txt'
     args '-excludes'
     args 'tests/excludes.txt'
+}
+
+/// A task which summarises generated verification logs in a useful
+/// manner.
+task debug(type: JavaExec) {
+    // Specify inputs
+    // inputs.files(fileTree('build/logs').include('*.csv'))
+    // Specify actions
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'dafnyevm.util.DafnyLogSummariser'
+    //
+    args 'build/logs/*.csv'
 }
 
 // ======================================================================

@@ -88,7 +88,7 @@ module Gas {
      *  The quadratic cost function is increasing.
      */
     lemma QuadraticCostIsMonotonic(x: nat, y: nat)
-        ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
+    ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
     {
         if x >= y {
             calc >= {
