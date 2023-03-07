@@ -46,7 +46,7 @@ abstract module EVM {
      * Create a fresh EVM to execute a given sequence of bytecode instructions.
      * The EVM is initialised with an empty stack and empty local memory.
      */
-    function Create(context: Context.T, world: map<u160,WorldState.Account>, gas: nat, code: seq<u8>, st: seq<u256> := []) : ExecutingState
+    function Create(context: Context.T, world: map<u160,WorldState.Account>, gas: nat, code: seq<u8>, precompiled: Precompiled.Dispatcher := Precompiled.DEFAULT, st: seq<u256> := []) : ExecutingState
     // Code to executed cannot exceed maximum limit.
     requires |code| <= Code.MAX_CODE_SIZE
     requires |st| <= Stack.CAPACITY
@@ -57,7 +57,7 @@ abstract module EVM {
         var wld := WorldState.Create(world);
         var cod := Code.Create(code);
         var sub := SubState.Create();
-        var evm := EVM(stack:=stck,memory:=mem,world:=wld,context:=context,code:=cod,substate:=sub,gas:=gas,pc:=0);
+        var evm := EVM(stack:=stck,memory:=mem,world:=wld,context:=context,precompiled:=precompiled,code:=cod,substate:=sub,gas:=gas,pc:=0);
         // Off we go!
         EXECUTING(evm)
     }

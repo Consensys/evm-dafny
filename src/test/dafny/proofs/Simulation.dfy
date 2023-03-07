@@ -29,16 +29,22 @@ module SimulationChecks {
      *  Compare two VMs states. Equality is wrt to all state components except code and PC.
      *  @note   Gas can be ignored too if needed.
      */
-    predicate equivVMs(e1: State, e2: State, ignoreGas: bool := false)
-    {
-        if e1.EXECUTING? && e2.EXECUTING? then
-            //  e1 and e2 are equal except possible for the Code field.
-            if ignoreGas then
-                e1.evm.(code := Code.Create([]), gas := 0) == e2.evm.(code := Code.Create([]), gas := 0)
-            else
-                e1.evm.(code := Code.Create([])) == e2.evm.(code := Code.Create([]))
+    predicate equiv(l: State, r: State) {
+        if l.EXECUTING? && r.EXECUTING?
+        then
+            l.evm.memory == r.evm.memory &&
+            l.evm.world == r.evm.world &&
+            l.evm.context == r.evm.context &&
+            l.evm.substate == r.evm.substate &&
+            l.evm.gas == r.evm.gas
+        else if l.RETURNS? && r.RETURNS?
+        then
+            l.data == r.data && l.world == r.world
+        else if l.ERROR? && r.ERROR?
+        then
+            l.data == r.data
         else
-            e1 == e2
+            false
     }
 
     /** Use the functional definition of the EVM to check refinement.
@@ -58,12 +64,12 @@ module SimulationChecks {
         var vm2 := EvmBerlin.InitEmpty(g);
 
         //  First check: initial states are equiv.
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
 
         //  Execute one instruciton in each machine and check equiv.
         vm2 := Bytecode.Push1(vm2.UseGas(Gas.G_VERYLOW), 1);
         vm1 := EvmBerlin.Execute(vm1);
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
     }
 
     /**
@@ -103,33 +109,33 @@ module SimulationChecks {
         var vm2 := EvmBerlin.InitEmpty(g);
 
         //  First check.
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
 
         //  Now run some instructions and check equiv after each of them.
         vm2 := Bytecode.Push1(vm2.UseGas(Gas.G_VERYLOW), a);
         vm1 := EvmBerlin.Execute(vm1);
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
 
         vm2 := Bytecode.Push1(vm2.UseGas(Gas.G_VERYLOW), b);
         vm1 := EvmBerlin.Execute(vm1);
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
 
         vm2 := Bytecode.Add(vm2.UseGas(Gas.G_VERYLOW));
         vm1 := EvmBerlin.Execute(vm1);
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
 
         assert vm2.Peek(0) == a as u256 + b as u256;
         assert vm1.Peek(0) == a as u256 + b as u256;
 
         vm2 := Bytecode.Pop(vm2.UseGas(Gas.G_BASE));
         vm1 := EvmBerlin.Execute(vm1);
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
 
         assert vm2.evm.stack == vm1.evm.stack;
 
         vm2 := Bytecode.Stop(vm2.UseGas(Gas.G_ZERO));
         vm1 := EvmBerlin.Execute(vm1);
-        assert equivVMs(vm1, vm2);
+        assert equiv(vm1, vm2);
     }
 
     /**
@@ -314,5 +320,4 @@ module SimulationChecks {
         vm := Stop(vm);
         assert vm.RETURNS?;
     }
-
 }

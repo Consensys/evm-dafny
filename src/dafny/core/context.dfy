@@ -15,14 +15,12 @@ include "../util/arrays.dfy"
 include "../util/bytes.dfy"
 include "../util/int.dfy"
 include "../util/option.dfy"
-include "precompiled.dfy"
 
 module Context {
     import opened Arrays
     import opened Int
     import opened Optional
     import Bytes
-    import Precompiled
 
     // =============================================================================
     // Block Context
@@ -64,9 +62,7 @@ module Context {
         // Price of gas in current environment.
         gasPrice: u256,
         // Block information in current environment.
-        block: Block,
-        // Precompile contract dispatcher
-        precompiled: Precompiled.Dispatcher
+        block: Block
     ) {
         /**
          * Determine the size (in bytes) of the call data associated with this
@@ -123,10 +119,10 @@ module Context {
     /**
      * Create an initial context from various components.
      */
-    function Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:Array<u8>,writePermission:bool,gasPrice:u256, block: Block, precompiled: Precompiled.Dispatcher) : T {
-        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writePermission:=writePermission,gasPrice:=gasPrice,block:=block,precompiled:=precompiled)
+    function Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:Array<u8>,writePermission:bool,gasPrice:u256, block: Block) : T {
+        Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writePermission:=writePermission,gasPrice:=gasPrice,block:=block)
     }
 
     // A simple witness of the Context datatype.
-    const DEFAULT : T := Create(0,0,0,0,[],true,0,Block.Info(0,0,0,0,0,0),Precompiled.DEFAULT)
+    const DEFAULT : T := Create(0,0,0,0,[],true,0,Block.Info(0,0,0,0,0,0))
 }

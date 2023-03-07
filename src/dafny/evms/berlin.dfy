@@ -31,7 +31,7 @@ module EvmBerlin refines EVM {
     requires |code| <= Code.MAX_CODE_SIZE
     {
         var tx := Context.DEFAULT;
-        Create(tx, map[0:=WorldState.DefaultAccount()], gas, code)
+        Create(tx, map[0:=WorldState.DefaultAccount()], gas, code, Precompiled.DEFAULT)
     }
 
     /** An empty VM, with some initial gas and initial stack.
@@ -43,8 +43,8 @@ module EvmBerlin refines EVM {
     requires |code| <= Code.MAX_CODE_SIZE
     requires |stk| <= 1024
     {
-        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0), Precompiled.DEFAULT);
-        Create(tx, map[0:=WorldState.DefaultAccount()], gas, code, stk)
+        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
+        Create(tx, map[0:=WorldState.DefaultAccount()], gas, code, Precompiled.DEFAULT, stk)
     }
 
     /** The gas cost semantics of an opcode.
