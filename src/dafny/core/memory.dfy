@@ -11,8 +11,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "../util/int.dfy"
+include "../util/arrays.dfy"
 include "../util/bytes.dfy"
+include "../util/int.dfy"
 
 /**
  * Memory on the EVM is a byte-addressable (volatile) random access memory.
@@ -20,6 +21,7 @@ include "../util/bytes.dfy"
 module Memory {
     import opened Int
     import U256
+    import Arrays
     import opened Bytes
 
     // =============================================================================
@@ -228,7 +230,7 @@ module Memory {
      */
     function WriteUint256(mem:T, address:nat, val:u256) : (mem':T)
     requires address + 31 < |mem.contents|
-    ensures EqualsExcept(mem,mem',address,32) {
+    ensures Arrays.EqualsExcept(mem.contents,mem'.contents,address,32) {
       var w1 := val / (TWO_128 as u256);
       var w2 := val % (TWO_128 as u256);
       var mem' := WriteUint128(mem,address,w1 as u128);
@@ -252,33 +254,9 @@ module Memory {
     function Copy(mem:T, address:nat, data:seq<u8>) : (mem':T)
     // Must have sufficient memory for copy.
     requires |data| == 0 || (address + |data|) <= |mem.contents|
-    // Following inductive invariant is required.
-    ensures |data| == 0 || EqualsExcept(mem,mem',address,|data|)
-    // Check data actually copied
-    ensures |data| == 0 || data == mem'.contents[address .. address+|data|]
-    // If no data is copied, nothing is changed.
-    ensures |data| == 0 ==> mem == mem'
-    decreases |data| {
+    {
         if |data| == 0 then mem
-        else if |data| == 1 then WriteUint8(mem,address,data[0])
         else
-          var pivot := |data| / 2;
-          var middle := address + pivot;
-          var nmem := Copy(mem,address,data[0..pivot]);
-          Copy(nmem,middle,data[pivot..])
-    }
-
-    /**
-     * Everything is the same, except for those bytes within the given region.
-     */
-    predicate EqualsExcept(lhs:T, rhs:T, address:nat, length: nat)
-    // Data region must be within available memory
-    requires address + length <= |lhs.contents| {
-        // Memory sizes are the same
-        |lhs.contents| == |rhs.contents| &&
-        // Check nothing below data region changed
-        lhs.contents[..address] == rhs.contents[..address] &&
-        // Check nothing above data region changed
-        lhs.contents[address+length..] == rhs.contents[address+length..]
+            Memory(Arrays.Copy(data,mem.contents,address))
     }
 }
