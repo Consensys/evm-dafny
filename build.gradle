@@ -244,12 +244,13 @@ task testgen(type: JavaExec) {
 /// A task which summarises generated verification logs in a useful
 /// manner.
 task debug(type: JavaExec) {
-    // Specify inputs
-    // inputs.files(fileTree('build/logs').include('*.csv'))
     // Specify actions
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'dafnyevm.util.DafnyLogSummariser'
-    //
+    // Report 20 entries
+    args '-entries'
+    args '20'
+    // Identify log files
     args 'build/logs/*.csv'
 }
 
