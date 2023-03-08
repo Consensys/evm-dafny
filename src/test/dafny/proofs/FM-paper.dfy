@@ -46,7 +46,7 @@ module Kontract1 {
     /**
      *  Simple proof about a contract reverting if oevrflows.
      */
-    method {:verify false} inc_proof(st: ExecutingState) returns (st': State)
+    method inc_proof(st: ExecutingState) returns (st': State)
         /** Initial state with PC = 0 and empty stack. */
         requires st.PC() == 0 && st.Operands() == 0
         /** Enough gas. */
@@ -161,7 +161,7 @@ module Kontract1 {
      *              The stack content is unconstrained but there must be
      *              enough capacity (3) to perform this computation.
      */
-    method {:verify false} Loopy(st: ExecutingState, c: u8) returns (st': State)
+    method Loopy(st: ExecutingState, c: u8) returns (st': State)
         requires /* Pre0 */ st.PC() == 0 && st.Capacity() >= 3
         requires /* Pre1 */ st.Gas() >=
             3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +
