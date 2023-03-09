@@ -16,7 +16,7 @@ module Test {
     import Gas
 
     /** The gas loaded in the EVM before executing a program. */
-    const INITGAS := 0xFFFFFFFF;
+    const INITGAS := 0xFFFFFFFF
 
     // ===========================================================================
     // Straight line test

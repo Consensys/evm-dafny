@@ -46,7 +46,7 @@ module EvmState {
      * Following included from gas.dfy to avoid circular definition.  However,
      * this is far from ideal.  See #327.
      */
-    const G_CODEDEPOSIT: nat := 200;
+    const G_CODEDEPOSIT: nat := 200
 
     /**
      *  A normal state.

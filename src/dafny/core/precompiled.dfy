@@ -46,11 +46,11 @@ module Precompiled {
     // ========================================================================
     // (1) ECDSA Recover
     // ========================================================================
-    const G_ECDSA := 3000;
+    const G_ECDSA := 3000
     /**
      * Constant as defined in the Yellow Paper
      */
-    const SECP256K1N : u256 := 115792089237316195423570985008687907852837564279074904382605163141518161494337;
+    const SECP256K1N : u256 := 115792089237316195423570985008687907852837564279074904382605163141518161494337
     /**
      * Key recovery.
      */
@@ -135,7 +135,7 @@ module Precompiled {
     // ========================================================================
     // (5) ModExp
     // ========================================================================
-    const G_QUADDIVISOR: nat := 3;
+    const G_QUADDIVISOR: nat := 3
 
     /**
      * Compute arbitrary precision exponentiation under modulo.  Specifically,
@@ -198,7 +198,7 @@ module Precompiled {
     // (6)
     // ========================================================================
 
-    const G_BNADD := 150;
+    const G_BNADD := 150
 
     function CallBnAdd(data: Array<u8>) : Option<(Array<u8>,nat)> {
         Some((data, G_BNADD))
@@ -208,7 +208,7 @@ module Precompiled {
     // (7)
     // ========================================================================
 
-    const G_BNMUL := 6000;
+    const G_BNMUL := 6000
 
     function CallBnMul(data: Array<u8>) : Option<(Array<u8>,nat)> {
         Some((data, G_BNMUL))

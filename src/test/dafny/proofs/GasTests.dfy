@@ -10,7 +10,7 @@ module GasTests {
     import Gas
 
      /** The gas loaded in the EVM before executing a program. */
-    const INITGAS := 0xFFFF;
+    const INITGAS := 0xFFFF
 
     method test_01() {
         // Simple contract containing only one instruction.
