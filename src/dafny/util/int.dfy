@@ -448,7 +448,7 @@ module U256 {
 
   function Shl(lhs: u256, rhs: u256) : u256
   {
-    if rhs == 0 then lhs
+    if rhs >= 256 then 0
     else
         var p := Pow(2,rhs as nat);
         var n := (lhs as nat) * p;
@@ -456,11 +456,11 @@ module U256 {
   }
 
   function Shr(lhs: u256, rhs: u256) : u256 {
-    var lbv := lhs as bv256;
-    // NOTE: unclear whether shifting is optimal choice here.
-    var res := if rhs < 256 then (lbv >> rhs) else 0;
-    //
-    res as u256
+    if rhs >= 256 then 0
+    else
+        var p := Pow(2, rhs as nat);
+        var n := (lhs as nat) / p;
+        n as u256
   }
 
   /**
