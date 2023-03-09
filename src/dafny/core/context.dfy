@@ -83,7 +83,7 @@ module Context {
          */
         function CallDataSlice(loc: u256, len: nat) : (data:seq<u8>)
         ensures |data| == len {
-            Bytes.Slice(this.callData,loc as nat, len)
+            Arrays.SliceAndPad(this.callData,loc as nat, len, 0)
         }
 
         /**
@@ -102,7 +102,7 @@ module Context {
         // Return data cannot overflow.
         requires (loc + len) <= |this.returnData|
         ensures |data| == len {
-            Bytes.Slice(this.returnData,loc, len)
+            Arrays.SliceAndPad(this.returnData,loc, len, 0)
         }
 
         /**
