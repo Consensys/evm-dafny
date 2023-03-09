@@ -15,7 +15,7 @@ module CallExamples {
 
 
     /** The gas loaded in the EVM before executing a program. */
-    const INITGAS := 0xFFFF;
+    const INITGAS := 0xFFFF
 
     method {:test} test_call_01() {
         // This is an absolutely minimal example of a contract call where the

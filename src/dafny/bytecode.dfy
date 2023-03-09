@@ -875,19 +875,19 @@ module Bytecode {
         if st.Operands() >= 4
         then
             // Extract contract account
-            var account := (st.Peek(0) as nat % TWO_160) as u160;
+            var address := (st.Peek(0) as nat % TWO_160) as u160;
             var m_loc := st.Peek(1) as nat;
             var d_loc := st.Peek(2) as nat;
             var len := st.Peek(3) as nat;
             var last := (m_loc as nat) + len;
             // Lookup account data
-            var data := st.evm.world.GetOrDefault(account);
+            var account := st.evm.world.GetOrDefault(address);
             // Slice bytes out of code (with padding as needed)
-            var data := Code.Slice(data.code,d_loc,len);
+            var data := Code.Slice(account.code,d_loc,len);
             // Sanity check
             assert |data| == len;
             // Copy slice into memory
-            st.AccountAccessed(account).Expand(m_loc as nat, len).Pop(4).Copy(m_loc,data).Next()
+            st.AccountAccessed(address).Expand(m_loc as nat, len).Pop(4).Copy(m_loc,data).Next()
          else
             ERROR(STACK_UNDERFLOW)
     }
@@ -1359,8 +1359,8 @@ module Bytecode {
         then
             var bytes := Code.Slice(st.evm.code, (st.evm.pc+1), k);
             assert 0 < |bytes| <= 32;
-            var k := Bytes.ConvertBytesTo256(bytes);
-            st.Push(k).Skip(|bytes|+1)
+            var val := Bytes.ConvertBytesTo256(bytes);
+            st.Push(val).Skip(|bytes|+1)
         else
             ERROR(STACK_OVERFLOW)
     }

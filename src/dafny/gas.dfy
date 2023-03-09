@@ -34,43 +34,43 @@ module Gas {
     import opened WorldState
     import opened SubState
 
-    const G_ZERO: nat := 0;
-    const G_JUMPDEST: nat := 1;
-	const G_BASE: nat := 2;
-	const G_VERYLOW: nat := 3;
-	const G_LOW: nat := 5;
-	const G_MID: nat := 8;
-	const G_HIGH: nat := 10;
+    const G_ZERO: nat := 0
+    const G_JUMPDEST: nat := 1
+	const G_BASE: nat := 2
+	const G_VERYLOW: nat := 3
+	const G_LOW: nat := 5
+	const G_MID: nat := 8
+	const G_HIGH: nat := 10
     // Cost of a warm account or storage access
-    const G_WARMACCESS: nat := 100;
+    const G_WARMACCESS: nat := 100
     // Cost of a cold account access.
-    const G_COLDACCOUNTACCESS: nat := 2600;
+    const G_COLDACCOUNTACCESS: nat := 2600
     // Cost of cold storage access
-    const G_COLDSLOAD: nat := 2100;
-	const G_SSET: nat := 20000;
-	const G_SRESET: nat := 2900;
-	const R_SCLEAR: nat := 15000;
-	const R_SELFDESTRUCT: nat := 24000;
-	const G_SELFDESTRUCT: nat := 5000;
-	const G_CREATE: nat := 32000;
-	const G_CODEDEPOSIT: nat := 200;
-	const G_CALLVALUE: nat := 9000;
-	const G_CALLSTIPEND: nat := 2300;
-	const G_NEWACCOUNT: nat := 25000;
-	const G_EXP: nat := 10;
-	const G_EXPBYTE: nat := 50;
-	const G_MEMORY: nat := 3;
-	const G_TXCREATE: nat := 32000;
-	const G_TXDATAZERO: nat := 4;
-	const G_TXDATANONZERO: nat := 16;
-	const G_TRANSACTION: nat := 21000;
-	const G_LOG: nat := 375;
-	const G_LOGDATA: nat := 8;
-	const G_LOGTOPIC: nat := 375;
-	const G_KECCAK256: nat := 30;
-	const G_KECCAK256WORD: nat := 6;
-	const G_COPY: nat := 3;
-	const G_BLOCKHASH: nat := 20;
+    const G_COLDSLOAD: nat := 2100
+	const G_SSET: nat := 20000
+	const G_SRESET: nat := 2900
+	const R_SCLEAR: nat := 15000
+	const R_SELFDESTRUCT: nat := 24000
+	const G_SELFDESTRUCT: nat := 5000
+	const G_CREATE: nat := 32000
+	const G_CODEDEPOSIT: nat := 200
+	const G_CALLVALUE: nat := 9000
+	const G_CALLSTIPEND: nat := 2300
+	const G_NEWACCOUNT: nat := 25000
+	const G_EXP: nat := 10
+	const G_EXPBYTE: nat := 50
+	const G_MEMORY: nat := 3
+	const G_TXCREATE: nat := 32000
+	const G_TXDATAZERO: nat := 4
+	const G_TXDATANONZERO: nat := 16
+	const G_TRANSACTION: nat := 21000
+	const G_LOG: nat := 375
+	const G_LOGDATA: nat := 8
+	const G_LOGTOPIC: nat := 375
+	const G_KECCAK256: nat := 30
+	const G_KECCAK256WORD: nat := 6
+	const G_COPY: nat := 3
+	const G_BLOCKHASH: nat := 20
     /**
      *  Assign a cost as a function of the memory size.
      *

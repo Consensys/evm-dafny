@@ -12,37 +12,37 @@
  * under the License.
  */
 module Int {
-  const TWO_7   : int := 0x0_80;
-  const TWO_8   : int := 0x1_00;
-  const TWO_15  : int := 0x0_8000;
-  const TWO_16  : int := 0x1_0000;
-  const TWO_24  : int := 0x1_0000_00;
-  const TWO_31  : int := 0x0_8000_0000;
-  const TWO_32  : int := 0x1_0000_0000;
-  const TWO_40  : int := 0x1_0000_0000_00;
-  const TWO_48  : int := 0x1_0000_0000_0000;
-  const TWO_56  : int := 0x1_0000_0000_0000_00;
-  const TWO_63  : int := 0x0_8000_0000_0000_0000;
-  const TWO_64  : int := 0x1_0000_0000_0000_0000;
-  const TWO_127 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000;
-  const TWO_128 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000;
-  const TWO_160 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-  const TWO_255 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-  const TWO_256 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
+  const TWO_7   : int := 0x0_80
+  const TWO_8   : int := 0x1_00
+  const TWO_15  : int := 0x0_8000
+  const TWO_16  : int := 0x1_0000
+  const TWO_24  : int := 0x1_0000_00
+  const TWO_31  : int := 0x0_8000_0000
+  const TWO_32  : int := 0x1_0000_0000
+  const TWO_40  : int := 0x1_0000_0000_00
+  const TWO_48  : int := 0x1_0000_0000_0000
+  const TWO_56  : int := 0x1_0000_0000_0000_00
+  const TWO_63  : int := 0x0_8000_0000_0000_0000
+  const TWO_64  : int := 0x1_0000_0000_0000_0000
+  const TWO_127 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000
+  const TWO_128 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000
+  const TWO_160 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000
+  const TWO_255 : int := 0x0_8000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000
+  const TWO_256 : int := 0x1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000
 
   // Signed Integers
-  const MIN_I8   : int := -TWO_7;
-  const MAX_I8   : int :=  TWO_7 - 1;
-  const MIN_I16  : int := -TWO_15;
-  const MAX_I16  : int :=  TWO_15 - 1;
-  const MIN_I32  : int := -TWO_31;
-  const MAX_I32  : int :=  TWO_31 - 1;
-  const MIN_I64  : int := -TWO_63;
-  const MAX_I64  : int :=  TWO_63 - 1;
-  const MIN_I128 : int := -TWO_127;
-  const MAX_I128 : int :=  TWO_127 - 1;
-  const MIN_I256 : int := -TWO_255;
-  const MAX_I256 : int :=  TWO_255 - 1;
+  const MIN_I8   : int := -TWO_7
+  const MAX_I8   : int :=  TWO_7 - 1
+  const MIN_I16  : int := -TWO_15
+  const MAX_I16  : int :=  TWO_15 - 1
+  const MIN_I32  : int := -TWO_31
+  const MAX_I32  : int :=  TWO_31 - 1
+  const MIN_I64  : int := -TWO_63
+  const MAX_I64  : int :=  TWO_63 - 1
+  const MIN_I128 : int := -TWO_127
+  const MAX_I128 : int :=  TWO_127 - 1
+  const MIN_I256 : int := -TWO_255
+  const MAX_I256 : int :=  TWO_255 - 1
 
   newtype{:nativeType "sbyte"} i8 = i:int   | MIN_I8 <= i <= MAX_I8
   newtype{:nativeType "short"} i16 = i:int  | MIN_I16 <= i <= MAX_I16
@@ -52,16 +52,16 @@ module Int {
   newtype i256 = i:int | MIN_I256 <= i <= MAX_I256
 
   // Unsigned Integers
-  const MAX_U8 : int :=  TWO_8 - 1;
-  const MAX_U16 : int := TWO_16 - 1;
-  const MAX_U24 : int := TWO_24 - 1;
-  const MAX_U32 : int := TWO_32 - 1;
-  const MAX_U40 : int := TWO_40 - 1;
-  const MAX_U48 : int := TWO_48 - 1;
-  const MAX_U56 : int := TWO_56 - 1;
-  const MAX_U64 : int := TWO_64 - 1;
-  const MAX_U128 : int := TWO_128 - 1;
-  const MAX_U160: int := TWO_160 - 1;
+  const MAX_U8 : int :=  TWO_8 - 1
+  const MAX_U16 : int := TWO_16 - 1
+  const MAX_U24 : int := TWO_24 - 1
+  const MAX_U32 : int := TWO_32 - 1
+  const MAX_U40 : int := TWO_40 - 1
+  const MAX_U48 : int := TWO_48 - 1
+  const MAX_U56 : int := TWO_56 - 1
+  const MAX_U64 : int := TWO_64 - 1
+  const MAX_U128 : int := TWO_128 - 1
+  const MAX_U160: int := TWO_160 - 1
   const MAX_U256: int := TWO_256 - 1
 
   newtype{:nativeType "byte"} u8 = i:int    | 0 <= i <= MAX_U8
