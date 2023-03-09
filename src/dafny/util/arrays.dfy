@@ -38,6 +38,22 @@ module Arrays {
     }
 
     /**
+     * Slice out a subsequence of bytes from a given sequence.
+     * If the requested subsequence overflows the sequence, then
+     * it is padded out with a given value.
+     */
+    function SliceAndPad<T>(mem:seq<T>, address:nat, len:nat, padding: T) : (result:seq<T>)
+    ensures |result| == len
+    {
+      var n := address + len;
+      // Sanity check for overflow
+      if n <= |mem| then mem[address..n]
+      // Yes overflow, so manage it.
+      else if address < |mem| then mem[address..] + seq(n-|mem|, i => padding)
+      else seq(len, i=>padding)
+    }
+
+    /**
      * Copy a sequence of bytes from into another at a given starting position.
      */
     opaque function Copy<T>(src: seq<T>, dst: seq<T>, start: nat) : (result:seq<T>)

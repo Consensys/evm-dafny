@@ -96,7 +96,7 @@ module Precompiled {
      * Key recovery.
      */
     function CallEcdsaRecover(fn: EcdsaRecoverFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
-        var h := Bytes.Slice(data,0,32);
+        var h := Arrays.SliceAndPad(data,0,32,0);
         var v := Bytes.ReadUint256(data,32);
         var r := Bytes.ReadUint256(data,64);
         var s := Bytes.ReadUint256(data,96);
@@ -191,11 +191,11 @@ module Precompiled {
         // Length of M
         var lM := Bytes.ReadUint256(data,64) as nat;
         // Extract B(ase)
-        var B := Bytes.Slice(data,96,lB);
+        var B := Arrays.SliceAndPad(data,96,lB,0);
         // Extract E(xponent)
-        var E := Bytes.Slice(data,96+lB,lE);
+        var E := Arrays.SliceAndPad(data,96+lB,lE,0);
         // Extract M(odulo)
-        var M := Bytes.Slice(data,96+lB+lE,lM);
+        var M := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
         // Compute modexp
         var modexp := fn(B,E,M);
         // Compute lEp

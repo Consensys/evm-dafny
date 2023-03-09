@@ -11,10 +11,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+include "../util/arrays.dfy"
 include "../util/bytes.dfy"
 include "../util/int.dfy"
 
 module Code {
+  import Arrays
   import Bytes
   import opened Int
 
@@ -62,6 +64,6 @@ module Code {
    * it is padded out with zeros.
    */
   function Slice(c:T, address:nat, len:nat) : seq<u8> {
-    Bytes.Slice(c.contents,address,len)
+    Arrays.SliceAndPad(c.contents,address,len,0)
   }
 }

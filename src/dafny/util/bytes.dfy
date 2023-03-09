@@ -83,22 +83,6 @@ module Bytes {
         (w1 * (TWO_128 as u256)) + w2
     }
 
-    /**
-     * Slice out a subsequence of bytes from a given sequence.
-     * If the requested subsequence overflows available memory,
-     * it is padded out with zeros.
-     */
-    function Slice(mem:seq<u8>, address:nat, len:nat) : seq<u8>
-      ensures |Slice(mem, address, len)| == len
-    {
-      var n := address + len;
-      // Sanity check for overflow
-      if n <= |mem| then mem[address..n]
-      // Yes overflow, so manage it.
-      else if address < |mem| then mem[address..] + Padding(n-|mem|)
-      else Padding(len)
-    }
-
     /** Converts a sequence of bytes into a u256.
      *
      *  @param  bytes   A sequence of bytes.
@@ -116,15 +100,6 @@ module Bytes {
     }
 
     /**
-     * Construct a sequence of an arbitrary sized padded out with zeros.
-     */
-    function Padding(n:nat) : seq<u8>
-    ensures |Padding(n)| == n
-    {
-        seq(n, i => 0)
-    }
-
-    /**
      * Pad an array of bytes with zeros in the low addresses upto a given
      * size n.
      */
@@ -135,4 +110,14 @@ module Bytes {
         // Append it!
         Padding(k) + bytes
     }
+
+    /**
+     * Construct a sequence of an arbitrary sized padded out with zeros.
+     */
+    function Padding(n:nat) : seq<u8>
+    ensures |Padding(n)| == n
+    {
+        seq(n, i => 0)
+    }
+
 }

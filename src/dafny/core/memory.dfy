@@ -240,10 +240,10 @@ module Memory {
     /**
      * Slice out a section of memory.
      */
-    function Slice(mem:T, address:nat, len:nat) : seq<u8>
-      ensures |Slice(mem, address, len)| == len
+    function Slice(mem:T, address:nat, len:nat) : (result:seq<u8>)
+    ensures |result| == len
     {
-      Bytes.Slice(mem.contents,address,len)
+      Arrays.SliceAndPad(mem.contents,address,len,0)
     }
 
     /**
