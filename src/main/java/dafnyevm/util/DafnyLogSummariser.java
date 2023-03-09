@@ -14,6 +14,7 @@
 package dafnyevm.util;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,16 +33,71 @@ import org.apache.commons.cli.ParseException;
 
 class Result {
     public final String name;
-    public final long usage;
+    public final ArrayList<BigInteger> usages;
 
     public Result(Map<String,String> entry) {
-        this.name = entry.get("TestResult.DisplayName");
-        this.usage = Long.parseLong(entry.get("TestResult.ResourceCount"));
+        // Strip off trailing stuff (e.g. assertion batch 0) as it just gets in the way.
+        this.name = toName(entry.get("TestResult.DisplayName"));
+        this.usages = new ArrayList<>();
+        this.usages.add(new BigInteger(entry.get("TestResult.ResourceCount")));
+    }
+
+    public BigInteger sum() {
+        BigInteger n = BigInteger.ZERO;
+        for(int i=0;i!=usages.size();++i) {
+            n = n.add(usages.get(i));
+        }
+        return n;
+    }
+
+    public BigInteger mean() {
+        return sum().divide(BigInteger.valueOf(usages.size()));
+    }
+
+    public BigInteger variance() {
+        BigInteger variance = BigInteger.ZERO;
+        BigInteger mean = mean();
+        for(int i=0;i!=usages.size();++i) {
+            BigInteger ith = usages.get(i);
+            ith = ith.subtract(mean).pow(2);
+            variance = variance.add(ith);
+        }
+        return variance;
+    }
+
+    public BigInteger stddev() {
+        BigInteger N = BigInteger.valueOf(usages.size());
+        return variance().divide(N).sqrt();
+    }
+
+    public double coeffVariance() {
+        return stddev().doubleValue() / mean().doubleValue();
+    }
+
+    public void join(Result r) {
+        usages.addAll(r.usages);
+    }
+
+    private String toName(String input) {
+        String[] items = input.split(" ");
+        return "[" + toNameType(items[1]) + "] " + items[0];
+    }
+
+    private String toNameType(String input) {
+        switch(input) {
+            case "(well-formedness)":
+                return "WF";
+            case "(correctness)":
+                return "CO";
+            default:
+                return "??";
+        }
     }
 
     public String toString(int width) {
-        width = width - name.length();
-        return name + String.format("%1$" + width + "s", Long.toString(usage));
+        width -= name.length();
+        String label = String.format("%1$s (%2$.2f)", mean().toString(),coeffVariance());
+        return name + String.format("%1$" + width + "s", label);
     }
 }
 
@@ -67,10 +123,24 @@ public class DafnyLogSummariser {
         }
     }
 
+    public static ArrayList<Result> merge(ArrayList<Result> results) {
+        HashMap<String,Result> map = new HashMap();
+        // Join all results together
+        for(int i=0;i!=results.size();++i) {
+            Result ith = results.get(i);
+            if(map.containsKey(ith.name)) {
+                ith.join(map.get(ith.name));
+            }
+            map.put(ith.name,ith);
+        }
+        // Done
+        return new ArrayList<>(map.values());
+    }
+
     public static void main(String[] args) throws IOException {
         // Parse command-line arguments.
         CommandLine cmd = parseCommandLine(args);
-        int nResults = Integer.parseInt(cmd.getOptionValue("entries", "10"));
+        int nResults = Integer.parseInt(cmd.getOptionValue("entries", "20"));
         //
         FileSystem fs = FileSystems.getDefault();
         ArrayList<Result> results = new ArrayList<>();
@@ -79,19 +149,30 @@ public class DafnyLogSummariser {
             PathMatcher matcher = fs.getPathMatcher("glob:" + line);
             processGlobs(matcher,results);
         }
+        // Combine duplicate results
+        results = merge(results);
         // Sort results into ascending order
-        results.sort((r1,r2) -> Long.compare(r1.usage, r2.usage));
+        results.sort((r1,r2) -> r1.mean().compareTo(r2.mean()));
         // Revert into descending order
         Collections.reverse(results);
         // Print out header
-        System.out.println("Name" + String.format("%1$" + 76 + "s", "Resource Usage"));
+        System.out.println("Name" + String.format("%1$" + 76 + "s", "Resource Usage (CoV)"));
         System.out.println(String.format("%1$" + 80 + "s", "").replace(' ','='));
         // Print top n results
-        for(int i=0;i!=Math.min(nResults,results.size());++i) {
+        BigInteger total = BigInteger.ZERO;
+        BigInteger subtotal = BigInteger.ZERO;
+        for(int i=0;i!=results.size();++i) {
             Result ith = results.get(i);
-            System.out.println(ith.toString(80));
+            if(i < nResults) {
+                System.out.println(ith.toString(80));
+                subtotal = subtotal.add(ith.mean());
+            }
+            total = total.add(ith.mean());
         }
         System.out.println("...");
+        System.out.println(String.format("%1$" + 80 + "s", "").replace(' ','='));
+        System.out.println(String.format("Subtotal (mean):" + "%1$" + 64 + "s", subtotal.toString()));
+        System.out.println(String.format("Total (mean):" + "%1$" + 67 + "s", total.toString()));
     }
 
     private static void processGlobs(PathMatcher matcher, List<Result> results) throws IOException {
