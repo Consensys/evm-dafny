@@ -90,11 +90,8 @@ module Gas {
     lemma QuadraticCostIsMonotonic(x: nat, y: nat)
     ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
     {
-        if x >= y {
-            calc >= {
-                G_MEMORY * x + ((x * x) / 512);
-                G_MEMORY * y + ((y * y) / 512);
-            }
+        if x > y {
+           QuadraticCostIsMonotonic(x-1,y);
         }
     }
 
