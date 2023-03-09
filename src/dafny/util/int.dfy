@@ -527,8 +527,31 @@ module U256 {
   }
 
   /**
-    *
-    */
+   * Sign extend a given value (v) using the most significant bit (msb) of its
+   * kth byte.  Consider this example for v:
+   *
+   *      23    16 15     8 7      0
+   *     +--------+--------+--------+
+   * ... |10111010|10010101|01000101|
+   *     +--------+--------+--------+
+   *
+   * Then, perfoming a sign extend with k=0 gives:
+   *
+   *      23    16 15     8 7      0
+   *     +--------+--------+--------+
+   * ... |00000000|00000000|01000101|
+   *     +--------+--------+--------+
+   *
+   * Since the msb of byte 0 is 0, everything above that is set to zero.  In
+   * contrast, performing a sign extend of our original input with k=1 gives:
+   *
+   *      23    16 15     8 7      0
+   *     +--------+--------+--------+
+   * ... |11111111|10010101|01000101|
+   *     +--------+--------+--------+
+   *
+   * Since, in this case, the msb of byte 1 is 1.
+   */
   function SignExtend(v: u256, k: nat) : u256 {
     if k >= 31 then v
     else
@@ -536,10 +559,8 @@ module U256 {
       var ith := 31 - k;
       // Extract byte containing sign bit
       var byte := NthUint8(v,ith);
-      // Extract sign bit
-      var signbit := ((byte as bv8) & 0x80) == 0x80;
       // Replicate sign bit.
-      var signs := if signbit then seq(31-k, i => 0xff)
+      var signs := if byte >= 128 then seq(31-k, i => 0xff)
                    else seq(31-k, i => 0);
       // Extract unchanged bytes
       var bytes := ToBytes(v)[ith..];
