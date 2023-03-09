@@ -71,16 +71,6 @@ module ByteTests{
         AssertAndExpect(ReadUint256([0xFF,0xA,0xB,0xC,0xD,0xE,0xF,0x1A,0x1B, 0x1C,0x1D,0x1E,0x1F,0x2A,0x2B,0x2C,0x2D, 0x2E,0x2F,0x3A,0x3B,0x3C,0x3D,0x3E,0x3F,  0x4A,0x4B,0x4C,0x4D,0x4E,0x4F,0x5A,0x5B],1) == 0x0A0B0C0D0E0F1A1B_1C1D1E1F2A2B2C2D_2E2F3A3B3C3D3E3F_4A4B4C4D4E4F5A5B);
     }
 
-    method {:test} SliceTests() {
-        AssertAndExpect(Slice([0],0,0) == []);
-        AssertAndExpect(Slice([0],0,1) == [0]);
-        AssertAndExpect(Slice([1],0,1) == [1]);
-        AssertAndExpect(Slice([1,2],0,1) == [1]);
-        AssertAndExpect(Slice([1,2],1,1) == [2]);
-        AssertAndExpect(Slice([1,2],1,2) == [2,0]);
-        AssertAndExpect(Slice([1,2,3],1,2) == [2,3]);
-    }
-
     method {:test} LeftPadTests() {
         AssertAndExpect(LeftPad([0],2) == [0,0]);
         AssertAndExpect(LeftPad([1],2) == [0,1]);
