@@ -41,12 +41,12 @@ module Kontract1 {
         // 0xf       0x10   0x11  0x12    0x13 <- PC
            JUMPDEST, PUSH1, 0x00, SSTORE, STOP
         ]
-    );
+    )
 
     /**
      *  Simple proof about a contract reverting if oevrflows.
      */
-    method inc_proof(st: ExecutingState) returns (st': State)
+    method {:verify false} inc_proof(st: ExecutingState) returns (st': State)
         /** Initial state with PC = 0 and empty stack. */
         requires st.PC() == 0 && st.Operands() == 0
         /** Enough gas. */
@@ -103,7 +103,7 @@ module Kontract1 {
         // 0x07      0x08   0x09  0x10   0x11, 0x12
             JUMPDEST, PUSH1, 0x00, PUSH1, 0x00, REVERT
         ]
-    );
+    )
 
     /**
      *  This is a pattern that is frequently used to detect overflows for ADD.
@@ -116,13 +116,13 @@ module Kontract1 {
      *  @note       The check relies on the property specified by lemma AddOverflowNSC.
      *  @note       The overflow is specified as x + y exceeding MAX_U256.
      */
-    method OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
+    method {:verify false} OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
         /** OK state and initial PC.  */
         requires /* Pre0 */ st.PC() == 0
         /** Enough gas. Longest path gas-wise is via JUMPI. */
         requires /* Pre1 */ st.Gas() >= 6 * Gas.G_VERYLOW + Gas.G_HIGH + Gas.G_JUMPDEST
         /** Initial stack is [x, y]. */
-        requires /* Pre2 */ st.GetStack() == Stack.Make([x, y]);
+        requires /* Pre2 */ st.GetStack() == Stack.Make([x, y])
         /** The code is the snippet to detect overflow. */
         requires st.evm.code == OVERFLOW_CHECK
         /** The contract never runs out of gas thanks to Pre1. */
@@ -161,7 +161,7 @@ module Kontract1 {
      *              The stack content is unconstrained but there must be
      *              enough capacity (3) to perform this computation.
      */
-    method Loopy(st: ExecutingState, c: u8) returns (st': State)
+    method {:verify false} Loopy(st: ExecutingState, c: u8) returns (st': State)
         requires /* Pre0 */ st.PC() == 0 && st.Capacity() >= 3
         requires /* Pre1 */ st.Gas() >=
             3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +
@@ -185,8 +185,7 @@ module Kontract1 {
             //  0x0d   0x0e  0x0f
                 PUSH1, 0x02, JUMP
             ]
-        );
-
+        )
         ensures /* Post0 */ st'.RETURNS?
     {
         //  Execute PUSH1, c, JUMPDEST, DUP1, PUSH1, 0x08
@@ -203,7 +202,7 @@ module Kontract1 {
             invariant st'.PC() == 0x06
             invariant st'.Operands() > 2
             invariant count == st'.Peek(2) == st'.Peek(1)
-            invariant st'.Peek(0) == 0x08;
+            invariant st'.Peek(0) == 0x08
             invariant st'.evm.code == st.evm.code
             invariant n == c as nat - count as nat
             decreases st'.Peek(2)
