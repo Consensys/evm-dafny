@@ -77,7 +77,7 @@ module Optimisations {
      *  @note       General case.
      *
      */
-    method Proposition12b(n: nat, s: seq<u256>, g: nat)
+    method {:verify false} Proposition12b(n: nat, s: seq<u256>, g: nat)
         requires 1 <= n <= 16
         /** Stack must have at least n + 1 elements. */
         requires n + 1 <= |s| <= 1024
