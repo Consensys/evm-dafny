@@ -22,7 +22,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Run Gradle Build
-        run: gradle build
+        run: gradle build -Prandomize=5
 
       - name: Print Verification Logs
         if: always()

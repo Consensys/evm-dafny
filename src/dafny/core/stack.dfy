@@ -18,7 +18,7 @@ module Stack {
     import opened Int
 
     // Maximum stack capcity is 1024 words.
-    const CAPACITY: nat := 1024;
+    const CAPACITY: nat := 1024
 
     /** The stack has limited capcity in the EVM. */
     type ValidStackContent = xs: seq<u256> | |xs| <= CAPACITY

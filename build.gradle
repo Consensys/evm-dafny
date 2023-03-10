@@ -26,6 +26,7 @@ apply plugin: 'application'
 final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
     '/noExterns',
+    '/vcsLoad:2',
     '/rlimit:1000000'
 ]
 
@@ -40,7 +41,6 @@ final DAFNY_VERIFY_FLAGS = DAFNY_BASE_FLAGS + [
     '/verifyAllModules',
     '/verificationLogger:csv;LogFileName=build/logs/verify.csv'
 ]
-
 
 final DAFNY_TEST_FLAGS = DAFNY_BASE_FLAGS + [
     '/compileTarget:java',
@@ -83,6 +83,13 @@ task verifyDafny {
     outputs.files(fileTree('build/logs/').include('verify.csv'))
     // Enable caching
     outputs.cacheIf { true }
+    // Apply randomisation (if requested)
+    def flags = DAFNY_VERIFY_FLAGS
+    if (project.hasProperty("randomize")) {
+        def prop = project.properties["randomize"]
+        project.logger.lifecycle('Randomize verification with ' + prop + ' iterations.')
+        flags = flags + ['/randomSeedIterations:' + prop]
+    }
     // Specify actions
     doLast {
         // Create build directory (Dafny doesn't do this for us)
@@ -90,7 +97,7 @@ task verifyDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args DAFNY_VERIFY_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+            args flags + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
     }
 }

@@ -87,16 +87,16 @@ module Precompiled {
     // ========================================================================
     // (1) ECDSA Recover
     // ========================================================================
-    const G_ECDSA := 3000;
+    const G_ECDSA := 3000
     /**
      * Constant as defined in the Yellow Paper
      */
-    const SECP256K1N : u256 := 115792089237316195423570985008687907852837564279074904382605163141518161494337;
+    const SECP256K1N : u256 := 115792089237316195423570985008687907852837564279074904382605163141518161494337
     /**
      * Key recovery.
      */
     function CallEcdsaRecover(fn: EcdsaRecoverFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
-        var h := Bytes.Slice(data,0,32);
+        var h := Arrays.SliceAndPad(data,0,32,0);
         var v := Bytes.ReadUint256(data,32);
         var r := Bytes.ReadUint256(data,64);
         var s := Bytes.ReadUint256(data,96);
@@ -176,7 +176,7 @@ module Precompiled {
     // ========================================================================
     // (5) ModExp
     // ========================================================================
-    const G_QUADDIVISOR: nat := 3;
+    const G_QUADDIVISOR: nat := 3
 
     /**
      * Compute arbitrary precision exponentiation under modulo.  Specifically,
@@ -191,11 +191,11 @@ module Precompiled {
         // Length of M
         var lM := Bytes.ReadUint256(data,64) as nat;
         // Extract B(ase)
-        var B := Bytes.Slice(data,96,lB);
+        var B := Arrays.SliceAndPad(data,96,lB,0);
         // Extract E(xponent)
-        var E := Bytes.Slice(data,96+lB,lE);
+        var E := Arrays.SliceAndPad(data,96+lB,lE,0);
         // Extract M(odulo)
-        var M := Bytes.Slice(data,96+lB+lE,lM);
+        var M := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
         // Compute modexp
         var modexp := fn(B,E,M);
         // Compute lEp
@@ -239,7 +239,7 @@ module Precompiled {
     // (6)
     // ========================================================================
 
-    const G_BNADD := 150;
+    const G_BNADD := 150
 
     function CallBnAdd(data: Array<u8>) : Option<(Array<u8>,nat)> {
         Some((data, G_BNADD))
@@ -249,7 +249,7 @@ module Precompiled {
     // (7)
     // ========================================================================
 
-    const G_BNMUL := 6000;
+    const G_BNMUL := 6000
 
     function CallBnMul(data: Array<u8>) : Option<(Array<u8>,nat)> {
         Some((data, G_BNMUL))

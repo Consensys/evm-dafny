@@ -22,4 +22,53 @@ module Arrays {
      * reasonably turned into a u256 and (for example) loaded on the stack.
      */
     type Array<T> = arr:seq<T> | |arr| < TWO_256
+
+    /**
+     * Everything is the same, except for those elements within the given region.
+     */
+    predicate EqualsExcept<T(==)>(lhs:seq<T>, rhs:seq<T>, address:nat, length: nat)
+    // Data region must be within available memory
+    requires address + length <= |lhs| {
+        // Memory sizes are the same
+        |lhs| == |rhs| &&
+        // Check nothing below data region changed
+        lhs[..address] == rhs[..address] &&
+        // Check nothing above data region changed
+        lhs[address+length..] == rhs[address+length..]
+    }
+
+    /**
+     * Slice out a subsequence of bytes from a given sequence.
+     * If the requested subsequence overflows the sequence, then
+     * it is padded out with a given value.
+     */
+    function SliceAndPad<T>(mem:seq<T>, address:nat, len:nat, padding: T) : (result:seq<T>)
+    ensures |result| == len
+    {
+      var n := address + len;
+      // Sanity check for overflow
+      if n <= |mem| then mem[address..n]
+      // Yes overflow, so manage it.
+      else if address < |mem| then mem[address..] + seq(n-|mem|, i => padding)
+      else seq(len, i=>padding)
+    }
+
+    /**
+     * Copy a sequence of bytes from into another at a given starting position.
+     */
+    opaque function Copy<T>(src: seq<T>, dst: seq<T>, start: nat) : (result:seq<T>)
+    // Must have enough space in the destination sequence.
+    requires (start+|src|) <= |dst|
+    // Resulting array unchanged in size
+    ensures |result| == |dst|
+    // Affected region matches source array
+    ensures src == result[start .. (start+|src|)]
+    // Everything unchanged outside affected region
+    ensures EqualsExcept(dst,result,start,|src|)
+    {
+        // Precompute end within destination
+        var end := start+|src|;
+        // Construct the sequence!
+        seq(|dst|, i requires i >= 0 && i < |dst| => if (i >= start && i<end) then src[i-start] else dst[i])
+    }
 }

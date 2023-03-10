@@ -83,7 +83,7 @@ abstract module MemoryVerif_01 {
   method MSTORE_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
-    requires vm.Gas() >= Gas.G_VERYLOW;
+    requires vm.Gas() >= Gas.G_VERYLOW
   {
     var address := vm.Peek(0) as nat;
 
@@ -169,7 +169,7 @@ abstract module MemoryVerif_01 {
   method MLOAD_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
-    requires vm.Gas() >= Gas.G_VERYLOW;
+    requires vm.Gas() >= Gas.G_VERYLOW
   {
     var address := vm.Peek(0) as nat;
 
@@ -226,7 +226,7 @@ abstract module MemoryVerif_01 {
   method RETURN_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
-    requires vm.Gas() >= Gas.G_VERYLOW;
+    requires vm.Gas() >= Gas.G_VERYLOW
   {
     var address := vm.Peek(0) as nat;
     var len := vm.Peek(1) as nat;
@@ -269,7 +269,7 @@ abstract module MemoryVerif_01 {
   method REVERT_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
-    requires vm.Gas() >= Gas.G_VERYLOW;
+    requires vm.Gas() >= Gas.G_VERYLOW
   {
     var address := vm.Peek(0) as nat;
     var len := vm.Peek(1) as nat;
