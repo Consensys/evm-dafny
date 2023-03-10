@@ -26,7 +26,8 @@ apply plugin: 'application'
 final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
     '/noExterns',
-    '/timeLimit:240'
+    '/vcsLoad:2',
+    '/rlimit:1000000'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
@@ -38,7 +39,6 @@ final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
 
 final DAFNY_VERIFY_FLAGS = DAFNY_BASE_FLAGS + [
     '/verifyAllModules',
-    '/rlimit:100000',
     '/verificationLogger:csv;LogFileName=build/logs/verify.csv'
 ]
 
