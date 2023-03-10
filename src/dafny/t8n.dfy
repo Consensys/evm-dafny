@@ -13,7 +13,7 @@
  */
 
 include "evms/berlin.dfy"
-
+include "core/precompiled.dfy"
 
  module t8n {
     import Storage
@@ -27,6 +27,7 @@ include "evms/berlin.dfy"
     import Optional
     import Stack
     import Memory
+        import Precompiled
     import opened Opcode
 
     method Main(argv: seq<string>){
@@ -86,7 +87,7 @@ include "evms/berlin.dfy"
 
         var depth := 0;
 
-        var st := EvmState.Call(worldState, context, substate, recipient, callValue, gasAvailable, depth);
+        var st := EvmState.Call(worldState, context, Precompiled.DEFAULT, substate, recipient, callValue, gasAvailable, depth);
 
         MessageCall(sender, origin, recipient, callValue, callData, writePermission, gasPrice, blockInfo, accounts, gasAvailable);
 
@@ -98,8 +99,7 @@ include "evms/berlin.dfy"
 		//Code_Compile.Raw code = new Code_Compile.Raw(DafnySequence.fromBytes//(bytecode));
         var code := Code.Create([12]);
 		//WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store,code);
-
-        var acct := WorldState.CreateAccount(nonce, endowment, store, code);
+        var acct := WorldState.CreateAccount(nonce, endowment, store, code, WorldState.HASH_EMPTYCODE);
 		//this.worldState = DafnyMap.update(worldState, address, acct);
 
         ws := worldStateOrig[address :=  acct];
@@ -116,7 +116,7 @@ include "evms/berlin.dfy"
         ss := ss.AccountAccessed(sender);
         ss := ss.AccountAccessed(recipient);
         ws := ws.IncNonce(sender);
-        var st := EvmState.Call(ws, ctx, ss, recipient, callValue, gas, 1);
+        var st := EvmState.Call(ws, ctx, Precompiled.DEFAULT, ss, recipient, callValue, gas, 1);
         st := Run(0, st);
         if st.RETURNS? {
 

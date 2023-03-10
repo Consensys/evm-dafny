@@ -26,8 +26,7 @@ apply plugin: 'application'
 final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
     '/noExterns',
-    '/arith:2',
-    '/timeLimit:240'
+    '/rlimit:1000000'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
@@ -111,8 +110,6 @@ task compileDafny {
             executable 'dafny'
             args DAFNY_BUILD_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
-        // Delete general file containing extern definitions.
-        delete "build/evm-java/External_Compile"
     }
 }
 

@@ -66,6 +66,7 @@ module EvmState {
      */
     datatype Raw = EVM(
         context: Context.T,
+        precompiled: Precompiled.T,
         world : WorldState.T,
         stack   : Stack.Stack,
         memory  : Memory.T,
@@ -75,11 +76,11 @@ module EvmState {
         pc : nat
     )
 
-    // A valud EVM state must have an entry in the world state for the account
-    // being executed.
-    type T = c:Raw | c.context.address in c.world.accounts
-    // Create simple witness of htis
-    witness EVM(Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0)),
+    // An example instantiation of the EVM to satisfy Dafny's witness
+    // requirements.  This should not be consider as a valid or useful instance
+    // of the EVM though.
+    const EVM_WITNESS : Raw := EVM(Context.DEFAULT,
+            Precompiled.DEFAULT,
             WorldState.Create(map[0:=WorldState.DefaultAccount()]),
             Stack.Create(),
             Memory.Create(),
@@ -88,22 +89,17 @@ module EvmState {
             0,
             0)
 
+    // A valid EVM state must have an entry in the world state for the account
+    // being executed.
+    type T = c:Raw | c.context.address in c.world.accounts
+    // Create simple witness of htis
+    witness EVM_WITNESS
+
     /**
      * The type for executing states.
      */
     type ExecutingState = s:State | s.EXECUTING?
-      witness EXECUTING(
-        EVM(
-            Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0)),
-            WorldState.Create(map[0:=WorldState.DefaultAccount()]),
-            Stack.Create(),
-            Memory.Create(),
-            Code.Create([]),
-            SubState.Create(),
-            0,
-            0
-        )
-    )
+      witness EXECUTING(EVM_WITNESS)
 
     /**
      * The type for terminated states.
@@ -368,7 +364,11 @@ module EvmState {
         requires this.EXECUTING?
         requires !evm.world.Exists(address)
         requires |code| <= Code.MAX_CODE_SIZE {
-            var data := WorldState.CreateAccount(nonce,balance,Storage.Create(storage),Code.Create(code));
+            // Compute code hash
+            var hash := evm.precompiled.Sha3(code);
+            // Create account
+            var data := WorldState.CreateAccount(nonce,balance,Storage.Create(storage),Code.Create(code),hash);
+            // Done
             EXECUTING(evm.(world:=evm.world.Put(address,data)))
         }
 
@@ -637,7 +637,7 @@ module EvmState {
      * @param depth The current call depth.
      * @param opcode The opcode causing this call.
      */
-    function Call(world: WorldState.T, ctx: Context.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
+    function Call(world: WorldState.T, ctx: Context.T, precompiled: Precompiled.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
     // Sender account must exist
     requires world.Exists(ctx.sender)  {
         // Address of called contract
@@ -657,8 +657,8 @@ module EvmState {
                 // Check for precompiled contract
                 if codeAddress >= 1 && codeAddress <= 9
                 then
-                    // Execute precompiled contract
-                    match Precompiled.Call(codeAddress,ctx.callData)
+                    // Call precompiled contract
+                    match precompiled.Call(codeAddress,ctx.callData)
                     case None => ERROR(INVALID_PRECONDITION,0,[])
                     case Some((data,gascost)) => if gas >= gascost
                         then RETURNS(gas - gascost, data, nw, substate)
@@ -672,7 +672,7 @@ module EvmState {
                         // Construct fresh EVM
                         var stack := Stack.Create();
                         var mem := Memory.Create();
-                        var evm := EVM(ctx,nw,stack,mem,cod,substate,gas,0);
+                        var evm := EVM(ctx,precompiled,nw,stack,mem,cod,substate,gas,0);
                         // Off we go!
                         EXECUTING(evm)
     }
@@ -686,7 +686,7 @@ module EvmState {
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
      */
-    function Create(world: WorldState.T, ctx: Context.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
+    function Create(world: WorldState.T, ctx: Context.T, precompiled: Precompiled.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
     requires |initcode| <= Code.MAX_CODE_SIZE
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
@@ -697,7 +697,7 @@ module EvmState {
         else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then ERROR(ACCOUNT_COLLISION,0,[])
         else
             var storage := Storage.Create(map[]); // empty
-            var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]));
+            var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]),WorldState.HASH_EMPTYCODE);
             // Create initial account
             var w := world.Put(ctx.address,account);
             // Deduct wei
@@ -711,7 +711,7 @@ module EvmState {
                 var cod := Code.Create(initcode);
                 // Mark new account as having been accessed
                 var ss := substate.AccountAccessed(ctx.address);
-                var evm := EVM(ctx,nw,stack,mem,cod,ss,gas,0);
+                var evm := EVM(ctx,precompiled,nw,stack,mem,cod,ss,gas,0);
                 // Off we go!
                 EXECUTING(evm)
     }
@@ -753,10 +753,11 @@ module EvmState {
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
+            var precompiled := evm.precompiled;
             // Construct new context
             var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,writePermission,gasPrice,block);
             // Make the call!
-            Call(evm.world,ctx,evm.substate,code,callValue,gas,depth+1)
+            Call(evm.world,ctx,precompiled,evm.substate,code,callValue,gas,depth+1)
         }
 
         /**
@@ -805,10 +806,11 @@ module EvmState {
             var origin := evm.context.origin;
             var gasPrice := evm.context.gasPrice;
             var block := evm.context.block;
+            var precompiled := evm.precompiled;
             // Construct new context
             var ctx := Context.Create(sender,origin,address,endowment,[],evm.context.writePermission,gasPrice,block);
             // Make the creation!
-            Create(evm.world,ctx,evm.substate,initcode,gas,depth+1)
+            Create(evm.world,ctx,precompiled,evm.substate,initcode,gas,depth+1)
         }
 
         /**
@@ -845,8 +847,11 @@ module EvmState {
                     // Check sufficient gas for deposit
                     else if vm.gas < depositcost then st.Push(0)
                     else
+                        // Compute code hash
+                        var hash := evm.precompiled.Sha3(vm.data);
                         // Initialise contract code for new account
-                        var nworld := vm.world.SetCode(address,vm.data);
+                        var nworld := vm.world.SetCode(address,vm.data,hash);
+                        // Mark account as having been accessed
                         var nvm := vm.substate.AccountAccessed(address);
                         // Thread world state through
                         st.Refund(vm.gas - depositcost).Merge(nworld,nvm).Push(address as u256).SetReturnData([])

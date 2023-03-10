@@ -12,12 +12,14 @@
  * under the License.
  */
 include "../util/arrays.dfy"
-include "../util/int.dfy"
 include "../util/bytes.dfy"
+include "../util/int.dfy"
+include "../util/option.dfy"
 
 module Context {
     import opened Arrays
     import opened Int
+    import opened Optional
     import Bytes
 
     // =============================================================================
@@ -114,13 +116,13 @@ module Context {
 
     }
 
-    // type T = c:Raw | |c.callData| <= MAX_U256 && |c.returnData| <= MAX_U256
-    // witness Context(0,0,0,0,[],[],true,0,Info(0,0,0,0,0,0))
-
     /**
      * Create an initial context from various components.
      */
     function Create(sender:u160,origin:u160,recipient:u160,callValue:u256,callData:Array<u8>,writePermission:bool,gasPrice:u256, block: Block) : T {
         Context(sender,origin,address:=recipient,callValue:=callValue,callData:=callData,returnData:=[],writePermission:=writePermission,gasPrice:=gasPrice,block:=block)
     }
+
+    // A simple witness of the Context datatype.
+    const DEFAULT : T := Create(0,0,0,0,[],true,0,Block.Info(0,0,0,0,0,0))
 }

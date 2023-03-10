@@ -34,15 +34,16 @@ import EvmState_Compile.State_CONTINUING;
 import EvmState_Compile.State_ERROR;
 import EvmState_Compile.State_EXECUTING;
 import EvmState_Compile.State_RETURNS;
+import Optional_Compile.Option;
 import WorldState_Compile.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
-import evmtools.core.Transaction.Outcome;
 import evmtools.util.Hex;
 import dafnyevm.util.Errors;
+import dafnyevm.util.Precompiles;
 import dafnyevm.util.Word.Uint160;
 import dafnyevm.util.Word.Uint256;
 
@@ -75,6 +76,13 @@ public class DafnyEvm {
 	 * Tracer is used for monitoring EVM state during execution.
 	 */
 	private Tracer tracer = DEFAULT_TRACER;
+
+
+	/**
+	 * Native implementation of precompiled contracts.
+	 */
+    private Precompiled_Compile.T NATIVE_PRECOMPILES = Precompiled_Compile.T.create(Precompiles::ecdsaRecover,
+            Precompiles::sha256, Precompiles::ripEmd160, Precompiles::modExp, Precompiles::blake2f, Precompiles::sha3);
 	/**
 	 * World state to use for this call.
 	 */
@@ -157,7 +165,8 @@ public class DafnyEvm {
 	public DafnyEvm create(BigInteger address, BigInteger nonce, BigInteger endowment, Map<BigInteger, BigInteger> storage, byte[] bytecode) {
 		DafnyMap<BigInteger,BigInteger> store = new DafnyMap<BigInteger,BigInteger>(storage);
 		DafnySequence<Byte> code = DafnySequence.fromBytes(bytecode);
-		WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store,code);
+		BigInteger hash = Precompiles.sha3(code);
+		WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store, code, hash);
 		this.worldState = DafnyMap.update(worldState, address, acct);
 		return this;
 	}
@@ -209,7 +218,7 @@ public class DafnyEvm {
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
 	        // Begin the call.
-	        st = EvmState_Compile.__default.Call(ws, ctx, ss, tx.to(), tx.value(), gas,
+	        st = EvmState_Compile.__default.Call(ws, ctx, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
 	    } else {
 	        // Contract creation
@@ -222,7 +231,7 @@ public class DafnyEvm {
 	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
 	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
 	        // Begin the call.
-	        st = EvmState_Compile.__default.Create(ws, ctx, ss, callData, gas, BigInteger.ONE);
+	        st = EvmState_Compile.__default.Create(ws, ctx, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
 	    if(st instanceof State_EXECUTING) {

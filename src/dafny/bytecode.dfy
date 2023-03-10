@@ -613,7 +613,7 @@ module Bytecode {
             var loc := st.Peek(0) as nat;
             var len := st.Peek(1) as nat;
             var bytes := Memory.Slice(st.evm.memory, loc, len);
-            var hash := External.sha3(bytes);
+            var hash := st.evm.precompiled.Sha3(bytes);
             st.Expand(loc,len).Pop(2).Push(hash).Next()
         else
             ERROR(STACK_UNDERFLOW)

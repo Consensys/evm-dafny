@@ -29,18 +29,59 @@ module Precompiled {
     import External
     import Bytes
 
-    function Call(address: u160, data: Array<u8>) : Option<(Array<u8>,nat)>
-    requires address >= 1 && address <= 9 {
-        match address
-        case 1 => CallEcdsaRecover(data)
-        case 2 => CallSha256(data)
-        case 3 => CallRipEmd160(data)
-        case 4 => CallID(data)
-        case 5 => CallModExp(data)
-        case 6 => CallBnAdd(data)
-        case 7 => CallBnMul(data)
-        case 8 => CallSnarkV(data)
-        case 9 => CallBlake2f(data)
+    const DEFAULT : T := Dispatcher(
+        // (1) ECDSA Recover
+        (data,v,r,s)=>(data),
+        // (2) SHA256
+        data=>data,
+        // (3) RIPEMD160
+        data=>data,
+        // (4) ModExp
+        (B,E,M)=>([]),
+        // (9) Blake2f
+        data=>data,
+        // Sha3
+        data=>0
+    )
+
+    // The type for an external ECDSA recover implementation, where we have v, r
+    // and s as the last three parameters.
+    type EcdsaRecoverFn = (Array<u8>, u8, u256, u256)->Array<u8>
+    // The type for an external Sha256 implementation.
+    type Sha256Fn = Array<u8> -> Array<u8>
+    // The type for an external RipEmd160 implementation.
+    type RipEmd160Fn = Array<u8> -> Array<u8>
+    // The type for an external ModExp implementation.
+    type ModExpFn = (Array<u8>,Array<u8>,Array<u8>)->Array<u8>
+    // The type for an external Blake2f implementation.
+    type Blake2Fn = Array<u8> -> Array<u8>
+    // The type for an external Sha3 implementation.
+    type Sha3Fn = Array<u8> -> u256
+
+    // Define the type of the precompiled dispatch function.  This accepts an
+    // address and an array of input data, and returns either nothing (in the
+    // event of a failure) or an array of output data and a gas cost.
+    datatype T = Dispatcher(ecdsa: EcdsaRecoverFn, sha256: Sha256Fn, ripemd160: RipEmd160Fn, modexp: ModExpFn, blake2f: Blake2Fn, sha3: Sha3Fn) {
+        // Call a precompiled contract.  This function is marked opaque to
+        // ensure that, when verifying against this function, no assumptions are
+        // made about the possible return values.
+        function {:opaque} Call(address: u160, data: Array<u8>) : Option<(Array<u8>,nat)> {
+            match address
+            case 1 => CallEcdsaRecover(ecdsa,data)
+            case 2 => CallSha256(sha256,data)
+            case 3 => CallRipEmd160(ripemd160,data)
+            case 4 => CallID(data)
+            case 5 => CallModExp(modexp,data)
+            case 6 => CallBnAdd(data)
+            case 7 => CallBnMul(data)
+            case 8 => CallSnarkV(data)
+            case 9 => CallBlake2f(blake2f,data)
+            case _ => None
+        }
+
+        function {:opaque} Sha3(data: Array<u8>) : u256 {
+            sha3(data)
+        }
     }
 
     // ========================================================================
@@ -54,7 +95,7 @@ module Precompiled {
     /**
      * Key recovery.
      */
-    function CallEcdsaRecover(data: Array<u8>) : Option<(Array<u8>,nat)> {
+    function CallEcdsaRecover(fn: EcdsaRecoverFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
         var h := Bytes.Slice(data,0,32);
         var v := Bytes.ReadUint256(data,32);
         var r := Bytes.ReadUint256(data,64);
@@ -64,7 +105,7 @@ module Precompiled {
         then
             []
         else
-            External.ECDSARecover(h,v as u8,r,s);
+            fn(h,v as u8,r,s);
         //
         Some((key, G_ECDSA))
     }
@@ -76,8 +117,8 @@ module Precompiled {
     /**
      * SHA256
      */
-    function CallSha256(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        Some((External.sha256(data),CostSha256(data)))
+    function CallSha256(fn: Sha256Fn, data: Array<u8>) : Option<(Array<u8>,nat)> {
+        Some((fn(data),CostSha256(data)))
     }
 
     /**
@@ -97,8 +138,8 @@ module Precompiled {
     /**
      * RipEmd160
      */
-    function CallRipEmd160(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        Some((External.ripEmd160(data), CostRipEmd160(data)))
+    function CallRipEmd160(fn: RipEmd160Fn, data: Array<u8>) : Option<(Array<u8>,nat)> {
+        Some((fn(data), CostRipEmd160(data)))
     }
 
     /**
@@ -142,7 +183,7 @@ module Precompiled {
      * we compue B^E % M.  All words are unsigned integers in big endian format.
      * See also EIP-2565.
      */
-    function CallModExp(data: Array<u8>) : Option<(Array<u8>,nat)> {
+    function CallModExp(fn: ModExpFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
         // Length of B
         var lB := Bytes.ReadUint256(data,0) as nat;
         // Length of E
@@ -156,7 +197,7 @@ module Precompiled {
         // Extract M(odulo)
         var M := Bytes.Slice(data,96+lB+lE,lM);
         // Compute modexp
-        var modexp := External.modExp(B,E,M);
+        var modexp := fn(B,E,M);
         // Compute lEp
         var lEp := LenEp(lB,E,data);
         // Gas calculation
@@ -230,12 +271,12 @@ module Precompiled {
     // (9) Blake2f
     // ========================================================================
 
-    function CallBlake2f(data: Array<u8>) : Option<(Array<u8>,nat)> {
+    function CallBlake2f(fn: Blake2Fn,data: Array<u8>) : Option<(Array<u8>,nat)> {
         if |data| == 213 && data[212] in {0,1}
         then
             var r := U32.Read(data,0) as nat;
             // FIXME: pull out stuff!
-            Some((External.blake2f(data),r))
+            Some((fn(data),r))
         else
             None
     }
