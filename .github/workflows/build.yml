@@ -24,9 +24,13 @@ jobs:
       - name: Run Gradle Build
         run: gradle build -Prandomize=5
 
-      - name: Print Verification Logs
+      - name: Verification Logs (EVM)
         if: always()
-        run: gradle debug
+        run: gradle debug --args="build/logs/verify.csv"
+
+      - name: Verification Logs (Proofs)
+        if: always()
+        run: gradle debug --args="build/logs/test_*.csv"
 
       - name: Set up Go
         uses: actions/setup-go@v3
