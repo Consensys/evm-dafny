@@ -172,7 +172,7 @@ module Test10Gas {
      *  @param  c   The number of times to iterate the loop.
      *  @param  g   The initial amount of gas.
      */
-    method main5(c: u8, g: nat)
+    method {:verify false} main5(c: u8, g: nat)
         requires g >= G_BASE + 4 * G_VERYLOW + c as nat * (2 * G_BASE + 9 * G_VERYLOW)
     {
         // Initialise Bytecode

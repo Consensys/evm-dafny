@@ -20,6 +20,19 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 // ======================================================================
+// Randomisation
+// ======================================================================
+final RANDOM_ITERATIONS = project.properties["randomize"]
+
+// Configure randomisation (if applicable)
+final RANDOMIZE_FLAG = project.hasProperty("randomize") ? ['/randomSeedIterations:' + RANDOM_ITERATIONS] : []
+
+// Report whether randomisation is enabled.
+if(project.hasProperty("randomize")) {
+    project.logger.lifecycle('Randomize verification with ' + RANDOM_ITERATIONS + ' iterations.')
+}
+
+// ======================================================================
 // Constants (Dafny 3)
 // ======================================================================
 
@@ -40,14 +53,14 @@ final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
 final DAFNY_VERIFY_FLAGS = DAFNY_BASE_FLAGS + [
     '/verifyAllModules',
     '/verificationLogger:csv;LogFileName=build/logs/verify.csv'
-]
+] + RANDOMIZE_FLAG
 
 final DAFNY_TEST_FLAGS = DAFNY_BASE_FLAGS + [
     '/compileTarget:java',
     '/runAllTests:1',
     '/out:build/dafny-tests',
     '/compile:4'
-]
+] + RANDOMIZE_FLAG
 
 // ======================================================================
 // Constants (Dafny 4)
@@ -83,13 +96,6 @@ task verifyDafny {
     outputs.files(fileTree('build/logs/').include('verify.csv'))
     // Enable caching
     outputs.cacheIf { true }
-    // Apply randomisation (if requested)
-    def flags = DAFNY_VERIFY_FLAGS
-    if (project.hasProperty("randomize")) {
-        def prop = project.properties["randomize"]
-        project.logger.lifecycle('Randomize verification with ' + prop + ' iterations.')
-        flags = flags + ['/randomSeedIterations:' + prop]
-    }
     // Specify actions
     doLast {
         // Create build directory (Dafny doesn't do this for us)
@@ -97,7 +103,7 @@ task verifyDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args flags + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+            args DAFNY_VERIFY_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
     }
 }

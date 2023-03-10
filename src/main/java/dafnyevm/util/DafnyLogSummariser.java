@@ -95,9 +95,10 @@ class Result {
     }
 
     public String toString(int width) {
-        width -= name.length();
+        String samples = "[" + usages.size() + "]";
+        width -= name.length() + samples.length();
         String label = String.format("%1$s (%2$.2f)", mean().toString(),coeffVariance());
-        return name + String.format("%1$" + width + "s", label);
+        return samples + name + String.format("%1$" + width + "s", label);
     }
 }
 
