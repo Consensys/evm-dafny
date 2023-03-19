@@ -83,6 +83,75 @@ module Bytes {
         (w1 * (TWO_128 as u256)) + w2
     }
 
+    /**
+     * Write a byte to a given address in Memory.
+     */
+    function WriteUint8(mem:seq<u8>, address:nat, val:u8) : seq<u8>
+        requires address < |mem| {
+        // Write location
+        mem[address:=val]
+    }
+
+    /**
+     * Write a 16bit word to a given address in Memory using
+     * big-endian addressing.
+     */
+    function WriteUint16(mem:seq<u8>, address:nat, val:u16) : seq<u8>
+    requires address + 1 < |mem| {
+      var w1 := val / (TWO_8 as u16);
+      var w2 := val % (TWO_8 as u16);
+      var mem' := WriteUint8(mem,address,w1 as u8);
+      WriteUint8(mem',address+1,w2 as u8)
+    }
+
+    /**
+     * Write a 32bit word to a given address in Memory using
+     * big-endian addressing.
+     */
+    function WriteUint32(mem:seq<u8>, address:nat, val:u32) : seq<u8>
+    requires address + 3 < |mem| {
+      var w1 := val / (TWO_16 as u32);
+      var w2 := val % (TWO_16 as u32);
+      var mem' := WriteUint16(mem,address,w1 as u16);
+      WriteUint16(mem',address+2,w2 as u16)
+    }
+
+    /**
+     * Write a 64bit word to a given address in Memory using
+     * big-endian addressing.
+     */
+    function WriteUint64(mem:seq<u8>, address:nat, val:u64) : seq<u8>
+    requires address + 7 < |mem| {
+      var w1 := val / (TWO_32 as u64);
+      var w2 := val % (TWO_32 as u64);
+      var mem' := WriteUint32(mem,address,w1 as u32);
+      WriteUint32(mem',address+4,w2 as u32)
+    }
+
+    /**
+     * Write a 128bit word to a given address in Memory using
+     * big-endian addressing.
+     */
+    function WriteUint128(mem:seq<u8>, address:nat, val:u128) : seq<u8>
+    requires address + 15 < |mem| {
+      var w1 := val / (TWO_64 as u128);
+      var w2 := val % (TWO_64 as u128);
+      var mem' := WriteUint64(mem,address,w1 as u64);
+      WriteUint64(mem',address+8,w2 as u64)
+    }
+
+    /**
+     * Write a 256bit word to a given address in Memory using
+     * big-endian addressing.
+     */
+    function WriteUint256(mem:seq<u8>, address:nat, val:u256) : (mem':seq<u8>)
+    requires address + 31 < |mem|{
+      var w1 := val / (TWO_128 as u256);
+      var w2 := val % (TWO_128 as u256);
+      var mem' := WriteUint128(mem,address,w1 as u128);
+      WriteUint128(mem',address+16,w2 as u128)
+    }
+
     /** Converts a sequence of bytes into a u256.
      *
      *  @param  bytes   A sequence of bytes.
