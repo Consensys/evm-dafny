@@ -754,6 +754,6 @@ module Gas {
             case STATICCALL => s.UseGas(CostExpandDoubleRange(s,6,2,3,4,5) + StaticCallCost(s))
             case REVERT => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)
             case SELFDESTRUCT => s.UseGas(CostSelfDestruct(s))
-            case _ => ERROR(INVALID_OPCODE,0,[])
+            case _ => ERROR(INVALID_OPCODE)
     }
 }
