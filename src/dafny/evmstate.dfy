@@ -644,7 +644,7 @@ module EvmState {
         var address := ctx.address;
         // Check call depth & available balance.  Note there isn't an off-by-one
         // error here (even though it looks like it).
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then ERROR(REVERTS, gas, [])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,value) then ERROR(REVERTS, gas)
         else
             // Create default account (if none exists)
             var w := world.EnsureAccount(address);
@@ -659,10 +659,10 @@ module EvmState {
                 then
                     // Call precompiled contract
                     match precompiled.Call(codeAddress,ctx.callData)
-                    case None => ERROR(INVALID_PRECONDITION,0,[])
+                    case None => ERROR(INVALID_PRECONDITION)
                     case Some((data,gascost)) => if gas >= gascost
                         then RETURNS(gas - gascost, data, nw, substate)
-                        else ERROR(INSUFFICIENT_GAS,0,[])
+                        else ERROR(INSUFFICIENT_GAS)
                 // Check for end-user account
                 else
                     // Extract contract code
@@ -692,9 +692,9 @@ module EvmState {
         var endowment := ctx.callValue;
         // Check call depth & available balance. Note there isn't an off-by-one
         // error here (even though it looks like it).
-        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writePermission then ERROR(REVERTS,gas,[])
+        if depth > 1024 || !world.CanWithdraw(ctx.sender,endowment) || !ctx.writePermission then ERROR(REVERTS,gas)
         // Sanity checks for existing account
-        else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then ERROR(ACCOUNT_COLLISION,0,[])
+        else if world.Exists(ctx.address) && !world.CanOverwrite(ctx.address) then ERROR(ACCOUNT_COLLISION)
         else
             var storage := Storage.Create(map[]); // empty
             var account := WorldState.CreateAccount(1,endowment,storage,Code.Create([]),WorldState.HASH_EMPTYCODE);

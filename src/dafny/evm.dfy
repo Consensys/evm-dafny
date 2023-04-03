@@ -72,7 +72,7 @@ abstract module EVM {
     {
         match st.OpDecode()
             case Some(op) => ExecuteOP(st,op)
-            case None => ERROR(INVALID_OPCODE,0,[])
+            case None => ERROR(INVALID_OPCODE)
     }
 
     function ExecuteOP(st: ExecutingState, op: u8): State {
