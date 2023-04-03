@@ -44,7 +44,7 @@ function equiv(l: State, r: State) : bool {
         false
 }
 
-method {:verify false} proof(context: Context.T, world: map<u160,WorldState.Account>, gas: nat)
+method proof(context: Context.T, world: map<u160,WorldState.Account>, gas: nat)
 requires context.writePermission
 requires gas > 100000
 requires context.address in world {

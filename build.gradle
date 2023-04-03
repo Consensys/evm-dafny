@@ -40,7 +40,9 @@ final DAFNY_BASE_FLAGS = [
     '/compileVerbose:0',
     '/noExterns',
     '/vcsLoad:2',
-    '/rlimit:1000000'
+    '/rlimit:1000000',
+    '/functionSyntax','4',
+    '/quantifierSyntax','4'
 ]
 
 final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
