@@ -27,7 +27,7 @@ module Test {
      *  1. execution can go through
      *  2. the gas left at the end of the program.
      */
-    method {:verify false} Test_EVM_01(x: u8)
+    method Test_EVM_01(x: u8)
     {
         // Initialise Bytecode
         var vm := EvmBerlin.InitEmpty(

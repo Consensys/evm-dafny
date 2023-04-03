@@ -593,7 +593,7 @@ module I256 {
   // language) supports Euclidean division.  Observe that this is a
   // true Remainder operator, and not a modulus operator.  For
   // emxaple, this means the result can be negative.
-  function {:verify false} Rem(lhs: i256, rhs: i256) : i256
+  function Rem(lhs: i256, rhs: i256) : i256
     // Cannot divide by zero!
     requires rhs != 0 {
     Int.Rem(lhs as int, rhs as int) as i256

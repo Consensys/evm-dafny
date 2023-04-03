@@ -46,7 +46,7 @@ module Kontract1 {
     /**
      *  Simple proof about a contract reverting if oevrflows.
      */
-    method {:verify false} inc_proof(st: ExecutingState) returns (st': State)
+    method inc_proof(st: ExecutingState) returns (st': State)
         /** Initial state with PC = 0 and empty stack. */
         requires st.PC() == 0 && st.Operands() == 0
         /** Enough gas. */
@@ -116,7 +116,7 @@ module Kontract1 {
      *  @note       The check relies on the property specified by lemma AddOverflowNSC.
      *  @note       The overflow is specified as x + y exceeding MAX_U256.
      */
-    method {:verify false} OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
+    method OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
         /** OK state and initial PC.  */
         requires /* Pre0 */ st.PC() == 0
         /** Enough gas. Longest path gas-wise is via JUMPI. */
@@ -161,7 +161,7 @@ module Kontract1 {
      *              The stack content is unconstrained but there must be
      *              enough capacity (3) to perform this computation.
      */
-    method {:verify false} Loopy(st: ExecutingState, c: u8) returns (st': State)
+    method Loopy(st: ExecutingState, c: u8) returns (st': State)
         requires /* Pre0 */ st.PC() == 0 && st.Capacity() >= 3
         requires /* Pre1 */ st.Gas() >=
             3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +
