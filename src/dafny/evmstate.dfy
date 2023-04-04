@@ -619,11 +619,27 @@ module EvmState {
         requires this.EXECUTING? { CodeAtIndex(PC()) }
 
         /**
+         * Check whether a given program counter location lies on an instruction
+         * boundary.  This is necessary to ensure jumping instructions are
+         * valid.  Observe that we permit negative locations here (which are
+         * clearly not on an instruction boundary) since that helps when
+         * calculating relative offsets.
+         */
+        predicate IsInstructionBoundary(pc: int)
+        requires this.EXECUTING? {
+            var len := Code.Size(evm.code) as nat;
+            // FIXME: this is not sufficient to establish that the given
+            // instruction offset actually lies on an instruction boundary.  See
+            // #242.
+            pc >= 0 && pc < len
+        }
+
+        /**
          * Check whether a given Program Counter location holds the JUMPDEST bytecode.
          */
         predicate IsJumpDest(pc: u256)
         requires this.EXECUTING? {
-            pc < Code.Size(evm.code) && Code.DecodeUint8(evm.code,pc as nat) == Opcode.JUMPDEST
+            this.IsInstructionBoundary(pc as nat) && Code.DecodeUint8(evm.code,pc as nat) == Opcode.JUMPDEST
         }
     }
 

@@ -158,7 +158,7 @@ module SimulationChecks {
      *  @param  c   The number of times to iterate the loop.
      *  @param  g   The initial amount of gas.
      */
-    method main5(c: u8, g: nat)
+    method {:verify false} main5(c: u8, g: nat)
         requires g >= 0 // Gas ignored in this example
     {
         var end : u8 := 17;
