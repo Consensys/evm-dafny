@@ -1327,6 +1327,87 @@ module Bytecode {
         st.Next()
     }
 
+    /**
+     * Perform a static relative jump using a given offset from the position
+     * immediately after this instruction.  This instruction does not read any
+     * operands from the stack.
+     *
+     * @note Introduced as part of EIP-4200
+     */
+    function RJump(st: ExecutingState, offset: i16) : (st':State) {
+        // Determine position following this instruction.
+        var post_pc := (st.evm.pc + 3) as int;
+        // Compute target PC value
+        var target := post_pc + (offset as int);
+        // Sanity check target address
+        if st.IsInstructionBoundary(target)
+        then
+            st.Goto(target as u256)
+        else
+            ERROR(INVALID_JUMPDEST)
+    }
+
+    /**
+     * Perform a conditional static relative jump using a given offset from the
+     * position immediately after this instruction.  This pops a value of the
+     * stack, and branches based on whether that value is zero or not.  If it is
+     * zero, then no branch occurs.  Otherwise, this instruction branches.
+     *
+     * @note Introduced as part of EIP-4200
+     */
+    function RJumpI(st: ExecutingState, offset: i16) : (st':State) {
+        if st.Operands() >= 1
+        then
+            var val := st.Peek(0);
+            // Check branch taken or not
+            if val == 0 then st.Pop(1).Next()
+            else
+                // Determine position following this instruction.
+                var post_pc := (st.evm.pc + 3) as int;
+                // Compute target PC value
+                var target := post_pc + (offset as int);
+                // Sanity check target address
+                if st.IsInstructionBoundary(target)
+                then
+                    st.Pop(1).Goto(target as u256)
+                else
+                    ERROR(INVALID_JUMPDEST)
+        else
+            ERROR(STACK_UNDERFLOW)
+    }
+
+    /**
+     * Perform a relative jump via a jump table of one or more relative offsets.
+     * This pops a value from the stack and branches to the relative offset
+     * given by that index.  If the case value is larger than the number of
+     * entries in the jumptable, then execution falls through to the next
+     * instruction following this.
+     *
+     * @note Introduced as part of EIP-4200.
+     */
+    function RJumpV(st: ExecutingState, table: seq<i16>) : (st':State)
+    // More than one but at most 255 entries in the jump table.
+    requires 1 <= |table| <= 255 {
+        if st.Operands() >= 1
+        then
+            var val := st.Peek(0) as nat;
+            // Check branch taken or not
+            if val >= |table| then st.Pop(1).Next()
+            else
+                // Determine position following this instruction.
+                var post_pc := (st.evm.pc + 3) as int;
+                // Compute target PC value
+                var target := post_pc + (table[val] as int);
+                // Sanity check target address
+                if st.IsInstructionBoundary(target)
+                then
+                    st.Pop(1).Goto(target as u256)
+                else
+                    ERROR(INVALID_JUMPDEST)
+        else
+            ERROR(STACK_UNDERFLOW)
+    }
+
     // =====================================================================
     // 60s & 70s: Push Operations
     // =====================================================================
