@@ -14,7 +14,10 @@
 package dafnyevm.util;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +35,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 class Result {
+    private static final BigDecimal KILO = BigDecimal.valueOf(1_000L);
+    private static final BigDecimal MEGA = BigDecimal.valueOf(1_000_000L);
+    private static final BigDecimal GIGA = BigDecimal.valueOf(1_000_000_000L);
+    private static final MathContext CONTEXT = new MathContext(4,RoundingMode.HALF_UP);
     public final String name;
     public final ArrayList<BigInteger> usages;
 
@@ -97,8 +104,22 @@ class Result {
     public String toString(int width) {
         String samples = "[" + usages.size() + "]";
         width -= name.length() + samples.length();
-        String label = String.format("%1$s (%2$.2f)", mean().toString(),coeffVariance());
+        String mean = toUnitString(mean());
+        String label = String.format("%1$s (%2$.2f)", mean,coeffVariance());
         return samples + name + String.format("%1$" + width + "s", label);
+    }
+
+    private String toUnitString(BigInteger _value) {
+        BigDecimal value = new BigDecimal(_value, CONTEXT);
+        if(value.compareTo(GIGA) >= 0) {
+            return value.divide(GIGA).toString() + "G";
+        } else if(value.compareTo(MEGA) >= 0) {
+            return value.divide(MEGA).toString() + "M";
+        } else if(value.compareTo(KILO) >= 0) {
+            return value.divide(KILO).toString() + "K";
+        } else {
+            return value.toString();
+        }
     }
 }
 
@@ -125,7 +146,7 @@ public class DafnyLogSummariser {
     }
 
     public static ArrayList<Result> merge(ArrayList<Result> results) {
-        HashMap<String,Result> map = new HashMap();
+        HashMap<String,Result> map = new HashMap<>();
         // Join all results together
         for(int i=0;i!=results.size();++i) {
             Result ith = results.get(i);
