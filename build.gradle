@@ -25,8 +25,7 @@ apply plugin: 'application'
 final RANDOM_ITERATIONS = project.properties["randomize"]
 
 // Configure randomisation (if applicable)
-final RANDOMIZE_FLAG = project.hasProperty("randomize") ? ['--boogie','/randomSeedIterations:' + RANDOM_ITERATIONS] : []
-
+final RANDOMIZE_FLAG = project.hasProperty("randomize") ? ['/randomSeedIterations:' + RANDOM_ITERATIONS] : []
 // Report whether randomisation is enabled.
 if(project.hasProperty("randomize")) {
     project.logger.lifecycle('Randomize verification with ' + RANDOM_ITERATIONS + ' iterations.')
@@ -36,11 +35,14 @@ if(project.hasProperty("randomize")) {
 // Constants (Dafny 4)
 // ======================================================================
 
+// Configure boogie-specific flags.
+final BOOGIE_FLAGS = ['/vcsLoad:1'] + RANDOMIZE_FLAG
+
 final DAFNY4_BASE_FLAGS = [
     '--resource-limit','1000000',
     '--function-syntax','4',
-    '--quantifier-syntax','4'
-] + RANDOMIZE_FLAG
+    '--quantifier-syntax','4',
+    '--boogie'] + BOOGIE_FLAGS
 
 final DAFNY4_BUILD_FLAGS = [
     'build',
