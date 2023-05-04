@@ -115,7 +115,7 @@ public class GeneralStateTests {
             "precompsEIP2929_Berlin_0_(43|61|151|169|241|295)_0",
             "idPrecomps_Berlin_0_[4-7]_0",
             "ecmul_.*",
-            "ecadd_.*",
+            //"ecadd_.*",
             "ecpairing.*",
             "pairingTest.*",
             "pointMulAdd.*",

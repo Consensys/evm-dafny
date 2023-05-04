@@ -16,6 +16,7 @@ include "../util/extern.dfy"
 include "../util/arrays.dfy"
 include "../util/int.dfy"
 include "../util/option.dfy"
+include "../crypto/alt_bn128.dfy"
 
 /**
  * Interface for the so-called "precompiled contracts".
@@ -24,6 +25,7 @@ module Precompiled {
     import opened Int
     import opened Arrays
     import opened Optional
+    import opened AltBn128
     import U32
     import U256
     import External
@@ -242,7 +244,30 @@ module Precompiled {
     const G_BNADD := 150
 
     function CallBnAdd(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        Some((data, G_BNADD))
+        // First point
+        var x0 := BNF(Bytes.ReadUint256(data,0) as nat);
+        var y0 := BNF(Bytes.ReadUint256(data,32) as nat);
+        // Second point
+        var x1 := BNF(Bytes.ReadUint256(data,64) as nat);
+        var y1 := BNF(Bytes.ReadUint256(data,96) as nat);
+        // Sanity check input values are prime fields for BN128
+        if x0 == None || y0 == None || x1 == None || y1 == None
+        then
+            None
+        else
+            var p0 := BNP(x0.Unwrap(),y0.Unwrap());
+            var p1 := BNP(x1.Unwrap(),y1.Unwrap());
+            // Sanity check input points are on the BN128 curve
+            if p0 == None || p1 == None
+            then
+                None
+            else
+                var p := AltBn128.PointAdd(p0.Unwrap(),p1.Unwrap());
+                var p_x := p.0 as u256;
+                var p_y := p.1 as u256;
+                var bytes : Array<u8> := U256.ToBytes(p_x) + U256.ToBytes(p_y);
+                assert |bytes| == 64;
+                Some((bytes,G_BNADD))
     }
 
     // ========================================================================
