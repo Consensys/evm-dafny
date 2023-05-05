@@ -115,11 +115,9 @@ public class GeneralStateTests {
             "precompsEIP2929_Berlin_0_(43|61|151|169|241|295)_0",
             "idPrecomps_Berlin_0_[4-7]_0",
             "ecmul_.*",
-            //"ecadd_.*",
             "ecpairing.*",
             "pairingTest.*",
             "pointMulAdd.*",
-            "pointAdd.*",
             // #455
             "MSTORE_Bounds2_Berlin_(0|1)_0_0",
             "modexp_Berlin_[0123]_(2|28|29|30|36|37)_0", // int overflow

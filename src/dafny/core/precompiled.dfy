@@ -244,6 +244,8 @@ module Precompiled {
     const G_BNADD := 150
 
     function CallBnAdd(data: Array<u8>) : Option<(Array<u8>,nat)> {
+        // Axiom needed for this all to go through.
+        AltBn128.IsPrimeField();
         // First point
         var x0 := BNF(Bytes.ReadUint256(data,0) as nat);
         var y0 := BNF(Bytes.ReadUint256(data,32) as nat);

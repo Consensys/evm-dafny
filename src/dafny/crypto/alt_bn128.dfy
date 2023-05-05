@@ -42,8 +42,13 @@ module FiniteField {
 
     // Divide one element into another.
     function Div(lhs: Field, rhs: Field) : Field
-    requires rhs != 0 {
-        (lhs/rhs) % N
+    requires IsPrime(N) {
+        if rhs == 0 then 0
+        else
+            assert rhs < N;
+            Int.PrimeFieldsHaveInverse(rhs,N);
+            var inverse := Int.Inverse(rhs,N).Unwrap();
+            (lhs * inverse) % N
     }
 
     // Raise field element to a given power.
@@ -71,10 +76,11 @@ module EllipticCurve refines FiniteField {
 
     // Add two points on the curve together producing another point on the curve.
     function PointAdd(p: Point, q: Point) : (r:Point)
-    requires N > 3 {
+    requires N > 3 && IsPrime(N)
+    {
         var x_p := p.0;
-        var x_q := p.1;
-        var y_p := q.0;
+        var x_q := q.0;
+        var y_p := p.1;
         var y_q := q.1;
         //
         if p == INFINITY then q
@@ -97,7 +103,7 @@ module EllipticCurve refines FiniteField {
     }
 
     function Double(p:Point) : (r:Point)
-    requires N > 3
+    requires N > 3 && IsPrime(N)
     requires p != INFINITY {
         var x := p.0;
         var y := p.1;
@@ -128,6 +134,13 @@ module AltBn128 refines EllipticCurve {
     // Parameters for the curve
     const A := 0;
     const B := 3;
+
+    // Axiom to establish that this is really a prime field.  This is needed
+    // because Dafny cannot possible determine that ALT_BN128_PRIME is a prime.
+    lemma {:axiom} IsPrimeField()
+    ensures IsPrime(ALT_BN128_PRIME) {
+        assume {:axiom} IsPrime(ALT_BN128_PRIME);
+    }
 
     // Attempt to construct an element of the prime field.  This will only
     // succeed if it is indeed a member, otherwise it returns nothing.
