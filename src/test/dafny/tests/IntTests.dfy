@@ -8,6 +8,7 @@ module IntTests {
     import opened U256
     import opened I256
     import opened Word
+    import opened Optional
 
     // Various tests for roundup
     method {:test} RoundUpTests() {
@@ -89,6 +90,145 @@ module IntTests {
         AssertAndExpect(Pow(2,64) * Pow(2,64) * Pow(2,64) * Pow(2,64) == TWO_256);
         AssertAndExpect((TWO_128 / TWO_64) == TWO_64);
         AssertAndExpect((TWO_256 / TWO_128) == TWO_128);
+    }
+
+    // Various sanity tests for multiplicative inverse
+    method {:test} InverseTests() {
+        AssertAndExpect(Inverse(0,2) == None);
+        AssertAndExpect(Inverse(1,2) == Some(1));
+        AssertAndExpect(Inverse(0,3) == None);
+        AssertAndExpect(Inverse(1,3) == Some(1));
+        AssertAndExpect(Inverse(2,3) == Some(2));
+        AssertAndExpect(Inverse(0,4) == None);
+        AssertAndExpect(Inverse(1,4) == Some(1));
+        AssertAndExpect(Inverse(2,4) == None);
+        AssertAndExpect(Inverse(3,4) == Some(3));
+        AssertAndExpect(Inverse(0,5) == None);
+        AssertAndExpect(Inverse(1,5) == Some(1));
+        AssertAndExpect(Inverse(2,5) == Some(3));
+        AssertAndExpect(Inverse(3,5) == Some(2));
+        AssertAndExpect(Inverse(4,5) == Some(4));
+        AssertAndExpect(Inverse(0,6) == None);
+        AssertAndExpect(Inverse(1,6) == Some(1));
+        AssertAndExpect(Inverse(2,6) == None);
+        AssertAndExpect(Inverse(3,6) == None);
+        AssertAndExpect(Inverse(4,6) == None);
+        AssertAndExpect(Inverse(5,6) == Some(5));
+        AssertAndExpect(Inverse(0,7) == None);
+        AssertAndExpect(Inverse(1,7) == Some(1));
+        AssertAndExpect(Inverse(2,7) == Some(4));
+        AssertAndExpect(Inverse(3,7) == Some(5));
+        AssertAndExpect(Inverse(4,7) == Some(2));
+        AssertAndExpect(Inverse(5,7) == Some(3));
+        AssertAndExpect(Inverse(6,7) == Some(6));
+        AssertAndExpect(Inverse(0,8) == None);
+        AssertAndExpect(Inverse(1,8) == Some(1));
+        AssertAndExpect(Inverse(2,8) == None);
+        AssertAndExpect(Inverse(3,8) == Some(3));
+        AssertAndExpect(Inverse(4,8) == None);
+        AssertAndExpect(Inverse(5,8) == Some(5));
+        AssertAndExpect(Inverse(6,8) == None);
+        AssertAndExpect(Inverse(7,8) == Some(7));
+        AssertAndExpect(Inverse(0,9) == None);
+        AssertAndExpect(Inverse(1,9) == Some(1));
+        AssertAndExpect(Inverse(2,9) == Some(5));
+        AssertAndExpect(Inverse(3,9) == None);
+        AssertAndExpect(Inverse(4,9) == Some(7));
+        AssertAndExpect(Inverse(5,9) == Some(2));
+        AssertAndExpect(Inverse(6,9) == None);
+        AssertAndExpect(Inverse(7,9) == Some(4));
+        AssertAndExpect(Inverse(8,9) == Some(8));
+        AssertAndExpect(Inverse(0,10) == None);
+        AssertAndExpect(Inverse(1,10) == Some(1));
+        AssertAndExpect(Inverse(2,10) == None);
+        AssertAndExpect(Inverse(3,10) == Some(7));
+        AssertAndExpect(Inverse(4,10) == None);
+        AssertAndExpect(Inverse(5,10) == None);
+        AssertAndExpect(Inverse(6,10) == None);
+        AssertAndExpect(Inverse(7,10) == Some(3));
+        AssertAndExpect(Inverse(8,10) == None);
+        AssertAndExpect(Inverse(9,10) == Some(9));
+        AssertAndExpect(Inverse(0,11) == None);
+        AssertAndExpect(Inverse(1,11) == Some(1));
+        AssertAndExpect(Inverse(2,11) == Some(6));
+        AssertAndExpect(Inverse(3,11) == Some(4));
+        AssertAndExpect(Inverse(4,11) == Some(3));
+        AssertAndExpect(Inverse(5,11) == Some(9));
+        AssertAndExpect(Inverse(6,11) == Some(2));
+        AssertAndExpect(Inverse(7,11) == Some(8));
+        AssertAndExpect(Inverse(8,11) == Some(7));
+        AssertAndExpect(Inverse(9,11) == Some(5));
+        AssertAndExpect(Inverse(10,11) == Some(10));
+        AssertAndExpect(Inverse(0,12) == None);
+        AssertAndExpect(Inverse(1,12) == Some(1));
+        AssertAndExpect(Inverse(2,12) == None);
+        AssertAndExpect(Inverse(3,12) == None);
+        AssertAndExpect(Inverse(4,12) == None);
+        AssertAndExpect(Inverse(5,12) == Some(5));
+        AssertAndExpect(Inverse(6,12) == None);
+        AssertAndExpect(Inverse(7,12) == Some(7));
+        AssertAndExpect(Inverse(8,12) == None);
+        AssertAndExpect(Inverse(9,12) == None);
+        AssertAndExpect(Inverse(10,12) == None);
+        AssertAndExpect(Inverse(11,12) == Some(11));
+        AssertAndExpect(Inverse(0,13) == None);
+        AssertAndExpect(Inverse(1,13) == Some(1));
+        AssertAndExpect(Inverse(2,13) == Some(7));
+        AssertAndExpect(Inverse(3,13) == Some(9));
+        AssertAndExpect(Inverse(4,13) == Some(10));
+        AssertAndExpect(Inverse(5,13) == Some(8));
+        AssertAndExpect(Inverse(6,13) == Some(11));
+        AssertAndExpect(Inverse(7,13) == Some(2));
+        AssertAndExpect(Inverse(8,13) == Some(5));
+        AssertAndExpect(Inverse(9,13) == Some(3));
+        AssertAndExpect(Inverse(10,13) == Some(4));
+        AssertAndExpect(Inverse(11,13) == Some(6));
+        AssertAndExpect(Inverse(12,13) == Some(12));
+        AssertAndExpect(Inverse(0,14) == None);
+        AssertAndExpect(Inverse(1,14) == Some(1));
+        AssertAndExpect(Inverse(2,14) == None);
+        AssertAndExpect(Inverse(3,14) == Some(5));
+        AssertAndExpect(Inverse(4,14) == None);
+        AssertAndExpect(Inverse(5,14) == Some(3));
+        AssertAndExpect(Inverse(6,14) == None);
+        AssertAndExpect(Inverse(7,14) == None);
+        AssertAndExpect(Inverse(8,14) == None);
+        AssertAndExpect(Inverse(9,14) == Some(11));
+        AssertAndExpect(Inverse(10,14) == None);
+        AssertAndExpect(Inverse(11,14) == Some(9));
+        AssertAndExpect(Inverse(12,14) == None);
+        AssertAndExpect(Inverse(13,14) == Some(13));
+        AssertAndExpect(Inverse(0,15) == None);
+        AssertAndExpect(Inverse(1,15) == Some(1));
+        AssertAndExpect(Inverse(2,15) == Some(8));
+        AssertAndExpect(Inverse(3,15) == None);
+        AssertAndExpect(Inverse(4,15) == Some(4));
+        AssertAndExpect(Inverse(5,15) == None);
+        AssertAndExpect(Inverse(6,15) == None);
+        AssertAndExpect(Inverse(7,15) == Some(13));
+        AssertAndExpect(Inverse(8,15) == Some(2));
+        AssertAndExpect(Inverse(9,15) == None);
+        AssertAndExpect(Inverse(10,15) == None);
+        AssertAndExpect(Inverse(11,15) == Some(11));
+        AssertAndExpect(Inverse(12,15) == None);
+        AssertAndExpect(Inverse(13,15) == Some(7));
+        AssertAndExpect(Inverse(14,15) == Some(14));
+    }
+
+    method {:test} IsPrimeTests() {
+        // Not an efficient mechanism for primality testing :)
+        assert GcdExtended(1,3).0 == 1;
+        assert IsPrime(3);
+        assert IsPrime(5);
+        assert IsPrime(7);
+        assert GcdExtended(1,11).0 == 1;
+        assert GcdExtended(2,11).0 == 1;
+        assert GcdExtended(3,11).0 == 1;
+        assert GcdExtended(4,11).0 == 1;
+        assert GcdExtended(5,11).0 == 1;
+        assert GcdExtended(6,11).0 == 1;
+        assert GcdExtended(7,11).0 == 1;
+        assert IsPrime(11);
     }
 
     method {:test} NthUint8Tests() {
