@@ -123,6 +123,18 @@ module EllipticCurve refines FiniteField {
             else
                 INFINITY
     }
+
+    // Multiply a point by a given factor on the curve.
+    function PointMul(p: Point, n: u256) : (r:Point)
+    requires N > 3 && IsPrime(N)
+    decreases n
+    {
+        if n == 0 then INFINITY
+        else
+            var res := PointMul(PointAdd(p,p),n / 2);
+            if n % 2 == 1 then PointAdd(res,p)
+            else res
+    }
 }
 
 // The ellptic curve given by y^2 == x^3 + 3.
