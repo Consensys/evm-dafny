@@ -279,7 +279,30 @@ module Precompiled {
     const G_BNMUL := 6000
 
     function CallBnMul(data: Array<u8>) : Option<(Array<u8>,nat)> {
-        Some((data, G_BNMUL))
+        // Axiom needed for this all to go through.
+        AltBn128.IsPrimeField();
+        // Point
+        var x0 := BNF(Bytes.ReadUint256(data,0) as nat);
+        var y0 := BNF(Bytes.ReadUint256(data,32) as nat);
+        // Factor
+        var n := Bytes.ReadUint256(data,64);
+        // Sanity check input values are prime fields for BN128
+        if x0 == None || y0 == None
+        then
+            None
+        else
+            var p0 := BNP(x0.Unwrap(),y0.Unwrap());
+            // Sanity check input point is on the BN128 curve
+            if p0 == None
+            then
+                None
+            else
+                var p := AltBn128.PointMul(p0.Unwrap(),n);
+                var p_x := p.0 as u256;
+                var p_y := p.1 as u256;
+                var bytes : Array<u8> := U256.ToBytes(p_x) + U256.ToBytes(p_y);
+                assert |bytes| == 64;
+                Some((bytes,G_BNMUL))
     }
 
     // ========================================================================
