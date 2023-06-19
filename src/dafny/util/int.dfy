@@ -160,9 +160,10 @@ module Int {
 
     /**
      * Compute n^k % m.  This is more efficient that doing Pow(n,k) % m.  In
-     * particular, we break out the primary case where the exponent is even.
+     * essence, this works by recursive decomposing the work and squaring the
+     * results.
      */
-    function {:inline} ModPow(n:nat, k:nat, m:nat) : (r:nat)
+    function ModPow(n:nat, k:nat, m:nat) : (r:nat)
     requires m > 0
     ensures r < m
     ensures n > 0 ==> r >= 0
@@ -249,6 +250,43 @@ module Int {
             var d := -((-lhs) / rhs);
             lhs - (d * rhs)
      }
+
+    // Convert an arbitrary sized unsigned integer into a sequence of 1 or more
+    // bytes in big endian notation.
+    function ToBytes(v:nat) : (r:seq<u8>)
+    ensures |r| > 0 {
+        // Extract the byte
+        var byte : u8 := (v % 256) as u8;
+        // Determine what's left
+        var w : nat := v/256;
+        if w == 0 then [byte]
+        else
+            ToBytes(w) + [byte]
+    }
+
+    // Convert a given sequence of zero or more bytes into an arbitrary sized
+    // unsigned integer.
+    function FromBytes(bytes:seq<u8>) : (r:nat)
+    requires |bytes| > 0 {
+        var last := |bytes| - 1;
+        var byte := bytes[last] as nat;
+        if |bytes| == 1 then byte
+        else
+            var msw := FromBytes(bytes[..last]);
+            (msw * 256) + byte
+    }
+
+    // Sanity check that going to/from bytes gives identical result.
+    lemma LemmaFromToBytes(v: nat)
+    ensures FromBytes(ToBytes(v)) == v {}
+
+    // Sanity check for the other direction.  Observe that we require an
+    // additional constraint because, in fact, in general the lemma does hold.
+    // For example FromBytes([0,0]) == 0 but ToBytes(0) == [0].  Therefore, the
+    // additional constraint just prevents unnecessary leading zeros.
+    lemma LemmaToFromBytes(bytes:seq<u8>)
+    requires |bytes| > 0 && (|bytes| == 1 || bytes[0] != 0)
+    ensures ToBytes(FromBytes(bytes)) == bytes { }
 }
 
 /**
