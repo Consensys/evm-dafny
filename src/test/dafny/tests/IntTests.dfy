@@ -92,6 +92,38 @@ module IntTests {
         AssertAndExpect((TWO_256 / TWO_128) == TWO_128);
     }
 
+    // Various sanity tests for modulo exponentiation.
+    method {:test} ModPowTests() {
+        AssertAndExpect(ModPow(1,1,2) == 1);
+        AssertAndExpect(ModPow(2,2,2) == 0);
+        AssertAndExpect(ModPow(2,2,3) == 1);
+        AssertAndExpect(ModPow(2,2,4) == 0);
+        AssertAndExpect(ModPow(2,2,5) == 4);
+        AssertAndExpect(ModPow(2,2,6) == 4);
+        AssertAndExpect(ModPow(3,2,2) == 1);
+        AssertAndExpect(ModPow(3,2,3) == 0);
+        AssertAndExpect(ModPow(3,2,4) == 1);
+        AssertAndExpect(ModPow(3,2,5) == 4);
+        AssertAndExpect(ModPow(3,2,6) == 3);
+        AssertAndExpect(ModPow(3,2,7) == 2);
+        AssertAndExpect(ModPow(3,2,8) == 1);
+        AssertAndExpect(ModPow(3,2,9) == 0);
+        AssertAndExpect(ModPow(2,3,2) == 0);
+        AssertAndExpect(ModPow(2,0,256) == 1);
+        AssertAndExpect(ModPow(2,1,256) == 2);
+        AssertAndExpect(ModPow(2,2,256) == 4);
+        AssertAndExpect(ModPow(2,3,256) == 8);
+        AssertAndExpect(ModPow(2,4,256) == 16);
+        AssertAndExpect(ModPow(2,8,256) == 0);
+        AssertAndExpect(ModPow(2,9,256) == 0);
+        AssertAndExpect(ModPow(3,0,256) == 1);
+        AssertAndExpect(ModPow(3,1,256) == 3);
+        AssertAndExpect(ModPow(3,2,256) == 9);
+        AssertAndExpect(ModPow(3,3,256) == 27);
+        AssertAndExpect(ModPow(3,5,256) == 243);
+        AssertAndExpect(ModPow(3,6,256) == 217);
+    }
+
     // Various sanity tests for multiplicative inverse
     method {:test} InverseTests() {
         AssertAndExpect(Inverse(0,2) == None);

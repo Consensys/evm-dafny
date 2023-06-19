@@ -158,6 +158,29 @@ module Int {
         }
     }
 
+    /**
+     * Compute n^k % m.  This is more efficient that doing Pow(n,k) % m.  In
+     * particular, we break out the primary case where the exponent is even.
+     */
+    function {:inline} ModPow(n:nat, k:nat, m:nat) : (r:nat)
+    requires m > 0
+    ensures r < m
+    ensures n > 0 ==> r >= 0
+    decreases k {
+        var nm := n % m;
+        if k == 0 || m == 1 then 1%m
+        else if k == 1 then nm
+        else
+            var np := ModPow(nm,k/2,m);
+            var np2 := (np * np) % m;
+            if (k%2) == 0 then
+                // Even case.  n^2k = n^k * n^k
+                np2
+            else
+                // Odd case.  n^2k+1 = n^2k * n
+                (np2 * nm) % m
+    }
+
     // Euclid's extended GCD algorithm, implemented recursively.
     function GcdExtended(a: nat, b: nat) : (r:(nat,int,int))
     // Conditions under which gcd is non-zero
