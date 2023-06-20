@@ -38,8 +38,6 @@ module Precompiled {
         data=>data,
         // (3) RIPEMD160
         data=>data,
-        // (4) ModExp
-        (B,E,M)=>([]),
         // (9) Blake2f
         data=>data,
         // Sha3
@@ -63,7 +61,7 @@ module Precompiled {
     // Define the type of the precompiled dispatch function.  This accepts an
     // address and an array of input data, and returns either nothing (in the
     // event of a failure) or an array of output data and a gas cost.
-    datatype T = Dispatcher(ecdsa: EcdsaRecoverFn, sha256: Sha256Fn, ripemd160: RipEmd160Fn, modexp: ModExpFn, blake2f: Blake2Fn, sha3: Sha3Fn) {
+    datatype T = Dispatcher(ecdsa: EcdsaRecoverFn, sha256: Sha256Fn, ripemd160: RipEmd160Fn, blake2f: Blake2Fn, sha3: Sha3Fn) {
         // Call a precompiled contract.  This function is marked opaque to
         // ensure that, when verifying against this function, no assumptions are
         // made about the possible return values.
@@ -73,7 +71,7 @@ module Precompiled {
             case 2 => CallSha256(sha256,data)
             case 3 => CallRipEmd160(ripemd160,data)
             case 4 => CallID(data)
-            case 5 => CallModExp(modexp,data)
+            case 5 => CallModExp(data)
             case 6 => CallBnAdd(data)
             case 7 => CallBnMul(data)
             case 8 => CallSnarkV(data)
@@ -185,7 +183,7 @@ module Precompiled {
      * we compue B^E % M.  All words are unsigned integers in big endian format.
      * See also EIP-2565.
      */
-    function CallModExp(fn: ModExpFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
+    function CallModExp(data: Array<u8>) : Option<(Array<u8>,nat)> {
         // Length of B
         var lB := Bytes.ReadUint256(data,0) as nat;
         // Length of E
@@ -193,19 +191,34 @@ module Precompiled {
         // Length of M
         var lM := Bytes.ReadUint256(data,64) as nat;
         // Extract B(ase)
-        var B := Arrays.SliceAndPad(data,96,lB,0);
+        var B_bytes := Arrays.SliceAndPad(data,96,lB,0);
         // Extract E(xponent)
-        var E := Arrays.SliceAndPad(data,96+lB,lE,0);
+        var E_bytes := Arrays.SliceAndPad(data,96+lB,lE,0);
         // Extract M(odulo)
-        var M := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
+        var M_bytes := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
+        // Convert bytes to nat
+        var E := Int.FromBytes(E_bytes);
+        var B := Int.FromBytes(B_bytes);
+        var M := Int.FromBytes(M_bytes);
         // Compute modexp
-        var modexp := fn(B,E,M);
+        var modexp_array : Array<u8> := if M != 0 then
+            var modexp := Int.ModPow(B,E,M);
+            var modexp_bytes := Int.ToBytes(modexp);
+            // Apply lemmas to establish |modexp_bytes| < TWO_256.
+            Int.LemmaLengthToBytes(modexp,M);
+            Int.LemmaLengthFromBytes(M,M_bytes);
+            // Make the coercion
+            Bytes.LeftPad(modexp_bytes,lM)
+        else
+            // To handle case where modulus is zero, the Yellow Paper specifies
+            // that we return zero.
+            seq(lM,i=>0);
         // Compute lEp
-        var lEp := LenEp(lB,E,data);
+        var lEp := LenEp(lB,E_bytes,data);
         // Gas calculation
         var gascost := Int.Max(200, (f(Int.Max(lM,lB)) * Int.Max(lEp,1)) / G_QUADDIVISOR);
         // Done
-        Some((modexp,gascost))
+        Some((modexp_array,gascost))
     }
 
     /**

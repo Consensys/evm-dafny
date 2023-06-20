@@ -160,9 +160,10 @@ module Int {
 
     /**
      * Compute n^k % m.  This is more efficient that doing Pow(n,k) % m.  In
-     * particular, we break out the primary case where the exponent is even.
+     * essence, this works by recursive decomposing the work and squaring the
+     * results.
      */
-    function {:inline} ModPow(n:nat, k:nat, m:nat) : (r:nat)
+    function ModPow(n:nat, k:nat, m:nat) : (r:nat)
     requires m > 0
     ensures r < m
     ensures n > 0 ==> r >= 0
@@ -249,6 +250,94 @@ module Int {
             var d := -((-lhs) / rhs);
             lhs - (d * rhs)
      }
+
+    // Convert an arbitrary sized unsigned integer into a sequence of 1 or more
+    // bytes in big endian notation.  This is naturally a tail recursive
+    // function.
+    function {:tailrecursion true} ToBytes(v:nat) : (r:seq<u8>)
+    ensures |r| > 0 {
+        // Extract the byte
+        var byte : u8 := (v % 256) as u8;
+        // Determine what's left
+        var w : nat := v/256;
+        if w == 0 then [byte]
+        else
+            ToBytes(w) + [byte]
+    }
+
+    // Convert a given sequence of zero or more bytes into an arbitrary sized
+    // unsigned integer.  If the empty sequence is given, then zero is returned.
+    // This is implemented by method to ensure large sequences can be converted
+    // without overflowing the stack.
+    function FromBytes(bytes:seq<u8>) : (r:nat) {
+        if |bytes| == 0 then 0
+        else
+            var last := |bytes| - 1;
+            var byte := bytes[last] as nat;
+            var msw := FromBytes(bytes[..last]);
+            (msw * 256) + byte
+    } by method {
+        r := 0;
+        for i := 0 to |bytes|
+        invariant r == FromBytes(bytes[..i]) {
+            var ith := bytes[i] as nat;
+            r := (r * 256) + ith;
+            LemmaFromBytes(bytes,i);
+        }
+        // Dafny needs help here :)
+        assert bytes[..|bytes|] == bytes;
+        // Done
+        return r;
+    }
+
+    // Lemma connecting FromBytes at an arbitrary position within a sequence.
+    lemma LemmaFromBytes(bytes:seq<u8>,i:nat)
+    requires 0 <= i < |bytes|
+    ensures FromBytes(bytes[..i+1]) == (FromBytes(bytes[..i]) * 256) + bytes[i] as nat {
+        if i != 0 {
+            var cons := bytes[..i+1];
+            var tail := bytes[..i];
+            var head := bytes[i];
+            // For reasons unknown, Dafny cannot figure this out for itself.
+            assert (cons == tail + [head]);
+        }
+    }
+
+    // Sanity check that going to/from bytes gives identical result.
+    lemma LemmaFromToBytes(v: nat)
+    ensures FromBytes(ToBytes(v)) == v {}
+
+    // Sanity check for the other direction.  Observe that we require an
+    // additional constraint because, in fact, in general the lemma does hold.
+    // For example FromBytes([0,0]) == 0 but ToBytes(0) == [0].  Therefore, the
+    // additional constraint just prevents unnecessary leading zeros.
+    lemma LemmaToFromBytes(bytes:seq<u8>)
+    requires |bytes| > 0 && (|bytes| == 1 || bytes[0] != 0)
+    ensures ToBytes(FromBytes(bytes)) == bytes { }
+
+    // Lemma to help connect the expected byte length of two natural numbers.
+    // For example, if one number is less than another then its byte sequence
+    // will not be larger (though could be the same length).
+    lemma LemmaLengthToBytes(n: nat, m: nat)
+    requires n <= m
+    ensures |ToBytes(n)| <= |ToBytes(m)| {}
+
+    // Lemma to help connect the expected byte length of a natural number
+    // through coecion.  Specifically, converting a byte sequence into a number
+    // and then back again yields a byte sequence that is not longer than the
+    // original.  Observer, however, that it can be shorter if there are leading
+    // zeros in the original byte sequence.
+    lemma LemmaLengthFromBytes(n: nat, bytes: seq<u8>)
+    requires n == FromBytes(bytes)
+    ensures bytes == [] || |ToBytes(n)| <= |bytes| {
+        if |bytes| == 1 {
+            assert |ToBytes(n)| == 1;
+        } else if |bytes| > 1 {
+            var last := |bytes| - 1;
+            var tail := bytes[..last];
+            LemmaLengthFromBytes(n/256,tail);
+        }
+    }
 }
 
 /**

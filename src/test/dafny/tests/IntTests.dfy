@@ -329,6 +329,34 @@ module IntTests {
         AssertAndExpect(U64.ToBytes(258) == [0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x02]);
         AssertAndExpect(U64.ToBytes(33554437) == [0x00,0x00,0x00,0x00,0x02,0x00,0x00,0x05]);
         AssertAndExpect(U64.ToBytes(65536 * 33554437) == [0x00,0x00,0x02,0x00,0x00,0x05,0x00,0x00]);
+        // Uint
+        AssertAndExpect(Int.ToBytes(0) == [0x00]);
+        AssertAndExpect(Int.ToBytes(1) == [0x01]);
+        AssertAndExpect(Int.ToBytes(256) == [0x01,0x00]);
+        AssertAndExpect(Int.ToBytes(257) == [0x01,0x01]);
+        AssertAndExpect(Int.ToBytes(513) == [0x02,0x01]);
+        AssertAndExpect(Int.ToBytes(65535) == [0xff,0xff]);
+        AssertAndExpect(Int.ToBytes(65536) == [0x01,0x00,0x00]);
+        AssertAndExpect(Int.ToBytes(65537) == [0x01,0x00,0x01]);
+        AssertAndExpect(Int.ToBytes(33554437) == [0x02,0x00,0x00,0x05]);
+        AssertAndExpect(Int.ToBytes(65536 * 33554437) == [0x02,0x00,0x00,0x05,0x00,0x00]);
+    }
+
+    method {:test} FromBytesTests() {
+        // Uint
+        AssertAndExpect(Int.FromBytes([]) == 0x00);
+        AssertAndExpect(Int.FromBytes([0x00]) == 0x00);
+        AssertAndExpect(Int.FromBytes([0x01]) == 0x01);
+        AssertAndExpect(Int.FromBytes([0xfe]) == 0xfe);
+        AssertAndExpect(Int.FromBytes([0x01,0x00]) == 0x100);
+        AssertAndExpect(Int.FromBytes([0x10,0xec]) == 0x10ec);
+        AssertAndExpect(Int.FromBytes([0xff,0xff]) == 0xffff);
+        assert Int.FromBytes([0x01,0x00,0x00]) == 0x010000;
+        AssertAndExpect(Int.FromBytes([0x01,0x00,0x00]) == 0x010000);
+        assert Int.FromBytes([0x01,0x01,0x01]) == 0x010101;
+        AssertAndExpect(Int.FromBytes([0x01,0x01,0x01]) == 0x010101);
+        assert {:fuel FromBytes,2} Int.FromBytes([0x02,0x00,0x00,0x05]) == 0x2000005;
+        AssertAndExpect(Int.FromBytes([0x02,0x00,0x00,0x05]) == 0x2000005);
     }
 
     method {:test} SarTests() {
