@@ -282,7 +282,6 @@ module Int {
         invariant r == FromBytes(bytes[..i]) {
             var ith := bytes[i] as nat;
             r := (r * 256) + ith;
-            assert r == (FromBytes(bytes[..i]) * 256) + ith;
             LemmaFromBytes(bytes,i);
         }
         // Dafny needs help here :)

@@ -115,39 +115,6 @@ public class Precompiles {
     }
 
     // ========================================================================
-    // (5) MODEXP
-    // ========================================================================
-
-    @SuppressWarnings({"unchecked","rawtypes"})
-    public static DafnySequence<? extends Byte> modExp(DafnySequence<? extends Byte> _B,
-            DafnySequence<? extends Byte> _E, DafnySequence<? extends Byte> _M) {
-        byte[] B = DafnySequence.toByteArray((DafnySequence) _B);
-        byte[] E = DafnySequence.toByteArray((DafnySequence) _E);
-        byte[] M = DafnySequence.toByteArray((DafnySequence) _M);
-        return DafnySequence.fromBytes(modExp(B,E,M));
-    }
-
-    /**
-     * Compute arbitrary precision exponentiation under modulo.  Specifically,
-     * we compue B^E % M.  All words are unsigned integers in big endian format.
-     *
-     * @param bytes
-     * @return
-     */
-    public static byte[] modExp(byte[] _B, byte[] _E, byte[] _M) {
-        BigInteger B = new BigInteger(1, _B);
-        BigInteger E = new BigInteger(1, _E);
-        BigInteger M = new BigInteger(1, _M);
-        BigInteger r;
-        if (M.equals(BigInteger.ZERO)) {
-            r = BigInteger.ZERO;
-        } else {
-            r = B.modPow(E, M);
-        }
-        return leftPad(r.toByteArray(),_M.length);
-    }
-
-    // ========================================================================
     // (9) BLAKE2f
     // ========================================================================
 

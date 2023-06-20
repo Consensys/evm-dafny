@@ -82,7 +82,7 @@ public class DafnyEvm {
 	 * Native implementation of precompiled contracts.
 	 */
     private Precompiled_Compile.T NATIVE_PRECOMPILES = Precompiled_Compile.T.create(Precompiles::ecdsaRecover,
-            Precompiles::sha256, Precompiles::ripEmd160, Precompiles::modExp, Precompiles::blake2f, Precompiles::sha3);
+            Precompiles::sha256, Precompiles::ripEmd160, Precompiles::blake2f, Precompiles::sha3);
 	/**
 	 * World state to use for this call.
 	 */
