@@ -253,7 +253,7 @@ module Int {
 
     // Convert an arbitrary sized unsigned integer into a sequence of 1 or more
     // bytes in big endian notation.
-    function ToBytes(v:nat) : (r:seq<u8>)
+    function {:tailrecursion true} ToBytes(v:nat) : (r:seq<u8>)
     ensures |r| > 0 {
         // Extract the byte
         var byte : u8 := (v % 256) as u8;
@@ -265,15 +265,37 @@ module Int {
     }
 
     // Convert a given sequence of zero or more bytes into an arbitrary sized
-    // unsigned integer.
-    function FromBytes(bytes:seq<u8>) : (r:nat)
-    requires |bytes| > 0 {
-        var last := |bytes| - 1;
-        var byte := bytes[last] as nat;
-        if |bytes| == 1 then byte
+    // unsigned integer.  If the empty sequence is given, then zero is returned.
+    function FromBytes(bytes:seq<u8>) : (r:nat) {
+        if |bytes| == 0 then 0
+        else if |bytes| == 1 then bytes[0] as nat
         else
+            var last := |bytes| - 1;
+            var byte := bytes[last] as nat;
             var msw := FromBytes(bytes[..last]);
             (msw * 256) + byte
+    }
+
+    // Convert a given sequence of zero or more bytes into an arbitrary sized
+    // unsigned integer.  If the empty sequence is given, then zero is returned.
+    // A divide-and-conquer approach is used to limit the maximum stack depth to
+    // be log(|bytes|).
+    function FromBytes2(bytes:seq<u8>) : (r:nat) {
+        if |bytes| == 0 then 0
+        else if |bytes| == 1 then bytes[0] as nat
+        else
+            var pivot := |bytes| / 2;
+            var high := bytes[..pivot];
+            var low := bytes[pivot..];
+            var msw := FromBytes2(high);
+            var lsw := FromBytes2(low);
+            var factor := Pow(2,|low|*8);
+            (msw * factor) + lsw
+    }
+
+    lemma {:verify false} LemmaFromBytes2(bytes:seq<u8>)
+    ensures FromBytes(bytes) == FromBytes2(bytes) {
+
     }
 
     // Sanity check that going to/from bytes gives identical result.
@@ -287,6 +309,27 @@ module Int {
     lemma LemmaToFromBytes(bytes:seq<u8>)
     requires |bytes| > 0 && (|bytes| == 1 || bytes[0] != 0)
     ensures ToBytes(FromBytes(bytes)) == bytes { }
+
+    // Lemma to help connect the expected byte length of a natural number.  If
+    // we have a bound for that number, then its bytelength is also a bound.
+    lemma LemmaLengthToBytes(n: nat, m: nat)
+    requires n <= m
+    ensures |ToBytes(n)| <= |ToBytes(m)| {
+
+    }
+
+    // Another lemma to help connect expected byte length after coercions.
+    lemma LemmaLengthFromBytes(n: nat, bytes: seq<u8>)
+    requires n == FromBytes(bytes)
+    ensures bytes == [] || |ToBytes(n)| <= |bytes| {
+        if |bytes| == 1 {
+            assert |ToBytes(n)| == 1;
+        } else if |bytes| > 1 {
+            var last := |bytes| - 1;
+            var tail := bytes[..last];
+            LemmaLengthFromBytes(n/256,tail);
+        }
+    }
 }
 
 /**
