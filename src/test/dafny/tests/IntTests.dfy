@@ -357,21 +357,6 @@ module IntTests {
         AssertAndExpect(Int.FromBytes([0x01,0x01,0x01]) == 0x010101);
         assert {:fuel FromBytes,2} Int.FromBytes([0x02,0x00,0x00,0x05]) == 0x2000005;
         AssertAndExpect(Int.FromBytes([0x02,0x00,0x00,0x05]) == 0x2000005);
-        // Uint (2)
-        AssertAndExpect(Int.FromBytes2([]) == 0x00);
-        AssertAndExpect(Int.FromBytes2([0x00]) == 0x00);
-        AssertAndExpect(Int.FromBytes2([0x01]) == 0x01);
-        AssertAndExpect(Int.FromBytes2([0xfe]) == 0xfe);
-        AssertAndExpect(Int.FromBytes2([0x01,0x00]) == 0x100);
-        AssertAndExpect(Int.FromBytes2([0x10,0xec]) == 0x10ec);
-        AssertAndExpect(Int.FromBytes2([0xff,0xff]) == 0xffff);
-        assert {:fuel FromBytes2,2} Int.FromBytes2([0x01,0x00,0x00]) == 0x010000;
-        AssertAndExpect(Int.FromBytes2([0x01,0x00,0x00]) == 0x010000);
-        assert Int.FromBytes2([0x01,0x01,0x01]) == 0x010101;
-        AssertAndExpect(Int.FromBytes2([0x01,0x01,0x01]) == 0x010101);
-        assert {:fuel FromBytes2,2} Int.FromBytes2([0x02,0x00,0x00,0x05]) == 0x2000005;
-        AssertAndExpect(Int.FromBytes2([0x02,0x00,0x00,0x05]) == 0x2000005);
-
     }
 
     method {:test} SarTests() {

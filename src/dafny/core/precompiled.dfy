@@ -197,15 +197,14 @@ module Precompiled {
         // Extract M(odulo)
         var M_bytes := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
         // Convert bytes to nat
-        var E := Int.FromBytes2(E_bytes);
-        var B := Int.FromBytes2(B_bytes);
-        var M := Int.FromBytes2(M_bytes);
+        var E := Int.FromBytes(E_bytes);
+        var B := Int.FromBytes(B_bytes);
+        var M := Int.FromBytes(M_bytes);
         // Compute modexp
         var modexp_array : Array<u8> := if M != 0 then
             var modexp := Int.ModPow(B,E,M);
             var modexp_bytes := Int.ToBytes(modexp);
             // Apply lemmas to establish |modexp_bytes| < TWO_256.
-            Int.LemmaFromBytes2(M_bytes);
             Int.LemmaLengthToBytes(modexp,M);
             Int.LemmaLengthFromBytes(M,M_bytes);
             // Make the coercion
