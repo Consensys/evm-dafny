@@ -308,9 +308,10 @@ module Int {
     ensures FromBytes(ToBytes(v)) == v {}
 
     // Sanity check for the other direction.  Observe that we require an
-    // additional constraint because, in fact, in general the lemma does hold.
-    // For example FromBytes([0,0]) == 0 but ToBytes(0) == [0].  Therefore, the
-    // additional constraint just prevents unnecessary leading zeros.
+    // additional constraint because, in fact, in general the lemma does not
+    // hold. For example FromBytes([0,0]) == 0 but ToBytes(0) == [0].
+    // Therefore, the additional constraint just prevents unnecessary leading
+    // zeros.
     lemma LemmaToFromBytes(bytes:seq<u8>)
     requires |bytes| > 0 && (|bytes| == 1 || bytes[0] != 0)
     ensures ToBytes(FromBytes(bytes)) == bytes { }
