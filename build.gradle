@@ -36,13 +36,12 @@ if(project.hasProperty("randomize")) {
 // ======================================================================
 
 // Configure boogie-specific flags.
-final BOOGIE_FLAGS = ['/vcsLoad:1'] + RANDOMIZE_FLAG
+final BOOGIE_FLAGS = RANDOMIZE_FLAG
 
 final DAFNY4_BASE_FLAGS = [
     '--resource-limit','1000000',
     '--function-syntax','4',
-    '--quantifier-syntax','4',
-    '--boogie'] + BOOGIE_FLAGS
+    '--quantifier-syntax','4']
 
 final DAFNY4_BUILD_FLAGS = [
     'build',
@@ -54,8 +53,8 @@ final DAFNY4_BUILD_FLAGS = [
 final DAFNY4_VERIFY_FLAGS = [
     'verify',
     '--verify-included-files',
-    '--log-format','csv;LogFileName=build/logs/verify.csv'
-] + DAFNY4_BASE_FLAGS
+    '--log-format','csv;LogFileName=build/logs/verify.csv',
+    '--boogie'] + BOOGIE_FLAGS + DAFNY4_BASE_FLAGS
 
 final DAFNY4_TEST_FLAGS = [
     'test'
