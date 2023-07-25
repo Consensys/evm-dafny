@@ -24,7 +24,7 @@ module Stack {
     type ValidStackContent = xs: seq<u256> | |xs| <= CAPACITY
 
     /** The Stack type. */
-    datatype Stack = Stack(contents: ValidStackContent)
+    datatype EvmStack = Stack(contents: ValidStackContent)
     {
         // Get number of items currently on this Stack.
         function Size(): nat { |contents| }
@@ -37,7 +37,7 @@ module Stack {
 
         // Push word onto Stack.  This requires that there is sufficient space for
         // that item.
-        function Push(val: u256): Stack
+        function Push(val: u256): EvmStack
             // Sanity check enough space.
             requires this.Size() < CAPACITY {
                 Stack(contents:=([val] + contents))
@@ -60,21 +60,21 @@ module Stack {
         }
 
         // Pop word off of this Stack.  This requires something to pop!
-        function Pop(): Stack
+        function Pop(): EvmStack
             // Sanity check something to pop.
             requires this.Size() > 0 {
                 Stack(contents:= contents[1..])
         }
 
         // Pop N words off of this Stack.  This requires something to pop!
-        function PopN(n: nat): Stack
+        function PopN(n: nat): EvmStack
             // Sanity check something to pop.
             requires this.Size() >= n {
                 Stack(contents:= contents[n..])
         }
 
         /** Swap top item at index 0 and the k+1-th item at index k. */
-        function Swap(k: nat) : Stack
+        function Swap(k: nat) : EvmStack
         requires this.Size() > k > 0
         {
             var top := contents[0];
@@ -88,7 +88,7 @@ module Stack {
          *  @param  u   An index.
          *  @returns    The stack made of the first u elements minus the first l.
          */
-        function Slice(l: nat, u: nat): (r: Stack)
+        function Slice(l: nat, u: nat): (r: EvmStack)
         requires l <= u <= this.Size()
         {
             Stack(contents[l..u])
@@ -99,12 +99,11 @@ module Stack {
     const Empty := Stack(contents := [])
 
     /** Build a stack with some content. */
-    function Make(xs: seq<u256>): Stack
+    function Make(xs: seq<u256>): EvmStack
         requires |xs| <= CAPACITY {
             Stack(contents := xs)
     }
 
-    /** Create an empty stack. */
-    function Create(): Stack { Stack(contents := [])}
-
+    // An empty evm stack
+    const EmptyEvmStack : EvmStack := Stack([])
 }

@@ -16,32 +16,32 @@ package dafnyevm.util;
 import evmtools.core.Transaction;
 
 public class Errors {
-    public static Transaction.Outcome toErrorCode(EvmState_Compile.Error err) {
-        if (err instanceof EvmState_Compile.Error_REVERTS) {
+    public static Transaction.Outcome toErrorCode(EvmState.Error err) {
+        if (err instanceof EvmState.Error_REVERTS) {
             return Transaction.Outcome.REVERT;
-        } else if (err instanceof EvmState_Compile.Error_INSUFFICIENT__GAS) {
+        } else if (err instanceof EvmState.Error_INSUFFICIENT__GAS) {
             return Transaction.Outcome.OUT_OF_GAS;
-        } else if (err instanceof EvmState_Compile.Error_INVALID__OPCODE) {
+        } else if (err instanceof EvmState.Error_INVALID__OPCODE) {
             return Transaction.Outcome.INVALID_OPCODE;
-        } else if (err instanceof EvmState_Compile.Error_INVALID__JUMPDEST) {
+        } else if (err instanceof EvmState.Error_INVALID__JUMPDEST) {
             return Transaction.Outcome.INVALID_JUMPDEST;
-        } else if (err instanceof EvmState_Compile.Error_STACK__OVERFLOW) {
+        } else if (err instanceof EvmState.Error_STACK__OVERFLOW) {
             return Transaction.Outcome.STACK_OVERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_STACK__UNDERFLOW) {
+        } else if (err instanceof EvmState.Error_STACK__UNDERFLOW) {
             return Transaction.Outcome.STACK_UNDERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_MEMORY__OVERFLOW) {
+        } else if (err instanceof EvmState.Error_MEMORY__OVERFLOW) {
             return Transaction.Outcome.MEMORY_OVERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_RETURNDATA__OVERFLOW) {
+        } else if (err instanceof EvmState.Error_RETURNDATA__OVERFLOW) {
             return Transaction.Outcome.RETURNDATA_OVERFLOW;
-        } else if (err instanceof EvmState_Compile.Error_INSUFFICIENT__FUNDS) {
+        } else if (err instanceof EvmState.Error_INSUFFICIENT__FUNDS) {
             return Transaction.Outcome.INSUFFICIENT_FUNDS;
-        } else if (err instanceof EvmState_Compile.Error_CALLDEPTH__EXCEEDED) {
+        } else if (err instanceof EvmState.Error_CALLDEPTH__EXCEEDED) {
             return Transaction.Outcome.CALLDEPTH_EXCEEDED;
-        } else if (err instanceof EvmState_Compile.Error_CODESIZE__EXCEEDED) {
+        } else if (err instanceof EvmState.Error_CODESIZE__EXCEEDED) {
             return Transaction.Outcome.CODESIZE_EXCEEDED;
-        } else if (err instanceof EvmState_Compile.Error_ACCOUNT__COLLISION) {
+        } else if (err instanceof EvmState.Error_ACCOUNT__COLLISION) {
             return Transaction.Outcome.ACCOUNT_COLLISION;
-        } else if (err instanceof EvmState_Compile.Error_WRITE__PROTECTION__VIOLATED) {
+        } else if (err instanceof EvmState.Error_WRITE__PROTECTION__VIOLATED) {
             return Transaction.Outcome.WRITE_PROTECTION;
         } else {
             return Transaction.Outcome.UNKNOWN;

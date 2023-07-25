@@ -13,7 +13,7 @@
  */
 package dafnyevm;
 
-import static EvmBerlin_Compile.__default.Execute;
+import static EvmBerlin.__default.Execute;
 
 import java.math.BigInteger;
 
@@ -28,14 +28,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import EvmState_Compile.Continuation_CALLS;
-import EvmState_Compile.Continuation_CREATES;
-import EvmState_Compile.State_CONTINUING;
-import EvmState_Compile.State_ERROR;
-import EvmState_Compile.State_EXECUTING;
-import EvmState_Compile.State_RETURNS;
-import Optional_Compile.Option;
-import WorldState_Compile.Account;
+import EvmState.Continuation_CALLS;
+import EvmState.Continuation_CREATES;
+import EvmState.State_CONTINUING;
+import EvmState.State_ERROR;
+import EvmState.State_EXECUTING;
+import EvmState.State_RETURNS;
+import Optional.Option;
+import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
@@ -58,19 +58,19 @@ public class DafnyEvm {
     /**
      * Extract the maximum permitted code size from Dafny,
      */
-    private static final int MAX_CODE_SIZE = Code_Compile.__default.MAX__CODE__SIZE().intValueExact();
+    private static final int MAX_CODE_SIZE = Code.__default.MAX__CODE__SIZE().intValueExact();
 	/**
 	 * A default tracer which does nothing.
 	 */
 	public static final Tracer DEFAULT_TRACER = new Tracer() {
         @Override
-        public void step(int depth, EvmState_Compile.State_EXECUTING st) {}
+        public void step(int depth, EvmState.State_EXECUTING st) {}
 
         @Override
-        public void enter(EvmState_Compile.State st) {}
+        public void enter(EvmState.State st) {}
 
         @Override
-        public void leave(int depth, EvmState_Compile.State st) {}
+        public void leave(int depth, EvmState.State st) {}
 	};
 	/**
 	 * Tracer is used for monitoring EVM state during execution.
@@ -81,7 +81,7 @@ public class DafnyEvm {
 	/**
 	 * Native implementation of precompiled contracts.
 	 */
-    private Precompiled_Compile.T NATIVE_PRECOMPILES = Precompiled_Compile.T.create(Precompiles::ecdsaRecover,
+    private Precompiled.T NATIVE_PRECOMPILES = Precompiled.T.create(Precompiles::ecdsaRecover,
             Precompiles::sha256, Precompiles::ripEmd160, Precompiles::blake2f, Precompiles::sha3);
 	/**
 	 * World state to use for this call.
@@ -166,7 +166,7 @@ public class DafnyEvm {
 		DafnyMap<BigInteger,BigInteger> store = new DafnyMap<BigInteger,BigInteger>(storage);
 		DafnySequence<Byte> code = DafnySequence.fromBytes(bytecode);
 		BigInteger hash = Precompiles.sha3(code);
-		WorldState_Compile.Account acct = WorldState_Compile.__default.CreateAccount(nonce, endowment, store, code, hash);
+		WorldState.Account acct = WorldState.__default.CreateAccount(nonce, endowment, store, code, hash);
 		this.worldState = DafnyMap.update(worldState, address, acct);
 		return this;
 	}
@@ -179,9 +179,9 @@ public class DafnyEvm {
      */
 	public DafnyEvm.State<?> execute(Transaction tx) {
 	       // Construct world state and substate
-        WorldState_Compile.T ws = WorldState_Compile.__default.Create(worldState);
-        SubState_Compile.Raw ss = SubState_Compile.__default.Create();
-        EvmState_Compile.State st;
+        WorldState.T ws = WorldState.__default.Create(worldState);
+        SubState.Raw ss = SubState.__default.Create();
+        EvmState.State st;
 	    // Perform initial checks
 	    BigInteger intrinsic = getIntrinsicGas(tx);
 	    BigInteger gasPrice;
@@ -212,13 +212,13 @@ public class DafnyEvm {
 	    // Decide between call and create
 	    if(tx.to() != null) {
 	        // Contract call
-	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), tx.to(), tx.value(),
+	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), tx.to(), tx.value(),
 	                callData, true, gasPrice, blockInfo.toDafny());
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
 	        // Begin the call.
-	        st = EvmState_Compile.__default.Call(ws, ctx, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
+	        st = EvmState.__default.Call(ws, ctx, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
 	    } else {
 	        // Contract creation
@@ -228,10 +228,10 @@ public class DafnyEvm {
 	        // calculated *before* the sender's nonce is incremented.
 	        BigInteger address = addr(tx.sender(),nonce);
 	        // Construct the transaction context for the call.
-	        Context_Compile.T ctx = Context_Compile.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
+	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
 	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
 	        // Begin the call.
-	        st = EvmState_Compile.__default.Create(ws, ctx, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
+	        st = EvmState.__default.Create(ws, ctx, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
 	    if(st instanceof State_EXECUTING) {
@@ -242,8 +242,8 @@ public class DafnyEvm {
 	            // Sanity check contract size
 	            if (rst.dtor_data().length() > MAX_CODE_SIZE) {
 	                // Contract being created is too large.
-	                EvmState_Compile.Error err = EvmState_Compile.Error.create_CODESIZE__EXCEEDED();
-	                st = EvmState_Compile.State.create_ERROR(err, BigInteger.ZERO, DafnySequence.fromBytes(new byte[0]));
+	                EvmState.Error err = EvmState.Error.create_CODESIZE__EXCEEDED();
+	                st = EvmState.State.create_ERROR(err, BigInteger.ZERO, DafnySequence.fromBytes(new byte[0]));
 	            }
 	        }
 	    }
@@ -260,16 +260,16 @@ public class DafnyEvm {
 	 * @param state   Current DafnyEvm state.
 	 * @return
 	 */
-    protected static EvmState_Compile.State run(Transaction tx, int depth, Tracer tracer, State_EXECUTING _st) {
-        EvmState_Compile.State st = _st;
+    protected static EvmState.State run(Transaction tx, int depth, Tracer tracer, State_EXECUTING _st) {
+        EvmState.State st = _st;
         tracer.enter(st);
         // Continue whilst the EVM is happy.
         while (st.is_EXECUTING()) {
-            tracer.step(depth, (EvmState_Compile.State_EXECUTING) st);
+            tracer.step(depth, (EvmState.State_EXECUTING) st);
             st = Execute(st);
             // Manage continuations
             if (st.is_CONTINUING()) {
-                EvmState_Compile.Continuation cc = ((State_CONTINUING) st)._a0;
+                EvmState.Continuation cc = ((State_CONTINUING) st)._a0;
                 if (cc.is_CALLS()) {
                     st = callContinue(tx, depth, tracer, (Continuation_CALLS) cc);
                 } else {
@@ -292,13 +292,13 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static EvmState_Compile.State callContinue(Transaction tx, int depth, Tracer tracer, EvmState_Compile.Continuation_CALLS cc) {
+	private static EvmState.State callContinue(Transaction tx, int depth, Tracer tracer, EvmState.Continuation_CALLS cc) {
 	    // Sanity check precondition for CallEnter
         if(!cc.dtor_evm().dtor_world().Exists(cc._sender)) {
             throw new IllegalArgumentException("Non-existent sender account!");
         }
 	    //
-		EvmState_Compile.State st = cc.CallEnter(BigInteger.valueOf(depth));
+		EvmState.State st = cc.CallEnter(BigInteger.valueOf(depth));
 		//
 		if(st instanceof State_EXECUTING) {
 		    // Run code within recursive call.
@@ -315,7 +315,7 @@ public class DafnyEvm {
 	 * @param depth The current call depth.
 	 * @return
 	 */
-	private static EvmState_Compile.State createContinue(Transaction tx, int depth, Tracer tracer, EvmState_Compile.Continuation_CREATES cc) {
+	private static EvmState.State createContinue(Transaction tx, int depth, Tracer tracer, EvmState.Continuation_CREATES cc) {
 		// Determine sender
 		BigInteger sender = cc.dtor_evm().dtor_context().dtor_address();
 		// Construct new account
@@ -328,7 +328,7 @@ public class DafnyEvm {
 		// Finally reconstruct the address from the rightmost 160bits.
 		BigInteger address = new BigInteger(1, hash);
 		// Begin the recursive call.
-		EvmState_Compile.State st = cc.CreateEnter(BigInteger.valueOf(depth), address, cc.dtor_initcode());
+		EvmState.State st = cc.CreateEnter(BigInteger.valueOf(depth), address, cc.dtor_initcode());
 		// Run init code for recursive call.
 		if(st instanceof State_EXECUTING) {
 		    st = run(tx, depth + 1, tracer, (State_EXECUTING) st);
@@ -346,7 +346,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public static BigInteger addr(BigInteger sender, BigInteger nonce) {
-		byte[] hash = addr(sender,nonce,new Optional_Compile.Option_None<>(),null);
+		byte[] hash = addr(sender,nonce,new Optional.Option_None<>(),null);
 		return new BigInteger(1,hash);
 	}
 
@@ -361,18 +361,18 @@ public class DafnyEvm {
 	 * @param initCode The initialisation code (only used with salt).
 	 * @return
 	 */
-	public static byte[] addr(BigInteger sender, BigInteger nonce, Optional_Compile.Option<BigInteger> salt,
+	public static byte[] addr(BigInteger sender, BigInteger nonce, Optional.Option<BigInteger> salt,
 			DafnySequence<? extends Byte> initCode) {
 		byte[] bytes;
 		//
-		if (salt instanceof Optional_Compile.Option_None) {
+		if (salt instanceof Optional.Option_None) {
 			// Case for CREATE
 			bytes = new Uint160(sender).getBytes();
 			bytes = RlpEncoder.encode(new RlpList(RlpString.create(bytes),RlpString.create(nonce)));
 		} else {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			byte[] code = DafnySequence.toByteArray((DafnySequence) initCode);
-			Optional_Compile.Option_Some<BigInteger> s = (Optional_Compile.Option_Some<BigInteger>) salt;
+			Optional.Option_Some<BigInteger> s = (Optional.Option_Some<BigInteger>) salt;
 			// Case for CREATE2 (see EIP 1014).
 			byte ff = (byte) (0xff & 0xff);
 			byte[] senderBytes = new Uint160(sender).getBytes();
@@ -426,7 +426,7 @@ public class DafnyEvm {
 	 * @author David J. Pearce
 	 *
 	 */
-	public abstract static class State<T extends EvmState_Compile.State> {
+	public abstract static class State<T extends EvmState.State> {
 		protected final Tracer tracer;
 		/**
 		 * State of the EVM (so we can query it).
@@ -466,7 +466,7 @@ public class DafnyEvm {
 		 * @param state
 		 * @return
 		 */
-		public static State<?> from(int depth, Tracer tracer, EvmState_Compile.State state) {
+		public static State<?> from(int depth, Tracer tracer, EvmState.State state) {
 			if (state instanceof State_ERROR) {
 				return new State.Exception(tracer, (State_ERROR) state, depth);
 			} else if (state instanceof State_EXECUTING) {
@@ -484,7 +484,7 @@ public class DafnyEvm {
 		 * @author David J. Pearce
 		 *
 		 */
-		public static abstract class Running<T extends EvmState_Compile.State> extends State<T> {
+		public static abstract class Running<T extends EvmState.State> extends State<T> {
 			public Running(Tracer tracer, T state, int depth) {
 				super(tracer, state, depth);
 			}
@@ -563,7 +563,7 @@ public class DafnyEvm {
 				// Determine executing account address
 				BigInteger address = getEVM().dtor_context().dtor_address();
 				// Get account record
-				WorldState_Compile.Account a = getEVM().dtor_world().dtor_accounts().get(address);
+				WorldState.Account a = getEVM().dtor_world().dtor_accounts().get(address);
 				// Extract storage
 				DafnyMap<? extends BigInteger, ? extends BigInteger> m = a.dtor_storage();
 				// Copy over
@@ -575,7 +575,7 @@ public class DafnyEvm {
 			 * Extract internal EVM state.
 			 * @return
 			 */
-			protected abstract EvmState_Compile.Raw getEVM();
+			protected abstract EvmState.Raw getEVM();
 		}
 
 		/**
@@ -590,7 +590,7 @@ public class DafnyEvm {
 			}
 
 			@Override
-			protected EvmState_Compile.Raw getEVM() {
+			protected EvmState.Raw getEVM() {
 				return state.dtor_evm();
 			}
 
@@ -757,7 +757,7 @@ public class DafnyEvm {
 			}
 		}
 
-		private static Map<BigInteger, evmtools.core.Account> toWorldState(WorldState_Compile.T world) {
+		private static Map<BigInteger, evmtools.core.Account> toWorldState(WorldState.T world) {
 			DafnyMap<? extends BigInteger, ? extends Account> accounts = world.dtor_accounts();
 			HashMap<BigInteger, evmtools.core.Account> ws = new HashMap<>();
 			for (BigInteger account : accounts.keySet().Elements()) {
@@ -931,8 +931,8 @@ public class DafnyEvm {
 		 * Convert this object into a Dafny encoding.
 		 * @return
 		 */
-		public Context_Compile.Block toDafny() {
-			return new Context_Compile.Block(coinBase, timeStamp, number, difficulty, gasLimit, chainID);
+		public Context.Block toDafny() {
+			return new Context.Block(coinBase, timeStamp, number, difficulty, gasLimit, chainID);
 		}
 	}
 
@@ -945,18 +945,18 @@ public class DafnyEvm {
 	    /**
 	     * Enter a new subtrace (i.e. contract call)
 	     */
-	    public void enter(EvmState_Compile.State st);
+	    public void enter(EvmState.State st);
 	    /**
          * Enter a new subtrace (i.e. contract call)
          */
-        public void leave(int depth, EvmState_Compile.State st);
+        public void leave(int depth, EvmState.State st);
 		/**
 		 * Identifies that the EVM has taken a single step of execution (i.e. executed a
 		 * bytecode).
 		 *
 		 * @param evm
 		 */
-		public void step(int depth, EvmState_Compile.State_EXECUTING st);
+		public void step(int depth, EvmState.State_EXECUTING st);
 	}
 
 	/**
@@ -969,17 +969,17 @@ public class DafnyEvm {
 	 */
 	public static abstract class TraceAdaptor implements Tracer {
 	    @Override
-        public final void enter(EvmState_Compile.State st) {
+        public final void enter(EvmState.State st) {
 	        this.enter();
 	    }
 
 		@Override
-		public final void step(int depth, EvmState_Compile.State_EXECUTING st) {
+		public final void step(int depth, EvmState.State_EXECUTING st) {
 			step(new State.Executing(this, (State_EXECUTING) st, depth));
 		}
 
 		@Override
-        public final void leave(int depth, EvmState_Compile.State st) {
+        public final void leave(int depth, EvmState.State st) {
             if (st instanceof State_RETURNS) {
                 end(new State.Return(this, (State_RETURNS) st, depth));
             } else if (st instanceof State_ERROR) {

@@ -16,7 +16,7 @@ jobs:
       - name: Install Dafny
         uses: dafny-lang/setup-dafny-action@v1.6.1
         with:
-          dafny-version: "3.13.0"
+          dafny-version: "4.2.0"
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
