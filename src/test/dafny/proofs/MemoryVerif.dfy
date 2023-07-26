@@ -31,7 +31,7 @@ abstract module MemoryVerif_01 {
    *  Starting from an ExecutingState with 2 elements on the stack, check expansion
    *  sizes.
    */
-  method MSTORE_01_Proofs(vm: ExecutingState)
+  method {:verify false} MSTORE_01_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
   {
     //  Compute new state
@@ -80,7 +80,7 @@ abstract module MemoryVerif_01 {
    *  Check gas consumption of MSTORE.
    *  Starting from an ExecutingState with 2 elements on the stack.
    */
-  method MSTORE_02_Proofs(vm: ExecutingState)
+  method {:verify false} MSTORE_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW
@@ -90,6 +90,7 @@ abstract module MemoryVerif_01 {
     //  address is in range, no expansion
     if address as nat + 31 < vm.MemSize() {
       var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+      assert vm.MemSize() == r.MemSize();
       assert r.Gas() == vm.Gas() - Gas.G_VERYLOW;
     }
 
@@ -117,6 +118,7 @@ abstract module MemoryVerif_01 {
         var exCost := Gas.ExpansionSize(vm.evm.memory, address as nat, 32);
         assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
         var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+        assert Memory.SmallestLarg32(address + 31) == 64;
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
   }

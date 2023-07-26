@@ -939,8 +939,8 @@ module Bytecode {
      */
     function ReturnDataCopy(st: ExecutingState): (st': State)
     ensures st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW) || st' == ERROR(RETURNDATA_OVERFLOW)
-    ensures st'.EXECUTING? <==> st.Operands() >= 3 &&
-                         (st.Peek(1) as nat + st.Peek(2) as nat) <= st.evm.context.ReturnDataSize() as nat
+    ensures st'.EXECUTING? <==> (st.Operands() >= 3 &&
+                         (st.Peek(1) as nat + st.Peek(2) as nat) <= st.evm.context.ReturnDataSize() as nat)
     ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 3
     {
         //
@@ -1602,10 +1602,10 @@ module Bytecode {
      */
     function Create(st: ExecutingState): (st': State)
     ensures st'.CONTINUING? || st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW) || st' == ERROR(WRITE_PROTECTION_VIOLATED)
-    ensures st'.CONTINUING? <==> st.Operands() >= 3 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) < MAX_U64
-    ensures st'.EXECUTING? <==> st.Operands() >= 3 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64
+    ensures st'.CONTINUING? <==> (st.Operands() >= 3 && st.WritesPermitted() &&
+        st.evm.world.Nonce(st.evm.context.address) < MAX_U64)
+    ensures st'.EXECUTING? <==> (st.Operands() >= 3 && st.WritesPermitted() &&
+        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64)
     ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 2
     ensures st' == ERROR(STACK_UNDERFLOW)  <==> st.Operands() < 3
     ensures st' == ERROR(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 3 && !st.WritesPermitted()
@@ -1772,10 +1772,10 @@ module Bytecode {
      */
     function Create2(st: ExecutingState): (st': State)
     ensures st'.CONTINUING? || st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW) || st' == ERROR(WRITE_PROTECTION_VIOLATED)
-    ensures st'.CONTINUING? <==> st.Operands() >= 4 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) < MAX_U64
-    ensures st'.EXECUTING? <==> st.Operands() >= 4 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64
+    ensures st'.CONTINUING? <==> (st.Operands() >= 4 && st.WritesPermitted() &&
+        st.evm.world.Nonce(st.evm.context.address) < MAX_U64)
+    ensures st'.EXECUTING? <==> (st.Operands() >= 4 && st.WritesPermitted() &&
+        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64)
     ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 3
     ensures st' == ERROR(STACK_UNDERFLOW)  <==> st.Operands() < 4
     ensures st' == ERROR(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 4 && !st.WritesPermitted()

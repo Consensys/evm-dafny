@@ -58,6 +58,7 @@ final DAFNY4_VERIFY_FLAGS = [
 
 final DAFNY4_TEST_FLAGS = [
     'test',
+    '--target','java',
     '--function-syntax','4',
     '--quantifier-syntax','4'
 ]
@@ -96,10 +97,6 @@ task compileDafny {
     outputs.cacheIf { true }
     // Specify actions
     doLast {
-        exec {
-            executable 'dafny'
-            args '--version'
-        }
         // Generate Dafny Source
         exec {
             executable 'dafny'

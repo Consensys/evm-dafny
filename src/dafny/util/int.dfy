@@ -314,7 +314,12 @@ module Int {
     // zeros.
     lemma LemmaToFromBytes(bytes:seq<u8>)
     requires |bytes| > 0 && (|bytes| == 1 || bytes[0] != 0)
-    ensures ToBytes(FromBytes(bytes)) == bytes { }
+    ensures ToBytes(FromBytes(bytes)) == bytes {
+        var n := |bytes| - 1;
+        if |bytes| > 1 {
+            LemmaToFromBytes(bytes[..n]);
+        }
+    }
 
     // Lemma to help connect the expected byte length of two natural numbers.
     // For example, if one number is less than another then its byte sequence
