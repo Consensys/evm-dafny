@@ -20,7 +20,7 @@ module Context {
     import opened Arrays
     import opened Int
     import opened Optional
-    import Bytes
+    import ByteUtils
 
     // =============================================================================
     // Block Context
@@ -76,7 +76,7 @@ module Context {
          * Read a word from the call data associated with this context.
          */
         function CallDataRead(loc: u256) : u256 {
-            Bytes.ReadUint256(this.callData,loc as nat)
+            ByteUtils.ReadUint256(this.callData,loc as nat)
         }
 
         /**

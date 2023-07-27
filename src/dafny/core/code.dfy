@@ -17,7 +17,6 @@ include "../util/int.dfy"
 
 module Code {
   import Arrays
-  import Bytes
   import opened Int
 
   // =============================================================================

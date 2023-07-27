@@ -26,13 +26,7 @@ module Gas {
 	import opened Opcode
 	import opened EvmState
     import opened Int
-    import opened Optional
     import opened Memory
-    import opened Bytes
-    import opened Code
-    import opened Context
-    import opened WorldState
-    import opened SubState
 
     const G_ZERO: nat := 0
     const G_JUMPDEST: nat := 1

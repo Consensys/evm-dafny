@@ -19,7 +19,7 @@ module Bytecode {
     import U256
     import I256
     import Word
-    import Bytes
+    import ByteUtils
     import External
     import GasCalc = Gas
     import opened EvmState
@@ -1440,7 +1440,7 @@ module Bytecode {
         then
             var bytes := Code.Slice(st.evm.code, (st.evm.pc+1), k);
             assert 0 < |bytes| <= 32;
-            var val := Bytes.ConvertBytesTo256(bytes);
+            var val := ByteUtils.ConvertBytesTo256(bytes);
             st.Push(val).Skip(|bytes|+1)
         else
             ERROR(STACK_OVERFLOW)

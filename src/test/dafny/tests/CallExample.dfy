@@ -10,7 +10,6 @@ module CallExamples {
     import EvmBerlin
     import WorldState
     import opened Bytecode
-    import Bytes
     import opened Utils
 
 

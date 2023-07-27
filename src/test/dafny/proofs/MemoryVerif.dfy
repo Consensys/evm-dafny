@@ -24,7 +24,7 @@ abstract module MemoryVerif_01 {
   import opened Opcode
   import Bytecode
   import opened EvmState
-  import Bytes
+  import ByteUtils
 
   /**
    *  Check MSTORE.
@@ -59,8 +59,8 @@ abstract module MemoryVerif_01 {
       //  Memory is expanded by 32 bytes
       assert r.MemSize() - 32 <= address + 31;
 
-      assert |r.evm.memory.contents[address + 31..]| == |Bytes.Padding(r.MemSize() - address - 31 )|;
-      assert r.evm.memory.contents[address + 32..] == Bytes.Padding(r.MemSize() - address - 32 );
+      assert |r.evm.memory.contents[address + 31..]| == |ByteUtils.Padding(r.MemSize() - address - 31 )|;
+      assert r.evm.memory.contents[address + 32..] == ByteUtils.Padding(r.MemSize() - address - 32 );
       assert U256.Read(r.evm.memory.contents, address) ==  vm.Peek(1);
 
       if address < vm.MemSize() {
@@ -155,7 +155,7 @@ abstract module MemoryVerif_01 {
       assert r.MemSize() - 32 <= address + 31;
 
       assert r.evm.memory.contents[..vm.MemSize()] == vm.evm.memory.contents;
-      assert r.evm.memory.contents[vm.MemSize()..] == Bytes.Padding(r.MemSize() - vm.MemSize());
+      assert r.evm.memory.contents[vm.MemSize()..] == ByteUtils.Padding(r.MemSize() - vm.MemSize());
     }
   }
 
