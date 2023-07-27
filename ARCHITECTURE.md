@@ -66,7 +66,7 @@ The source files including our formalisation of the EVM semantics, the state, ga
 - [`stack.dfy`](src/dafny/core/stack.dfy) specifies the stack of EVM together with stack operations.
 - [`storage.dfy`](src/dafny/core/storage.dfy) is an implementation of the EVM storage including functionalities for performing operations on the storage.
 - [`substate.dfy`](src/dafny/core/substate.dfy) encodes the substate of the EVM.
-- [`worldstate.dfy`](src/dafny/core/worldstate.dfy) specifies the wold state of the ethereum.
+- [`worldstate.dfy`](src/dafny/core/worldstate.dfy) specifies the world state of the ethereum.
 
 
 ## Low Level
