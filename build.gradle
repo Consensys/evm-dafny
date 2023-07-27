@@ -26,61 +26,35 @@ final RANDOM_ITERATIONS = project.properties["randomize"]
 
 // Configure randomisation (if applicable)
 final RANDOMIZE_FLAG = project.hasProperty("randomize") ? ['/randomSeedIterations:' + RANDOM_ITERATIONS] : []
-
 // Report whether randomisation is enabled.
 if(project.hasProperty("randomize")) {
     project.logger.lifecycle('Randomize verification with ' + RANDOM_ITERATIONS + ' iterations.')
 }
 
 // ======================================================================
-// Constants (Dafny 3)
-// ======================================================================
-
-final DAFNY_BASE_FLAGS = [
-    '/compileVerbose:0',
-    '/noExterns',
-    '/vcsLoad:2',
-    '/rlimit:1000000',
-    '/functionSyntax','4',
-    '/quantifierSyntax','4'
-]
-
-final DAFNY_BUILD_FLAGS = DAFNY_BASE_FLAGS + [
-    '/compileTarget:java',
-    '/compile:2',
-    '/noVerify',
-    '/out:build/evm'
-]
-
-final DAFNY_VERIFY_FLAGS = DAFNY_BASE_FLAGS + [
-    '/verifyAllModules',
-    '/verificationLogger:csv;LogFileName=build/logs/verify.csv'
-] + RANDOMIZE_FLAG
-
-final DAFNY_TEST_FLAGS = DAFNY_BASE_FLAGS + [
-    '/compileTarget:java',
-    '/runAllTests:1',
-    '/out:build/dafny-tests',
-    '/compile:4'
-] + RANDOMIZE_FLAG
-
-// ======================================================================
 // Constants (Dafny 4)
 // ======================================================================
 
+// Configure boogie-specific flags.
+final BOOGIE_FLAGS = RANDOMIZE_FLAG
+
 final DAFNY4_BASE_FLAGS = [
-    '--target','java',
-    '--cores','0', // 0 = auto
+    '--resource-limit','1000000',
     '--function-syntax','4',
-    '--quantifier-syntax','4'
-]
+    '--quantifier-syntax','4']
 
 final DAFNY4_BUILD_FLAGS = [
-    'translate',
-    '--output','build/evm',
-    '--include-runtime',
-    '--verify-included-files'
+    'build',
+    '--no-verify',
+    '--target','java',
+    '--output','build/libs/evm'
 ] + DAFNY4_BASE_FLAGS
+
+final DAFNY4_VERIFY_FLAGS = [
+    'verify',
+    '--verify-included-files',
+    '--log-format','csv;LogFileName=build/logs/verify.csv',
+    '--boogie'] + BOOGIE_FLAGS + DAFNY4_BASE_FLAGS
 
 final DAFNY4_TEST_FLAGS = [
     'test'
@@ -105,7 +79,7 @@ task verifyDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args DAFNY_VERIFY_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+            args DAFNY4_VERIFY_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
     }
 }
@@ -115,7 +89,7 @@ task compileDafny {
     // Specify inputs
     inputs.files(fileTree('src/dafny/').include('**/*.dfy'))
     // Specify outputs
-    outputs.files(fileTree('build/evm-java').include('**/*.java'))
+    outputs.files(fileTree('build/').include('libs/evm.jar'))
     // Enable caching
     outputs.cacheIf { true }
     // Specify actions
@@ -123,7 +97,7 @@ task compileDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args DAFNY_BUILD_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+            args DAFNY4_BUILD_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
         }
     }
 }
@@ -144,7 +118,7 @@ task testDafny {
     // Specify inputs
     inputs.files(fileTree('src').include('**/*.dfy'))
     // Specify outputs
-    outputs.files(fileTree('build/test-java').include('**/*.java') + fileTree('build/logs').include('**/test_*.csv'))
+    outputs.files(fileTree('build/logs').include('**/test_*.csv'))
     // Require code gen
     dependsOn verifyDafny
     // Specify actions
@@ -155,11 +129,11 @@ task testDafny {
             File file -> {
                 // Construct logging option
                 def name = file.name.take(file.name.lastIndexOf('.'))
-                def logging = '/verificationLogger:csv;LogFileName=build/logs/test_' + name + '.csv'
+                def logging = '--log-format:csv;LogFileName=build/logs/test_' + name + '.csv'
                 // Run test
                 exec {
                     executable 'dafny'
-                    args DAFNY_TEST_FLAGS + [logging,file]
+                    args DAFNY4_TEST_FLAGS + [logging,file]
                 }
             }
         }
@@ -195,15 +169,6 @@ test {
 // Otherwise, the Java compiler cannot find up-to-date Dafny tests!
 compileJava.dependsOn compileDafny
 
-sourceSets {
-    main {
-        java {
-            // Add Dafny output directory to Java build path.
-            srcDirs("build/evm-java")
-        }
-    }
-}
-
 // In this section you declare the dependencies for your production and test code
 dependencies {
     implementation("commons-cli:commons-cli:1.5.0")
@@ -213,7 +178,7 @@ dependencies {
     implementation("org.web3j:rlp:5.0.0")
     implementation("org.web3j:crypto:5.0.0")
     implementation("org.whiley:evmtools:0.3.26")
-    implementation files('build/evm-java/DafnyRuntime.jar')
+    implementation files('build/libs/evm.jar')
     //
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.0")
