@@ -21,11 +21,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.4.2
 
-      - name: Find Z3
-        run: which dafny
-
-      - name: Find Z3(2)
-        run: echo $(which dafny | sed -e "s/dafny/z3\/bin\/z3-4.8.5/")
+      - name: Set DAFNY_HOME
+        run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV
 
       - name: Run Gradle Build
         run: gradle build -Prandomize=5

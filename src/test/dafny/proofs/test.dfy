@@ -80,7 +80,7 @@ module Test {
     /**
      *  Add two values `x` and `y` and return result in `z`.
      */
-    method {:verify false} Test_IR_02(x: u8, y: u8) returns (z:u16)
+    method Test_IR_02(x: u8, y: u8) returns (z:u16)
       ensures z == (x as u16) + (y as u16)
     {
         var vm := EvmBerlin.InitEmpty(gas := INITGAS);

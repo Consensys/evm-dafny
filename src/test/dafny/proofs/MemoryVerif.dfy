@@ -31,7 +31,7 @@ abstract module MemoryVerif_01 {
    *  Starting from an ExecutingState with 2 elements on the stack, check expansion
    *  sizes.
    */
-  method {:verify false} MSTORE_01_Proofs(vm: ExecutingState)
+  method MSTORE_01_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
   {
     //  Compute new state
@@ -80,7 +80,7 @@ abstract module MemoryVerif_01 {
    *  Check gas consumption of MSTORE.
    *  Starting from an ExecutingState with 2 elements on the stack.
    */
-  method {:verify false} MSTORE_02_Proofs(vm: ExecutingState)
+  method MSTORE_02_Proofs(vm: ExecutingState)
     requires vm.Operands() >= 2
     requires vm.MemSize() <= MAX_U256
     requires vm.Gas() >= Gas.G_VERYLOW

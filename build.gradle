@@ -25,15 +25,32 @@ apply plugin: 'application'
 final RANDOM_ITERATIONS = project.properties["randomize"]
 
 // Configure randomisation (if applicable)
-final RANDOMIZE_FLAG = project.hasProperty("randomize") ? ['/randomSeedIterations:' + RANDOM_ITERATIONS] : []
+final RANDOMIZE_FLAG = project.hasProperty("randomize") ? ['--boogie','/randomSeedIterations:' + RANDOM_ITERATIONS] : []
 // Report whether randomisation is enabled.
 if(project.hasProperty("randomize")) {
     project.logger.lifecycle('Randomize verification with ' + RANDOM_ITERATIONS + ' iterations.')
 }
 
 // ======================================================================
+// Configure Z3
+// ======================================================================
+
+final DAFNY_HOME = System.env.'DAFNY_HOME'
+final Z3_PATH = DAFNY_HOME + "/z3/bin/z3-4.8.5"
+final Z3_OPTION = DAFNY_HOME != null ? ['--solver-path',Z3_PATH] : []
+// Report what happened
+if(DAFNY_HOME != null) {
+    println "DAFNY_HOME: $DAFNY_HOME"
+    println "Z3_PATH   : $Z3_PATH"
+} else {
+    println "DAFNY_HOME: (not set)"
+    println "Z3_PATH   : (default)"
+}
+
+// ======================================================================
 // Constants (Dafny 4)
 // ======================================================================
+
 
 // Configure boogie-specific flags.
 final BOOGIE_FLAGS = RANDOMIZE_FLAG
@@ -54,14 +71,14 @@ final DAFNY4_VERIFY_FLAGS = [
     '--log-format','csv;LogFileName=build/logs/verify.csv',
     '--function-syntax','4',
     '--quantifier-syntax','4',
-    '--boogie'] + BOOGIE_FLAGS
+] + Z3_OPTION + BOOGIE_FLAGS
 
 final DAFNY4_TEST_FLAGS = [
     'test',
     '--target','java',
     '--function-syntax','4',
     '--quantifier-syntax','4'
-]
+]  + Z3_OPTION
 
 // ======================================================================
 // Dafny Build
