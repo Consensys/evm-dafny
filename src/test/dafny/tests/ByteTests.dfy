@@ -2,7 +2,7 @@ include "../../../dafny/util/bytes.dfy"
 include "../utils.dfy"
 
 module ByteTests{
-    import opened Bytes
+    import opened ByteUtils
     import opened Utils
 
     method {:test} ReadTests() {

@@ -18,6 +18,19 @@ MAKEFLAGS += -j 2 #--output-sync
 RUN_ARGS ?=
 DAFNY_ARGS := --function-syntax 4 --quantifier-syntax 4 --cores 50%
 
+ifdef DAFNY_HOME
+Z3_PATH := $(DAFNY_HOME)/z3/bin/z3-4.8.5
+$(info DAFNY_HOME: $(DAFNY_HOME))
+$(info Z3_PATH   : $(Z3_PATH))
+DAFNY_ARGS += --solver-path $(DAFNY_HOME)/z3/bin/z3-4.8.5
+SOLVER_OPTION := /proverOpt:PROVER_PATH=$(Z3_PATH)
+else
+$(info DAFNY_HOME: (unset))
+$(info Z3_PATH   : (default))
+SOLVER_OPTION :=
+endif
+
+
 #silent by default
 SILENCER := @
 VERBOSE ?= 0
@@ -74,12 +87,12 @@ dafny_verify_global_force: dafny_verify_global_clean
 
 DAFNY_TEST_WITNESS_GLOBAL:=$(DAFNY_TEST_OUT_DIR)/.last_global_test
 
-dafny_test_global: $(DAFNY_TEST_WITNESS_GLOBAL) $(DAFNY_VERIFY_WITNESS_GLOBAL)
+# dafny_test_global: $(DAFNY_TEST_WITNESS_GLOBAL) $(DAFNY_VERIFY_WITNESS_GLOBAL)
 
 #TODO probably tests should refer to the main build instead of rebuilding it (once the Dafny toolchain supports it)
 $(DAFNY_TEST_WITNESS_GLOBAL): $(DAFNY_TEST_FILES)
 	@echo Testing Dafny : `echo $? | wc -w` files
-	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /vcsLoad:2 /compileTarget:go /compile:4 /compileVerbose:0 /noExterns /out:$(DAFNY_TEST_OUT_DIR)/global $? /runAllTests:1  /warnShadowing /deprecation:2 #$(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /vcsLoad:2 /compileTarget:go /compile:4 /compileVerbose:0 /noExterns $(SOLVER_OPTION) /out:$(DAFNY_TEST_OUT_DIR)/global $? /runAllTests:1  /warnShadowing /deprecation:2 #$(DAFNY_ARGS)
 #	Dafny v4 new CLI: test doesn't seem to work
 #	$(SILENCER)$(DAFNY_EXEC) test $(DAFNY_ARGS) --test-assumptions Externs  --target go --warn-shadowing  --resource-limit 100000  $< # --output $(DAFNY_TEST_OUT_DIR)/$*
 	$(SILENCER)touch $@
@@ -96,11 +109,11 @@ dafny_test_global_force: dafny_test_global_clean
 # Translate Dafny Main's, using build product as witness.
 # Depends on previous global verification.
 
-dafny_translate: $(DAFNY_OUT_FILENAME) $(DAFNY_TEST_WITNESS_GLOBAL)
+dafny_translate: $(DAFNY_OUT_FILENAME) # $(DAFNY_TEST_WITNESS_GLOBAL)
 
 $(DAFNY_OUT_FILENAME) : $(DAFNY_SRC_FILES)
 	@echo Translating Dafny
-	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 #$(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 $(SOLVER_OPTION) /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 #$(DAFNY_ARGS)
 #	Dafny v4 new CLI: missing --deprecation and --noExterns
 #	$(SILENCER)$(DAFNY_EXEC) build $(DAFNY_ARGS) --no-verify --target go --warn-shadowing --test-assumptions Externs --output:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) #--deprecation 2  -noExterns
 

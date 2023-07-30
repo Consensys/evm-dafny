@@ -56,7 +56,7 @@ include "core/precompiled.dfy"
         var emptyStorage := Storage.Create(map[]);
         var emptyCode := Code.Create([]);
         var someCode := Code.Create([PUSH1, 0x1, PUSH1, 0x2, ADD, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN]);
-        var emptyStack := Stack.Create();
+        var emptyStack := Stack.EmptyEvmStack;
         var mem := Memory.Create();
         var substate := SubState.Create();
 

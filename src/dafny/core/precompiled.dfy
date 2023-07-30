@@ -29,7 +29,7 @@ module Precompiled {
     import U32
     import U256
     import External
-    import Bytes
+    import ByteUtils
 
     const DEFAULT : T := Dispatcher(
         // (1) ECDSA Recover
@@ -97,9 +97,9 @@ module Precompiled {
      */
     function CallEcdsaRecover(fn: EcdsaRecoverFn, data: Array<u8>) : Option<(Array<u8>,nat)> {
         var h := Arrays.SliceAndPad(data,0,32,0);
-        var v := Bytes.ReadUint256(data,32);
-        var r := Bytes.ReadUint256(data,64);
-        var s := Bytes.ReadUint256(data,96);
+        var v := ByteUtils.ReadUint256(data,32);
+        var r := ByteUtils.ReadUint256(data,64);
+        var s := ByteUtils.ReadUint256(data,96);
         // Sanity checks
         var key : Array<u8> := if !(v in {27,28}) || r == 0 || r >= SECP256K1N || s == 0 || s >= SECP256K1N
         then
@@ -185,11 +185,11 @@ module Precompiled {
      */
     function CallModExp(data: Array<u8>) : Option<(Array<u8>,nat)> {
         // Length of B
-        var lB := Bytes.ReadUint256(data,0) as nat;
+        var lB := ByteUtils.ReadUint256(data,0) as nat;
         // Length of E
-        var lE := Bytes.ReadUint256(data,32) as nat;
+        var lE := ByteUtils.ReadUint256(data,32) as nat;
         // Length of M
-        var lM := Bytes.ReadUint256(data,64) as nat;
+        var lM := ByteUtils.ReadUint256(data,64) as nat;
         // Extract B(ase)
         var B_bytes := Arrays.SliceAndPad(data,96,lB,0);
         // Extract E(xponent)
@@ -208,7 +208,7 @@ module Precompiled {
             Int.LemmaLengthToBytes(modexp,M);
             Int.LemmaLengthFromBytes(M,M_bytes);
             // Make the coercion
-            Bytes.LeftPad(modexp_bytes,lM)
+            ByteUtils.LeftPad(modexp_bytes,lM)
         else
             // To handle case where modulus is zero, the Yellow Paper specifies
             // that we return zero.
@@ -239,11 +239,11 @@ module Precompiled {
         if lE <= 32 then
             // NOTE: the following could be improved by performing the log
             // directly on the byte sequence and, hence, avoiding the coercion.
-            var w := Bytes.ReadUint256(Bytes.LeftPad(E,32),0);
+            var w := ByteUtils.ReadUint256(ByteUtils.LeftPad(E,32),0);
             // Check where we stand
             if w == 0 then 0 else U256.Log2(w)
         else
-            var w := Bytes.ReadUint256(data,96 + lB);
+            var w := ByteUtils.ReadUint256(data,96 + lB);
             var g := 8 * (lE - 32);
             // NOTE: the following could be improved by performing the log
             // directly on the byte sequence and, hence, avoiding the coercion.
@@ -260,11 +260,11 @@ module Precompiled {
         // Axiom needed for this all to go through.
         AltBn128.IsPrimeField();
         // First point
-        var x0 := BNF(Bytes.ReadUint256(data,0) as nat);
-        var y0 := BNF(Bytes.ReadUint256(data,32) as nat);
+        var x0 := BNF(ByteUtils.ReadUint256(data,0) as nat);
+        var y0 := BNF(ByteUtils.ReadUint256(data,32) as nat);
         // Second point
-        var x1 := BNF(Bytes.ReadUint256(data,64) as nat);
-        var y1 := BNF(Bytes.ReadUint256(data,96) as nat);
+        var x1 := BNF(ByteUtils.ReadUint256(data,64) as nat);
+        var y1 := BNF(ByteUtils.ReadUint256(data,96) as nat);
         // Sanity check input values are prime fields for BN128
         if x0 == None || y0 == None || x1 == None || y1 == None
         then
@@ -295,10 +295,10 @@ module Precompiled {
         // Axiom needed for this all to go through.
         AltBn128.IsPrimeField();
         // Point
-        var x0 := BNF(Bytes.ReadUint256(data,0) as nat);
-        var y0 := BNF(Bytes.ReadUint256(data,32) as nat);
+        var x0 := BNF(ByteUtils.ReadUint256(data,0) as nat);
+        var y0 := BNF(ByteUtils.ReadUint256(data,32) as nat);
         // Factor
-        var n := Bytes.ReadUint256(data,64);
+        var n := ByteUtils.ReadUint256(data,64);
         // Sanity check input values are prime fields for BN128
         if x0 == None || y0 == None
         then

@@ -22,7 +22,7 @@ module Memory {
     import opened Int
     import U256
     import Arrays
-    import opened Bytes
+    import ByteUtils
 
     // =============================================================================
     // Random Access Memory
@@ -61,7 +61,7 @@ module Memory {
           mem
         else
           var extLength := SmallestLarg32(address);
-          mem.(contents := mem.contents + Padding(extLength - |mem.contents|))
+          mem.(contents := mem.contents + ByteUtils.Padding(extLength - |mem.contents|))
     }
 
     /** Smallest number multiple of 32 that is larger than k. */
@@ -103,7 +103,7 @@ module Memory {
      */
     function ReadUint256(mem:T, address:nat) : u256
       requires address + 31 < |mem.contents| {
-       Bytes.ReadUint256(mem.contents,address)
+       ByteUtils.ReadUint256(mem.contents,address)
     }
 
     /**
@@ -123,7 +123,7 @@ module Memory {
     requires address + 31 < |mem.contents|
     // Nothing has changed except the bytes overwritten by the u256
     ensures Arrays.EqualsExcept(mem.contents,mem'.contents,address,32) {
-        var ncontents := Bytes.WriteUint256(mem.contents,address,val);
+        var ncontents := ByteUtils.WriteUint256(mem.contents,address,val);
         Memory(contents:=ncontents)
     }
 

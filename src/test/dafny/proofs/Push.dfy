@@ -17,7 +17,7 @@ requires DecodeUint8(s1.evm.code,s1.evm.pc+1) == k {
 
 method test_2(s1: ExecutingState, k:u16)
 requires s1.CodeOperands() >= 2
-requires Bytes.ReadUint16(s1.evm.code.contents,s1.evm.pc+1) == k {
+requires ByteUtils.ReadUint16(s1.evm.code.contents,s1.evm.pc+1) == k {
     var s2 := Bytecode.Push2(s1,k);
     var s3 := Bytecode.Push(s1,2);
     // Should be identical

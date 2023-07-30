@@ -29,7 +29,7 @@ module WorldState {
     import External
 
     // Sha3 hash of the empty sequence.
-    const HASH_EMPTYCODE : u256 := 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+    const HASH_EMPTYCODE : u256 := 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
 
     /**
      * Account state associated with a given contract address.

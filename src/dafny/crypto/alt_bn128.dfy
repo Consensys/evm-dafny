@@ -20,7 +20,7 @@ module FiniteField {
     type pos = n:nat | n > 0 witness 1
 
     // The number of elements in the given field.
-    const N : pos;
+    const N : pos
 
     // Define the raw set of field elements.
     type Field = n:nat | n < N
@@ -63,9 +63,9 @@ module EllipticCurve refines FiniteField {
     // Define the so-called "point at infinity"
     const INFINITY : (nat,nat) := (0,0)
     // Parameter defining the curve
-    const A : Field;
+    const A : Field
     // Paramter defining the curve
-    const B : Field;
+    const B : Field
     /// Equation defining this particular elliptic curve.
     function Curve(x:Field,y:Field) : bool {
         // NOTE: should be field operations?
@@ -140,12 +140,12 @@ module EllipticCurve refines FiniteField {
 // The ellptic curve given by y^2 == x^3 + 3.
 module AltBn128 refines EllipticCurve {
     // Specify the number of elements in the finite field
-    const N := ALT_BN128_PRIME;
+    const N := ALT_BN128_PRIME
     // As per EIP196
     const ALT_BN128_PRIME := 21888242871839275222246405745257275088696311157297823662689037894645226208583
     // Parameters for the curve
-    const A := 0;
-    const B := 3;
+    const A := 0
+    const B := 3
 
     // Axiom to establish that this is really a prime field.  This is needed
     // because Dafny cannot possible determine that ALT_BN128_PRIME is a prime.

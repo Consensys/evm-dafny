@@ -31,7 +31,7 @@ include "opcodes.dfy"
 module EvmState {
     import opened Int
     import opened Arrays
-    import Stack
+    import opened Stack
     import Memory
     import Storage
     import WorldState
@@ -68,7 +68,7 @@ module EvmState {
         context: Context.T,
         precompiled: Precompiled.T,
         world : WorldState.T,
-        stack   : Stack.Stack,
+        stack   : EvmStack,
         memory  : Memory.T,
         code: Code.T,
         substate: SubState.T,
@@ -82,7 +82,7 @@ module EvmState {
     const EVM_WITNESS : Raw := EVM(Context.DEFAULT,
             Precompiled.DEFAULT,
             WorldState.Create(map[0:=WorldState.DefaultAccount()]),
-            Stack.Create(),
+            EmptyEvmStack,
             Memory.Create(),
             Code.Create([]),
             SubState.Create(),
@@ -493,7 +493,7 @@ module EvmState {
         /**
          * Get the state of the internal stack.
          */
-        function GetStack(): Stack.Stack
+        function GetStack(): EvmStack
         requires this.EXECUTING? {
             this.evm.stack
         }
@@ -544,7 +544,7 @@ module EvmState {
          *  @param  u   An index.
          *  @returns    A stack made of the first u elements of `st` minus the first `l`.
          */
-        function SlicePeek(l: nat, u: nat): (r: Stack.Stack)
+        function SlicePeek(l: nat, u: nat): (r: EvmStack)
         requires this.EXECUTING?
         requires l <= u <= Operands()
         ensures r.Size() == u - l
@@ -686,7 +686,7 @@ module EvmState {
                     if |cod.contents| == 0 then RETURNS(gas, [], nw, substate)
                     else
                         // Construct fresh EVM
-                        var stack := Stack.Create();
+                        var stack := EmptyEvmStack;
                         var mem := Memory.Create();
                         var evm := EVM(ctx,precompiled,nw,stack,mem,cod,substate,gas,0);
                         // Off we go!
@@ -722,7 +722,7 @@ module EvmState {
             if |initcode| == 0 then RETURNS(gas, [], nw, substate)
             else
                 // Construct fresh EVM
-                var stack := Stack.Create();
+                var stack := EmptyEvmStack;
                 var mem := Memory.Create();
                 var cod := Code.Create(initcode);
                 // Mark new account as having been accessed

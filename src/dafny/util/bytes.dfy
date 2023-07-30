@@ -14,7 +14,7 @@
 include "int.dfy"
 include "arrays.dfy"
 
-module Bytes {
+module ByteUtils {
     import opened Int
     import Arrays
 

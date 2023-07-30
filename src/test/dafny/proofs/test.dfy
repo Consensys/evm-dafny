@@ -12,7 +12,7 @@ module Test {
     import opened Opcode
     import EvmBerlin
     import Bytecode
-    import Bytes
+    import ByteUtils
     import Gas
 
     /** The gas loaded in the EVM before executing a program. */
@@ -96,7 +96,7 @@ module Test {
         vm := Bytecode.Push1(vm,0x1E);
         vm := Bytecode.Return(vm);
         // read 2 bytes from vm.data starting at 0
-        return Bytes.ReadUint16(vm.data,0);
+        return ByteUtils.ReadUint16(vm.data,0);
     }
 
     /**
@@ -119,7 +119,7 @@ module Test {
       vm := Bytecode.Push1(vm,0x1F);
       vm := Bytecode.Return(vm);
       //  read one byte from vm.data starting at 0
-      return Bytes.ReadUint8(vm.data,0);
+      return ByteUtils.ReadUint8(vm.data,0);
     }
 
     // ===========================================================================
@@ -179,7 +179,7 @@ module Test {
           vm := Bytecode.Push1(vm,0x1F);
           vm := Bytecode.Return (vm);
           //
-          return Bytes.ReadUint8(vm.data,0), false;
+          return ByteUtils.ReadUint8(vm.data,0), false;
         }
     }
 }
