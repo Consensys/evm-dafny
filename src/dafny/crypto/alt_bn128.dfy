@@ -53,7 +53,7 @@ module FiniteField {
 
     // Raise field element to a given power.
     function Pow(lhs: Field, n: nat) : Field {
-        Int.Pow(lhs,n) % N
+        Int.ModPow(lhs,n,N)
     }
 }
 
