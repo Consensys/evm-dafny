@@ -1,3 +1,6 @@
 [submodule "fixtures"]
 	path = fixtures
 	url = git@github.com:ethereum/tests.git
+[submodule "DafnyCrypto"]
+	path = libs/DafnyCrypto
+	url = git@github.com:Consensys/DafnyCrypto.git

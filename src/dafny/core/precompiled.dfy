@@ -11,12 +11,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+include "../crypto/alt_bn128.dfy"
 include "../util/bytes.dfy"
 include "../util/extern.dfy"
 include "../util/arrays.dfy"
 include "../util/int.dfy"
-include "../util/option.dfy"
-include "../crypto/alt_bn128.dfy"
 
 /**
  * Interface for the so-called "precompiled contracts".
@@ -285,6 +284,17 @@ module Precompiled {
                 Some((bytes,G_BNADD))
     }
 
+    // Construct a point on the BN128 curve.  This will only succeed if it is
+    // indeed on the curve, otherwise it returns nothing.
+    function BNP(x: Field, y: Field) : Option<Point> {
+        // Check whether or not the point is actually on the curve.
+        if (x,y) == INFINITY || Curve(x,y)
+        then
+            var bnp : Point := (x,y);
+            Some(bnp)
+        else
+            None
+    }
     // ========================================================================
     // (7)
     // ========================================================================
@@ -316,6 +326,18 @@ module Precompiled {
                 var bytes : Array<u8> := U256.ToBytes(p_x) + U256.ToBytes(p_y);
                 assert |bytes| == 64;
                 Some((bytes,G_BNMUL))
+    }
+
+
+    // Attempt to construct an element of the prime field.  This will only
+    // succeed if it is indeed a member, otherwise it returns nothing.
+    function BNF(val:nat) : (r:Option<Field>)
+    {
+        // Check whether it is a member of the field
+        if val < ALT_BN128_PRIME then
+            Some(val)
+        else
+            None
     }
 
     // ========================================================================

@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "option.dfy"
+include "../../../libs/DafnyCrypto/src/dafny/util/option.dfy"
 
 module Int {
     import opened Optional

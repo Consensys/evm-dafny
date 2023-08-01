@@ -14,7 +14,6 @@
 include "code.dfy"
 include "storage.dfy"
 include "../util/int.dfy"
-include "../util/option.dfy"
 include "../util/extern.dfy"
 
 /**
