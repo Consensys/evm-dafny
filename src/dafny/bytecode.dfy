@@ -282,7 +282,7 @@ module Bytecode {
         then
             var base := st.Peek(0) as int;
             var power := st.Peek(1) as int;
-            var res := Int.Pow(base,power) % TWO_256;
+            var res := MathUtils.Pow(base,power) % TWO_256;
             st.Pop(2).Push(res as u256).Next()
         else
             ERROR(STACK_UNDERFLOW)

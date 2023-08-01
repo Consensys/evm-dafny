@@ -15,6 +15,7 @@ include "../util/int.dfy"
 
 module FiniteField {
     import opened Int
+    import opened MathUtils
 
     type pos = n:nat | n > 0 witness 1
 
@@ -45,14 +46,14 @@ module FiniteField {
         if rhs == 0 then 0
         else
             assert rhs < N;
-            Int.PrimeFieldsHaveInverse(rhs,N);
-            var inverse := Int.Inverse(rhs,N).Unwrap();
+            PrimeFieldsHaveInverse(rhs,N);
+            var inverse := Inverse(rhs,N).Unwrap();
             (lhs * inverse) % N
     }
 
     // Raise field element to a given power.
     function Pow(lhs: Field, n: nat) : Field {
-        Int.ModPow(lhs,n,N)
+        ModPow(lhs,n,N)
     }
 }
 

@@ -201,7 +201,7 @@ module Precompiled {
         var M := Int.FromBytes(M_bytes);
         // Compute modexp
         var modexp_array : Array<u8> := if M != 0 then
-            var modexp := Int.ModPow(B,E,M);
+            var modexp := MathUtils.ModPow(B,E,M);
             var modexp_bytes := Int.ToBytes(modexp);
             // Apply lemmas to establish |modexp_bytes| < TWO_256.
             Int.LemmaLengthToBytes(modexp,M);
