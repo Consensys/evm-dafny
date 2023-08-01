@@ -19,7 +19,6 @@ include "core/code.dfy"
 include "core/context.dfy"
 include "core/worldstate.dfy"
 include "core/substate.dfy"
-include "util/option.dfy"
 include "util/bytes.dfy"
 
 module Gas {

@@ -11,8 +11,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+include "../../libs/DafnyCrypto/src/dafny/util/option.dfy"
 include "evmstate.dfy"
-include "util/option.dfy"
 
 /**
  * Top-level definition of an Ethereum Virtual Machine.

@@ -14,7 +14,6 @@
 include "../util/arrays.dfy"
 include "../util/bytes.dfy"
 include "../util/int.dfy"
-include "../util/option.dfy"
 
 module Context {
     import opened Arrays

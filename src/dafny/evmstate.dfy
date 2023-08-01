@@ -21,7 +21,6 @@ include "core/substate.dfy"
 include "core/worldstate.dfy"
 include "util/arrays.dfy"
 include "util/extern.dfy"
-include "util/option.dfy"
 include "util/int.dfy"
 include "opcodes.dfy"
 
