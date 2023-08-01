@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "../crypto/alt_bn128.dfy"
+include "../../../libs/DafnyCrypto/src/dafny/ecc/alt_bn128.dfy"
 include "../util/bytes.dfy"
 include "../util/extern.dfy"
 include "../util/arrays.dfy"
@@ -276,21 +276,44 @@ module Precompiled {
             then
                 None
             else
-                var p := AltBn128.PointAdd(p0.Unwrap(),p1.Unwrap());
-                var p_x := p.0 as u256;
-                var p_y := p.1 as u256;
-                var bytes : Array<u8> := U256.ToBytes(p_x) + U256.ToBytes(p_y);
+                // Perform operation
+                var p := p0.Unwrap().Add(p1.Unwrap());
+                // Precompile defined to return (0,0) to represent the special
+                // point of infinity.
+                var (r_x,r_y) := if p == Infinity then (0,0)
+                else
+                    var Pair(p_x,p_y) := p;
+                    (p_x.n as u256,p_y.n as u256);
+                // Convert into bytes
+                var bytes : Array<u8> := U256.ToBytes(r_x) + U256.ToBytes(r_y);
                 assert |bytes| == 64;
                 Some((bytes,G_BNADD))
     }
 
+    // Attempt to construct an element of the prime field.  This will only
+    // succeed if it is indeed a member, otherwise it returns nothing.
+    function BNF(val:nat) : (r:Option<AltBn128.Element>)
+    ensures r == None || r.Unwrap().Value?
+    {
+        // Check whether it is a member of the field
+        if val < ALT_BN128_PRIME then
+            Some(AltBn128.Value(val))
+        else
+            None
+    }
+
     // Construct a point on the BN128 curve.  This will only succeed if it is
-    // indeed on the curve, otherwise it returns nothing.
-    function BNP(x: Field, y: Field) : Option<Point> {
+    // indeed on the curve, otherwise it returns nothing.  Furthermore, the
+    // Yellow Paper defines the special point (0,0) as the point at infinity.
+    function BNP(x: AltBn128.Element, y: AltBn128.Element) : (r:Option<AltBn128.Point>) {
         // Check whether or not the point is actually on the curve.
-        if (x,y) == INFINITY || Curve(x,y)
+        if AltBn128.OnCurve(x,y)
         then
-            var bnp : Point := (x,y);
+            var bnp : Point := AltBn128.Pair(x,y);
+            Some(bnp)
+        else if x.n == 0 && y.n == 0
+        then
+            var bnp : Point := AltBn128.Infinity;
             Some(bnp)
         else
             None
@@ -320,24 +343,19 @@ module Precompiled {
             then
                 None
             else
-                var p := AltBn128.PointMul(p0.Unwrap(),n);
-                var p_x := p.0 as u256;
-                var p_y := p.1 as u256;
-                var bytes : Array<u8> := U256.ToBytes(p_x) + U256.ToBytes(p_y);
+                // Since neither p0 or p1 are Infinity, we know the result is
+                // not Infinity.
+                var p := p0.Unwrap().Mul(n as nat);
+                // Precompile defined to return (0,0) to represent the special
+                // point of infinity.
+                var (r_x,r_y) := if p == Infinity then (0,0)
+                else
+                    var Pair(p_x,p_y) := p;
+                    (p_x.n as u256,p_y.n as u256);
+                // Convert into bytes
+                var bytes : Array<u8> := U256.ToBytes(r_x) + U256.ToBytes(r_y);
                 assert |bytes| == 64;
                 Some((bytes,G_BNMUL))
-    }
-
-
-    // Attempt to construct an element of the prime field.  This will only
-    // succeed if it is indeed a member, otherwise it returns nothing.
-    function BNF(val:nat) : (r:Option<Field>)
-    {
-        // Check whether it is a member of the field
-        if val < ALT_BN128_PRIME then
-            Some(val)
-        else
-            None
     }
 
     // ========================================================================
