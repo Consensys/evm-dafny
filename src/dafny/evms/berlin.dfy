@@ -137,6 +137,7 @@ module EvmBerlin refines EVM {
             case MSIZE => Bytecode.MSize(st)
             case GAS => Bytecode.Gas(st)
             case JUMPDEST => Bytecode.JumpDest(st)
+            case PUSH0 => Bytecode.Push0(st)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => Bytecode.Push(st,1)
             case PUSH2 => Bytecode.Push(st,2)

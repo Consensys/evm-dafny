@@ -664,6 +664,7 @@ module Gas {
             case MSIZE => s.UseGas(G_BASE)
             case GAS => s.UseGas(G_BASE)
             case JUMPDEST => s.UseGas(G_JUMPDEST)
+            case PUSH0 => s.UseGas(G_BASE)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => s.UseGas(G_VERYLOW)
             case PUSH2 => s.UseGas(G_VERYLOW)
