@@ -1,10 +1,10 @@
 // Some tests related to gas.
 include "../../../dafny/evm.dfy"
-include "../../../dafny/evms/berlin.dfy"
 
 module GasTests {
     import opened Int
-    import EvmBerlin
+    import EVM
+    import EvmFork
     import Bytecode
     import opened Opcode
     import Gas
@@ -13,9 +13,11 @@ module GasTests {
     const INITGAS := 0xFFFF
 
     method test_01() {
+        // Assuption required because Z3 cannot figure this out!
+        assume {:axiom} {GAS} <= EvmFork.BERLIN_BYTECODES;
         // Simple contract containing only one instruction.
-        var vm := EvmBerlin.InitEmpty(gas := INITGAS, code := [GAS]);
-        vm := EvmBerlin.Execute(vm);
+        var vm := EVM.Init(gas := INITGAS, code := [GAS]);
+        vm := EVM.Execute(vm);
         // Sanity check output!
         assert vm.Peek(0) == ((INITGAS - Gas.G_BASE) as u256);
     }

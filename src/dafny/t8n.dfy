@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "evms/berlin.dfy"
+include "evm.dfy"
 include "core/precompiled.dfy"
 
  module t8n {
@@ -23,7 +23,7 @@ include "core/precompiled.dfy"
     import Context
     import SubState
     import EvmState
-    import EvmBerlin
+    import EVM
     import Optional
     import Stack
     import Memory
@@ -151,7 +151,7 @@ include "core/precompiled.dfy"
         st := st0;
         while (st.EXECUTING?){
             TracerStep(depth, st);
-            st := EvmBerlin.Execute(st);
+            st := EVM.Execute(st);
             match st
                 case CONTINUING(cc) => {
                     if cc.CALLS? {

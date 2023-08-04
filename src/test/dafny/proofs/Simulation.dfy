@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
 
 /**
  *  Provide some simple simulation checks.
@@ -20,7 +20,7 @@ include "../../../dafny/evms/berlin.dfy"
 module SimulationChecks {
 
     import opened Int
-    import opened EvmBerlin
+    import opened EVM
     import opened Bytecode
     import opened EvmState
     import opened Opcode
@@ -54,21 +54,23 @@ module SimulationChecks {
     method main0Func(g: nat)
         requires g  >= Gas.G_VERYLOW
     {
+        // Assumption required because Z3 cannot prove this!
+        assume {:axiom} PUSH1 in EvmFork.BERLIN_BYTECODES;
         // Initialise EVM #1
-        var vm1 := EvmBerlin.InitEmpty(g, [PUSH1, 1, PUSH1, 0x2, ADD, POP, STOP]);
+        var vm1 := EVM.Init(gas:=g, code:=[PUSH1, 1, PUSH1, 0x2, ADD, POP, STOP]);
 
         //  EVM #2, no code associated with.
         //  to be able to satisfy the pre-condition of Push1 etc we still need
         //  some bytecode of the same size to be able to advance `pc` (this check is part of
         //  Push1 and others)
-        var vm2 := EvmBerlin.InitEmpty(g);
+        var vm2 := EVM.Init(g);
 
         //  First check: initial states are equiv.
         assert equiv(vm1, vm2);
 
         //  Execute one instruciton in each machine and check equiv.
         vm2 := Bytecode.Push1(vm2.UseGas(Gas.G_VERYLOW), 1);
-        vm1 := EvmBerlin.Execute(vm1);
+        vm1 := EVM.Execute(vm1);
         assert equiv(vm1, vm2);
     }
 
@@ -95,46 +97,49 @@ module SimulationChecks {
     method main1(g: nat)
         requires g >= 3 * Gas.G_VERYLOW + Gas.G_BASE + Gas.G_ZERO //  gas is not used in the functional evm implementation.
     {
+        // Assumption required because Z3 cannot prove this!
+        assume {:axiom} {PUSH1,ADD,POP,STOP} <= EvmFork.BERLIN_BYTECODES;
+        //
         var a: u8 := 0x01;
         var b : u8 := 0x02;
 
         //  EVM #1
         // Initialise EVM #1
-        var vm1 := EvmBerlin.InitEmpty(g, [PUSH1, a, PUSH1, b, ADD, POP, STOP]);
+        var vm1 := EVM.Init(gas:=g, code:=[PUSH1, a, PUSH1, b, ADD, POP, STOP]);
 
         //  EVM #2, no code associated with.
         //  to be able to satisfy the pre-condition of Push1 etc we still need
         //  some bytecode of the same size to be able to advance `pc` (this check is part of
         //  Push1 and others)
-        var vm2 := EvmBerlin.InitEmpty(g);
+        var vm2 := EVM.Init(g);
 
         //  First check.
         assert equiv(vm1, vm2);
 
         //  Now run some instructions and check equiv after each of them.
         vm2 := Bytecode.Push1(vm2.UseGas(Gas.G_VERYLOW), a);
-        vm1 := EvmBerlin.Execute(vm1);
+        vm1 := EVM.Execute(vm1);
         assert equiv(vm1, vm2);
 
         vm2 := Bytecode.Push1(vm2.UseGas(Gas.G_VERYLOW), b);
-        vm1 := EvmBerlin.Execute(vm1);
+        vm1 := EVM.Execute(vm1);
         assert equiv(vm1, vm2);
 
         vm2 := Bytecode.Add(vm2.UseGas(Gas.G_VERYLOW));
-        vm1 := EvmBerlin.Execute(vm1);
+        vm1 := EVM.Execute(vm1);
         assert equiv(vm1, vm2);
 
         assert vm2.Peek(0) == a as u256 + b as u256;
         assert vm1.Peek(0) == a as u256 + b as u256;
 
         vm2 := Bytecode.Pop(vm2.UseGas(Gas.G_BASE));
-        vm1 := EvmBerlin.Execute(vm1);
+        vm1 := EVM.Execute(vm1);
         assert equiv(vm1, vm2);
 
         assert vm2.evm.stack == vm1.evm.stack;
 
         vm2 := Bytecode.Stop(vm2.UseGas(Gas.G_ZERO));
-        vm1 := EvmBerlin.Execute(vm1);
+        vm1 := EVM.Execute(vm1);
         assert equiv(vm1, vm2);
     }
 
@@ -165,10 +170,8 @@ module SimulationChecks {
         var a: u8 := 0x01;
         var b : u8 := 0x02;
 
-        //  EVM
         // Initialise EVM
-        var vm := EvmBerlin.InitEmpty(g,
-            [
+        var vm := EVM.Init(gas := g, code := [
                 PUSH1, c,       //  0
                 JUMPDEST,       //  2
                 DUP1,           //  3

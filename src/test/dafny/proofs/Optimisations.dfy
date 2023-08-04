@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
 
 /** Provide some tests to check some qualitative properties of bytecode.
  *
@@ -23,13 +23,22 @@ module Optimisations {
 
     import opened Int
     import opened Bytecode
-    import opened EvmBerlin
+    import opened EVM
     import opened EvmState
     import opened Opcode
     import Stack
 
     //  Some optimisation examples from
     // https://fenix.tecnico.ulisboa.pt/cursos/mma/dissertacao/1691203502343808
+
+    function Execute(op: u8, s: ExecutingState) : State {
+        match EVM.DeductGas(op,s)
+         // Not out of gas
+            case EXECUTING(vm) => ExecuteBytecode(op,EXECUTING(vm))
+            // Out of gas (or invalid opcode)
+            case s => s
+
+    }
 
     /**
      *  Proposition 12: n + 1 consecutive Pop  <_gas SwapN n + 1 consecutive Pop
@@ -46,17 +55,17 @@ module Optimisations {
         /** Minimum gas needed. */
         requires g >= 2 * Gas.G_BASE + Gas.G_VERYLOW
     {
-        var vm := EvmBerlin.Init(gas := g, stk := s, code := []);
+        var vm := EVM.Init(gas := g, stk := s, code := []);
         //  execute 2 POPs
         var vm1 := vm;
-        vm1 := ExecuteOP(vm1, POP);
-        vm1 := ExecuteOP(vm1, POP);
+        vm1 := Execute(POP, vm1);
+        vm1 := Execute(POP, vm1);
 
         //  execute SWAP1 and 2 POPs
         var vm2 := vm;
-        vm2 := ExecuteOP(vm2, SWAP1);
-        vm2 := ExecuteOP(vm2, POP);
-        vm2 := ExecuteOP(vm2, POP);
+        vm2 := Execute(SWAP1, vm2);
+        vm2 := Execute(POP, vm2);
+        vm2 := Execute(POP, vm2);
 
         //  States are the same except for gas and PC
         assert vm1.evm.(pc := 0, gas := 0) == vm2.evm.(pc := 0, gas :=0);
@@ -84,7 +93,7 @@ module Optimisations {
         /** Minimum gas needed. */
         requires g >= (n + 1) * Gas.G_BASE + Gas.G_VERYLOW
     {
-        var vm := EvmBerlin.Init(gas := g, stk := s, code := []);
+        var vm := EVM.Init(gas := g, stk := s, code := []);
 
         //  Execute n + 1 POPs in vm1.
         var vm1 := vm;
@@ -94,7 +103,7 @@ module Optimisations {
             invariant vm1.Operands() >= n - i
             invariant vm1.GetStack() == vm.SlicePeek(i, |s|)
         {
-            vm1 := ExecuteOP(vm1, POP);
+            vm1 := Execute(POP, vm1);
             assert vm1.EXECUTING?;
         }
         assert vm1.Gas() >= Gas.G_VERYLOW;
@@ -113,7 +122,7 @@ module Optimisations {
         invariant vm2.Operands() == vm.Operands() - i == |s| - i
         invariant vm2.SlicePeek(n + 1 - i, |s| - i) == vm.SlicePeek(n + 1, |s|)
         {
-            vm2 := ExecuteOP(vm2, POP);
+            vm2 := Execute(POP, vm2);
             assert vm2.EXECUTING?;
         }
         assert vm2.SlicePeek(0, |s| - n - 1) == vm.SlicePeek(n + 1, |s|);

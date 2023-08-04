@@ -12,8 +12,8 @@
  * under the License.
  */
 
-include "../../../dafny/evms/berlin.dfy"
-include "../../../dafny/evmstate.dfy"
+include "../../../dafny/evm.dfy"
+include "../../../dafny/evm.dfy"
 
 /**
  *  Provide some tests to check some qualitative properties of bytecode.
@@ -22,7 +22,7 @@ module Kontract1 {
 
     import opened Int
     import opened Bytecode
-    import opened EvmBerlin
+    import opened EVM
     import opened EvmState
     import opened Opcode
     import Stack
@@ -48,7 +48,7 @@ module Kontract1 {
      */
     method inc_proof(st: ExecutingState) returns (st': State)
         /** Initial state with PC = 0 and empty stack. */
-        requires st.PC() == 0 && st.Operands() == 0
+        requires st.PC() == 0 && st.Operands() == 0 && st.Fork() == EvmFork.BERLIN
         /** Enough gas. */
         requires st.Gas() >= 40000
         /** Permission to write to storage. */
@@ -64,6 +64,8 @@ module Kontract1 {
         /** Normal termination implies storage at Loc 0 has been incremented by 1. */
         ensures st'.RETURNS? ==> st'.world.Read(st.evm.context.address,0) as nat == st.Load(0) as nat + 1
     {
+        // Assumption required because Z3 cannot figure this out!
+        assume {:axiom} {PUSH1,SLOAD,ADD,DUP1,JUMPI,REVERT,JUMPDEST,SSTORE,STOP} <= EvmFork.BERLIN_BYTECODES;
         //  Execute 7 steps (PUSH1, 0x00, SLOAD, PUSH1, 0x01, ADD, DUP1, PUSH1, 0xf, JUMPI)
         st' := ExecuteN(st,7);
         assert (st'.PC() == 0xa || st'.PC() == 0xf);
@@ -119,7 +121,7 @@ module Kontract1 {
      */
     method OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
         /** OK state and initial PC.  */
-        requires /* Pre0 */ st.PC() == 0
+        requires /* Pre0 */ st.PC() == 0 && st.Fork() == EvmFork.BERLIN
         /** Enough gas. Longest path gas-wise is via JUMPI. */
         requires /* Pre1 */ st.Gas() >= 6 * Gas.G_VERYLOW + Gas.G_HIGH + Gas.G_JUMPDEST
         /** Initial stack is [x, y]. */
@@ -133,6 +135,8 @@ module Kontract1 {
         /** Normal termination iff no overflow. */
         ensures st'.RETURNS? <==> x as nat + y as nat <= MAX_U256
     {
+        // Assumption required because Z3 cannot figure this out!
+        assume {:axiom} {DUP2,ADD,LT,PUSH1,JUMPI,STOP,JUMPDEST,REVERT} <= EvmFork.BERLIN_BYTECODES;
         //  Execute 4 steps -- DUP2 ADD LT PUSH1 0x07
         st' := ExecuteN(st,4);
         //  Depending on result of LT comparison overflow or not
@@ -163,7 +167,7 @@ module Kontract1 {
      *              enough capacity (3) to perform this computation.
      */
     method Loopy(st: ExecutingState, c: u8) returns (st': State)
-        requires /* Pre0 */ st.PC() == 0 && st.Capacity() >= 3
+        requires /* Pre0 */ st.PC() == 0 && st.Capacity() >= 3 && st.Fork() == EvmFork.BERLIN
         requires /* Pre1 */ st.Gas() >=
             3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +
             c as nat * (2 * Gas.G_HIGH + 2 * Gas.G_JUMPDEST + 6 * Gas.G_VERYLOW)
@@ -189,6 +193,8 @@ module Kontract1 {
         )
         ensures /* Post0 */ st'.RETURNS?
     {
+        // Assumption required because Z3 cannot figure this out!
+        assume {:axiom} {PUSH1,JUMPDEST,DUP1,JUMPI,STOP,SWAP1,SUB,JUMP} <= EvmFork.BERLIN_BYTECODES;
         //  Execute PUSH1, c, JUMPDEST, DUP1, PUSH1, 0x08
         st' := ExecuteN(st, 4);
         assert st'.EXECUTING?;
@@ -204,7 +210,7 @@ module Kontract1 {
             invariant st'.Operands() > 2
             invariant count == st'.Peek(2) == st'.Peek(1)
             invariant st'.Peek(0) == 0x08
-            invariant st'.evm.code == st.evm.code
+            invariant st'.evm.code == st.evm.code && st'.Fork() == st.Fork()
             invariant n == c as nat - count as nat
             decreases st'.Peek(2)
         {

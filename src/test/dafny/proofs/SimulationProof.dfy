@@ -9,13 +9,12 @@
 //
 // One sequence was generated with optimisation enabled, and the other was not.
 include "../../../dafny/evm.dfy"
-include "../../../dafny/evms/berlin.dfy"
 
 import opened Int
 import opened Opcode
 import opened Memory
 import opened Bytecode
-import opened EvmBerlin
+import opened EVM
 import opened EvmState
 
 // 60016000540160008103601157600080fd5b8060005500
@@ -50,8 +49,8 @@ requires gas > 100000
 requires context.address in world {
     var storage := world[context.address].storage;
     var x := Storage.Read(storage,0) as nat;
-    var st1 := EvmBerlin.Create(context,world,gas,UNOPT_CODE);
-    var st2 := EvmBerlin.Create(context,world,gas,OPT_CODE);
+    var st1 := EVM.Create(EvmFork.BERLIN,context,world,gas,UNOPT_CODE);
+    var st2 := EVM.Create(EvmFork.BERLIN,context,world,gas,OPT_CODE);
     //
     st1 := ExecuteN(st1,7); // PUSH1 0x01,PUSH1 0x00,SLOAD,ADD,PUSH1 0x00,DUP2,SUB
     st2 := ExecuteN(st2,6); // PUSH1 0x01,PUSH1 0x00,SLOAD,ADD,DUP1,ISZERO

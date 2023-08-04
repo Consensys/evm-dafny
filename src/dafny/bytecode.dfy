@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-include "evmstate.dfy"
+include "state.dfy"
 include "gas.dfy"
 
 module Bytecode {
@@ -1073,6 +1073,19 @@ module Bytecode {
             var balance := st.evm.world.Balance(address);
             // Done
             st.Push(balance).Next()
+        else
+            ERROR(STACK_OVERFLOW)
+    }
+
+    /**
+     * Returns the value of the base fee for the currently executing block.
+     */
+    function BaseFee(st: ExecutingState): (st': State)
+    {
+        if st.Capacity() >= 1
+        then
+            // NOTE: needs to be implemented properly!
+            st.Push(0).Next()
         else
             ERROR(STACK_OVERFLOW)
     }
