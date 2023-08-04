@@ -1413,6 +1413,22 @@ module Bytecode {
     // =====================================================================
 
     /**
+     *  Push zero on the stack.
+     *
+     *  @param st   A state.
+     */
+    function Push0(st: ExecutingState): (st': State)
+    ensures st'.EXECUTING? || st' == ERROR(STACK_OVERFLOW)
+    ensures st'.EXECUTING? <==> st.Capacity() >= 1
+    ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() + 1
+    {
+        if st.Capacity() >= 1
+        then
+            st.Push(0).Next()
+        else
+            ERROR(STACK_OVERFLOW)
+    }
+    /**
      *  Push bytes on the stack.
      *
      *  @param st   A state.
