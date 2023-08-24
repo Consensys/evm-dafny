@@ -1,5 +1,5 @@
-//include "../../dafny/evm.dfy"
-include "../../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
+include "../../../dafny/core/fork.dfy"
 
 import opened Int
 import opened Opcode
@@ -10,7 +10,8 @@ module Test {
 
     import opened Int
     import opened Opcode
-    import EvmBerlin
+    import EVM
+    import EvmFork
     import Bytecode
     import ByteUtils
     import Gas
@@ -29,8 +30,10 @@ module Test {
      */
     method Test_EVM_01(x: u8)
     {
+        // Assuption required because Z3 cannot figure this out!
+        assume {:axiom} {PUSH1,MSTORE,RETURN} <= EvmFork.BERLIN_BYTECODES;
         // Initialise Bytecode
-        var vm := EvmBerlin.InitEmpty(
+        var vm := EVM.Init(
           gas := INITGAS,
           code := [
             PUSH1, x,
@@ -42,13 +45,13 @@ module Test {
             ]);
 
         // PUSH1 x
-        vm := EvmBerlin.Execute(vm);
+        vm := EVM.Execute(vm);
         // PUSH1 0x0
-        vm := EvmBerlin.Execute(vm);
+        vm := EVM.Execute(vm);
         // MSTORE
-        vm := EvmBerlin.Execute(vm);
+        vm := EVM.Execute(vm);
         // PUSH ... RETURN
-        vm := EvmBerlin.ExecuteN(vm,3);
+        vm := EVM.ExecuteN(vm,3);
         //
         assert vm.RETURNS?;
         //
@@ -64,8 +67,9 @@ module Test {
      */
     method Test_IR_01(x: u8)
     {
-        var vm := EvmBerlin.InitEmpty(gas := INITGAS);
-
+        // Initialise Bytecode
+        var vm := EVM.Init(gas := INITGAS);
+        //
         vm := Bytecode.Push1(vm,x);
         vm := Bytecode.Push1(vm,0);
         vm := Bytecode.MStore(vm);
@@ -83,7 +87,7 @@ module Test {
     method Test_IR_02(x: u8, y: u8) returns (z:u16)
       ensures z == (x as u16) + (y as u16)
     {
-        var vm := EvmBerlin.InitEmpty(gas := INITGAS);
+        var vm := EVM.Init(gas := INITGAS);
         //
         vm := Bytecode.Push1(vm,x);
         vm := Bytecode.Push1(vm,y);
@@ -106,20 +110,19 @@ module Test {
     requires x >= y
     ensures z <= x
     {
-      var vm := EvmBerlin.InitEmpty(gas := INITGAS);
-
-      //
-      vm := Bytecode.Push1(vm,y);
-      vm := Bytecode.Push1(vm,x);
-      vm := Bytecode.Sub(vm); // x - y
-      assert vm.Peek(0) == (x as u256) - (y as u256);
-      vm := Bytecode.Push1(vm,0);
-      vm := Bytecode.MStore(vm);
-      vm := Bytecode.Push1(vm,0x1);
-      vm := Bytecode.Push1(vm,0x1F);
-      vm := Bytecode.Return(vm);
-      //  read one byte from vm.data starting at 0
-      return ByteUtils.ReadUint8(vm.data,0);
+        var vm := EVM.Init(gas := INITGAS);
+        //
+        vm := Bytecode.Push1(vm,y);
+        vm := Bytecode.Push1(vm,x);
+        vm := Bytecode.Sub(vm); // x - y
+        assert vm.Peek(0) == (x as u256) - (y as u256);
+        vm := Bytecode.Push1(vm,0);
+        vm := Bytecode.MStore(vm);
+        vm := Bytecode.Push1(vm,0x1);
+        vm := Bytecode.Push1(vm,0x1F);
+        vm := Bytecode.Return(vm);
+        //  read one byte from vm.data starting at 0
+        return ByteUtils.ReadUint8(vm.data,0);
     }
 
     // ===========================================================================
@@ -134,7 +137,7 @@ module Test {
         ensures !revert <==> (z <= x)
     {
         // var tx := Context.Create(0xabc,0xdef,0,[],0);
-        var vm := EvmBerlin.InitEmpty(
+        var vm := EVM.Init(
             gas := INITGAS,
             code := [
                 PUSH1, x,

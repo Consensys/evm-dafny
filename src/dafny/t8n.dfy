@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "evms/berlin.dfy"
+include "evm.dfy"
 include "core/precompiled.dfy"
 
  module t8n {
@@ -23,7 +23,8 @@ include "core/precompiled.dfy"
     import Context
     import SubState
     import EvmState
-    import EvmBerlin
+    import EvmFork
+    import EVM
     import Optional
     import Stack
     import Memory
@@ -65,7 +66,7 @@ include "core/precompiled.dfy"
         var sender := 254;
         var origin := 243;
         var recipient := 221;
-        var callValue := 1;
+        var callValue := 1 as u256;
         var callData : seq<u8> := [12];
         var writePermission := true;
         var gasPrice := 12;
@@ -87,7 +88,7 @@ include "core/precompiled.dfy"
 
         var depth := 0;
 
-        var st := EvmState.Call(worldState, context, Precompiled.DEFAULT, substate, recipient, callValue, gasAvailable, depth);
+        var st := EvmState.Call(worldState, context, EvmFork.BERLIN, Precompiled.DEFAULT, substate, recipient, callValue, gasAvailable, depth);
 
         MessageCall(sender, origin, recipient, callValue, callData, writePermission, gasPrice, blockInfo, accounts, gasAvailable);
 
@@ -116,7 +117,7 @@ include "core/precompiled.dfy"
         ss := ss.AccountAccessed(sender);
         ss := ss.AccountAccessed(recipient);
         ws := ws.IncNonce(sender);
-        var st := EvmState.Call(ws, ctx, Precompiled.DEFAULT, ss, recipient, callValue, gas, 1);
+        var st := EvmState.Call(ws, ctx, EvmFork.BERLIN, Precompiled.DEFAULT, ss, recipient, callValue, gas, 1);
         st := Run(0, st);
         if st.RETURNS? {
 
@@ -151,7 +152,7 @@ include "core/precompiled.dfy"
         st := st0;
         while (st.EXECUTING?){
             TracerStep(depth, st);
-            st := EvmBerlin.Execute(st);
+            st := EVM.Execute(st);
             match st
                 case CONTINUING(cc) => {
                     if cc.CALLS? {

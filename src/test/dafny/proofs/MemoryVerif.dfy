@@ -13,6 +13,7 @@
  */
 
 include "../../../dafny/bytecode.dfy"
+include "../../../dafny/evm.dfy"
 include "../../../dafny/gas.dfy"
 
 /**
@@ -23,6 +24,7 @@ abstract module MemoryVerif_01 {
   import opened Int
   import opened Opcode
   import Bytecode
+  import EVM
   import opened EvmState
   import ByteUtils
 
@@ -89,7 +91,7 @@ abstract module MemoryVerif_01 {
 
     //  address is in range, no expansion
     if address as nat + 31 < vm.MemSize() {
-      var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+      var r := Bytecode.MStore(EVM.DeductGas(MSTORE, vm));
       assert vm.MemSize() == r.MemSize();
       assert r.Gas() == vm.Gas() - Gas.G_VERYLOW;
     }
@@ -104,7 +106,7 @@ abstract module MemoryVerif_01 {
         var exCost := Gas.ExpansionSize(vm.evm.memory, address as nat, 32);
         assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
-        var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+        var r := Bytecode.MStore(EVM.DeductGas(MSTORE, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + (Gas.G_MEMORY * 32 + 2) / 32);
     }
 
@@ -117,7 +119,7 @@ abstract module MemoryVerif_01 {
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address as nat, 32);
         assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
-        var r := Bytecode.MStore(Gas.GasBerlin(MSTORE, vm));
+        var r := Bytecode.MStore(EVM.DeductGas(MSTORE, vm));
         assert Memory.SmallestLarg32(address + 31) == 64;
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
@@ -177,7 +179,7 @@ abstract module MemoryVerif_01 {
 
     //  address is in range, no expansion
     if address + 31 < vm.MemSize() {
-      var r := Bytecode.MLoad(Gas.GasBerlin(MLOAD, vm));
+      var r := Bytecode.MLoad(EVM.DeductGas(MLOAD, vm));
       assert r.Gas() == vm.Gas() - Gas.G_VERYLOW;
     }
 
@@ -191,7 +193,7 @@ abstract module MemoryVerif_01 {
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, 32);
         assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
-        var r := Bytecode.MLoad(Gas.GasBerlin(MLOAD, vm));
+        var r := Bytecode.MLoad(EVM.DeductGas(MLOAD, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + (Gas.G_MEMORY * 32 + 2) / 32);
     }
 
@@ -204,7 +206,7 @@ abstract module MemoryVerif_01 {
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, 32);
         assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
-        var r := Bytecode.MLoad(Gas.GasBerlin(MSTORE, vm));
+        var r := Bytecode.MLoad(EVM.DeductGas(MSTORE, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
 
@@ -219,7 +221,7 @@ abstract module MemoryVerif_01 {
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, 32);
         assert exCost == ((Gas.G_MEMORY * 128 + (128 * 128) / 512) / 32) -
           ((Gas.G_MEMORY * k + k * k / 512 ) / 32);
-        var r := Bytecode.MLoad(Gas.GasBerlin(MLOAD, vm));
+        var r := Bytecode.MLoad(EVM.DeductGas(MLOAD, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_VERYLOW + exCost);
     }
   }
@@ -235,7 +237,7 @@ abstract module MemoryVerif_01 {
 
     //  address is in range, no expansion
     if address + len < vm.MemSize() {
-      var r := Bytecode.Return(Gas.GasBerlin(RETURN, vm));
+      var r := Bytecode.Return(EVM.DeductGas(RETURN, vm));
       assert r.Gas() == vm.Gas() - Gas.G_ZERO;
     }
 
@@ -249,7 +251,7 @@ abstract module MemoryVerif_01 {
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
         assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
-        var r := Bytecode.Return(Gas.GasBerlin(RETURN, vm));
+        var r := Bytecode.Return(EVM.DeductGas(RETURN, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }
 
@@ -262,7 +264,7 @@ abstract module MemoryVerif_01 {
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
         assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
-        var r := Bytecode.Return(Gas.GasBerlin(RETURN, vm));
+        var r := Bytecode.Return(EVM.DeductGas(RETURN, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }
   }
@@ -278,7 +280,7 @@ abstract module MemoryVerif_01 {
 
     //  address is in range, no expansion
     if address + len < vm.MemSize() {
-      var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
+      var r := Bytecode.Revert(EVM.DeductGas(REVERT, vm));
       assert r.Gas() == vm.Gas() - Gas.G_ZERO;
     }
 
@@ -292,7 +294,7 @@ abstract module MemoryVerif_01 {
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
         assert exCost == (Gas.G_MEMORY * 32 + 2) / 32;
 
-        var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
+        var r := Bytecode.Revert(EVM.DeductGas(REVERT, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }
 
@@ -305,7 +307,7 @@ abstract module MemoryVerif_01 {
         assert ex == 64;
         var exCost := Gas.ExpansionSize(vm.evm.memory, address, len);
         assert exCost == ((Gas.G_MEMORY * 64 + 8) / 32) - ((Gas.G_MEMORY * 32 + 2) / 32);
-        var r := Bytecode.Revert(Gas.GasBerlin(REVERT, vm));
+        var r := Bytecode.Revert(EVM.DeductGas(REVERT, vm));
         assert r.Gas() == vm.Gas() - (Gas.G_ZERO + exCost);
     }
   }

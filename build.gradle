@@ -40,7 +40,7 @@ def DAFNY_HOME = System.env.'DAFNY_HOME'
 def Z3_PATH = DAFNY_HOME != null ? DAFNY_HOME + "/z3/bin/z3-4.8.5" : null
 
 if(project.hasProperty("solver-path")) {
-  Z3_PATH = project.properties["solver-path"]				       
+  Z3_PATH = project.properties["solver-path"]
 }
 
 // Configure option for use with dafny command
@@ -104,7 +104,7 @@ task verifyDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args DAFNY4_VERIFY_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+            args DAFNY4_VERIFY_FLAGS + ['src/dafny/evm.dfy']
         }
     }
 }
@@ -122,7 +122,7 @@ task compileDafny {
         // Generate Dafny Source
         exec {
             executable 'dafny'
-            args DAFNY4_BUILD_FLAGS + ['src/dafny/evm.dfy','src/dafny/evms/berlin.dfy']
+            args DAFNY4_BUILD_FLAGS + ['src/dafny/evm.dfy']
         }
     }
 }

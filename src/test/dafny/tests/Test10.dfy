@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
 include "../utils.dfy"
 
 /** Provide some tests to check some qualitative properties of bytecode.
@@ -24,7 +24,7 @@ module Test10 {
 
     import opened Int
     import opened Bytecode
-    import opened EvmBerlin
+    import opened EVM
     import opened EvmState
     import opened Opcode
     import Stack
@@ -37,7 +37,7 @@ module Test10 {
     method {:test} main1()
     {
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(0);
+        var vm := EVM.Init(0);
 
         var a: u8 := 0x01;
         var b: u8 := 0x02;
@@ -62,7 +62,7 @@ module Test10 {
     method  main2(c: u8)
     {
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(0);
+        var vm := EVM.Init(0);
 
         var a: u8 := 0x01;
         var b : u8 := 0x02;
@@ -95,7 +95,7 @@ module Test10 {
         var b : u8 := 0x02;
 
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(0);
+        var vm := EVM.Init(0);
 
         vm := Push1(vm, c);
         ghost var g := vm.GetStack();
@@ -132,7 +132,7 @@ module Test10 {
     method main4a(c: u8)
     {
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(0);
+        var vm := EVM.Init(0);
 
         var count: u8 := c;
 
@@ -172,7 +172,7 @@ module Test10 {
     method main4aa(c: u8)
     {
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(0);
+        var vm := EVM.Init(0);
         ghost var count: u8 := 0;
 
         vm := Push1(vm, 0); //  [0]
@@ -222,7 +222,7 @@ module Test10 {
     method main5(c: u8)
     {
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(0);
+        var vm := EVM.Init(0);
 
         var a: u8 := 0x01;
         var b : u8 := 0x02;

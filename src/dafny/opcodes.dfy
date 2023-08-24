@@ -72,6 +72,7 @@ module Opcode {
 	const GASLIMIT : u8 := 0x45
     const CHAINID : u8 := 0x46
     const SELFBALANCE : u8 := 0x47
+    const BASEFEE : u8 := 0x48
 	// 50s: Stack, Memory Storage and Flow Operations
 	const POP : u8 := 0x50
 	const MLOAD : u8 := 0x51

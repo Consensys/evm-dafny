@@ -13,7 +13,7 @@
  */
 package dafnyevm;
 
-import static EvmBerlin.__default.Execute;
+import static EVM.__default.Execute;
 
 import java.math.BigInteger;
 
@@ -34,6 +34,7 @@ import EvmState.State_CONTINUING;
 import EvmState.State_ERROR;
 import EvmState.State_EXECUTING;
 import EvmState.State_RETURNS;
+import static EvmFork.__default.BERLIN;
 import Optional.Option;
 import WorldState.Account;
 import dafny.DafnyMap;
@@ -218,7 +219,7 @@ public class DafnyEvm {
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
 	        // Begin the call.
-	        st = EvmState.__default.Call(ws, ctx, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
+	        st = EvmState.__default.Call(ws, ctx, BERLIN(), NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
 	    } else {
 	        // Contract creation
@@ -231,7 +232,7 @@ public class DafnyEvm {
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
 	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
 	        // Begin the call.
-	        st = EvmState.__default.Create(ws, ctx, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
+	        st = EvmState.__default.Create(ws, ctx, BERLIN(), NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
 	    if(st instanceof State_EXECUTING) {

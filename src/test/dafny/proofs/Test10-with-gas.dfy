@@ -12,7 +12,7 @@
  * under the License.
  */
 
-include "../../../dafny/evms/berlin.dfy"
+include "../../../dafny/evm.dfy"
 
 /** Provide some tests to check some quantitative properties of bytecode.
  *
@@ -23,7 +23,7 @@ module Test10Gas {
 
     import opened Int
     import opened Bytecode
-    import opened EvmBerlin
+    import opened EVM
     import opened Gas
     import Stack
 
@@ -36,7 +36,7 @@ module Test10Gas {
         requires g >= 2*G_VERYLOW + 2*G_LOW
     {
         // Initialise VM with g  gas unit.
-        var vm := InitEmpty(g);
+        var vm := Init(g);
         var a: u8 := 0x01;
         var b: u8 := 0x02;
 
@@ -64,7 +64,7 @@ module Test10Gas {
         requires g >= c as nat * (3 * G_VERYLOW + G_BASE)
     {
         // Initialise VM
-        var vm := InitEmpty(g);
+        var vm := Init(g);
         var a: u8 := 0x01;
         var b : u8 := 0x02;
         var count: u8 := c;
@@ -99,7 +99,7 @@ module Test10Gas {
         var b : u8 := 0x02;
 
         // Initialise Bytecode
-        var vm := InitEmpty(g);
+        var vm := Init(g);
 
         vm := Push1(vm, c).UseGas(G_VERYLOW);
         ghost var count : u256 := c as u256;
@@ -138,7 +138,7 @@ module Test10Gas {
         requires g >= 2*G_VERYLOW + c as nat * (7*G_VERYLOW + G_BASE) + G_BASE
     {
         // Initialise VM
-        var vm := EvmBerlin.InitEmpty(g);
+        var vm := EVM.Init(g);
         ghost var count: u8 := 0;
 
         vm := Push1(vm, 0).UseGas(G_VERYLOW); //  [0]
@@ -176,7 +176,7 @@ module Test10Gas {
         requires g >= G_BASE + 4 * G_VERYLOW + c as nat * (2 * G_BASE + 9 * G_VERYLOW)
     {
         // Initialise Bytecode
-        var vm := InitEmpty(g);
+        var vm := Init(g);
 
         var a: u8 := 0x01;
         var b : u8 := 0x02;

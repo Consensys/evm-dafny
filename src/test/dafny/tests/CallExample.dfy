@@ -1,13 +1,12 @@
 // An set of examples illustrating contract calls.
 include "../../../dafny/evm.dfy"
-include "../../../dafny/evms/berlin.dfy"
 include "../utils.dfy"
 
 module CallExamples {
     import opened Int
     import opened Opcode
     import opened Memory
-    import EvmBerlin
+    import EVM
     import WorldState
     import opened Bytecode
     import opened Utils
@@ -20,7 +19,7 @@ module CallExamples {
         // This is an absolutely minimal example of a contract call where the
         // called contract just stops.  Since the called contract stopped
         // successfully, we can at least check the exit code.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
+        var vm1 := EVM.Init(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
         vm1 := Push1(vm1,0x0); // Out size
         vm1 := Dup(vm1,1);     // Out offset
         vm1 := Dup(vm1,1);     // In size
@@ -44,7 +43,7 @@ module CallExamples {
     method {:test} test_call_02() {
         // This is another simple example of a contract call where the called
         // contract raises an exception.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
+        var vm1 := EVM.Init(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
         vm1 := Push1(vm1,0x0); // Out size
         vm1 := Dup(vm1,1);     // Out offset
         vm1 := Dup(vm1,1);     // In size
@@ -71,7 +70,7 @@ module CallExamples {
     method {:test} test_call_03() {
         // This is another simple example of a contract call where the called
         // contract returns some return data.
-        var vm1 := EvmBerlin.InitEmpty(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
+        var vm1 := EVM.Init(gas := INITGAS).CreateAccount(0xccc,0,0,map[],[STOP]);
         vm1 := Push1(vm1,0x20);  // Out size
         vm1 := Push1(vm1,0x0);   // Out offset
         vm1 := Dup(vm1,1);       // In size
