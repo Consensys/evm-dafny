@@ -202,7 +202,7 @@ dependencies {
     implementation("org.web3j:utils:5.0.0")
     implementation("org.web3j:rlp:5.0.0")
     implementation("org.web3j:crypto:5.0.0")
-    implementation("org.whiley:evmtools:0.3.26")
+    implementation("org.whiley:evmtools:0.3.27")
     implementation("org.dafny:DafnyRuntime:4.2.0")
     implementation files('build/libs/evm.jar')
     //
@@ -232,8 +232,8 @@ task testgen(type: JavaExec) {
     jvmArgs '-Xmx2G','-Xss4m'
     // arguments to pass to the application
     args '-incremental'
-    args '-fork'
-    args 'Berlin'
+    args '-forks'
+    args 'Berlin,London'
     args '-dir'
     args 'fixtures'
     args '-out'
