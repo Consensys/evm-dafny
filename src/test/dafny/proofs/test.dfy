@@ -81,26 +81,26 @@ module Test {
         assert vm.data  == [x];
     }
 
-    /**
-     *  Add two values `x` and `y` and return result in `z`.
-     */
-    method Test_IR_02(x: u8, y: u8) returns (z:u16)
+    function Test_IR_02b(x: u8, y: u8) : (z:u16)
       ensures z == (x as u16) + (y as u16)
     {
-        var vm := EVM.Init(gas := INITGAS);
+        var xpy := (x as u256) + (y as u256);
+        var vm0 := EVM.Init(gas := INITGAS);
         //
-        vm := Bytecode.Push1(vm,x);
-        vm := Bytecode.Push1(vm,y);
-        vm := Bytecode.Add(vm);
-        assert vm.Peek(0) == (x as u256) + (y as u256);
-        vm := Bytecode.Push1(vm,0);
-        vm := Bytecode.MStore(vm);
-        assert vm.Read(0) == (x as u256) + (y as u256);
-        vm := Bytecode.Push1(vm,0x2);
-        vm := Bytecode.Push1(vm,0x1E);
-        vm := Bytecode.Return(vm);
+        var vm1 := Bytecode.Push1(vm0,x);
+        var vm2 := Bytecode.Push1(vm1,y);
+        var vm3 := Bytecode.Add(vm2);
+        assert vm3.EXECUTING?;
+        assert vm3.Peek(0) == xpy;
+        var vm4 := Bytecode.Push1(vm3,0);
+        var vm5 := Bytecode.MStore(vm4);
+        assert vm5.EXECUTING?;
+        assert vm5.Read(0) == xpy;
+        var vm6 := Bytecode.Push1(vm5,0x2);
+        var vm7 := Bytecode.Push1(vm6,0x1E);
+        var vm8 := Bytecode.Return(vm7);
         // read 2 bytes from vm.data starting at 0
-        return ByteUtils.ReadUint16(vm.data,0);
+        ByteUtils.ReadUint16(vm8.data,0)
     }
 
     /**
@@ -123,6 +123,28 @@ module Test {
         vm := Bytecode.Return(vm);
         //  read one byte from vm.data starting at 0
         return ByteUtils.ReadUint8(vm.data,0);
+    }
+
+    /**
+     *  Subtract `y` from `x` and return result in `z`.
+     */
+    function Test_IR_03b(x: u8, y: u8) : (z:u8)
+    requires x >= y
+    ensures z <= x
+    {
+        var vm0 := EVM.Init(gas := INITGAS);
+        //
+        var vm1 := Bytecode.Push1(vm0,y);
+        var vm2 := Bytecode.Push1(vm1,x);
+        var vm3 := Bytecode.Sub(vm2); // x - y
+        assert vm3.Peek(0) == (x as u256) - (y as u256);
+        var vm4 := Bytecode.Push1(vm3,0);
+        var vm5 := Bytecode.MStore(vm4);
+        var vm6 := Bytecode.Push1(vm5,0x1);
+        var vm7 := Bytecode.Push1(vm6,0x1F);
+        var vm8 := Bytecode.Return(vm7);
+        //  read one byte from vm.data starting at 0
+        ByteUtils.ReadUint8(vm8.data,0)
     }
 
     // ===========================================================================

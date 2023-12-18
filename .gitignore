@@ -9,6 +9,7 @@
 *.dll.*
 *.exe
 *.mdb
+*.jar
 
 # Linker output
 *.ilk
@@ -76,3 +77,7 @@ src/test/dafny/**/*.runtimeconfig.json
 
 /bin/
 **/.vscode
+*~
+.classpath
+.project
+.settings

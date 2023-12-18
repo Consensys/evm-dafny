@@ -35,11 +35,11 @@ import EvmState.State_ERROR;
 import EvmState.State_EXECUTING;
 import EvmState.State_RETURNS;
 import static EvmFork.__default.BERLIN;
-import Optional.Option;
 import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
+import dafny.TypeDescriptor;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
 import evmtools.util.Hex;
@@ -347,7 +347,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public static BigInteger addr(BigInteger sender, BigInteger nonce) {
-		byte[] hash = addr(sender,nonce,new Optional.Option_None<>(),null);
+		byte[] hash = addr(sender,nonce,new Optional.Option_None<>(TypeDescriptor.BIG_INTEGER),null);
 		return new BigInteger(1,hash);
 	}
 
