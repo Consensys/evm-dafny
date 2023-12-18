@@ -347,7 +347,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public static BigInteger addr(BigInteger sender, BigInteger nonce) {
-		byte[] hash = addr(sender,nonce,new Optional.Option_None<>(TypeDescriptor.BIG_INTEGER),null);
+		byte[] hash = addr(sender,nonce,new Optional.Option_None<>(),null);
 		return new BigInteger(1,hash);
 	}
 
