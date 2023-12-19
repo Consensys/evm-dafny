@@ -39,7 +39,7 @@ module EVM {
     requires |code| <= Code.MAX_CODE_SIZE
     requires |stk| <= 1024
     {
-        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0));
+        var tx := Context.Create(0,0,0,0,[],true,0,Context.Block.Info(0,0,0,0,0,0,0));
         Create(fork, tx, map[0:=WorldState.DefaultAccount()], gas, code, Precompiled.DEFAULT, stk)
     }
 

@@ -35,11 +35,11 @@ import EvmState.State_ERROR;
 import EvmState.State_EXECUTING;
 import EvmState.State_RETURNS;
 import static EvmFork.__default.BERLIN;
+import static EvmFork.__default.LONDON;
 import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
-import dafny.TypeDescriptor;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
 import evmtools.util.Hex;
@@ -78,7 +78,10 @@ public class DafnyEvm {
 	 */
 	private Tracer tracer = DEFAULT_TRACER;
 
-
+	/**
+	 * Fork defines which environment to execute contract code within.
+	 */
+	private EvmFork.Fork fork = BERLIN();
 	/**
 	 * Native implementation of precompiled contracts.
 	 */
@@ -103,6 +106,31 @@ public class DafnyEvm {
 	 */
 	public DafnyEvm tracer(Tracer tracer) {
 		this.tracer = tracer;
+		return this;
+	}
+
+	/**
+	 * Set the fork to use during executing of this EVM.
+	 * @param forkStr
+	 * @return
+	 */
+	public DafnyEvm fork(String forkStr) {
+		EvmFork.Fork fork;
+		switch(forkStr.toUpperCase()) {
+		case "BERLIN":
+			fork = BERLIN();
+			break;
+		case "LONDON":
+			fork = LONDON();
+			break;
+		default:
+			throw new IllegalArgumentException("invalid fork: \"" + forkStr + "\"");
+		}
+		return fork(fork);
+	}
+
+	public DafnyEvm fork(EvmFork.Fork fork) {
+		this.fork = fork;
 		return this;
 	}
 
@@ -219,7 +247,7 @@ public class DafnyEvm {
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
 	        // Begin the call.
-	        st = EvmState.__default.Call(ws, ctx, BERLIN(), NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
+	        st = EvmState.__default.Call(ws, ctx, fork, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
 	    } else {
 	        // Contract creation
@@ -232,7 +260,7 @@ public class DafnyEvm {
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
 	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
 	        // Begin the call.
-	        st = EvmState.__default.Create(ws, ctx, BERLIN(), NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
+	        st = EvmState.__default.Create(ws, ctx, fork, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
 	    if(st instanceof State_EXECUTING) {
@@ -824,6 +852,10 @@ public class DafnyEvm {
 		 * Current chain ID (Ethereum mainnet == 1).
 		 */
 		public final BigInteger chainID;
+		/**
+		 * Current base fee per gas (EIP1559)
+		 */
+		public final BigInteger baseFee;
 
 		public BlockInfo() {
 			this.coinBase = BigInteger.ONE;
@@ -832,16 +864,18 @@ public class DafnyEvm {
 			this.difficulty = BigInteger.ONE;
 			this.gasLimit = BigInteger.ONE;
 			this.chainID = BigInteger.ONE;
+			this.baseFee = BigInteger.ONE;
 		}
 
 		private BlockInfo(BigInteger coinBase, BigInteger timeStamp, BigInteger number, BigInteger difficulty,
-				BigInteger gasLimit, BigInteger chainID) {
+				BigInteger gasLimit, BigInteger chainID, BigInteger baseFee) {
 			this.coinBase = coinBase;
 			this.timeStamp = timeStamp;
 			this.number = number;
 			this.difficulty = difficulty;
 			this.gasLimit = gasLimit;
 			this.chainID = chainID;
+			this.baseFee = baseFee;
 		}
 
 		/**
@@ -855,7 +889,7 @@ public class DafnyEvm {
 		 * Set block's beneficiary address.
 		 */
 		public BlockInfo coinBase(BigInteger v) {
-			return new BlockInfo(v, timeStamp, number, difficulty, gasLimit, chainID);
+			return new BlockInfo(v, timeStamp, number, difficulty, gasLimit, chainID, baseFee);
 		}
 
 		/**
@@ -869,7 +903,7 @@ public class DafnyEvm {
 		 * Set block's timestamp.
 		 */
 		public BlockInfo timeStamp(BigInteger v) {
-			return new BlockInfo(coinBase, v, number, difficulty, gasLimit, chainID);
+			return new BlockInfo(coinBase, v, number, difficulty, gasLimit, chainID, baseFee);
 		}
 
 		/**
@@ -883,7 +917,7 @@ public class DafnyEvm {
 		 * Set block's number.
 		 */
 		public BlockInfo number(BigInteger v) {
-			return new BlockInfo(coinBase, timeStamp, v, difficulty, gasLimit, chainID);
+			return new BlockInfo(coinBase, timeStamp, v, difficulty, gasLimit, chainID, baseFee);
 		}
 
 		/**
@@ -897,7 +931,7 @@ public class DafnyEvm {
 		 * Set block's difficulty.
 		 */
 		public BlockInfo difficulty(BigInteger v) {
-			return new BlockInfo(coinBase, timeStamp, number, v, gasLimit, chainID);
+			return new BlockInfo(coinBase, timeStamp, number, v, gasLimit, chainID, baseFee);
 		}
 
 		/**
@@ -911,7 +945,7 @@ public class DafnyEvm {
 		 * Set block's gas limit.
 		 */
 		public BlockInfo gasLimit(BigInteger v) {
-			return new BlockInfo(coinBase, timeStamp, number, difficulty, v, chainID);
+			return new BlockInfo(coinBase, timeStamp, number, difficulty, v, chainID, baseFee);
 		}
 
 		/**
@@ -925,7 +959,21 @@ public class DafnyEvm {
 		 * Set chain ID.
 		 */
 		public BlockInfo chainID(BigInteger v) {
-			return new BlockInfo(coinBase, timeStamp, number, difficulty, gasLimit, v);
+			return new BlockInfo(coinBase, timeStamp, number, difficulty, gasLimit, v, baseFee);
+		}
+
+		/**
+		 * Set base fee.
+		 */
+		public BlockInfo baseFee(long v) {
+			return this.baseFee(BigInteger.valueOf(v));
+		}
+
+		/**
+		 * Set base fee.
+		 */
+		public BlockInfo baseFee(BigInteger v) {
+			return new BlockInfo(coinBase, timeStamp, number, difficulty, gasLimit, chainID, v);
 		}
 
 		/**
@@ -933,7 +981,7 @@ public class DafnyEvm {
 		 * @return
 		 */
 		public Context.Block toDafny() {
-			return new Context.Block(coinBase, timeStamp, number, difficulty, gasLimit, chainID);
+			return new Context.Block(coinBase, timeStamp, number, difficulty, gasLimit, chainID, baseFee);
 		}
 	}
 

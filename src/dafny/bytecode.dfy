@@ -1079,13 +1079,13 @@ module Bytecode {
 
     /**
      * Returns the value of the base fee for the currently executing block.
+     * This bytecode was added as part of EIP3198.
      */
     function BaseFee(st: ExecutingState): (st': State)
     {
         if st.Capacity() >= 1
         then
-            // NOTE: needs to be implemented properly!
-            st.Push(0).Next()
+            st.Push(st.evm.context.block.baseFee).Next()
         else
             ERROR(STACK_OVERFLOW)
     }

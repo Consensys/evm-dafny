@@ -36,7 +36,9 @@ module Context {
         // Current block's gas limit.
         gasLimit: u256,
         // Current chain ID.
-        chainID: u256
+        chainID: u256,
+        // Base fee per gas (EIP1559)
+        baseFee: u256
     )
 
     // =============================================================================
@@ -123,5 +125,5 @@ module Context {
     }
 
     // A simple witness of the Context datatype.
-    const DEFAULT : T := Create(0,0,0,0,[],true,0,Block.Info(0,0,0,0,0,0))
+    const DEFAULT : T := Create(0,0,0,0,[],true,0,Block.Info(0,0,0,0,0,0,0))
 }
