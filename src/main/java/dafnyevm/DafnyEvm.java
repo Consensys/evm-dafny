@@ -347,7 +347,7 @@ public class DafnyEvm {
 	 * @return
 	 */
 	public static BigInteger addr(BigInteger sender, BigInteger nonce) {
-		byte[] hash = addr(sender,nonce,new Optional.Option_None<>(),null);
+		byte[] hash = addr(sender,nonce,null,null);
 		return new BigInteger(1,hash);
 	}
 
@@ -366,11 +366,7 @@ public class DafnyEvm {
 			DafnySequence<? extends Byte> initCode) {
 		byte[] bytes;
 		//
-		if (salt instanceof Optional.Option_None) {
-			// Case for CREATE
-			bytes = new Uint160(sender).getBytes();
-			bytes = RlpEncoder.encode(new RlpList(RlpString.create(bytes),RlpString.create(nonce)));
-		} else {
+		if (salt instanceof Optional.Option_Some) {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			byte[] code = DafnySequence.toByteArray((DafnySequence) initCode);
 			Optional.Option_Some<BigInteger> s = (Optional.Option_Some<BigInteger>) salt;
@@ -379,6 +375,10 @@ public class DafnyEvm {
 			byte[] senderBytes = new Uint160(sender).getBytes();
 			byte[] saltBytes = new Uint256(s.dtor_v()).getBytes();
 			bytes = concat(new byte[] { ff }, senderBytes, saltBytes, Hash.sha3(code));
+		} else {
+			// Case for CREATE
+			bytes = new Uint160(sender).getBytes();
+			bytes = RlpEncoder.encode(new RlpList(RlpString.create(bytes),RlpString.create(nonce)));
 		}
 		// Calculate hash.
 		byte[] hash = Hash.sha3(bytes);
