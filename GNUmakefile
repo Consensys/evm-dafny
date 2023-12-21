@@ -69,7 +69,7 @@ dafny_verify_global: $(DAFNY_VERIFY_WITNESS_GLOBAL)
 $(DAFNY_VERIFY_WITNESS_GLOBAL) : $(DAFNY_SRC_FILES)
 	@echo Verifying Dafny
 #	$(SILENCER)$(DAFNY_EXEC) /vcsLoad:2 /compile:0 /rlimit:100000 /functionSyntax:4 /quantifierSyntax:4 $(DAFNY_ARGS) $(DAFNY_SRC_FILES)
-	$(SILENCER)$(DAFNY_EXEC) verify $(DAFNY_ARGS) --verify-included-files --resource-limit 100000 $(DAFNY_SRC_FILES)
+	$(SILENCER)$(DAFNY_EXEC) verify $(DAFNY_ARGS) --verify-included-files --resource-limit 1000000 $(DAFNY_SRC_FILES)
 	$(SILENCER)mkdir -p $(DAFNY_OUT_DIR)
 	$(SILENCER)touch $@
 
@@ -113,7 +113,7 @@ dafny_translate: $(DAFNY_OUT_FILENAME) # $(DAFNY_TEST_WITNESS_GLOBAL)
 
 $(DAFNY_OUT_FILENAME) : $(DAFNY_SRC_FILES)
 	@echo Translating Dafny
-	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /rlimit:100000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 $(SOLVER_OPTION) /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 #$(DAFNY_ARGS)
+	$(SILENCER)$(DAFNY_EXEC) /functionSyntax:4 /quantifierSyntax:4 /rlimit:1000000 /vcsLoad:2 /compileTarget:go /compileVerbose:0 /spillTargetCode:3 /noExterns /warnShadowing /deprecation:2 $(SOLVER_OPTION) /out:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) /compile:2 #$(DAFNY_ARGS)
 #	Dafny v4 new CLI: missing --deprecation and --noExterns
 #	$(SILENCER)$(DAFNY_EXEC) build $(DAFNY_ARGS) --no-verify --target go --warn-shadowing --test-assumptions Externs --output:$(DAFNY_OUT_ARG) $(DAFNY_SRC_ENTRY_POINT) #--deprecation 2  -noExterns
 
