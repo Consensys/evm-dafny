@@ -8,59 +8,78 @@ on:
 
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
+  build-java:
+    runs-on: ubuntu-latest    
     steps:
-      - uses: actions/checkout@v2
+        # Setup
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Install Dafny
-        uses: dafny-lang/setup-dafny-action@v1.7.0
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: adopt
+          cache: 'gradle'        
+      - uses: dafny-lang/setup-dafny-action@v1.7.0
         with:
           dafny-version: "4.4.0"
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.4.2
-
       - name: Set DAFNY_HOME
         run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV
-    
-  build-java:
-    needs: setup
-    steps:
+        # Build
       - name: Gradle Build
-        run: gradle build -Prandomize=5
-      
+        run: gradle --no-daemon build -Prandomize=5
+        # Report
       - name: Verification Logs (EVM)
         if: always()
-        run: gradle debug --args="build/logs/verify.csv"
-
+        run: gradle --no-daemon debug --args="build/logs/verify.csv"
       - name: Verification Logs (Proofs)
         if: always()
-        run: gradle debug --args="build/logs/test_*.csv"
+        run: gradle --no-daemon debug --args="build/logs/test_*.csv"
 
   build-go:
-    needs: setup
+    runs-on: ubuntu-latest    
     steps:
+        # Setup      
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dafny-lang/setup-dafny-action@v1.7.0
+        with:
+          dafny-version: "4.4.0"
+      - name: Set DAFNY_HOME
+        run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV      
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: 1.19
-
+        # Build
       - name: Makefile Build
         run: make
 
   test-z3-4-8-5:
-    needs: setup    
+    runs-on: ubuntu-latest    
     steps:
+        # Setup
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: adopt
+          cache: 'gradle'    
+      - uses: dafny-lang/setup-dafny-action@v1.7.0
+        with:
+          dafny-version: "4.4.0"
+      - name: Set DAFNY_HOME
+        run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV
+        # Build
       - name: Gradle Test
-        run: gradle test -Prandomize=5 -Psolver-path=$DAFNY_HOME/z3/bin/z3-4.8.5
-
+        run: gradle --no-daemon test -Prandomize=5 -Psolver-path=$DAFNY_HOME/z3/bin/z3-4.8.5
+        # Report
       - name: Verification Logs (EVM)
         if: always()
-        run: gradle debug --args="build/logs/verify.csv"
-
+        run: gradle --no-daemon debug --args="build/logs/verify.csv"
       - name: Verification Logs (Proofs)
         if: always()
-        run: gradle debug --args="build/logs/test_*.csv"
+        run: gradle --no-daemon debug --args="build/logs/test_*.csv"
