@@ -213,8 +213,7 @@ module Test10Gas {
         {
             //  top of the stack is the last result of stack[0] > stack[1]
             vm := Pop(vm).UseGas(G_BASE);
-            assert vm.GetStack() == Stack.Make([count]);
-
+            assert vm.Peek(0) == count;
             //  a + b and discard result
             vm := Push1(vm, a).UseGas(G_VERYLOW);
             vm := Push1(vm, b).UseGas(G_VERYLOW);

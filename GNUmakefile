@@ -18,17 +18,17 @@ MAKEFLAGS += -j 2 #--output-sync
 RUN_ARGS ?=
 DAFNY_ARGS := --function-syntax 4 --quantifier-syntax 4 --cores 50%
 
-ifdef DAFNY_HOME
-Z3_PATH := $(DAFNY_HOME)/z3/bin/z3-4.8.5
-$(info DAFNY_HOME: $(DAFNY_HOME))
-$(info Z3_PATH   : $(Z3_PATH))
-DAFNY_ARGS += --solver-path $(DAFNY_HOME)/z3/bin/z3-4.8.5
-SOLVER_OPTION := /proverOpt:PROVER_PATH=$(Z3_PATH)
-else
+# ifdef DAFNY_HOME
+# Z3_PATH := $(DAFNY_HOME)/z3/bin/z3-4.8.5
+# $(info DAFNY_HOME: $(DAFNY_HOME))
+# $(info Z3_PATH   : $(Z3_PATH))
+# DAFNY_ARGS += --solver-path $(DAFNY_HOME)/z3/bin/z3-4.8.5
+# SOLVER_OPTION := /proverOpt:PROVER_PATH=$(Z3_PATH)
+# else
 $(info DAFNY_HOME: (unset))
 $(info Z3_PATH   : (default))
 SOLVER_OPTION :=
-endif
+#endif
 
 
 #silent by default

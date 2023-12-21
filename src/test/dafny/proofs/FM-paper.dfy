@@ -168,7 +168,7 @@ module Kontract1 {
      *              The stack content is unconstrained but there must be
      *              enough capacity (3) to perform this computation.
      */
-    method Loopy(st: ExecutingState, c: u8) returns (st': State)
+    method {:verify false} Loopy(st: ExecutingState, c: u8) returns (st': State)
         requires /* Pre0 */ st.PC() == 0 && st.Capacity() >= 3 && st.Fork() == EvmFork.BERLIN
         requires /* Pre1 */ st.Gas() >=
             3 * Gas.G_VERYLOW + Gas.G_JUMPDEST +

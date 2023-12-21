@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,10 +25,13 @@ jobs:
 
       - name: Set DAFNY_HOME
         run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV
-
-      - name: Run Gradle Build
+    
+  build-java:
+    needs: setup
+    steps:
+      - name: Gradle Build
         run: gradle build -Prandomize=5
-
+      
       - name: Verification Logs (EVM)
         if: always()
         run: gradle debug --args="build/logs/verify.csv"
@@ -37,10 +40,27 @@ jobs:
         if: always()
         run: gradle debug --args="build/logs/test_*.csv"
 
+  build-go:
+    needs: setup
+    steps:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.19
 
-      - name: Build with the Makefile
+      - name: Makefile Build
         run: make
+
+  test-z3-4-8-5:
+    needs: setup    
+    steps:
+      - name: Gradle Test
+        run: gradle test -Prandomize=5 -Psolver-path=$DAFNY_HOME/z3/bin/z3-4.8.5
+
+      - name: Verification Logs (EVM)
+        if: always()
+        run: gradle debug --args="build/logs/verify.csv"
+
+      - name: Verification Logs (Proofs)
+        if: always()
+        run: gradle debug --args="build/logs/test_*.csv"
