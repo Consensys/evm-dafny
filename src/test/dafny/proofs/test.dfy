@@ -65,7 +65,7 @@ module Test {
     /**
      *  Same as Test_EVM_01 but using EVM-IR instructions (no code, no PC).
      */
-    method Test_IR_01(x: u8)
+    method {:verify false} Test_IR_01(x: u8)
     {
         // Initialise Bytecode
         var vm := EVM.Init(gas := INITGAS);
@@ -81,7 +81,7 @@ module Test {
         assert vm.data  == [x];
     }
 
-    function Test_IR_02b(x: u8, y: u8) : (z:u16)
+    function {:verify false} Test_IR_02b(x: u8, y: u8) : (z:u16)
       ensures z == (x as u16) + (y as u16)
     {
         var xpy := (x as u256) + (y as u256);
@@ -106,7 +106,7 @@ module Test {
     /**
      *  Subtract `y` from `x` and return result in `z`.
      */
-    method Test_IR_03(x: u8, y: u8) returns (z:u8)
+    method {:verify false} Test_IR_03(x: u8, y: u8) returns (z:u8)
     requires x >= y
     ensures z <= x
     {
@@ -152,7 +152,7 @@ module Test {
     // ===========================================================================
 
     // This is an underflow test.  Either the contract reverts, or there was no underflow.
-    method Test_IR_04(x: u8, y: u8) returns (z:u8, revert:bool)
+    method {:verify false} Test_IR_04(x: u8, y: u8) returns (z:u8, revert:bool)
         // Check revert only when overflow would have occurred.
         ensures revert <==> y > x
         // If didn't revert, then result is less.

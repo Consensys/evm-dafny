@@ -36,8 +36,8 @@ if(project.hasProperty("randomize")) {
 // ======================================================================
 
 def DAFNY_HOME = System.env.'DAFNY_HOME'
-// Configure Z3_PATH based on DAFNY_HOME
-def Z3_PATH = DAFNY_HOME != null ? DAFNY_HOME + "/z3/bin/z3-4.8.5" : null
+// Use default Z3 version
+def Z3_PATH = null
 
 if(project.hasProperty("solver-path")) {
   Z3_PATH = project.properties["solver-path"]

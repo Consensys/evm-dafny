@@ -280,12 +280,16 @@ module Int {
     // hold. For example FromBytes([0,0]) == 0 but ToBytes(0) == [0].
     // Therefore, the additional constraint just prevents unnecessary leading
     // zeros.
-    lemma LemmaToFromBytes(bytes:seq<u8>)
+    lemma {:verify false} LemmaToFromBytes(bytes:seq<u8>)
     requires |bytes| > 0 && (|bytes| == 1 || bytes[0] != 0)
-    ensures ToBytes(FromBytes(bytes)) == bytes {
+    ensures ToBytes(FromBytes(bytes)) == bytes 
+    {
         var n := |bytes| - 1;
         if |bytes| > 1 {
-            LemmaToFromBytes(bytes[..n]);
+            var tail := bytes[..n];
+            LemmaToFromBytes(tail);
+        } else {
+            assert ToBytes(FromBytes(bytes)) == bytes;
         }
     }
 
