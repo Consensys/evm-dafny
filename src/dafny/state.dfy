@@ -863,14 +863,14 @@ module EvmState {
                     // NOTE: only in the event of a REVERT should the return data be passed back.
                     if vm.IsRevert() then nst.Refund(vm.gas).SetReturnData(vm.data)
                     else nst
-                else
+                else 
                     assert vm.world.Exists(evm.context.address);
                     // Calculate the deposit cost
                     var depositcost := G_CODEDEPOSIT * |vm.data|;
                     // Check code within permitted bounds
                     if |vm.data| > Code.MAX_CODE_SIZE then st.Push(0)
                     // Enforce EIP-3541 "Reject new contract code starting with the 0xEF byte"
-                    // else if |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0)
+                    else if this.evm.fork.IsActive(3541) && |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0)
                     // Check sufficient gas for deposit
                     else if vm.gas < depositcost then st.Push(0)
                     else
