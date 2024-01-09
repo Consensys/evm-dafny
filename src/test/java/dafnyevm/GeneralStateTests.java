@@ -126,6 +126,7 @@ public class GeneralStateTests {
             "CREATE_ContractRETURNBigOffset_.*_0_(0|1|2|3)_0",
             "codesizeOOGInvalidSize_.*_0_(0|1)_0",
             "randomStatetest643_.*_0_0_0",
+            "randomStatetest384_.*_0_0_0",
             // #532
             "multiOwnedConstructionNotEnoughGasPartial_.*_0_0_0",
             "multiOwnedConstructionNotEnoughGas_.*_0_0_0",

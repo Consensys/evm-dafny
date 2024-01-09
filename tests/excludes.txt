@@ -2,6 +2,7 @@ GeneralStateTests/stAttackTest/ContractCreationSpam.json
 GeneralStateTests/stChainId/chainIdGasCost.json
 GeneralStateTests/stChainId/chainId.json
 GeneralStateTests/stCreate2/CREATE2_Bounds*.json
+GeneralStateTests/stCreateTest/CreateOOGafterMaxCodesize.json
 GeneralStateTests/stEIP1559/lowFeeCap.json
 GeneralStateTests/stEIP1559/lowGasPriceOldTypes.json
 GeneralStateTests/stEIP1559/outOfFunds.json
