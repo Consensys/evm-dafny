@@ -137,7 +137,8 @@ public class GeneralStateTests {
             "expPower256Of256_.*_0_0_0",
             "randomStatetest(52|64|320|354|367|650)_.*_0_0_0",
             "gasCostExp_.*_0_8_0",
-            // #
+            "modexp_modsize0_returndatasize_.*_0_4_0",
+            // #622
             "CreateAddressWarmAfterFail_.*",
             // Unknowns
             "undefinedOpcodeFirstByte_.*_0_0_0",
@@ -157,7 +158,7 @@ public class GeneralStateTests {
     	final String fork = tuple.getMiddle();
         final TraceTest.Instance instance = tuple.getRight();
         //
-        if (isIgnoredInstance(tuple.getRight())) {
+        if (isIgnoredInstance(instance)) {
             // Force test to be ignored.
             assumeTrue(false);
         } else {

@@ -180,7 +180,8 @@ module Precompiled {
     /**
      * Compute arbitrary precision exponentiation under modulo.  Specifically,
      * we compue B^E % M.  All words are unsigned integers in big endian format.
-     * See also EIP-2565.
+     * See also EIP-2565.  Observe that efforts are made to avoid unnecessary
+     * calculations where possible.
      */
     function CallModExp(data: Array<u8>) : Option<(Array<u8>,nat)> {
         // Length of B
@@ -189,35 +190,40 @@ module Precompiled {
         var lE := ByteUtils.ReadUint256(data,32) as nat;
         // Length of M
         var lM := ByteUtils.ReadUint256(data,64) as nat;
-        // Extract B(ase)
-        var B_bytes := Arrays.SliceAndPad(data,96,lB,0);
-        // Extract E(xponent)
-        var E_bytes := Arrays.SliceAndPad(data,96+lB,lE,0);
-        // Extract M(odulo)
-        var M_bytes := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
-        // Convert bytes to nat
-        var E := Int.FromBytes(E_bytes);
-        var B := Int.FromBytes(B_bytes);
-        var M := Int.FromBytes(M_bytes);
-        // Compute modexp
-        var modexp_array : Array<u8> := if M != 0 then
-            var modexp := MathUtils.ModPow(B,E,M);
-            var modexp_bytes := Int.ToBytes(modexp);
-            // Apply lemmas to establish |modexp_bytes| < TWO_256.
-            Int.LemmaLengthToBytes(modexp,M);
-            Int.LemmaLengthFromBytes(M,M_bytes);
-            // Make the coercion
-            ByteUtils.LeftPad(modexp_bytes,lM)
-        else
-            // To handle case where modulus is zero, the Yellow Paper specifies
-            // that we return zero.
-            seq(lM,i=>0);
-        // Compute lEp
-        var lEp := LenEp(lB,E_bytes,data);
-        // Gas calculation
-        var gascost := Int.Max(200, (f(Int.Max(lM,lB)) * Int.Max(lEp,1)) / G_QUADDIVISOR);
-        // Done
-        Some((modexp_array,gascost))
+        // Sanity check
+        var output : Array<u8> := if lB == 0 && lM == 0 then []
+            else                
+                // Extract M(odulo)
+                var M_bytes := Arrays.SliceAndPad(data,96+lB+lE,lM,0);
+                // Convert bytes to nat
+                var M := Int.FromBytes(M_bytes);        
+                // Compute modexp
+                if M != 0 then
+                    // Extract B(ase)
+                    var B_bytes := Arrays.SliceAndPad(data,96,lB,0);
+                    // Extract E(xponent)
+                    var E_bytes := Arrays.SliceAndPad(data,96+lB,lE,0);
+                    // Convert bytes to nat
+                    var E := Int.FromBytes(E_bytes);
+                    var B := Int.FromBytes(B_bytes);
+                    // Compute exponent
+                    var modexp := MathUtils.ModPow(B,E,M);
+                    var modexp_bytes := Int.ToBytes(modexp);
+                    // Apply lemmas to establish |modexp_bytes| < TWO_256.
+                    Int.LemmaLengthToBytes(modexp,M);
+                    Int.LemmaLengthFromBytes(M,M_bytes);
+                    // Make the coercion
+                    ByteUtils.LeftPad(modexp_bytes,lM)
+                else
+                    // To handle case where modulus is zero, the Yellow Paper specifies
+                    // that we return zero.
+                    seq(lM,i=>0);
+            // Compute lEp
+            var lEp := LenEp(lB,lE,data);
+            // Gas calculation
+            var gascost := Int.Max(200, (f(Int.Max(lM,lB)) * Int.Max(lEp,1)) / G_QUADDIVISOR);
+            // Done
+            Some((output,gascost))
     }
 
     /**
@@ -232,13 +238,13 @@ module Precompiled {
      * Calculation for "LenEp" (the Length of E primed) as stated in the yellow
      * paper.
      */
-    function LenEp(lB: nat, E: Array<u8>, data: Array<u8>) : nat {
-        var lE := |E|;
-        //
+    function LenEp(lB: nat, lE: nat, data: Array<u8>) : nat {
         if lE <= 32 then
+            // Extract E(xponent)
+            var E_bytes := Arrays.SliceAndPad(data,96+lB,lE,0);
             // NOTE: the following could be improved by performing the log
             // directly on the byte sequence and, hence, avoiding the coercion.
-            var w := ByteUtils.ReadUint256(ByteUtils.LeftPad(E,32),0);
+            var w := ByteUtils.ReadUint256(ByteUtils.LeftPad(E_bytes,32),0);
             // Check where we stand
             if w == 0 then 0 else U256.Log2(w)
         else
