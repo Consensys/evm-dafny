@@ -108,20 +108,16 @@ public class GeneralStateTests {
             "jumpi_.*_0_14_0",
             "jumpToPush_.*_[0-9_]*",
             // #339
-            "create2callPrecompiles_.*_0_[56]_0",
             "static_CallEcrecover0_0input_.*_0_8_0",
             "StaticcallToPrecompileFromContractInitialization_.*_0_0_0",
             "StaticcallToPrecompileFromCalledContract_.*_0_0_0",
             "StaticcallToPrecompileFromTransaction_.*_0_0_0",
             "precompsEIP2929_.*_0_(43|61|151|169|241|295)_0",
-            "idPrecomps_.*_0_[4-7]_0",
-            //"ecmul_.*",
+            "idPrecomps_.*_0_7_0",
             "ecpairing.*",
             "pairingTest.*",
-            //"pointMulAdd.*",
             // #455
-            "MSTORE_Bounds2_.*_(0|1)_0_0",
-            "modexp_.*_[0123]_(2|28|29|30|36|37)_0", // int overflow
+            "modexp_.*_[0123]_2_0", // int overflow
             // #531
             "CREATE_ContractRETURNBigOffset_.*_0_(0|1|2|3)_0",
             "codesizeOOGInvalidSize_.*_0_(0|1)_0",
@@ -140,15 +136,18 @@ public class GeneralStateTests {
             "modexp_modsize0_returndatasize_.*_0_4_0",
             // #622
             "CreateAddressWarmAfterFail_.*",
+            // #623
+            "CreateOOGFromEOARefunds.*",
+            // #624
+            "CreateTransactionHighNonce.*",
+            // #625
+            "ecrecoverWeirdV.*",
+            "ecrecoverShortBuff.*",
+            "CallEcrecover_Overflow.*",
             // Unknowns
             "undefinedOpcodeFirstByte_.*_0_0_0",
-            "CrashingTransaction_.*_0_0_0",
             "InitCollisionNonZeroNonce_.*_[0-9_]*",
             "randomStatetest353_.*_0_0_0",
-            "vitalikTransactionTest_.*_0_0_0",
-            "manualCreate_.*_0_[012]_0",
-            "CreateTransactionEOF1_.*_0_[0123]_0",
-            "Opcodes_TransactionInit_.*_0_131_0",
             "eip1559_.*_0_0_0",
             "dummy");
 
