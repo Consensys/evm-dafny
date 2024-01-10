@@ -481,7 +481,7 @@ module Gas {
         }
 
     /* computes the part of SSTORE gas cost */
-    function GasCostSSTORE(originalVal: nat, currentVal: nat, newVal: nat): nat
+    function GasCostSStore(originalVal: nat, currentVal: nat, newVal: nat): nat
         {
             if currentVal == newVal
                 then
@@ -503,7 +503,7 @@ module Gas {
      * @returns     a tuple where the first component of the tuple computes the amount of gas to be charged
                     and the second component the amount of wei to be refunded to the originator of the call
      */
-    function CostSSTOREChargeRefund(st: ExecutingState) : (nat, int)
+    function CostSStoreChargeRefund(st: ExecutingState) : (nat, int)
     {
         if st.Operands() >= 2 && (st.evm.world.Exists(st.evm.context.address))
         then
@@ -523,9 +523,9 @@ module Gas {
                 if originalValue == currentValue
                 then
                     if newValue == 0
-                    then (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, R_SCLEAR)
+                    then (GasCostSStore(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, R_SCLEAR)
                     else
-                        (GasCostSSTORE(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
+                        (GasCostSStore(originalValue as nat, currentValue as nat, newValue as nat) + accessCost, 0)
 
                 else
                     (G_WARMACCESS + accessCost, AccruedSubstateRefund(originalValue as nat, currentValue as nat, newValue as nat))
@@ -534,19 +534,19 @@ module Gas {
     }
 
     // returns the amount of gas to charge upon the execution of SSTORE
-    function CostSSTORE(st: ExecutingState): nat {
+    function CostSStore(st: ExecutingState): nat {
         if st.Gas() <= G_CALLSTIPEND
         then
             // NOTE: The following forces an out-of-gas exception if the stipend
             // would be jeorpodised, as following the yellow paper.
             MAX_U256
         else
-            CostSSTOREChargeRefund(st).0
+            CostSStoreChargeRefund(st).0
     }
 
     // sets in the refund component of the substate the refund amount computed upon the execution of SSTORE
     function PutRefund(st: ExecutingState): State {
-        var computeRefund := CostSSTOREChargeRefund(st).1;
+        var computeRefund := CostSStoreChargeRefund(st).1;
         st.ModifyRefundCounter(computeRefund)
         }
 

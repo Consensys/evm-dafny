@@ -170,7 +170,7 @@ module EVM {
             case MSTORE => s.UseGas(CostExpandBytes(s,2,0,32) + G_VERYLOW)
             case MSTORE8 => s.UseGas(CostExpandBytes(s,2,0,1) + G_VERYLOW)
             case SLOAD => s.UseGas(CostSLoad(s))
-            case SSTORE => s.UseGas(CostSSTORE(s)) // for now
+            case SSTORE => s.UseGas(CostSStore(s)) // for now
             case JUMP => s.UseGas(G_MID)
             case JUMPI => s.UseGas(G_HIGH) // for now
             case PC => s.UseGas(G_BASE)

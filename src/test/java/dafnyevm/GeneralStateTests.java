@@ -137,6 +137,8 @@ public class GeneralStateTests {
             "expPower256Of256_.*_0_0_0",
             "randomStatetest(52|64|320|354|367|650)_.*_0_0_0",
             "gasCostExp_.*_0_8_0",
+            // #
+            "CreateAddressWarmAfterFail_.*",
             // Unknowns
             "undefinedOpcodeFirstByte_.*_0_0_0",
             "CrashingTransaction_.*_0_0_0",

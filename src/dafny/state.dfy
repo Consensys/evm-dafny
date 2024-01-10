@@ -206,6 +206,14 @@ module EvmState {
         }
 
         /**
+         * Determine whether a given EIP is active in this EVM.
+         */
+        predicate IsEipActive(eip: nat) 
+        requires this.EXECUTING? {
+            this.evm.fork.IsActive(eip)
+        }
+        
+        /**
          * Determine whether modifications to the world state are permitted in this
          * context (true means writes are permitted).
          *  @todo  This should go somewhere else?
@@ -862,17 +870,17 @@ module EvmState {
                     var nst := st.AccountAccessed(address).Push(0);
                     // NOTE: only in the event of a REVERT should the return data be passed back.
                     if vm.IsRevert() then nst.Refund(vm.gas).SetReturnData(vm.data)
-                    else nst
+                    else nst.SetReturnData([])
                 else 
                     assert vm.world.Exists(evm.context.address);
                     // Calculate the deposit cost
                     var depositcost := G_CODEDEPOSIT * |vm.data|;
                     // Check code within permitted bounds
-                    if |vm.data| > Code.MAX_CODE_SIZE then st.Push(0)
+                    if |vm.data| > Code.MAX_CODE_SIZE then st.Push(0).SetReturnData([])
                     // Enforce EIP-3541 "Reject new contract code starting with the 0xEF byte"
-                    else if this.evm.fork.IsActive(3541) && |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0)
+                    else if this.evm.fork.IsActive(3541) && |vm.data| > 0 && vm.data[0] == Opcode.EOF then st.Push(0).SetReturnData([])
                     // Check sufficient gas for deposit
-                    else if vm.gas < depositcost then st.Push(0)
+                    else if vm.gas < depositcost then st.Push(0).SetReturnData([])
                     else
                         // Compute code hash
                         var hash := evm.precompiled.Sha3(vm.data);
