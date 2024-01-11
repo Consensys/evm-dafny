@@ -70,7 +70,7 @@ include "core/precompiled.dfy"
         var callData : seq<u8> := [12];
         var writePermission := true;
         var gasPrice := 12;
-        var blockInfo := Context.Info(1,2,3,4,5,6);
+        var blockInfo := Context.Info(1,2,3,4,5,6,7);
         var context := Context.Create(sender, origin, recipient, callValue, callData, writePermission, gasPrice, blockInfo);
 
         var senderAccount := WorldState.Account(1,2,Storage.Create(map[]),emptyCode, 0);
