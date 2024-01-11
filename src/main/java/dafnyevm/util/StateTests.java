@@ -79,6 +79,7 @@ public class StateTests {
         info = info.number(env.currentNumber);
         info = info.difficulty(env.currentDifficulty);
         info = info.gasLimit(env.currentGasLimit);
+        info = info.baseFee(env.currentBaseFee);
         return info;
     }
 

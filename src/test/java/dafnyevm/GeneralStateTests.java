@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,7 +74,7 @@ public class GeneralStateTests {
     /**
      * Fork which (for now) I'm assuming we are running on. All others are ignored.
      */
-    public final static String FORK = "Berlin";
+    public final static String[] FORKS = {"Berlin","London"};
     /**
      * The directory containing the test files.
      */
@@ -103,56 +104,60 @@ public class GeneralStateTests {
      */
     public final static List<String> IGNORED_INSTANCES = Arrays.asList( //
             // #241
-            "jump_Berlin_0_9_0",
-            "jumpi_Berlin_0_14_0",
-            "jumpToPush_Berlin_[0-9_]*",
+            "jump_.*_0_9_0",
+            "jumpi_.*_0_14_0",
+            "jumpToPush_.*_[0-9_]*",
             // #339
-            "create2callPrecompiles_Berlin_0_[56]_0",
-            "static_CallEcrecover0_0input_Berlin_0_8_0",
-            "StaticcallToPrecompileFromContractInitialization_Berlin_0_0_0",
-            "StaticcallToPrecompileFromCalledContract_Berlin_0_0_0",
-            "StaticcallToPrecompileFromTransaction_Berlin_0_0_0",
-            "precompsEIP2929_Berlin_0_(43|61|151|169|241|295)_0",
-            "idPrecomps_Berlin_0_[4-7]_0",
-            //"ecmul_.*",
+            "static_CallEcrecover0_0input_.*_0_8_0",
+            "StaticcallToPrecompileFromContractInitialization_.*_0_0_0",
+            "StaticcallToPrecompileFromCalledContract_.*_0_0_0",
+            "StaticcallToPrecompileFromTransaction_.*_0_0_0",
+            "precompsEIP2929_.*_0_(43|61|151|169|241|295)_0",
+            "idPrecomps_.*_0_7_0",
             "ecpairing.*",
             "pairingTest.*",
-            //"pointMulAdd.*",
             // #455
-            "MSTORE_Bounds2_Berlin_(0|1)_0_0",
-            "modexp_Berlin_[0123]_(2|28|29|30|36|37)_0", // int overflow
+            "modexp_.*_[0123]_2_0", // int overflow
             // #531
-            "CREATE_ContractRETURNBigOffset_Berlin_0_(0|1|2|3)_0",
-            "codesizeOOGInvalidSize_Berlin_0_(0|1)_0",
-            "randomStatetest643_Berlin_0_0_0",
+            "CREATE_ContractRETURNBigOffset_.*_0_(0|1|2|3)_0",
+            "codesizeOOGInvalidSize_.*_0_(0|1)_0",
+            "randomStatetest643_.*_0_0_0",
+            "randomStatetest384_.*_0_0_0",
             // #532
-            "multiOwnedConstructionNotEnoughGasPartial_Berlin_0_0_0",
-            "multiOwnedConstructionNotEnoughGas_Berlin_0_0_0",
-            "walletConstructionOOG_Berlin_0_0_0",
-            "dayLimitConstructionOOG_Berlin_0_0_0",
+            "multiOwnedConstructionNotEnoughGasPartial_.*_0_0_0",
+            "multiOwnedConstructionNotEnoughGas_.*_0_0_0",
+            "walletConstructionOOG_.*_0_0_0",
+            "dayLimitConstructionOOG_.*_0_0_0",
             // Performance
-            "exp_Berlin_0_(1|2|9)_0",
-            "expPower256Of256_Berlin_0_0_0",
-            "randomStatetest(52|64|320|354|367|650)_Berlin_0_0_0",
-            "gasCostExp_Berlin_0_8_0",
+            "exp_.*_0_(1|2|9)_0",
+            "expPower256Of256_.*_0_0_0",
+            "randomStatetest(52|64|320|354|367|650)_.*_0_0_0",
+            "gasCostExp_.*_0_8_0",
+            "modexp_modsize0_returndatasize_.*_0_4_0",
+            // #622
+            "CreateAddressWarmAfterFail_.*",
+            // #623
+            "CreateOOGFromEOARefunds.*",
+            // #624
+            "CreateTransactionHighNonce.*",
+            // #625
+            "ecrecoverWeirdV.*",
+            "ecrecoverShortBuff.*",
+            "CallEcrecover_Overflow.*",
             // Unknowns
-            "undefinedOpcodeFirstByte_Berlin_0_0_0",
-            "CrashingTransaction_Berlin_0_0_0",
-            "InitCollisionNonZeroNonce_Berlin_[0-9_]*",
-            "randomStatetest353_Berlin_0_0_0",
-            "vitalikTransactionTest_Berlin_0_0_0",
-            "manualCreate_Berlin_0_[012]_0",
-            "CreateTransactionEOF1_Berlin_0_[0123]_0",
-            "Opcodes_TransactionInit_Berlin_0_131_0",
-            "eip1559_Berlin_0_0_0",
+            "undefinedOpcodeFirstByte_.*_0_0_0",
+            "InitCollisionNonZeroNonce_.*_[0-9_]*",
+            "randomStatetest353_.*_0_0_0",
+            "eip1559_.*_0_0_0",
             "dummy");
 
     @ParameterizedTest
     @MethodSource("allTestFiles")
-    public void tests(Pair<Path, TraceTest.Instance> pair) throws IOException, JSONException {
-        final TraceTest.Instance instance = pair.getRight();
+    public void tests(Triple<Path, String, TraceTest.Instance> tuple) throws IOException, JSONException {
+    	final String fork = tuple.getMiddle();
+        final TraceTest.Instance instance = tuple.getRight();
         //
-        if (isIgnoredInstance(pair.getRight())) {
+        if (isIgnoredInstance(instance)) {
             // Force test to be ignored.
             assumeTrue(false);
         } else {
@@ -161,7 +166,7 @@ public class GeneralStateTests {
             DafnyEvm.BlockInfo env = StateTests.toBlockInfo(instance.getEnvironment());
             // Construct EVM
             StructuredTracer tracer = new StructuredTracer();
-            DafnyEvm evm = new DafnyEvm().tracer(tracer).blockInfo(env);
+            DafnyEvm evm = new DafnyEvm().tracer(tracer).blockInfo(env).fork(fork);
             // Configure world state
             StateTests.configureWorldState(evm, instance.getWorldState());
             // Run the call or create
@@ -172,7 +177,7 @@ public class GeneralStateTests {
             if (!Objects.equals(expected,actual)) {
                 // NOTE: the following is really just to help provide additional debugging
                 // support when running tests from e.g. gradle on the command line.
-                System.err.println(pair + " ==> " + outcome);
+                System.err.println(tuple + " ==> " + outcome);
                 printTraceDiff(expected, actual);
             }
             // Finally check for equality.
@@ -221,7 +226,7 @@ public class GeneralStateTests {
     }
 
     // Here we enumerate all available test cases.
-    private static Stream<Pair<Path, TraceTest.Instance>> allTestFiles() throws IOException {
+    private static Stream<Triple<Path, String, TraceTest.Instance>> allTestFiles() throws IOException {
         return readTestFiles(TESTS_DIR);
     }
 
@@ -270,7 +275,7 @@ public class GeneralStateTests {
     // Data sources
     // ======================================================================
 
-    public static Stream<Pair<Path, TraceTest.Instance>> readTestFiles(Path dir) throws IOException {
+    public static Stream<Triple<Path, String, TraceTest.Instance>> readTestFiles(Path dir) throws IOException {
         ArrayList<Path> testfiles = new ArrayList<>();
         //
         Files.walk(dir).forEach(f -> {
@@ -290,33 +295,39 @@ public class GeneralStateTests {
      * @param files
      * @return
      */
-    private static Stream<Pair<Path, TraceTest.Instance>> streamTestsFromFiles(Stream<Path> files) {
+    private static Stream<Triple<Path, String, TraceTest.Instance>> streamTestsFromFiles(Stream<Path> files) {
         return files.flatMap(f -> {
             try {
-                ArrayList<Pair<Path, TraceTest.Instance>> instances = new ArrayList<>();
-                if (!isImpossible(f)) {
-                    // Read contents of fixture file
-                    String contents = Files.readString(f);
-                    // Convert fixture into JSON
-                    JSONObject json = new JSONObject(contents);
-                    // Parse into one or more tests
-                    for (String test : JSONObject.getNames(json)) {
-                        TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
-                        if (tt.hasInstances(FORK)) {
-                            // Add all instances
-                            for (TraceTest.Instance i : tt.getInstances(FORK)) {
-                                instances.add(Pair.of(f, i));
-                            }
-                        }
-                    }
-                }
-                return instances.stream();
+                return streamTestsFromFile(f);
             } catch (Throwable e) {
                 System.out.println("*** Error reading file \"" + f + "\" (" + e.getMessage() + ")");
                 e.printStackTrace();
                 return null;
             }
         });
+    }
+
+    private static Stream<Triple<Path, String, TraceTest.Instance>> streamTestsFromFile(Path f) throws IOException, JSONException {
+    	ArrayList<Triple<Path, String, TraceTest.Instance>> instances = new ArrayList<>();
+        if (!isImpossible(f)) {
+            // Read contents of fixture file
+            String contents = Files.readString(f);
+            // Convert fixture into JSON
+            JSONObject json = new JSONObject(contents);
+            // Parse into one or more tests
+            for (String test : JSONObject.getNames(json)) {
+                TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
+                for (String fork : FORKS) {
+                	if (tt.hasInstances(fork)) {
+                		// Add all instances
+                		for (TraceTest.Instance i : tt.getInstances(fork)) {
+                			instances.add(Triple.of(f, fork, i));
+                		}
+                	}
+                }
+            }
+        }
+        return instances.stream();
     }
 
     public static class StructuredTracer extends DafnyEvm.TraceAdaptor {

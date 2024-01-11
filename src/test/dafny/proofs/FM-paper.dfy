@@ -58,7 +58,7 @@ module Kontract1 {
         /** The contract never runs out of gas. */
         ensures (st'.ERROR? && st'.error == REVERTS) || st'.RETURNS?
         /** It terminates normally iff storage at loc 0 is < MAX_U256. */
-        ensures st'.RETURNS? <==> (st.Load(0) as nat) < MAX_U256
+        ensures st'.RETURNS? ==> (st.Load(0) as nat) < MAX_U256
         /** The world state's accounts do not change. */
         ensures st'.RETURNS? ==> st'.world.accounts.Keys == st.evm.world.accounts.Keys
         /** Normal termination implies storage at Loc 0 has been incremented by 1. */
@@ -66,9 +66,8 @@ module Kontract1 {
     {
         // Assumption required because Z3 cannot figure this out!
         assume {:axiom} {PUSH1,SLOAD,ADD,DUP1,JUMPI,REVERT,JUMPDEST,SSTORE,STOP} <= EvmFork.BERLIN_BYTECODES;
-        //
         //  Execute 7 steps (PUSH1, 0x00, SLOAD, PUSH1, 0x01, ADD, DUP1, PUSH1, 0xf, JUMPI)
-        st' := ExecuteN(st,7);
+        st' := ExecuteN(st,7);        
         assert (st'.PC() == 0xa || st'.PC() == 0xf);
         // Peek(0) == 0 iff an overflow occurred in the increment.
         if st'.Peek(0) == 0 {
