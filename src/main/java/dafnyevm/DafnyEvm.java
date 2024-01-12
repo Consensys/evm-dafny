@@ -36,6 +36,7 @@ import EvmState.State_EXECUTING;
 import EvmState.State_RETURNS;
 import static EvmFork.__default.BERLIN;
 import static EvmFork.__default.LONDON;
+import static EvmFork.__default.SHANGHAI;
 import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
@@ -122,6 +123,9 @@ public class DafnyEvm {
 			break;
 		case "LONDON":
 			fork = LONDON();
+			break;
+		case "SHANGHAI":
+			fork = SHANGHAI();
 			break;
 		default:
 			throw new IllegalArgumentException("invalid fork: \"" + forkStr + "\"");

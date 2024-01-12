@@ -102,12 +102,16 @@ module EvmFork {
 
     const BERLIN_EIPS : seq<nat> := [2565,2929,2718,2930]
     const LONDON_EIPS : seq<nat> := BERLIN_EIPS + [1559,3198,3529,3541,3554]
+    const SHANGHAI_EIPS : seq<nat> := LONDON_EIPS + [3651,3855,3860,4895]      
 
     const BERLIN_BYTECODES : set<u8> := EipBytecodes(BERLIN_EIPS,GENISIS_BYTECODES)
     const LONDON_BYTECODES : set<u8> := EipBytecodes(LONDON_EIPS,GENISIS_BYTECODES)
+    const SHANGHAI_BYTECODES : set<u8> := EipBytecodes(SHANGHAI_EIPS,GENISIS_BYTECODES)      
 
     const BERLIN : Fork := Instance(2021_04_15, BERLIN_EIPS, BERLIN_BYTECODES)
     const LONDON : Fork := Instance(2021_08_05, LONDON_EIPS, LONDON_BYTECODES)
+    // Paris?
+    const SHANGHAI : Fork := Instance(2023_04_12, SHANGHAI_EIPS, SHANGHAI_BYTECODES)      
 
     // A fork is either the _root_ (i.e. genisis EVM), or an _instance_ which
     // refines another fork.
@@ -135,4 +139,10 @@ module EvmFork {
     {
 
     }
+
+    lemma {:verify false} ShanghaiFacts()
+      ensures {PUSH0,BASEFEE} <= SHANGHAI_BYTECODES
+    {
+
+    }    
 }
