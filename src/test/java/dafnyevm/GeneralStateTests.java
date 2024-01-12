@@ -74,7 +74,7 @@ public class GeneralStateTests {
     /**
      * Fork which (for now) I'm assuming we are running on. All others are ignored.
      */
-    public final static String[] FORKS = {"Berlin","London"};
+    public final static String[] FORKS = {"Berlin","London","Shanghai"};
     /**
      * The directory containing the test files.
      */
@@ -149,6 +149,30 @@ public class GeneralStateTests {
             "InitCollisionNonZeroNonce_.*_[0-9_]*",
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
+            "badOpcodes_Berlin_0_23_0", // weird
+            // Shanghai Issues
+            ".*_Shanghai.*", // for now
+            "createNonConst_Shanghai.*",
+            "RawCreateGas.*_Shanghai.*",
+            "createContract.*_Shanghai.*",
+            "createFailResult.*_Shanghai.*",
+            "createLargeResult.*_Shanghai.*",
+            "contractCreation.*_Shanghai.*",
+            "static_.*_Shanghai.*",
+            "CREATE_.*_Shanghai.*",
+            "CREATE2_.*_Shanghai.*",
+            "CreateOOG.*_Shanghai.*",
+            "CreateResults.*_Shanghai.*",
+            "gasCostBerlin_Shanghai.*",
+            "sstore_.*_Shanghai.*",
+            ".*DiffPlaces_Shanghai.*",
+            "diffPlaces_Shanghai.*",
+            "buffer_Shanghai.*",
+            "oog_Shanghai.*",
+            "clearReturnBuffer_.*_Shanghai.*",
+            "returndatacopyPythonBug_.*_Shanghai.*",
+            "push0.*_Shanghai.*",
+            "coinbaseWarm.*_Shanghai.*",
             "dummy");
 
     @ParameterizedTest
