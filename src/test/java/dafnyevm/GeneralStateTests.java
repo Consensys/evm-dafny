@@ -149,6 +149,7 @@ public class GeneralStateTests {
             "InitCollisionNonZeroNonce_.*_[0-9_]*",
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
+            "badOpcodes_Berlin_0_23_0", // weird
             // Shanghai Issues
             ".*_Shanghai.*", // for now
             "createNonConst_Shanghai.*",
