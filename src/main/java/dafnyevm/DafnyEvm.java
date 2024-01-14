@@ -14,7 +14,7 @@
 package dafnyevm;
 
 import static EVM.__default.Execute;
-
+import static Gas.__default.CostInitCode;
 import java.math.BigInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -173,6 +173,8 @@ public class DafnyEvm {
 	    //
 	    if(tx.to() == null) {
 	        gas = gas.add(G_txcreate);
+	        // EIP3860 "Limit and meter initcode"
+	        gas = gas.add(CostInitCode(fork,BigInteger.valueOf(callData.length)));
 	    }
 	    //
 	    gas = gas.add(G_transaction);

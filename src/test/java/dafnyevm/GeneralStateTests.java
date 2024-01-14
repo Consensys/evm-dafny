@@ -95,7 +95,6 @@ public class GeneralStateTests {
             "stRevertTest/RevertInCreateInInit.json",
             "stCreate2/RevertInCreateInInitCreate2.json");
 
-
     /**
      * Identifies test instances which (for various reasons) should be ignored. For
      * example, because the test does not currently pass. Each line in the list is a
@@ -149,30 +148,17 @@ public class GeneralStateTests {
             "InitCollisionNonZeroNonce_.*_[0-9_]*",
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
-            "badOpcodes_Berlin_0_23_0", // weird
+            "badOpcodes_Berlin_0_23_0", // weird?
             // Shanghai Issues
-            ".*_Shanghai.*", // for now
-            "createNonConst_Shanghai.*",
-            "RawCreateGas.*_Shanghai.*",
-            "createContract.*_Shanghai.*",
-            "createFailResult.*_Shanghai.*",
-            "createLargeResult.*_Shanghai.*",
-            "contractCreation.*_Shanghai.*",
-            "static_.*_Shanghai.*",
-            "CREATE_.*_Shanghai.*",
-            "CREATE2_.*_Shanghai.*",
-            "CreateOOG.*_Shanghai.*",
-            "CreateResults.*_Shanghai.*",
-            "gasCostBerlin_Shanghai.*",
-            "sstore_.*_Shanghai.*",
-            ".*DiffPlaces_Shanghai.*",
-            "diffPlaces_Shanghai.*",
-            "buffer_Shanghai.*",
-            "oog_Shanghai.*",
-            "clearReturnBuffer_.*_Shanghai.*",
-            "returndatacopyPythonBug_.*_Shanghai.*",
-            "push0.*_Shanghai.*",
+            "badOpcodes_Shanghai_0_34_0",
             "coinbaseWarm.*_Shanghai.*",
+            "createInitCodeSizeLimit_Shanghai_.*",
+            "create2InitCodeSizeLimit_Shanghai_.*",            
+            "opcEFDiffPlaces_Shanghai.*",
+            "push0.*_Shanghai.*",      
+            "PythonRevertTest.*_Shanghai.*",
+            "randomStatetest(26|30|45|199|207|244|246|295|307|508|646|571|577|628)_Shanghai_0_0_0",
+            "TestContractSuicide_Shanghai_.*",
             "dummy");
 
     @ParameterizedTest

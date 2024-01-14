@@ -251,7 +251,7 @@ module EVM {
             case LOG3 => s.UseGas(CostExpandRange(s,5,0,1) + CostLog(s,3))
             case LOG4 => s.UseGas(CostExpandRange(s,6,0,1) + CostLog(s,4))
             // 0xf0
-            case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + G_CREATE)
+            case CREATE => s.UseGas(CostExpandRange(s,3,1,2) + CostCreate(s))
             case CALL => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCost(s))
             case CALLCODE => s.UseGas(CostExpandDoubleRange(s,7,3,4,5,6) + CallCodeCost(s))
             case RETURN => s.UseGas(CostExpandRange(s,2,0,1) + G_ZERO)

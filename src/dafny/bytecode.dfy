@@ -1646,17 +1646,17 @@ module Bytecode {
             var codeOffset := st.Peek(1) as nat;
             // Extract length of initialisation code
             var codeSize := st.Peek(2) as nat;
-            // Copy initialisation code from memory
-            var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
-            // Calculate available gas
-            var gascap := GasCalc.CreateGasCap(st);
-            // Apply everything
-            var nst := st.Expand(codeOffset,codeSize).Pop(3).Next();
             // Check if the permission for writing has been given
             if !st.WritesPermitted()
             then
                 ERROR(WRITE_PROTECTION_VIOLATED)
             else
+                // Copy initialisation code from memory
+                var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
+                // Calculate available gas
+                var gascap := GasCalc.CreateGasCap(st);
+                // Apply everything
+                var nst := st.Expand(codeOffset,codeSize).Pop(3).Next();                
                 // Sanity check nonce
                 if st.evm.world.Nonce(st.evm.context.address) < MAX_U64
                 then
