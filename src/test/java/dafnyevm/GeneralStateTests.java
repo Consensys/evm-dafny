@@ -151,9 +151,7 @@ public class GeneralStateTests {
             "badOpcodes_Berlin_0_23_0", // weird?
             // Shanghai Issues
             "badOpcodes_Shanghai_0_34_0",
-            "coinbaseWarm.*_Shanghai.*",
-            "createInitCodeSizeLimit_Shanghai_.*",
-            "create2InitCodeSizeLimit_Shanghai_.*",            
+            "coinbaseWarm.*_Shanghai.*",           
             "opcEFDiffPlaces_Shanghai.*",
             "push0.*_Shanghai.*",      
             "PythonRevertTest.*_Shanghai.*",

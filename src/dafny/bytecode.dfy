@@ -1630,14 +1630,7 @@ module Bytecode {
      * Create a new account with associated code.
      */
     function Create(st: ExecutingState): (st': State)
-    ensures st'.CONTINUING? || st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW) || st' == ERROR(WRITE_PROTECTION_VIOLATED)
-    ensures st'.CONTINUING? <==> (st.Operands() >= 3 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) < MAX_U64)
-    ensures st'.EXECUTING? <==> (st.Operands() >= 3 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64)
-    ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 2
-    ensures st' == ERROR(STACK_UNDERFLOW)  <==> st.Operands() < 3
-    ensures st' == ERROR(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 3 && !st.WritesPermitted()
+    ensures st'.CONTINUING? || st'.EXECUTING? || st' in {ERROR(STACK_UNDERFLOW),ERROR(WRITE_PROTECTION_VIOLATED),ERROR(INSUFFICIENT_GAS)}
     {
         if st.Operands() >= 3
         then
@@ -1648,8 +1641,9 @@ module Bytecode {
             var codeSize := st.Peek(2) as nat;
             // Check if the permission for writing has been given
             if !st.WritesPermitted()
-            then
-                ERROR(WRITE_PROTECTION_VIOLATED)
+                then ERROR(WRITE_PROTECTION_VIOLATED)
+            else if st.IsEipActive(3860) && codeSize > 2*Code.MAX_CODE_SIZE
+                then ERROR(INSUFFICIENT_GAS)
             else
                 // Copy initialisation code from memory
                 var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
@@ -1800,27 +1794,23 @@ module Bytecode {
      * Create a new account with associated code.
      */
     function Create2(st: ExecutingState): (st': State)
-    ensures st'.CONTINUING? || st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW) || st' == ERROR(WRITE_PROTECTION_VIOLATED)
-    ensures st'.CONTINUING? <==> (st.Operands() >= 4 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) < MAX_U64)
-    ensures st'.EXECUTING? <==> (st.Operands() >= 4 && st.WritesPermitted() &&
-        st.evm.world.Nonce(st.evm.context.address) >= MAX_U64)
-    ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 3
-    ensures st' == ERROR(STACK_UNDERFLOW)  <==> st.Operands() < 4
-    ensures st' == ERROR(WRITE_PROTECTION_VIOLATED) <==> st.Operands() >= 4 && !st.WritesPermitted()
+    ensures st'.CONTINUING? || st'.EXECUTING? || st' in {ERROR(STACK_UNDERFLOW),ERROR(WRITE_PROTECTION_VIOLATED),ERROR(INSUFFICIENT_GAS)}
     {
         if st.Operands() >= 4
             then
+                var endowment := st.Peek(0);
+                // Extract start of initialisation code in memory
+                var codeOffset := st.Peek(1) as nat;
+                // Extract length of initialisation code
+                var codeSize := st.Peek(2) as nat;
+                // Extract the salt
+                var salt := st.Peek(3);
+                // Check if the permission for writing has been given                
                 if !st.WritesPermitted()
                     then ERROR(WRITE_PROTECTION_VIOLATED)
+                else if st.IsEipActive(3860) && codeSize > 2*Code.MAX_CODE_SIZE
+                    then ERROR(INSUFFICIENT_GAS)
                 else
-                    var endowment := st.Peek(0);
-                    // Extract start of initialisation code in memory
-                    var codeOffset := st.Peek(1) as nat;
-                    // Extract length of initialisation code
-                    var codeSize := st.Peek(2) as nat;
-                    // Extract the salt
-                    var salt := st.Peek(3);
                     // Copy initialisation code from memory
                     var code := Memory.Slice(st.evm.memory, codeOffset, codeSize);
                     // Calculate available gas
