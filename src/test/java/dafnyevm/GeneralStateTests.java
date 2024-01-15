@@ -149,8 +149,6 @@ public class GeneralStateTests {
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
-            // Shanghai Issues
-            "TestContractSuicide_Shanghai_.*",
             "dummy");
 
     @ParameterizedTest
