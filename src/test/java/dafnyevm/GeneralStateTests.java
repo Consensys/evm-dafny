@@ -152,8 +152,7 @@ public class GeneralStateTests {
             // Shanghai Issues
             "badOpcodes_Shanghai_0_34_0",
             "coinbaseWarm.*_Shanghai.*",           
-            "opcEFDiffPlaces_Shanghai.*",
-            "push0.*_Shanghai.*",      
+            "opcEFDiffPlaces_Shanghai.*",    
             "PythonRevertTest.*_Shanghai.*",
             "randomStatetest(26|30|45|199|207|244|246|295|307|508|646|571|577|628)_Shanghai_0_0_0",
             "TestContractSuicide_Shanghai_.*",
