@@ -61,6 +61,11 @@ public class DafnyEvm {
      * Extract the maximum permitted code size from Dafny,
      */
     private static final int MAX_CODE_SIZE = Code.__default.MAX__CODE__SIZE().intValueExact();
+    
+    /**
+     * Constant for EIP3651 "Warm Coinbase".
+     */
+    private static final BigInteger EIP3651 = BigInteger.valueOf(3651);
 	/**
 	 * A default tracer which does nothing.
 	 */
@@ -252,6 +257,9 @@ public class DafnyEvm {
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
+	        if(fork.IsActive(EIP3651)) {
+	        	ss = ss.AccountAccessed(blockInfo.coinBase);
+	        }
 	        // Begin the call.
 	        st = EvmState.__default.Call(ws, ctx, fork, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
