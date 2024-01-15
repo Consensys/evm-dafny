@@ -14,7 +14,7 @@
 package dafnyevm;
 
 import static EVM.__default.Execute;
-
+import static Gas.__default.CostInitCode;
 import java.math.BigInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -61,6 +61,11 @@ public class DafnyEvm {
      * Extract the maximum permitted code size from Dafny,
      */
     private static final int MAX_CODE_SIZE = Code.__default.MAX__CODE__SIZE().intValueExact();
+    
+    /**
+     * Constant for EIP3651 "Warm Coinbase".
+     */
+    private static final BigInteger EIP3651 = BigInteger.valueOf(3651);
 	/**
 	 * A default tracer which does nothing.
 	 */
@@ -173,6 +178,8 @@ public class DafnyEvm {
 	    //
 	    if(tx.to() == null) {
 	        gas = gas.add(G_txcreate);
+	        // EIP3860 "Limit and meter initcode"
+	        gas = gas.add(CostInitCode(fork,BigInteger.valueOf(callData.length)));
 	    }
 	    //
 	    gas = gas.add(G_transaction);
@@ -250,6 +257,9 @@ public class DafnyEvm {
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
+	        if(fork.IsActive(EIP3651)) {
+	        	ss = ss.AccountAccessed(blockInfo.coinBase);
+	        }
 	        // Begin the call.
 	        st = EvmState.__default.Call(ws, ctx, fork, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);

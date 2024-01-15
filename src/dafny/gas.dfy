@@ -17,6 +17,7 @@ include "state.dfy"
 include "core/memory.dfy"
 include "core/code.dfy"
 include "core/context.dfy"
+include "core/fork.dfy"
 include "core/worldstate.dfy"
 include "core/substate.dfy"
 include "util/bytes.dfy"
@@ -24,6 +25,7 @@ include "util/bytes.dfy"
 module Gas {
 	import opened Opcode
 	import opened EvmState
+    import opened EvmFork
     import opened Int
     import opened Memory
 
@@ -64,6 +66,8 @@ module Gas {
 	const G_KECCAK256WORD: nat := 6
 	const G_COPY: nat := 3
 	const G_BLOCKHASH: nat := 20
+    // EIP-3860
+    const G_INITCODE_WORD_COST := 2
     /**
      *  Assign a cost as a function of the memory size.
      *
@@ -199,6 +203,28 @@ module Gas {
             G_ZERO
     }
 
+    /**
+     * As defined in EIP-3860.
+     */
+    function CostInitCode(fork: Fork, len: nat) : nat {
+        if fork.IsActive(3860)
+        then G_INITCODE_WORD_COST * (Int.RoundUp(len,32)/32)
+        else 0
+    }
+
+    /*
+     * Compute gas cost for CREATE2 bytecode.
+     * @param st    A non-failure state.
+     */
+    function CostCreate(st: ExecutingState) : nat {
+        if st.Operands() >= 3
+        then
+            var len := st.Peek(2) as nat;
+            G_CREATE + CostInitCode(st.Fork(),len)
+        else
+            G_ZERO
+    }
+    
     /*
      * Compute gas cost for CREATE2 bytecode.
      * @param st    A non-failure state.
@@ -209,7 +235,7 @@ module Gas {
         then
             var len := st.Peek(2) as nat;
             var rhs := RoundUp(len,32) / 32;
-            G_CREATE + (G_KECCAK256WORD * rhs)
+            G_CREATE + (G_KECCAK256WORD * rhs) + CostInitCode(st.Fork(),len)
         else
             G_ZERO
     }
