@@ -74,7 +74,7 @@ public class GeneralStateTests {
     /**
      * Fork which (for now) I'm assuming we are running on. All others are ignored.
      */
-    public final static String[] FORKS = {"Berlin","London","Shanghai"};
+    public final static String[] FORKS = {"Berlin","London","Shanghai","Cancun"};
     /**
      * The directory containing the test files.
      */
@@ -149,6 +149,14 @@ public class GeneralStateTests {
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
+            // Cancun
+            "MCOPY_Cancun_.*",
+            "MCOPY_copy_cost_Cancun_.*",
+            "MCOPY_memory_expansion_cost_Cancun_.*",
+            "MCOPY_memory_hash_Cancun_.*",
+            "transStorageOK_Cancun_.*",
+            "transStorageReset_Cancun_.*",
+            //
             "dummy");
 
     @ParameterizedTest
@@ -317,7 +325,7 @@ public class GeneralStateTests {
             // Parse into one or more tests
             for (String test : JSONObject.getNames(json)) {
                 TraceTest tt = TraceTest.fromJSON(test, json.getJSONObject(test));
-                for (String fork : FORKS) {
+                for (String fork : FORKS) {                	
                 	if (tt.hasInstances(fork)) {
                 		// Add all instances
                 		for (TraceTest.Instance i : tt.getInstances(fork)) {

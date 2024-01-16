@@ -86,9 +86,12 @@ module Opcode {
 	const MSIZE : u8 := 0x59
 	const GAS : u8 := 0x5a
 	const JUMPDEST : u8 := 0x5b
-    const RJUMP : u8 := 0x5c  // EIP-4200
-    const RJUMPI : u8 := 0x5d // EIP-4200
-    const RJUMPV : u8 := 0x5e // EIP-4200
+    // const RJUMP : u8 := 0x5c  // EIP-4200
+    // const RJUMPI : u8 := 0x5d // EIP-4200
+    // const RJUMPV : u8 := 0x5e // EIP-4200
+	const TLOAD : u8 := 0x5c // EIP-1153
+	const TSTORE : u8 := 0x5d // EIP-1153
+	const MCOPY : u8 := 0x5e // EIP-5656
 	const PUSH0 : u8 := 0x5f // EIP-3855
 	// 60s & 70s: Push Operations
 	const PUSH1 : u8 := 0x60

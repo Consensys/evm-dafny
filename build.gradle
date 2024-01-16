@@ -234,7 +234,7 @@ task testgen(type: JavaExec) {
     // arguments to pass to the application
     args '-incremental'
     args '-forks'
-    args 'Berlin,London,Shanghai'
+    args 'Berlin,London,Shanghai,Dencun'
     args '-dir'
     args 'fixtures'
     args '-out'
