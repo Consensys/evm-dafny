@@ -65,6 +65,7 @@ module EvmFork {
 
     function EipDescription(eip: nat) : Option<string> {
         match eip
+        case 1153 => Some("Transient storage opcodes")
         case 1559 => Some("Fee market change for ETH 1.0 chain")
         case 2565 => Some("ModExp Gas Cost")
         case 2929 => Some("Gas cost increases for state access opcodes")
@@ -82,6 +83,7 @@ module EvmFork {
         case 4399 => Some("Supplant DIFFICULTY opcode with PREVRANDAO")
         case 4895 => Some("Beacon chain push withdrawals as operations")
         case 5133 => Some("Delaying Difficulty Bomb to mid-September 2022")
+        case 5656 => Some("MCOPY - Memory copying instruction")
         case _ => None
     }
 
@@ -91,8 +93,10 @@ module EvmFork {
         if |eips| == 0 then bytecodes
         else
             match eips[0]
+            case 1153 => EipBytecodes(eips[1..], bytecodes + {TLOAD,TSTORE})
             case 3198 => EipBytecodes(eips[1..], bytecodes + {BASEFEE})
             case 3855 => EipBytecodes(eips[1..], bytecodes + {PUSH0})
+            case 5656 => EipBytecodes(eips[1..], bytecodes + {MCOPY})
             case _ => EipBytecodes(eips[1..], bytecodes)
     }
 
@@ -103,15 +107,17 @@ module EvmFork {
     const BERLIN_EIPS : seq<nat> := [2565,2929,2718,2930]
     const LONDON_EIPS : seq<nat> := BERLIN_EIPS + [1559,3198,3529,3541,3554]
     const SHANGHAI_EIPS : seq<nat> := LONDON_EIPS + [3651,3855,3860,4895]      
+    const CANCUN_EIPS : seq<nat> := SHANGHAI_EIPS + [1153,5656]      
 
     const BERLIN_BYTECODES : set<u8> := EipBytecodes(BERLIN_EIPS,GENISIS_BYTECODES)
     const LONDON_BYTECODES : set<u8> := EipBytecodes(LONDON_EIPS,GENISIS_BYTECODES)
     const SHANGHAI_BYTECODES : set<u8> := EipBytecodes(SHANGHAI_EIPS,GENISIS_BYTECODES)      
+    const CANCUN_BYTECODES : set<u8> := EipBytecodes(CANCUN_EIPS,GENISIS_BYTECODES)      
 
     const BERLIN : Fork := Instance(2021_04_15, BERLIN_EIPS, BERLIN_BYTECODES)
     const LONDON : Fork := Instance(2021_08_05, LONDON_EIPS, LONDON_BYTECODES)
-    // Paris?
     const SHANGHAI : Fork := Instance(2023_04_12, SHANGHAI_EIPS, SHANGHAI_BYTECODES)      
+    const CANCUN : Fork := Instance(2024_03_12, CANCUN_EIPS, CANCUN_BYTECODES)      
 
     // A fork is either the _root_ (i.e. genisis EVM), or an _instance_ which
     // refines another fork.
@@ -145,4 +151,10 @@ module EvmFork {
     {
 
     }    
+
+    lemma {:verify false} CancunFacts()
+      ensures {MCOPY,TLOAD,TSTORE} <= CANCUN_BYTECODES
+    {
+
+    } 
 }

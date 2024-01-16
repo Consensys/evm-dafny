@@ -37,6 +37,7 @@ import EvmState.State_RETURNS;
 import static EvmFork.__default.BERLIN;
 import static EvmFork.__default.LONDON;
 import static EvmFork.__default.SHANGHAI;
+import static EvmFork.__default.CANCUN;
 import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
@@ -126,6 +127,9 @@ public class DafnyEvm {
 		case "BERLIN":
 			fork = BERLIN();
 			break;
+		case "DENCUN":
+			fork = CANCUN();
+			break;			
 		case "LONDON":
 			fork = LONDON();
 			break;
