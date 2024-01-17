@@ -127,7 +127,7 @@ public class DafnyEvm {
 		case "BERLIN":
 			fork = BERLIN();
 			break;
-		case "DENCUN":
+		case "CANCUN":
 			fork = CANCUN();
 			break;			
 		case "LONDON":

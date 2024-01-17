@@ -177,6 +177,7 @@ module EVM {
             case MSIZE => s.UseGas(G_BASE)
             case GAS => s.UseGas(G_BASE)
             case JUMPDEST => s.UseGas(G_JUMPDEST)
+            case MCOPY => s.UseGas(CostExpandDoubleRange(s,3,0,2,1,2) + G_VERYLOW + CostCopy(s,2))
             case PUSH0 => s.UseGas(G_BASE)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => s.UseGas(G_VERYLOW)
@@ -343,6 +344,7 @@ module EVM {
             case MSIZE => Bytecode.MSize(st)
             case GAS => Bytecode.Gas(st)
             case JUMPDEST => Bytecode.JumpDest(st)
+            case MCOPY => Bytecode.MCopy(st)
             case PUSH0 => Bytecode.Push0(st)
             // 0x60s & 0x70s: Push operations
             case PUSH1 => Bytecode.Push(st,1)

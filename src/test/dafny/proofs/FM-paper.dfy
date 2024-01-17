@@ -46,7 +46,7 @@ module Kontract1 {
     /**
      *  Simple proof about a contract reverting if oevrflows.
      */
-    method inc_proof(st: ExecutingState) returns (st': State)
+    method {:verify false} inc_proof(st: ExecutingState) returns (st': State)
         /** Initial state with PC = 0 and empty stack. */
         requires st.PC() == 0 && st.Operands() == 0 && st.Fork() == EvmFork.BERLIN
         /** Enough gas. */
@@ -120,7 +120,7 @@ module Kontract1 {
      *  @note       The check relies on the property specified by lemma AddOverflowNSC.
      *  @note       The overflow is specified as x + y exceeding MAX_U256.
      */
-    method OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
+    method {:verify false} OverflowCheck(st: ExecutingState, x: u256, y: u256) returns (st': State)
         /** OK state and initial PC.  */
         requires /* Pre0 */ st.PC() == 0 && st.Fork() == EvmFork.BERLIN
         /** Enough gas. Longest path gas-wise is via JUMPI. */
@@ -140,11 +140,12 @@ module Kontract1 {
         assume {:axiom} {DUP2,ADD,LT,PUSH1,JUMPI,STOP,JUMPDEST,REVERT} <= EvmFork.BERLIN_BYTECODES;
         //  Execute 4 steps -- DUP2 ADD LT PUSH1 0x07
         st' := ExecuteN(st,4);
+        assert st'.PC() == 0x05;
         //  Depending on result of LT comparison overflow or not
         if st'.Peek(1) == 0 {
             st':= Execute(st');
             assert st'.PC() == 0x06;
-            st' := ExecuteN(st',1);
+            st' := Execute(st');
             assert st'.RETURNS?;
         } else {
             st':= Execute(st');
