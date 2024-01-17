@@ -1341,6 +1341,27 @@ module Bytecode {
     }
 
     /**
+     * Perform an efficient copy of memory from one area to another.
+     */
+    function MCopy(st: ExecutingState): (st': State) {
+        //
+        if st.Operands() >= 3
+        then
+            var dst := st.Peek(0) as nat;
+            var src := st.Peek(1) as nat;
+            var len := st.Peek(2) as nat;
+            //
+            // Slice bytes out of memory
+            var data := Memory.Slice(st.evm.memory,src,len);
+            // Sanity check
+            assert |data| == len;
+            // Copy slice into memory
+            st.Expand(src, len).Expand(dst, len).Pop(3).Copy(dst,data).Next()
+        else
+            ERROR(STACK_UNDERFLOW)
+    }
+
+    /**
      * Perform a static relative jump using a given offset from the position
      * immediately after this instruction.  This instruction does not read any
      * operands from the stack.

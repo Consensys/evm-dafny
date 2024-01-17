@@ -150,10 +150,10 @@ public class GeneralStateTests {
             "eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
             // Cancun
-            "MCOPY_Cancun_.*",
-            "MCOPY_copy_cost_Cancun_.*",
-            "MCOPY_memory_expansion_cost_Cancun_.*",
-            "MCOPY_memory_hash_Cancun_.*",
+//            "MCOPY_Cancun_.*",
+//            "MCOPY_copy_cost_Cancun_.*",
+//            "MCOPY_memory_expansion_cost_Cancun_.*",
+//            "MCOPY_memory_hash_Cancun_.*",
             "transStorageOK_Cancun_.*",
             "transStorageReset_Cancun_.*",
             //
