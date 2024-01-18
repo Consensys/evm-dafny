@@ -222,8 +222,8 @@ public class DafnyEvm {
      * @return
      */
 	public DafnyEvm.State<?> execute(Transaction tx) {
-	       // Construct world state and substate
         WorldState.T ws = WorldState.__default.Create(worldState);
+        DafnyMap ts = TransientStorage.__default.Create();
         SubState.Raw ss = SubState.__default.Create();
         EvmState.State st;
 	    // Perform initial checks
@@ -265,7 +265,7 @@ public class DafnyEvm {
 	        	ss = ss.AccountAccessed(blockInfo.coinBase);
 	        }
 	        // Begin the call.
-	        st = EvmState.__default.Call(ws, ctx, fork, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
+	        st = EvmState.__default.Call(ws, ts, ctx, fork, NATIVE_PRECOMPILES, ss, tx.to(), tx.value(), gas,
 	                BigInteger.ONE);
 	    } else {
 	        // Contract creation
@@ -278,7 +278,7 @@ public class DafnyEvm {
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
 	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
 	        // Begin the call.
-	        st = EvmState.__default.Create(ws, ctx, fork, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
+	        st = EvmState.__default.Create(ws, ts, ctx, fork, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
 	    // Execute bytecodes!
 	    if(st instanceof State_EXECUTING) {

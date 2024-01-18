@@ -34,7 +34,7 @@ module Bytecode {
      * return output data.
      */
     function Stop(st: ExecutingState) : State {
-        RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,substate:=st.evm.substate)
+        RETURNS(gas:=st.Gas(),data:=[],world:=st.evm.world,transient:=st.evm.transient,substate:=st.evm.substate)
     }
 
     /**
@@ -1340,17 +1340,23 @@ module Bytecode {
         st.Next()
     }
     
+    /**
+     * Get word from transient storage.
+     */
     function TLoad(st: ExecutingState): (st': State) {
         if st.Operands() >= 1
         then
             var loc := st.Peek(0);
-            var val := st.Load(loc);
+            var val := st.TransientLoad(loc);
             // Push word
             st.Pop().Push(val).KeyAccessed(loc).Next()
         else
             ERROR(STACK_UNDERFLOW)
     }
 
+    /**
+     * Write word into transient storage.
+     */
     function TStore(st: ExecutingState): (st': State) {
         if st.Operands() >= 2
         then
@@ -1360,7 +1366,7 @@ module Bytecode {
                 var loc := st.Peek(0);
                 var val := st.Peek(1);
                 // Store word
-                st.Pop(2).Store(loc,val).KeyAccessed(loc).Next()
+                st.Pop(2).TransientStore(loc,val).KeyAccessed(loc).Next()
         else
             ERROR(STACK_UNDERFLOW)
     }
@@ -1796,7 +1802,7 @@ module Bytecode {
             // Read out that data.
             var data := Memory.Slice(st.evm.memory, start, len);
             // Done
-            RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,substate:=st.evm.substate)
+            RETURNS(gas:=st.evm.gas,data:=data,world:=st.evm.world,transient:=st.evm.transient,substate:=st.evm.substate)
         else
             ERROR(STACK_UNDERFLOW)
     }
@@ -1966,7 +1972,7 @@ module Bytecode {
                     // Otherwise reset balance to zero
                     else st.evm.world.Withdraw(address, balance);
                 //
-                RETURNS(gas:=st.Gas(),data:=[],world:=w,substate:=ss)
+                RETURNS(gas:=st.Gas(),data:=[],world:=w,transient:=st.evm.transient,substate:=ss)
         else
             ERROR(STACK_UNDERFLOW)
     }

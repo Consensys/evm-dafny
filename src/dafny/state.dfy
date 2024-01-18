@@ -19,6 +19,7 @@ include "core/code.dfy"
 include "core/fork.dfy"
 include "core/storage.dfy"
 include "core/substate.dfy"
+include "core/transient.dfy"
 include "core/worldstate.dfy"
 include "util/arrays.dfy"
 include "util/extern.dfy"
@@ -37,6 +38,7 @@ module EvmState {
     import WorldState
     import Context
     import SubState
+    import TransientStorage
     import Code
     import opened EvmFork
     import Opcode
@@ -72,6 +74,7 @@ module EvmState {
         world : WorldState.T,
         stack   : EvmStack,
         memory  : Memory.T,
+        transient : TransientStorage.T,
         code: Code.T,
         substate: SubState.T,
         gas: nat,
@@ -87,6 +90,7 @@ module EvmState {
             WorldState.Create(map[0:=WorldState.DefaultAccount()]),
             EmptyEvmStack,
             Memory.Create(),
+            TransientStorage.Create(),
             Code.Create([]),
             SubState.Create(),
             0,
@@ -140,7 +144,7 @@ module EvmState {
      */
     datatype State = EXECUTING(evm:T)
         | ERROR(error:Error,gas:nat := 0, data: Array<u8> := [])
-        | RETURNS(gas:nat,data: Array<u8>,world: WorldState.T,substate:SubState.T)
+        | RETURNS(gas:nat,data: Array<u8>,world: WorldState.T,transient: TransientStorage.T,substate:SubState.T)
         | CONTINUING(Continuation) {
 
         /**
@@ -173,7 +177,7 @@ module EvmState {
         function Gas(): nat {
             match this
                 case EXECUTING(evm) => evm.gas
-                case RETURNS(g, _, _, _) => g
+                case RETURNS(g, _, _, _, _) => g
                 case ERROR(_, g, _) => g
                 case CONTINUING(cc) => cc.evm.gas
         }
@@ -324,6 +328,28 @@ module EvmState {
             evm.world.Read(account,address)
         }
 
+        // =======================================================================================
+        // Transient Storage
+        // =======================================================================================
+
+        /**
+         * Write word to storage
+         */
+        function TransientStore(address:u256, val: u256) : ExecutingState
+        requires this.EXECUTING? {
+            var account := evm.context.address;
+            EXECUTING(evm.(transient:=evm.transient.Write(account,address,val)))
+        }
+
+        /**
+         * Read word from storage
+         */
+        function TransientLoad(address:u256) : u256
+        requires this.EXECUTING? {
+            var account := evm.context.address;
+            evm.transient.Read(account,address)
+        }
+
         /**
          * Determine whether or not an account is considered to be "empty".
          */
@@ -445,11 +471,11 @@ module EvmState {
          * Thread through world state and substate from a successful contract
          * call.
          */
-        function Merge(world: WorldState.T, substate: SubState.T) : ExecutingState
+        function Merge(world: WorldState.T, transient: TransientStorage.T, substate: SubState.T) : ExecutingState
         requires this.EXECUTING?
         // Contract address for this account must exist.
         requires world.Exists(evm.context.address) {
-            EXECUTING(evm.(world:=world,substate:=substate))
+            EXECUTING(evm.(world:=world,transient:=transient,substate:=substate))
         }
 
         // =======================================================================================
@@ -672,7 +698,7 @@ module EvmState {
      * @param depth The current call depth.
      * @param opcode The opcode causing this call.
      */
-    function Call(world: WorldState.T, ctx: Context.T, fork: Fork, precompiled: Precompiled.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
+    function Call(world: WorldState.T, transient: TransientStorage.T, ctx: Context.T, fork: Fork, precompiled: Precompiled.T, substate: SubState.T, codeAddress: u160, value: u256, gas: nat, depth: nat) : State
     // Sender account must exist
     requires world.Exists(ctx.sender)  {
         // Address of called contract
@@ -696,18 +722,18 @@ module EvmState {
                     match precompiled.Call(codeAddress,ctx.callData)
                     case None => ERROR(INVALID_PRECONDITION)
                     case Some((data,gascost)) => if gas >= gascost
-                        then RETURNS(gas - gascost, data, nw, substate)
+                        then RETURNS(gas - gascost, data, nw, transient, substate)
                         else ERROR(INSUFFICIENT_GAS)
                 // Check for end-user account
                 else
                     // Extract contract code
                     var cod := w.GetOrDefault(codeAddress).code;
-                    if |cod.contents| == 0 then RETURNS(gas, [], nw, substate)
+                    if |cod.contents| == 0 then RETURNS(gas, [], nw, transient, substate)
                     else
                         // Construct fresh EVM
                         var stack := EmptyEvmStack;
                         var mem := Memory.Create();
-                        var evm := EVM(fork,ctx,precompiled,nw,stack,mem,cod,substate,gas,0);
+                        var evm := EVM(fork,ctx,precompiled,nw,stack,mem,transient,cod,substate,gas,0);
                         // Off we go!
                         EXECUTING(evm)
     }
@@ -721,7 +747,7 @@ module EvmState {
      * @param gas The available gas to use for the call.
      * @param depth The current call depth.
      */
-    function Create(world: WorldState.T, ctx: Context.T, fork: Fork, precompiled: Precompiled.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
+    function Create(world: WorldState.T, transient: TransientStorage.T, ctx: Context.T, fork: Fork, precompiled: Precompiled.T, substate: SubState.T, initcode: seq<u8>, gas: nat, depth: nat) : State
     requires |initcode| <= Code.MAX_CODE_SIZE
     requires world.Exists(ctx.sender) {
         var endowment := ctx.callValue;
@@ -738,7 +764,7 @@ module EvmState {
             // Deduct wei
             var nw := w.Withdraw(ctx.sender,endowment);
             // When creating end-use account, return immediately.
-            if |initcode| == 0 then RETURNS(gas, [], nw, substate)
+            if |initcode| == 0 then RETURNS(gas, [], nw, transient, substate)
             else
                 // Construct fresh EVM
                 var stack := EmptyEvmStack;
@@ -746,7 +772,7 @@ module EvmState {
                 var cod := Code.Create(initcode);
                 // Mark new account as having been accessed
                 var ss := substate.AccountAccessed(ctx.address);
-                var evm := EVM(fork,ctx,precompiled,nw,stack,mem,cod,ss,gas,0);
+                var evm := EVM(fork,ctx,precompiled,nw,stack,mem,transient,cod,ss,gas,0);
                 // Off we go!
                 EXECUTING(evm)
     }
@@ -792,7 +818,7 @@ module EvmState {
             // Construct new context
             var ctx := Context.Create(sender,origin,recipient,delegateValue,callData,writePermission,gasPrice,block);
             // Make the call!
-            Call(evm.world,ctx,evm.fork,precompiled,evm.substate,code,callValue,gas,depth+1)
+            Call(evm.world,evm.transient,ctx,evm.fork,precompiled,evm.substate,code,callValue,gas,depth+1)
         }
 
         /**
@@ -820,7 +846,7 @@ module EvmState {
                     // Slice out that data
                     var data := vm.data[0..m];
                     // Thread through world state and substate
-                    var nst := if vm.RETURNS? then st.Merge(vm.world,vm.substate) else st;
+                    var nst := if vm.RETURNS? then st.Merge(vm.world,vm.transient,vm.substate) else st;
                     // Done
                     nst.Push(exitCode).Refund(vm.gas).SetReturnData(vm.data).Copy(outOffset,data)
             else
@@ -845,7 +871,7 @@ module EvmState {
             // Construct new context
             var ctx := Context.Create(sender,origin,address,endowment,[],evm.context.writePermission,gasPrice,block);
             // Make the creation!
-            Create(evm.world,ctx,evm.fork,precompiled,evm.substate,initcode,gas,depth+1)
+            Create(evm.world,evm.transient,ctx,evm.fork,precompiled,evm.substate,initcode,gas,depth+1)
         }
 
         /**
@@ -889,7 +915,7 @@ module EvmState {
                         // Mark account as having been accessed
                         var nvm := vm.substate.AccountAccessed(address);
                         // Thread world state through
-                        st.Refund(vm.gas - depositcost).Merge(nworld,nvm).Push(address as u256).SetReturnData([])
+                        st.Refund(vm.gas - depositcost).Merge(nworld,vm.transient,nvm).Push(address as u256).SetReturnData([])
             else
                 ERROR(STACK_OVERFLOW)
         }

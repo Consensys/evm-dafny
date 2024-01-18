@@ -55,10 +55,11 @@ module EVM {
     requires context.address in world {
         var stck := Stack.Make(st);
         var mem := Memory.Create();
+        var tstore := TransientStorage.Create();
         var wld := WorldState.Create(world);
         var cod := Code.Create(code);
         var sub := SubState.Create();
-        var evm := EVM(fork,stack:=stck,memory:=mem,world:=wld,context:=context,precompiled:=precompiled,code:=cod,substate:=sub,gas:=gas,pc:=0);
+        var evm := EVM(fork,stack:=stck,memory:=mem,transient:=tstore,world:=wld,context:=context,precompiled:=precompiled,code:=cod,substate:=sub,gas:=gas,pc:=0);
         // Off we go!
         EXECUTING(evm)
     }
