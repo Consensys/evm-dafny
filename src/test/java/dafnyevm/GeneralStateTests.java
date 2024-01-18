@@ -74,8 +74,7 @@ public class GeneralStateTests {
     /**
      * Fork which (for now) I'm assuming we are running on. All others are ignored.
      */
-    //public final static String[] FORKS = {"Berlin","London","Shanghai","Cancun"};
-	public final static String[] FORKS = {"Cancun"};
+    public final static String[] FORKS = {"Berlin","London","Shanghai","Cancun"};
     /**
      * The directory containing the test files.
      */
@@ -183,7 +182,7 @@ public class GeneralStateTests {
                 // NOTE: the following is really just to help provide additional debugging
                 // support when running tests from e.g. gradle on the command line.
                 System.err.println(tuple + " ==> " + outcome);
-                printTraceDiff(expected, actual);
+                printTraceDiff(0, expected, actual);
             }
             // Finally check for equality.
             assertEquals(expected, actual);
@@ -207,7 +206,7 @@ public class GeneralStateTests {
      * @param expected
      * @param actual
      */
-    private static void printTraceDiff(Trace traceExpected, Trace traceActual) {
+    private static void printTraceDiff(int depth, Trace traceExpected, Trace traceActual) {
         if(traceExpected == null || traceActual == null) {
             System.err.println("(expected) " + traceExpected);
             System.err.println("(actual)   " + traceActual);
@@ -221,9 +220,15 @@ public class GeneralStateTests {
                 Trace.Element aith = actual.get(i);
                 // FIXME: handle nested traces here
                 if (!eith.equals(aith)) {
-                    System.err.println("(expected) " + eith);
-                    System.err.println("(actual)   " + aith);
-                    System.err.println("--");
+                	if(eith instanceof Trace.SubTrace && aith instanceof Trace.SubTrace) {
+                		Trace eith_tr = ((Trace.SubTrace)eith).getTrace();
+                		Trace aith_tr = ((Trace.SubTrace)aith).getTrace();
+                		printTraceDiff(depth+1,eith_tr,aith_tr);
+                	} else {
+                		System.err.println("(expected) " + eith.toString(depth));
+                		System.err.println("(actual)   " + aith.toString(depth));
+                		System.err.println("--");
+                	}
                     return;
                 }
             }
