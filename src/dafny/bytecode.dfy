@@ -1349,7 +1349,7 @@ module Bytecode {
             var loc := st.Peek(0);
             var val := st.TransientLoad(loc);
             // Push word
-            st.Pop().Push(val).KeyAccessed(loc).Next()
+            st.Pop().Push(val).Next()
         else
             ERROR(STACK_UNDERFLOW)
     }
@@ -1366,7 +1366,7 @@ module Bytecode {
                 var loc := st.Peek(0);
                 var val := st.Peek(1);
                 // Store word
-                st.Pop(2).TransientStore(loc,val).KeyAccessed(loc).Next()
+                st.Pop(2).TransientStore(loc,val).Next()
         else
             ERROR(STACK_UNDERFLOW)
     }
