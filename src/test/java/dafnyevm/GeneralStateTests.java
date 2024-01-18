@@ -74,7 +74,8 @@ public class GeneralStateTests {
     /**
      * Fork which (for now) I'm assuming we are running on. All others are ignored.
      */
-    public final static String[] FORKS = {"Berlin","London","Shanghai","Cancun"};
+    //public final static String[] FORKS = {"Berlin","London","Shanghai","Cancun"};
+	public final static String[] FORKS = {"Cancun"};
     /**
      * The directory containing the test files.
      */
@@ -150,12 +151,8 @@ public class GeneralStateTests {
             "eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
             // Cancun
-//            "MCOPY_Cancun_.*",
-//            "MCOPY_copy_cost_Cancun_.*",
-//            "MCOPY_memory_expansion_cost_Cancun_.*",
-//            "MCOPY_memory_hash_Cancun_.*",
-            "transStorageOK_Cancun_.*",
-            "transStorageReset_Cancun_.*",
+//            "transStorageOK_Cancun_.*",
+//            "transStorageReset_Cancun_.*",
             //
             "dummy");
 

@@ -1339,6 +1339,31 @@ module Bytecode {
     function JumpDest(st: ExecutingState): (st': ExecutingState) {
         st.Next()
     }
+    
+    function TLoad(st: ExecutingState): (st': State) {
+        if st.Operands() >= 1
+        then
+            var loc := st.Peek(0);
+            var val := st.Load(loc);
+            // Push word
+            st.Pop().Push(val).KeyAccessed(loc).Next()
+        else
+            ERROR(STACK_UNDERFLOW)
+    }
+
+    function TStore(st: ExecutingState): (st': State) {
+        if st.Operands() >= 2
+        then
+            if !st.WritesPermitted()
+                then ERROR(WRITE_PROTECTION_VIOLATED)
+            else
+                var loc := st.Peek(0);
+                var val := st.Peek(1);
+                // Store word
+                st.Pop(2).Store(loc,val).KeyAccessed(loc).Next()
+        else
+            ERROR(STACK_UNDERFLOW)
+    }
 
     /**
      * Perform an efficient copy of memory from one area to another.
