@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -149,13 +148,13 @@ public class GeneralStateTests {
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
-            // Cancun
-//            "MCOPY_Cancun_.*",
-//            "MCOPY_copy_cost_Cancun_.*",
-//            "MCOPY_memory_expansion_cost_Cancun_.*",
-//            "MCOPY_memory_hash_Cancun_.*",
-            "transStorageOK_Cancun_.*",
-            "transStorageReset_Cancun_.*",
+            // EIP4844 (PointEval Precompile)
+            "precompsEIP2929Cancun_Cancun_.*",
+            "idPrecomps_Cancun_0_9_0",
+            // EIP6780?
+            "suicideSendEtherPostDeath_Cancun_0_0_0",
+            "SelfDestruct_Cancun_.*",
+            "failed_tx_xcf416c53_Cancun_0_0_0",
             //
             "dummy");
 
@@ -186,7 +185,7 @@ public class GeneralStateTests {
                 // NOTE: the following is really just to help provide additional debugging
                 // support when running tests from e.g. gradle on the command line.
                 System.err.println(tuple + " ==> " + outcome);
-                printTraceDiff(expected, actual);
+                printTraceDiff(0, expected, actual);
             }
             // Finally check for equality.
             assertEquals(expected, actual);
@@ -210,7 +209,7 @@ public class GeneralStateTests {
      * @param expected
      * @param actual
      */
-    private static void printTraceDiff(Trace traceExpected, Trace traceActual) {
+    private static void printTraceDiff(int depth, Trace traceExpected, Trace traceActual) {
         if(traceExpected == null || traceActual == null) {
             System.err.println("(expected) " + traceExpected);
             System.err.println("(actual)   " + traceActual);
@@ -224,9 +223,15 @@ public class GeneralStateTests {
                 Trace.Element aith = actual.get(i);
                 // FIXME: handle nested traces here
                 if (!eith.equals(aith)) {
-                    System.err.println("(expected) " + eith);
-                    System.err.println("(actual)   " + aith);
-                    System.err.println("--");
+                	if(eith instanceof Trace.SubTrace && aith instanceof Trace.SubTrace) {
+                		Trace eith_tr = ((Trace.SubTrace)eith).getTrace();
+                		Trace aith_tr = ((Trace.SubTrace)aith).getTrace();
+                		printTraceDiff(depth+1,eith_tr,aith_tr);
+                	} else {
+                		System.err.println("(expected) " + eith.toString(depth));
+                		System.err.println("(actual)   " + aith.toString(depth));
+                		System.err.println("--");
+                	}
                     return;
                 }
             }

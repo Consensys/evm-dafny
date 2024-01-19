@@ -20,6 +20,7 @@ include "core/precompiled.dfy"
     import opened Int
     import Code
     import WorldState
+    import TransientStorage
     import Context
     import SubState
     import EvmState
@@ -77,6 +78,7 @@ include "core/precompiled.dfy"
         var recipientAccount := WorldState.Account(5,6,Storage.Create(map[]),someCode, 0);
         var accounts := map[sender := senderAccount, recipient := recipientAccount];
         var worldState := WorldState.Create(accounts);
+        var transient := TransientStorage.Create();
 
         var gasLimit := 2;
 
@@ -88,7 +90,7 @@ include "core/precompiled.dfy"
 
         var depth := 0;
 
-        var st := EvmState.Call(worldState, context, EvmFork.BERLIN, Precompiled.DEFAULT, substate, recipient, callValue, gasAvailable, depth);
+        var st := EvmState.Call(worldState, transient, context, EvmFork.BERLIN, Precompiled.DEFAULT, substate, recipient, callValue, gasAvailable, depth);
 
         MessageCall(sender, origin, recipient, callValue, callData, writePermission, gasPrice, blockInfo, accounts, gasAvailable);
 
@@ -114,10 +116,11 @@ include "core/precompiled.dfy"
         var ctx := Context.Create(sender, origin, recipient, callValue, callData, writePermission, gasPrice, blockInfo);
         var ws := WorldState.Create(accounts);
         var ss := SubState.Create();
+        var transient := TransientStorage.Create();
         ss := ss.AccountAccessed(sender);
         ss := ss.AccountAccessed(recipient);
         ws := ws.IncNonce(sender);
-        var st := EvmState.Call(ws, ctx, EvmFork.BERLIN, Precompiled.DEFAULT, ss, recipient, callValue, gas, 1);
+        var st := EvmState.Call(ws, transient, ctx, EvmFork.BERLIN, Precompiled.DEFAULT, ss, recipient, callValue, gas, 1);
         st := Run(0, st);
         if st.RETURNS? {
 

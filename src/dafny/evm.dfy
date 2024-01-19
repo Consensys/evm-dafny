@@ -55,10 +55,11 @@ module EVM {
     requires context.address in world {
         var stck := Stack.Make(st);
         var mem := Memory.Create();
+        var tstore := TransientStorage.Create();
         var wld := WorldState.Create(world);
         var cod := Code.Create(code);
         var sub := SubState.Create();
-        var evm := EVM(fork,stack:=stck,memory:=mem,world:=wld,context:=context,precompiled:=precompiled,code:=cod,substate:=sub,gas:=gas,pc:=0);
+        var evm := EVM(fork,stack:=stck,memory:=mem,transient:=tstore,world:=wld,context:=context,precompiled:=precompiled,code:=cod,substate:=sub,gas:=gas,pc:=0);
         // Off we go!
         EXECUTING(evm)
     }
@@ -177,6 +178,8 @@ module EVM {
             case MSIZE => s.UseGas(G_BASE)
             case GAS => s.UseGas(G_BASE)
             case JUMPDEST => s.UseGas(G_JUMPDEST)
+            case TLOAD => s.UseGas(G_WARMACCESS)
+            case TSTORE => s.UseGas(G_WARMACCESS)
             case MCOPY => s.UseGas(CostExpandDoubleRange(s,3,0,2,1,2) + G_VERYLOW + CostCopy(s,2))
             case PUSH0 => s.UseGas(G_BASE)
             // 0x60s & 0x70s: Push operations
@@ -344,6 +347,8 @@ module EVM {
             case MSIZE => Bytecode.MSize(st)
             case GAS => Bytecode.Gas(st)
             case JUMPDEST => Bytecode.JumpDest(st)
+            case TLOAD => Bytecode.TLoad(st)
+            case TSTORE => Bytecode.TStore(st)
             case MCOPY => Bytecode.MCopy(st)
             case PUSH0 => Bytecode.Push0(st)
             // 0x60s & 0x70s: Push operations
