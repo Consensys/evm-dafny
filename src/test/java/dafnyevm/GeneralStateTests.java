@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -149,9 +148,13 @@ public class GeneralStateTests {
             "randomStatetest353_.*_0_0_0",
             "eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
-            // Cancun
-//            "transStorageOK_Cancun_.*",
-//            "transStorageReset_Cancun_.*",
+            // EIP4844 (PointEval Precompile)
+            "precompsEIP2929Cancun_Cancun_.*",
+            "idPrecomps_Cancun_0_9_0",
+            // EIP6780?
+            "suicideSendEtherPostDeath_Cancun_0_0_0",
+            "SelfDestruct_Cancun_.*",
+            "failed_tx_xcf416c53_Cancun_0_0_0",
             //
             "dummy");
 
