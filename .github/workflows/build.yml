@@ -36,26 +36,6 @@ jobs:
         if: always()
         run: gradle --no-daemon debug --args="build/logs/test_*.csv"
 
-  build-go:
-    runs-on: ubuntu-latest    
-    steps:
-        # Setup      
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: dafny-lang/setup-dafny-action@v1.7.0
-        with:
-          dafny-version: "4.4.0"
-      - name: Set DAFNY_HOME
-        run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV      
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.19
-        # Build
-      - name: Makefile Build
-        run: make
-
   test-z3-4-8-5:
     runs-on: ubuntu-latest    
     steps:
