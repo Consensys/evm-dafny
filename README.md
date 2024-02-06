@@ -18,7 +18,6 @@
 5. [Building the Code](#building-the-code)
    1. [Java target](#java-target)
       1. [Test Generation](#test-generation)
-   2. [Go target](#go-target)
 6. [Contributing](#contributing)
 7. [Resources](#resources)
 
@@ -197,27 +196,6 @@ is governed by the files `tests/includes.txt` and
 tests should be included, whilst the latter identifies specific cases
 to exclude.  Finally, the trace generation process is managed by the
 [EvmTools](https://github.com/DavePearce/EvmTools) framework.
-
-## Go target
-
-The Go target uses GNU Make for its build system (preferably v4 or later).
-In macOS, it can be installed with `brew install make`, which installs it as `gmake`.
-
-The code is currently being developed with Dafny 3.10, Go 1.19; all available in `brew`.
-
-The GNUMakefile contains multiple targets to ease development:
-* `dafny` runs verification, translation and tests on the Dafny code.
-  * Each stage can be run independently with `dafny_verify`, `dafny_translate`, `dafny_test`
-  * You can add `_clean` to those to remove their products and witnesses.
-  * Or you can add `_force` instead to rerun them even if there were no changes.
-* `clean` cleans all build products and verification and test witnesses.
-* `run` builds and runs the Dafny Main entry point. You can provide arguments adding `RUN_ARGS="--gas 100"`.
-  * This is for convenience; a standard executable is nonetheless generated at `build/dafnyexec`.
-
-For example, you can run the Dafny main like this:
-```
-> gmake run RUN_ARGS="--gas 100"
-```
 
 
 # Contributing
