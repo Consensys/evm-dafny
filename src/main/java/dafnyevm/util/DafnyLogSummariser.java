@@ -20,11 +20,14 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -44,6 +47,10 @@ class Result {
 
     public Result(Map<String,String> entry) {
         // Strip off trailing stuff (e.g. assertion batch 0) as it just gets in the way.
+        if (! Objects.equals(entry.get("TestResult.Outcome"),"Passed")) {
+            System.err.println("Failed entry: %s = %s".formatted(toName(entry.get("TestResult.DisplayName")),toUnitString(new BigInteger(entry.get("TestResult.ResourceCount")))));
+            //System.exit(1);
+        }
         this.name = toName(entry.get("TestResult.DisplayName"));
         this.usages = new ArrayList<>();
         this.usages.add(new BigInteger(entry.get("TestResult.ResourceCount")));
@@ -81,13 +88,31 @@ class Result {
         return stddev().doubleValue() / mean().doubleValue();
     }
 
+    public BigInteger min() {
+        return usages.get(0);
+    }
+
+    public BigInteger max() {
+        return usages.get(usages.size()-1);
+    }
+
+    public BigInteger median() {
+        var i = usages.size();
+        return usages.get(i/2);
+    }
+
     public void join(Result r) {
         usages.addAll(r.usages);
     }
 
-    private String toName(String input) {
-        String[] items = input.split(" ");
-        return "[" + toNameType(items[1]) + "] " + items[0];
+    private String toName(String displayName) {
+        String[] items = displayName.split(" ");
+        if (! displayName.contains("(assertion batch 0)")) {
+            System.err.println("Assertion batch != 0!");
+            System.exit(1);
+        }
+        String res = "[" + toNameType(items[1]) + "] " + items[0];
+        return res;
     }
 
     private String toNameType(String input) {
@@ -105,7 +130,10 @@ class Result {
         String samples = "[" + usages.size() + "]";
         width -= name.length() + samples.length();
         String mean = toUnitString(mean());
-        String label = String.format("%1$s (%2$.2f)", mean,coeffVariance());
+        var min = toUnitString(min());
+        var max = toUnitString(max());
+        var median = toUnitString(median());
+        String label = String.format("%1$s  (%2$.2f) %3$7s %4$7s %5$7s", mean, coeffVariance(), min, median, max);
         return samples + name + String.format("%1$" + width + "s", label);
     }
 
@@ -155,6 +183,13 @@ public class DafnyLogSummariser {
             }
             map.put(ith.name,ith);
         }
+
+        // sort the usages so that we can get the medians (and easy max,min)
+        for (var k: map.keySet()) {
+            var v = map.get(k);
+            v.usages.sort(BigInteger::compareTo);
+        }
+
         // Done
         return new ArrayList<>(map.values());
     }
@@ -162,6 +197,7 @@ public class DafnyLogSummariser {
     public static void main(String[] args) throws IOException {
         // Parse command-line arguments.
         CommandLine cmd = parseCommandLine(args);
+        //System.out.println("args at Java = " + String.join(" ",args));
         int nResults = Integer.parseInt(cmd.getOptionValue("entries", "20"));
         //
         FileSystem fs = FileSystems.getDefault();
@@ -169,16 +205,22 @@ public class DafnyLogSummariser {
         // Process globs given on the command-line.
         for (String line : args) {
             PathMatcher matcher = fs.getPathMatcher("glob:" + line);
-            processGlobs(matcher,results);
+            int count = processGlobs(matcher,results);
+            if (count == 0){
+                System.err.println("NO MATCHES: %s ".formatted(line));
+            }
         }
         // Combine duplicate results
         results = merge(results);
         // Sort results into ascending order
-        results.sort((r1,r2) -> r1.mean().compareTo(r2.mean()));
+        //results.sort((r1,r2) -> r1.mean().compareTo(r2.mean()));
+        //results.sort((r1,r2) -> Double.compare(r1.coeffVariance(),r2.coeffVariance()));
+        results.sort((r1,r2) -> r1.max().compareTo(r2.max()));
+
         // Revert into descending order
         Collections.reverse(results);
         // Print out header
-        System.out.println("Name" + String.format("%1$" + 76 + "s", "Resource Usage (CoV)"));
+        System.out.println("Name" + String.format("%1$" + 76 + "s", "RU   (CoV)      Min  Median     Max"));
         System.out.println(String.format("%1$" + 80 + "s", "").replace(' ','='));
         // Print top n results
         BigInteger total = BigInteger.ZERO;
@@ -197,11 +239,13 @@ public class DafnyLogSummariser {
         System.out.println(String.format("Total (mean):" + "%1$" + 67 + "s", total.toString()));
     }
 
-    private static void processGlobs(PathMatcher matcher, List<Result> results) throws IOException {
+    private static int processGlobs(PathMatcher matcher, List<Result> results) throws IOException {
         Path dir = Path.of(".");
+        AtomicInteger count = new AtomicInteger(0);
         Files.walk(dir,10).forEach(f -> {
             Path rf = dir.relativize(f);
             if(matcher.matches(rf)) {
+                count.incrementAndGet();
                 try {
                     processPath(rf,results);
                 } catch (IOException e) {
@@ -209,9 +253,12 @@ public class DafnyLogSummariser {
                 }
             }
         });
+        return count.intValue();
+
     }
 
     private static void processPath(Path p, List<Result> results) throws IOException {
+        System.out.println("processing file "+p);
         try (Scanner scanner = new Scanner(p);) {
             String[] headers = scanner.nextLine().split(",");
             while (scanner.hasNextLine()) {
