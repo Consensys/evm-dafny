@@ -81,3 +81,5 @@ src/test/dafny/**/*.runtimeconfig.json
 .classpath
 .project
 .settings
+TestResults
+
