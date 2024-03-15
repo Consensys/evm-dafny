@@ -20,8 +20,11 @@ def shell(str, **kwargs):
     #print(r)
     return r
 
-#parser = argparse.ArgumentParser()
-#remember there's also sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument("dafnyfile")
+parser.add_argument("extra_args", nargs='?', default="")
+args = parser.parse_args()
+
 
 loglevel = "debug"
 numeric_level = getattr(log, loglevel.upper(), None)
@@ -29,9 +32,9 @@ if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % loglevel)
 log.basicConfig(level=numeric_level,format='%(levelname)s:%(message)s')
 
-argstring = " ".join(sys.argv[2:])
-dafnyfile = sys.argv[1]
-argstring4filename = "".join(sys.argv[1:]).replace("/","-").replace("--","-").replace(":","-")
+argstring = args.extra_args
+dafnyfile = args.dafnyfile
+argstring4filename = f"{args.dafnyfile}{argstring}".replace("/","").replace("-","").replace(":","").replace(" ","")
 d : str = dt.now()
 dstr = d.strftime('%Y%m%d-%H%M%S')
 filename = "TestResults/" + dstr + "_" + argstring4filename + ".csv"

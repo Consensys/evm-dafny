@@ -1,6 +1,6 @@
 #! python3
 """
-Runs measure-complexity with random seeds until it finds logs with Resource Usage <min and >max
+Runs measure-complexity with random seeds until it finds CSV logs with Resource Usage <min and >max for the given DisplayName
 """
 import argparse
 import csv
@@ -30,14 +30,13 @@ def smag(i) -> str:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("dafnyfile")
-parser.add_argument("displayname")
-parser.add_argument("min", type=Quantity)
-parser.add_argument("max", type=Quantity)
+parser.add_argument("--displayname", default="")
+parser.add_argument("--min", type=Quantity, default=-inf)
+parser.add_argument("--max", type=Quantity, default=inf)
 parser.add_argument("extra_args", nargs='?', default="")
 parser.add_argument("-v", "--verbose", action="count", default=0)
 
 args = parser.parse_args()
-#remember there's also sys.argv
 
 # loglevel = "debug"
 # numeric_level = getattr(log, loglevel.upper(), None)
@@ -83,32 +82,35 @@ while True:
         #log.info("executed: " + CLI_line)
         continue
 
-    if res.returncode == 0:
-        with open(filename) as csvfile:
-            reader = csv.DictReader(csvfile)
-            rows_num = 0
-            rus: list[int] = []
-            for row in reader:
-                rows_num += 1
-                log.debug(f"CSV row {rows_num}")
-                if args.displayname in row['TestResult.DisplayName'] :
-                    # if ru == None:
-                    #     ru = int(row['TestResult.ResourceCount'])
-                    # else:
-                    #     # if we run a single iteration, there should be no multiple rows for a given method/function, right? Though those might happen when something is included or whatever...?
-                    #     log.error(f"File {filename} contains multiple rows for {args.displayname}!")
-                    #     exit(100)
-                    rus.append(int(row['TestResult.ResourceCount']))
-
-        if rus == []:
-            log.error("DisplayName not in results!")
-            exit(100)
-    else:
+    if res.returncode != 0:
         print(f"returncode={res.returncode}")
         print(f"stdout={res.stdout}")
         print(f"stderr={res.stderr}")
         continue
         #exit(res.returncode)
+
+    if args.displayname == "":
+        continue
+
+    with open(filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows_num = 0
+        rus: list[int] = []
+        for row in reader:
+            rows_num += 1
+            log.debug(f"CSV row {rows_num}")
+            if args.displayname in row['TestResult.DisplayName'] :
+                # if ru == None:
+                #     ru = int(row['TestResult.ResourceCount'])
+                # else:
+                #     # if we run a single iteration, there should be no multiple rows for a given method/function, right? Though those might happen when something is included or whatever...?
+                #     log.error(f"File {filename} contains multiple rows for {args.displayname}!")
+                #     exit(100)
+                rus.append(int(row['TestResult.ResourceCount']))
+
+    if rus == []:
+        log.error("DisplayName not in results!")
+        exit(100)
 
     rus.sort()
     rus_min = rus[0]
