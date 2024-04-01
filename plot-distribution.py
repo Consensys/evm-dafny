@@ -25,6 +25,8 @@ import numpy as np
 import re
 from datetime import datetime as dt, timedelta as td
 
+from quantiphy import Quantity
+
 
 def cleanDisplayName(dn:str) -> str:
     new = dn.replace("(well-formedness)","WF")
@@ -45,13 +47,16 @@ def readCSV(fullpath) -> int:
     log.info(f"{fullpath} :{rows} rows")
     return rows
 
+def smag(i) -> str:
+    return f"{Quantity(i):.3}"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('paths', nargs='+')
 parser.add_argument("-v", "--verbose", action="count", default=0)
-parser.add_argument("-r", "--recreate-pickle",action="store_true")
-parser.add_argument("-n", "--nbins", default=25)
+parser.add_argument("-p", "--recreate-pickle",action="store_true")
+parser.add_argument("-n", "--nbins", default=50)
 parser.add_argument("-y", "--ylog",action="store_true")
+parser.add_argument("-d", "--delta", default=10)
 
 args = parser.parse_args()
 
@@ -152,46 +157,49 @@ m = [l for l in usages.values()]
 
 maxRC = np.max(m) + 1
 bins = np.linspace(0,maxRC, num=args.nbins)
-counts, bins2 = np.histogram(m,bins=bins)
+bin_size = maxRC / args.nbins
+#counts, bins2 = np.histogram(m,bins=bins)
 #bins = 0.5 * (bins[:-1] + bins[1:])
 
 # import plotly.express as px
 # fig = px.bar(x=bins[:-1], y=counts, barmode="group")#,labels={'x':'RC', 'y':'occurrences'},)
 
 
-from plotly.graph_objs._figure import Figure
 
-import plotly.graph_objects as go
-fig = go.Figure()
-
-categories = 0
+traces = []
+labels = []
 for k,v in usages.items():
-    counts, _ = np.histogram(v,bins=bins)
-
-    nonempty = []
-    for i in range(len(counts)):
-        if counts[i] != 0:
-            nonempty += [i]
-    if nonempty[-1]-nonempty[0] < 3:
+    minRC = min(v)
+    maxRC = max(v)
+    delta = (maxRC-minRC)/maxRC # difference between max and min
+    print(f"{k}: \t{len(v)} points \t{smag(minRC)} - {smag(maxRC)} \tdiff={delta:.2%}", end="")
+    if delta < args.delta/100:
+        print("")
         continue
 
-    fig.add_bar(
-        x=bins,
-        y=counts,
-        #visible=visibility,
-        name=k,
-    )
-    categories += 1
+    print("\t PLOTTED")
+    traces.append(v)
+    labels.append(k)
 
+#DEPRECATED
+#import plotly.figure_factory as ff
+#fig = ff.create_distplot(traces, labels, bin_size=bin_size,show_curve=False)
 
+# impossibly slow
+import plotly.express as px
+fig = px.histogram(usages, x=labels, barmode="group", nbins = args.nbins, marginal="rug")#,labels=labels,)
+
+title = f'{args.nbins} bins, {len(traces)}/{len(usages)} categories'
+print(title)
 
 # fig.update_traces({"visible":"legendonly"})
 fig.update_layout(
-    title_text=f'{args.nbins} bins, {categories}/{len(usages)} categories', # title of plot
+    title_text=title, # title of plot
     xaxis_title_text='Resource Count', # xaxis label
     yaxis_title_text='Occurrences', # yaxis label
     bargap=0.2, # gap between bars of adjacent location coordinates
-    bargroupgap=0, # gap between bars of the same location coordinates
+    bargroupgap=0, # gap between bars of the same location coordinates,
+
 )
 
 if args.ylog:
@@ -199,5 +207,43 @@ if args.ylog:
 
 # to set x-axes ticks to limits of bins
 #fig.update_xaxes(tickvals=np.arange(range_dict.start, range_dict.end+range_dict.size, range_dict.size))
+
+print(fig.to_dict())
+
+# ADD 2 BUTTONS TO TOGGLE LOG/LINEAR Y, but only in the yaxis 1
+# fig.update_layout(
+#     updatemenus=[
+#         dict(
+#             type="buttons",
+#             direction="right",
+#             active=0,
+#             x=0.57,
+#             y=1.2,
+#             buttons=list([
+#                 dict(label="Linear",
+#                      method="update",
+#                      args=[{"visible": [True, False, True, False]},
+#                            {"title": "Yahoo",
+#                             "annotations": []}]),
+#                 dict(label="High",
+#                      method="update",
+#                      args=[{"visible": [True, True, False, False]},
+#                            {"title": "Yahoo High",
+#                             "annotations": high_annotations}]),
+#                 dict(label="Low",
+#                      method="update",
+#                      args=[{"visible": [False, False, True, True]},
+#                            {"title": "Yahoo Low",
+#                             "annotations": low_annotations}]),
+#                 dict(label="Both",
+#                      method="update",
+#                      args=[{"visible": [True, True, True, True]},
+#                            {"title": "Yahoo",
+#                             "annotations": high_annotations + low_annotations}]),
+#             ]),
+#         )
+#     ])
+
+
 
 fig.show()
