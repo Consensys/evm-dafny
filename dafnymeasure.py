@@ -1,5 +1,7 @@
 #! python3
 """
+Make it easier to run measure-complexity, store its log file with the current date and run a tool on it
+
 Runs dafny's measure-complexity with the given args,
 stores the CSV file with the args in the filename for easier bookkeeping,
 and runs dafny-reportgenerator on that file
@@ -23,6 +25,7 @@ def shell(str, **kwargs):
 parser = argparse.ArgumentParser()
 parser.add_argument("dafnyfile")
 parser.add_argument("extra_args", nargs='?', default="")
+parser.add_argument("-d", "--dafnyexec", default="dafny")
 args = parser.parse_args()
 
 
@@ -39,15 +42,20 @@ d : str = dt.now()
 dstr = d.strftime('%Y%m%d-%H%M%S')
 filename = "TestResults/" + dstr + "_" + argstring4filename + ".csv"
 #log.debug(f"filename={filename}")
-cli = fr"dafny44 measure-complexity --log-format csv\;LogFileName='{filename}' {argstring} {dafnyfile}"
+cli = fr"{args.dafnyexec} measure-complexity --log-format csv\;LogFileName='{filename}' {argstring} {dafnyfile}"
 log.debug(f"Executing:{cli}")
 res = shell(cli)
 #res = shell(fr"dafny44 verify --log-format csv\;LogFileName='{filename}' {argstring} {dafnyfile}")
+print(f"out: {res.stdout}")
 if res.returncode != 0:
-    print(f"out: {res.stdout}")
     print(f"err: {res.stderr}")
     exit(res.returncode)
+
 cli = f"dafny-reportgenerator summarize-csv-results --max-resource-cv-pct 10 '{filename}'"
 log.debug(f"Executing:{cli}")
 res = shell(cli)
-print(res.stdout)
+print(f"out: {res.stdout}")
+if res.returncode != 0:
+
+    print(f"err: {res.stderr}")
+    exit(res.returncode)
