@@ -13,6 +13,7 @@
 
 import argparse
 import csv
+import json
 import logging as log
 import os
 import pickle
@@ -42,6 +43,74 @@ def readCSV(fullpath) -> int: #reads 1 file, returns number of rows read
             usages[dn] = usages.get(dn,[]) + [int(rc)]
     log.info(f"{fullpath} :{rows} rows")
     return rows
+
+class verification_data:
+    RC: list[int] = []
+    RC_max: int
+    RC_min: int
+    line: int
+    col: int
+    description: str
+
+verifications: dict[str,verification_data] = {}
+
+def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
+    # We want entries like: Precompiled.CallModExp WF ABx : [usages],Line,Row,Message
+    entries = 0
+    global verifications
+    with open(fullpath) as jsonfile:
+        verificationResults = json.load(jsonfile)["verificationResults"]
+    
+    # A JSON verification log contains a list of verificationResults
+    # Each of vR corresponds to a function or method
+    # and contains its Display Name, overall Resource Count, verification outcome and the Assertion Batches (vcResults)
+    # If "isolating assertions" was NOT used, then there will be only 1 AB per vR
+    #   Each AB contains its number (vcNum), outcome, Resource Count, and a list of assertions
+    #   if "isolating assertions" was NOT used, then the list will contain multiple assertions: 1 vcResult = multiple assertions
+    #       Each assertion contains its location and description of the result
+    #
+    # Recap: if "isolating assertions" was NOT used, then DN does NOT contain AB (because it's always 1),
+    # and its entry only contains the list of RCs, not anything deeper
+    # But if "isolating assertions" was used, then each DN contains an AB; and each DN+AB's entry contains not only list of RCs,
+    # but usages and location
+
+    for vr in verificationResults:
+        display_name = cleanDisplayName(vr["name"])
+        assert vr["outcome"] == "Correct", f"{vr["name"]} has outcome {vr["outcome"]}" # didn't see it before, not implemented
+
+        dn_RC = vr["resourceCount"] # should equal the sum of the RC of all the ABs
+
+        # vcResults is the list of Assertion Batches (AKA Verification Conditions)
+        # And without "isolating assertions", there is only 1 vcr per vr
+        if len(vr['vcResults']) == 1:
+            # No "isolating assertions", so just store the RC into the list for that DN
+            entry: verification_data = verifications.get(display_name, verification_data())
+            entry.RC.append(dn_RC)
+            verifications[display_name] = entry
+            entries += 1
+            continue
+
+        # At this point we know there's more than 1 AB, so we assume it an "isolating assertions" case
+        for i in range(1,len(vr.vcResults)+1): # for coherence with the text logs, who number the ABs with base 1
+            vcr = vr.vcResults[i]
+            assert vcr['outcome'] == "Valid", f"{vr["name"]} has vcResult.outcome == {vr["outcome"]}, stopping"
+            assert vcr['vcNum'] == i # looks like vcNum is always the index in the list of vcResults
+            assert len(vcr['assertions']) == 1             # There's multiple ABs, but each AB contains a single assertion
+            display_name += " AB"+i
+            entry: verification_data = verifications.get(display_name, verification_data())
+            if entry != None:
+                assert entry.line == vcr['line']
+                assert entry.col == vcr['col']
+                assert entry.description == vcr['description']
+            else:
+                entry.line = vcr['line']
+                entry.col = vcr['col']
+                entry.description = vcr['description']
+            entry.RC.append(vcr['resourceCount'])
+            verifications[display_name] = entry
+            entries += 1
+
+    return entries
 
 def smag(i) -> str:
     return f"{Quantity(i):.3}"
@@ -78,7 +147,7 @@ else:
         # os.walk doesn't accept files, only dirs; so we need to process files separately
         log.debug(f"root {p}")
         if os.path.isfile(p):
-            rows_read = readCSV(p)
+            rows_read = readJSON(p)
             if rows_read == 0:
                 print(f"no rows in {p}")
                 exit(1)
@@ -89,13 +158,13 @@ else:
         for dirpath, dirnames, dirfiles in os.walk(p):
             files_before = files
             for f in dirfiles:
-                if not ".csv" in f:
+                if not ".json" in f:
                     continue
                 files +=1
                 fullpath = os.path.join(dirpath, f)
                 log.debug(f"file {files}: {fullpath}")
                 rows_before = rows
-                rows_read = readCSV(fullpath)
+                rows_read = readJSON(fullpath)
                 if rows_read == 0:
                     print(f"no files found in {p}")
                     exit(1)
