@@ -29,8 +29,8 @@ def cleanDisplayName(dn:str) -> str:
     new = re.sub(r"\(assertion batch (\d+)\)",r"AB\1", new)
     return new.strip()
 
-def readCSV(fullpath) -> int:
-    """Reads the CSV into the global usages map"""
+def readCSV(fullpath) -> int: #reads 1 file, returns number of rows read
+    """Reads the CSV file into the global usages map"""
     rows = 0
     global usages
     with open(fullpath) as csvfile:
@@ -75,6 +75,7 @@ if os.path.isfile(picklefilepath) and not args.recreate_pickle:
 else:
 
     for p in args.paths:
+        # os.walk doesn't accept files, only dirs; so we need to process files separately
         log.debug(f"root {p}")
         if os.path.isfile(p):
             rows_read = readCSV(p)
@@ -249,20 +250,21 @@ dfu = pd.DataFrame(usages)
 dfu = dfu.reset_index()
 
 log.info("hvplot")
-hist = dfu.hvplot(kind='hist',y=labels_selected, xlabel="Resource Count", ylabel="Occurrences", bins=25, responsive=True, height=500, logy=False, ylim=[0.5,1000])
-#hist2 = dfu.hvplot.hist(y=labels_selected, xlabel="Resource Count", ylabel="Occurrences", bins=25)
+hist = dfu.hvplot(kind='hist',y=labels_selected, xlabel="Resource Count", ylabel="Occurrences", bins=args.nbins, responsive=True, height=500, autorange='y')#, logy=True, ylim=(1,1000), )
+# hist2 = hv.Histogram((bins, counts)).opts(opts.Histogram(responsive=True, height=500, logy=False, ylim=(0.5,1000)))
 violin = dfu.hvplot(kind='violin', y=labels_selected, invert=True, responsive=True, height=200)
 violin.opts(opts.Violin(inner='stick'))
 
 plot = violin + hist
 plot.cols(1)
-plot.opts(
-    opts.Violin(tools=['box_select','lasso_select']),
-    #opts.Histogram(responsive=True, height=500, width=1000),
-    opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
-)
-ls = hv.link_selections.instance()
-lplot = ls(plot)
+# plot.opts(
+#     opts.Violin(tools=['box_select','lasso_select']),
+#     #opts.Histogram(responsive=True, height=500, width=1000),
+#     opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
+# )
+
+# ls = hv.link_selections.instance()
+# lplot = ls(plot)
 
 
 #renderer.save(plot, 'plot')
