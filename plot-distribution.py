@@ -1,5 +1,18 @@
 #! python3
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('paths', nargs='+')
+parser.add_argument("-v", "--verbose", action="count", default=0)
+parser.add_argument("-p", "--recreate-pickle",action="store_true")
+parser.add_argument("-n", "--nbins", default=50)
+#parser.add_argument("-y", "--ylog",action="store_true")
+parser.add_argument("-d", "--delta", type=int, default=10)
+parser.add_argument("-i", "--ignore", action='append', default=[])
+parser.add_argument("-t", "--top", default=5)
+
+args = parser.parse_args()
+
 
 #######################################################################################################################
 # A tick formatter for Bokeh plots, so that is uses SI suffixes for big numbers
@@ -132,23 +145,6 @@ class SIFormatter(TickFormatter):
 
 #######################################################################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import argparse
-import csv
 import json
 import logging as log
 from math import inf
@@ -164,27 +160,13 @@ from quantiphy import Quantity
 
 def cleanDisplayName(dn:str) -> str:
     new = dn.replace("(well-formedness)","") # WF is almost everywhere, so omit it; better just mention anything non-WF
+    new = new.replace("(correctness)","[C]")
     new = re.sub(r"\(assertion batch (\d+)\)",r"AB\1", new)
     return new.strip()
-
-def readCSV(fullpath) -> int: #reads 1 file, returns number of rows read
-    """Reads the CSV file into the global usages map"""
-    rows = 0
-    global results
-    with open(fullpath) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            rows += 1
-            dn = cleanDisplayName(row['TestResult.DisplayName'])
-            rc = row['TestResult.ResourceCount']
-            results[dn] = results.get(dn,[]) + [int(rc)]
-    log.info(f"{fullpath} :{rows} rows")
-    return rows
 
 class Details:
     def __init__(self):
         self.RC: list[int]= []
-
     RC: list[int]
     RC_max: int
     RC_min: int
@@ -192,6 +174,7 @@ class Details:
     col: int = None
     description: str = None
     randomSeed: int = None
+    RC_delta: int
 
 
 
@@ -210,7 +193,7 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
     #   if "isolating assertions" was NOT used, then the list will contain multiple assertions: 1 vcResult = multiple assertions
     #       Each assertion contains its location and description of the result
     #
-    # Recap: if "isolating assertions" was NOT used, then DN does NOT contain AB (because it's always 1),
+    # Recap: if "isolating assertions" was NOT used, then the AB number is always 1, so no need to add it to our DN
     # and its entry only contains the list of RCs, not anything deeper
     # But if "isolating assertions" was used, then each DN contains an "AB x"; and each DN+AB's entry contains not only list of RCs,
     # but usages and location
@@ -272,15 +255,6 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
 def smag(i) -> str:
     return f"{Quantity(i):.3}"
 
-parser = argparse.ArgumentParser()
-parser.add_argument('paths', nargs='+')
-parser.add_argument("-v", "--verbose", action="count", default=0)
-parser.add_argument("-p", "--recreate-pickle",action="store_true")
-parser.add_argument("-n", "--nbins", default=50)
-parser.add_argument("-y", "--ylog",action="store_true")
-parser.add_argument("-d", "--delta", default=10)
-
-args = parser.parse_args()
 
 numeric_level = log.WARNING - args.verbose * 10
 log.basicConfig(level=numeric_level,format='%(asctime)s-%(levelname)s:%(message)s',datefmt='%H:%M:%S')
@@ -349,30 +323,77 @@ else:
 # counts, bins2 = np.histogram(m,bins=bins)
 # #bins = 0.5 * (bins[:-1] + bins[1:])
 
-log.info("Selecting traces")
-traces_selected = []
-labels_selected = []
+log.debug("Selecting traces")
+# Decide which displaynames look interesting
+#traces_selected = []
+#labels_selected = []
 maxRC = -inf
 minRC = inf
+
 for k,v in results.items():
+    if k in args.ignore:
+        continue
     minRC_entry = min(v.RC)
     minRC = min(minRC, minRC_entry)
     maxRC_entry = max(v.RC)
     maxRC = max(maxRC, maxRC_entry)
     delta = (maxRC_entry-minRC_entry)/maxRC_entry # difference between max and min, relative to max
-    line = f"{k}: \t{len(v.RC)} points \t{smag(minRC_entry)} - {smag(maxRC_entry)} \tdiff={delta:.2%}"
+    line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {delta:>8.2%}"
     log.debug(line)
     if delta < args.delta/100:
         continue
+    results[k].RC_max = maxRC_entry
+    results[k].RC_min = minRC_entry
+    results[k].RC_delta = delta
 
-    print(f"{line}\t PLOTTED")
-    traces_selected.append(v)
-    labels_selected.append(k)
+    #print(f"{line}")
+    #traces_selected.append(v)
+    #labels_selected.append(k)
 
+#sort the dictionary of results by the delta; high delta == high interest
+results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'RC_delta',0))}
+
+# add the sorted index to the beginning of each DN
+# results2 = {f'{i} {k}':v for i,k,v in zip(range(len(results.items())),results.keys(), results.values())}
+# results = results2
+results2 = {}
+keys = list(results.keys())
+for i in range(len(keys)):
+    new_key = f'{i+1} {keys[i]}'
+    results2[new_key] = results[keys[i]]
+results = results2
+
+# We have the interesting DNs, but when plotting all histograms together, the bin distribution might cause some DNs to fall into a single bin
+# So let's remove those from the plots
+print(f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'diff':>8}")
+print(f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'====':>8}")
+bins = np.linspace(minRC,maxRC, num=args.nbins+1)
+bh = 0.5 * (bins[:-1] + bins[1:])
+hist_dict = {}
+# the results dict is sorted by delta; to keep that order we need to traverse the dict, not the list of labs_selected
+for dn in results.keys():
+    d = results[dn]
+    delta = getattr(d,'RC_delta',0)
+    if delta < args.delta/100:
+        break #because it's sorted
+    counts, _ = np.histogram(d.RC,bins=bins)
+    line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%}"
+    # remove plots that would fall into less than 3 bins
+    nonempty = []
+    for i in range(len(counts)):
+        if counts[i] != 0:
+            nonempty += [i]
+    if nonempty[-1]-nonempty[0] < 3:
+        print(line)
+        continue
+    print(f"{line}\tPLOTTED")
+    hist_dict[dn] = counts
+print("Plotting those not in a single bin...")
 
 #######################################################################################################################
 
 # MATPLOTLIB
+# good for static plots
 
 # see "bars with legend" in https://matplotlib.org/stable/gallery/statistics/histogram_multihist.html#sphx-glr-gallery-statistics-histogram-multihist-py
 # density = True looks good
@@ -408,8 +429,8 @@ for k,v in results.items():
 #######################################################################################################################
 
 # PLOTLY FIGUREFACTORY
-
 # #DEPRECATED
+
 # import plotly.figure_factory as ff
 # fig_ff = ff.create_distplot(traces, labels, bin_size=bin_size,show_curve=False)
 
@@ -438,8 +459,8 @@ for k,v in results.items():
 #######################################################################################################################
 
 # # PLOTLY EXPRESS
+# worked using the "express" functionality, but the moment I wanted to improve something it turned very complicated
 
-# # impossibly slow
 # import plotly.express as px
 # fig_px = px.histogram(usages, x=labels, barmode="group", nbins = args.nbins, marginal="rug")#,labels=labels,)
 # # fig = px.bar(x=bins[:-1], y=counts, barmode="group")#,labels={'x':'RC', 'y':'occurrences'},)
@@ -485,36 +506,31 @@ renderer = hv.renderer('bokeh')
 log.debug("creating dataframe")
 d = {k:v for k,v in zip(results.keys(), map(lambda v: v.RC, results.values()))}
 
-df = pd.DataFrame(d)
-#df['rows'] = range(df.size[0])
-df = df.reset_index() # adds an index column, makes life easier with plotting libs
+# df = pd.DataFrame(d)
+# df = df.reset_index() # adds an index column, makes life easier with plotting libs
 
 log.debug("hvplot")
-#hist = df.hvplot(kind='hist',y=labels_selected, bins=args.nbins, responsive=True, height=500)#, autorange='y')#, logy=True, ylim=(1,1000), )
-
-hists_dict = {}
-bins = np.linspace(minRC,maxRC, num=args.nbins+1)
-for l in labels_selected:
-    counts, _ = np.histogram(df[l],bins=bins)
-    bh = 0.5 * (bins[:-1] + bins[1:])
-    hists_dict[l] = hv.Histogram((bh, counts)).redim(x="RC").opts(autorange='y',ylim=(0.1,None), xlim=(minRC,maxRC),padding=(0, (0, 0.1)))
-
-hists = hv.NdOverlay(hists_dict)#, kdims='Elements')
+histplots_dict = {
+    l: hv.Histogram((bins, hist_dict[l])).redim(x="RC").opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
+        for l in hist_dict.keys()
+    }
+hists = hv.NdOverlay(histplots_dict)#, kdims='Elements')
 hists.opts(
-    opts.Histogram(alpha=0.7, responsive=True, height=500,  tools=['hover'],autorange='y')#,logy=True)#,color=hv.Cycle()),
-)
+    opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True)
+    #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
+    )
 
-#composition = hist << hv.Spikes(hist.kdims)
-#composition.opts(opts.Spikes(line_alpha=0.2))
-
-# violin = df.hvplot(kind='violin', y=labels_selected, invert=True, responsive=True, height=200)
-# violin.opts(opts.Violin(inner='stick'))
-
-spikes_dict = {labels_selected[i]: hv.Spikes(list(df[labels_selected[i]]),kdims="RC").opts(position=i) for i in range(len(labels_selected))}
-spikes = hv.NdOverlay(spikes_dict).opts(yticks=[((i+1)-0.5, i) for i in range(len(labels_selected))])
+nlabs = len(hist_dict)
+spikes_dict = {}
+for i in range(len(hist_dict.keys())):
+    dn = list(hist_dict.keys())[i]
+    x= results[dn].RC
+    y = [dn]*len(x)
+    spikes_dict[dn] = hv.Spikes((x,y),kdims="RC").opts(position=i,tools=['hover'])
+spikes = hv.NdOverlay(spikes_dict).opts(yticks=[((i+1)-0.5, list(spikes_dict.keys())[i]) for i in range(nlabs)])
 spikes.opts(
-    opts.Spikes(spike_length=0.5,line_alpha=0.2,responsive=True, height=100,color=hv.Cycle(),ylim=(0,4),autorange=None),
-    opts.NdOverlay(show_legend=False,click_policy='mute',autorange=None,ylim=(0,4)),
+    opts.Spikes(spike_length=1,line_alpha=0.4,responsive=True, height=50+nlabs*20,color=hv.Cycle(),ylim=(0,nlabs),autorange=None,tools=['hover'],yaxis='right'),
+    opts.NdOverlay(show_legend=False,click_policy='mute',autorange=None,ylim=(0,nlabs),tools=['hover']),
     #opts.NdOverlay(shared_axes=True, shared_datasource=True,show_legend=False)
     )
 
@@ -526,7 +542,7 @@ plot.opts(
 #     #opts.Violin(tools=['box_select','lasso_select']),
 #     #opts.Histogram(responsive=True, height=500, width=1000),
     # opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
-    opts.NdOverlay(click_policy='mute',autorange='y',xformatter=SIFormatter())
+    opts.NdOverlay(click_policy='mute',autorange='y',xformatter=SIFormatter(),legend_position="right")
 )
 #plot.opts(shared_axes=True)
 
