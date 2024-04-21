@@ -7,9 +7,10 @@ parser.add_argument("-v", "--verbose", action="count", default=0)
 parser.add_argument("-p", "--recreate-pickle",action="store_true")
 parser.add_argument("-n", "--nbins", default=50)
 #parser.add_argument("-y", "--ylog",action="store_true")
-parser.add_argument("-d", "--delta", type=int, default=10)
-parser.add_argument("-i", "--ignore", action='append', default=[])
-parser.add_argument("-t", "--top", default=5)
+parser.add_argument("-d", "--delta", type=int, default=10, help="The delta maxRC-minRC (as a % of max) over which a plot might be interesting")
+parser.add_argument("-i", "--ignore", action='append', default=[], help="DisplayNames with these substrings will be ignored")
+#parser.add_argument("-t", "--top", default=5)
+parser.add_argument("-l", "--limitRC", type=int, default=100000000, help="RCs over this limit will be considered failure markers")
 
 args = parser.parse_args()
 
@@ -175,6 +176,7 @@ class Details:
     description: str = None
     randomSeed: int = None
     RC_delta: int
+    failed: bool = False
 
 
 
@@ -184,29 +186,30 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
     global results
     with open(fullpath) as jsonfile:
         verificationResults = json.load(jsonfile)["verificationResults"]
-    
+    log.debug(f"{fullpath}: {len(verificationResults)} verificationResults")
+
     # A JSON verification log contains a list of verificationResults
     # Each of vR corresponds to a function or method
     # and contains its Display Name, overall Resource Count, verification outcome and the Assertion Batches (vcResults)
-    # If "isolating assertions" was NOT used, then the AB list will contain only 1 batch
     #   Each AB contains its number (vcNum), outcome, Resource Count, and a list of assertions
-    #   if "isolating assertions" was NOT used, then the list will contain multiple assertions: 1 vcResult = multiple assertions
-    #       Each assertion contains its location and description of the result
+    # If "isolating assertions" was NOT used, then the AB list in a vR will contain only 1 AB
+    #   1 vR = 1 AB = 1*(multiple assertions); we ignore them for plotting
+    #       The AB contains the details we want; we ignore the individual assertions
+    # If "isolating assertions" was used, then
+    #   1 vR = n AB = n*(1 assertion)
+    #       Each AB contains details we want; we store the assertion locations
     #
     # Recap: if "isolating assertions" was NOT used, then the AB number is always 1, so no need to add it to our DN
     # and its entry only contains the list of RCs, not anything deeper
-    # But if "isolating assertions" was used, then each DN contains an "AB x"; and each DN+AB's entry contains not only list of RCs,
-    # but usages and location
+    # But if "isolating assertions" was used, then each DN contains an "AB x";
+    # and each DN+AB's entry contains not only list of RCs, but also location
 
     mode_IA = None  # Isolate Assertions. Guess the mode to check if it stays coherent.
     for vr in verificationResults:
         display_name = cleanDisplayName(vr["name"])
-        assert vr["outcome"] == "Correct", f"{vr["name"]} has outcome {vr["outcome"]}" # didn't see it before, not implemented
+        assert vr["outcome"] in ["Correct", "Errors", "OutOfResource"], f"{vr["name"]} has unknown outcome: {vr["outcome"]=}"
 
-        dn_RC = vr["resourceCount"] # should equal the sum of the RC of all the ABs
-
-        # vcResults is the list of Assertion Batches (AKA Verification Conditions)
-        # And without "isolating assertions", there is only 1 vcr per vr
+        # Without "isolating assertions", there is only 1 vcr per vr
         # Curiously, with IA, there is always (?) an extra empty assertion in each AB, so with IA the minimum is 2 assertions per AB
 
         if mode_IA == None:
@@ -214,15 +217,20 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
 
         assert mode_IA == (len(vr['vcResults']) != 1), f"It looked like 'isolating-assertions'=={mode_IA}, and yet there's {len(vr['vcResults'])} ABs for {display_name}"
 
+        vcrs_RC = []
+        vr_RC = vr["resourceCount"] # should equal the sum of the RC of all the vcr
+        vr_randomseed = None
         for vcr in vr['vcResults']:
-            assert vcr['outcome'] == "Valid", f"{vr["name"]} has vcResult.outcome == {vr["outcome"]}, stopping"
+            if vr_randomseed == None:
+                vr_randomseed = vcr["randomSeed"]
+            else:
+                assert vr_randomseed == vcr["randomSeed"]
 
-            display_name_AB: str = display_name + (f" AB{vcr["vcNum"]}" if mode_IA else "")
-                
-            det: Details = results.get(display_name_AB, Details())
-
+            #assert vcr['outcome'] == "Valid", f"{vr["name"]} has vcResult.outcome == {vr["outcome"]}, stopping"
             if mode_IA:
-                # There's multiple ABs, but each AB contains a single assertion
+                # There's multiple ABs. Each AB contains a single assertion
+                display_name_AB: str = display_name + f" AB{vcr["vcNum"]}"
+                det: Details = results.get(display_name_AB, Details())
                 if len(vcr['assertions']) == 0:
                     assert vcr['vcNum'] == 1 #only seems to happen in the first one
                     # Ensure that it's empty every time it appears
@@ -233,7 +241,7 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
                     assert len(vcr['assertions']) == 1, f"{display_name_AB} contains {len(vcr['assertions'])} assertions, expected only 1 because we're in IA mode!"
                     a = vcr['assertions'][0]
                     if det.line != None:
-                        # Just double-check that everything stays consistent
+                        # Just double-check that everything stays consistent with previous appearances
                         assert det.line == a['line']
                         assert det.col == a['col']
                         assert det.description == a['description']
@@ -241,15 +249,27 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
                         det.line = a['line']
                         det.col = a['col']
                         det.description = a['description']
+
             else:
-                # A single AB with multiple assertions. We don't want that much detail for plotting.
+                # A single AB with all the assertions. We don't want that much detail for plotting.
+                display_name_AB = display_name
+                det: Details = results.get(display_name_AB, Details())
                 pass
 
-            det.RC.append(vcr['resourceCount'])
+            vcr_RC = vcr['resourceCount']
+            det.RC.append(vcr_RC)
+            vcrs_RC.append(vcr_RC)
             det.randomSeed = vcr['randomSeed']
+            if vcr["outcome"] != "Valid" :
+                assert vcr["outcome"] in ["OutOfResource","Invalid"], f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!"
+                assert vr["outcome"] in ["OutOfResource","Errors"], f"{display_name}.outcome == {vr["outcome"]}: unexpected!"
+                det.failed = True
+            else: # vcr Valid
+                # all good
+                pass
             results[display_name_AB] = det
             entries += 1
-
+        assert sum(vcrs_RC) == vr_RC, f"{display_name}.RC={vr_RC}, but the sum of the vcrs' RCs is {sum(vcrs_RC)} "
     return entries
 
 def smag(i) -> str:
@@ -266,6 +286,7 @@ entries = 0
 # to be un/pickled: [files, rows, usages]
 
 t0 = dt.now()
+plotfilepath = "".join(args.paths)+".html"
 picklefilepath = "".join(args.paths)+"v2.pickle"
 pickle_contents = []
 if os.path.isfile(picklefilepath) and not args.recreate_pickle:
@@ -331,8 +352,9 @@ maxRC = -inf
 minRC = inf
 
 for k,v in results.items():
-    if k in args.ignore:
-        continue
+    for ig in args.ignore:
+        if ig in k:
+            continue
     minRC_entry = min(v.RC)
     minRC = min(minRC, minRC_entry)
     maxRC_entry = max(v.RC)
@@ -529,7 +551,7 @@ for i in range(len(hist_dict.keys())):
     spikes_dict[dn] = hv.Spikes((x,y),kdims="RC").opts(position=i,tools=['hover'])
 spikes = hv.NdOverlay(spikes_dict).opts(yticks=[((i+1)-0.5, list(spikes_dict.keys())[i]) for i in range(nlabs)])
 spikes.opts(
-    opts.Spikes(spike_length=1,line_alpha=0.4,responsive=True, height=50+nlabs*20,color=hv.Cycle(),ylim=(0,nlabs),autorange=None,tools=['hover'],yaxis='right'),
+    opts.Spikes(spike_length=1,line_alpha=1,responsive=True, height=50+nlabs*20,color=hv.Cycle(),ylim=(0,nlabs),autorange=None,tools=['hover'],yaxis='right'),
     opts.NdOverlay(show_legend=False,click_policy='mute',autorange=None,ylim=(0,nlabs),tools=['hover']),
     #opts.NdOverlay(shared_axes=True, shared_datasource=True,show_legend=False)
     )
@@ -547,9 +569,9 @@ plot.opts(
 #plot.opts(shared_axes=True)
 
 #renderer.save(plot, 'plot')
-hv.save(plot, 'plot.html')
+hv.save(plot, plotfilepath)
 #hvplot.show(plot)
-os.system("open plot.html")
+os.system(f"open {plotfilepath}")
 
 #webbrowser.open('plot.html')
 
