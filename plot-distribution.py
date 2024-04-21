@@ -1,6 +1,8 @@
 #! python3
 
 import argparse
+from quantiphy import Quantity
+
 parser = argparse.ArgumentParser()
 parser.add_argument('paths', nargs='+')
 parser.add_argument("-v", "--verbose", action="count", default=0)
@@ -10,7 +12,7 @@ parser.add_argument("-n", "--nbins", default=50)
 parser.add_argument("-d", "--delta", type=int, default=10, help="The delta maxRC-minRC (as a % of max) over which a plot might be interesting")
 parser.add_argument("-i", "--ignore", action='append', default=[], help="DisplayNames with these substrings will be ignored")
 #parser.add_argument("-t", "--top", default=5)
-parser.add_argument("-l", "--limitRC", type=int, default=100000000, help="RCs over this limit will be considered failure markers")
+parser.add_argument("-l", "--limitRC", type=Quantity, default=None, help="RCs over this limit will be considered failure markers")
 
 args = parser.parse_args()
 
@@ -176,12 +178,12 @@ class Details:
     description: str = None
     randomSeed: int = None
     RC_delta: int
-    failed: bool = False
+    failed: int = 0
 
 
 
 def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
-    # We want entries like: Precompiled.CallModExp WF ABx : [usages],Line,Row,Message
+    # We want entries like: Precompiled.CallModExp WF ABx : [usages],Line,Col,Description,Failed
     entries = 0
     global results
     with open(fullpath) as jsonfile:
@@ -217,8 +219,11 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
 
         assert mode_IA == (len(vr['vcResults']) != 1), f"It looked like 'isolating-assertions'=={mode_IA}, and yet there's {len(vr['vcResults'])} ABs for {display_name}"
 
+        # We will store only the vcr's RC in each DN
+        # but check that the vr's RC equals the sum of the vcrs.
         vcrs_RC = []
-        vr_RC = vr["resourceCount"] # should equal the sum of the RC of all the vcr
+        vr_RC = vr["resourceCount"]
+
         vr_randomseed = None
         for vcr in vr['vcResults']:
             if vr_randomseed == None:
@@ -263,7 +268,7 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
             if vcr["outcome"] != "Valid" :
                 assert vcr["outcome"] in ["OutOfResource","Invalid"], f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!"
                 assert vr["outcome"] in ["OutOfResource","Errors"], f"{display_name}.outcome == {vr["outcome"]}: unexpected!"
-                det.failed = True
+                det.failed += 1
             else: # vcr Valid
                 # all good
                 pass
@@ -336,16 +341,15 @@ else:
 
 
 
-# dns = list(results.keys())
-# m = [l for l in results.values()]
-# maxRC = np.max(m) + 1
-# bins = np.linspace(0,maxRC, num=args.nbins)
-# bin_size = maxRC / args.nbins
-# counts, bins2 = np.histogram(m,bins=bins)
-# #bins = 0.5 * (bins[:-1] + bins[1:])
-
 log.debug("Selecting traces")
-# Decide which displaynames look interesting
+# Decide which results look interesting
+
+
+
+
+
+
+
 #traces_selected = []
 #labels_selected = []
 maxRC = -inf
@@ -358,12 +362,21 @@ for k,v in results.items():
     minRC_entry = min(v.RC)
     minRC = min(minRC, minRC_entry)
     maxRC_entry = max(v.RC)
+    try:
+        if maxRC_entry > args.limitRC:
+            continue #TODO continue is not good enough. The plot will happen anyway because it's failed, so the delta is not important; but the maxRC still can help shape the plot
+    except TypeError:
+        pass
     maxRC = max(maxRC, maxRC_entry)
-    delta = (maxRC_entry-minRC_entry)/maxRC_entry # difference between max and min, relative to max
+
+    # Calculate the % difference between max and min
+    delta = (maxRC_entry-minRC_entry)/maxRC_entry 
     line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {delta:>8.2%}"
     log.debug(line)
     if delta < args.delta/100:
+        # uninteresting results won't even store a delta
         continue
+
     results[k].RC_max = maxRC_entry
     results[k].RC_min = minRC_entry
     results[k].RC_delta = delta
@@ -374,21 +387,30 @@ for k,v in results.items():
 
 #sort the dictionary of results by the delta; high delta == high interest
 results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'RC_delta',0))}
+# but failed results are even more interesting
+results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'failed'))}
 
-# add the sorted index to the beginning of each DN
-# results2 = {f'{i} {k}':v for i,k,v in zip(range(len(results.items())),results.keys(), results.values())}
-# results = results2
-results2 = {}
-keys = list(results.keys())
-for i in range(len(keys)):
-    new_key = f'{i+1} {keys[i]}'
-    results2[new_key] = results[keys[i]]
+if next(iter(results.items()))[1].failed > 0 and args.limitRC==None:
+    log.warning(f"There are 'failed' results, but no limitRC was given!")
+
+# Plot legends can't be sorted, so add the sorted index to the beginning of each DN
+results2 = {f'{i} {k}':v for i,(k,v) in enumerate(results.items())}
 results = results2
+# results2 = {}
+# keys = list(results.keys())
+# for i in range(len(keys)):
+#     new_key = f'{i+1} {keys[i]}'
+#     results2[new_key] = results[keys[i]]
+# results = results2
 
 # We have the interesting DNs, but when plotting all histograms together, the bin distribution might cause some DNs to fall into a single bin
 # So let's remove those from the plots
-print(f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'diff':>8}")
-print(f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'====':>8}")
+# For that, we need to calculate all the histograms
+table = ""
+line = f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'diff':>8} {'failed?':>8}\n"
+table += line
+line = f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'====':>8} {'=======':>8}\n"
+table += line
 bins = np.linspace(minRC,maxRC, num=args.nbins+1)
 bh = 0.5 * (bins[:-1] + bins[1:])
 hist_dict = {}
@@ -399,17 +421,20 @@ for dn in results.keys():
     if delta < args.delta/100:
         break #because it's sorted
     counts, _ = np.histogram(d.RC,bins=bins)
-    line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%}"
+    failstr = "FAILED" if d.failed>0 else ""
+    line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%} {failstr:>8}"
+
     # remove plots that would fall into less than 3 bins
     nonempty = []
     for i in range(len(counts)):
         if counts[i] != 0:
             nonempty += [i]
     if nonempty[-1]-nonempty[0] < 3:
-        print(line)
+        table += f"{line}\n"
         continue
-    print(f"{line}\tPLOTTED")
+    table += f"{line}\tPLOTTED\n"
     hist_dict[dn] = counts
+print(table)
 print("Plotting those not in a single bin...")
 
 # HOLOVIEWS
