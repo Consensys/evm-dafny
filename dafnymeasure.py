@@ -47,7 +47,6 @@ filename = "TestResults/" + dstr + "_" + argstring4filename
 #shell_line = fr"{args.dafnyexec} measure-complexity --log-format csv\;LogFileName='{filename}' {args.extra_args} {args.dafnyfile}"
 #log.info(f"Executing:{args.dafnyexec} {cli_args}")
 
-#CHANGE TO USE os.execvp()
 arglist = [
     args.dafnyexec,
     "measure-complexity",

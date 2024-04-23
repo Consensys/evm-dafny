@@ -11,7 +11,7 @@ parser.add_argument("-n", "--nbins", default=50)
 #parser.add_argument("-y", "--ylog",action="store_true")
 parser.add_argument("-d", "--delta", type=int, default=10, help="The delta maxRC-minRC (as a % of max) over which a plot might be interesting")
 parser.add_argument("-i", "--ignore", action='append', default=[], help="DisplayNames with these substrings will be ignored")
-#parser.add_argument("-t", "--top", default=5)
+parser.add_argument("-t", "--top", type=int, default=5, help="Plot only the first N at the top of the list")
 parser.add_argument("-l", "--limitRC", type=Quantity, default=None, help="RCs over this limit will be considered failure markers")
 
 args = parser.parse_args()
@@ -155,6 +155,7 @@ import os
 import pickle
 from time import sleep
 import numpy as np
+import pandas as pd
 import re
 from datetime import datetime as dt, timedelta as td
 
@@ -170,6 +171,7 @@ def cleanDisplayName(dn:str) -> str:
 class Details:
     def __init__(self):
         self.RC: list[int]= []
+        self.fails = []
     RC: list[int]
     RC_max: int
     RC_min: int
@@ -178,7 +180,7 @@ class Details:
     description: str = None
     randomSeed: int = None
     RC_delta: int
-    failed: int = 0
+    fails: list[int]
 
 
 
@@ -262,16 +264,14 @@ def readJSON(fullpath) -> int:  #reads 1 file, returns number of entries created
                 pass
 
             vcr_RC = vcr['resourceCount']
-            det.RC.append(vcr_RC)
             vcrs_RC.append(vcr_RC)
             det.randomSeed = vcr['randomSeed']
             if vcr["outcome"] != "Valid" :
                 assert vcr["outcome"] in ["OutOfResource","Invalid"], f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!"
                 assert vr["outcome"] in ["OutOfResource","Errors"], f"{display_name}.outcome == {vr["outcome"]}: unexpected!"
-                det.failed += 1
+                det.fails.append(vcr_RC)
             else: # vcr Valid
-                # all good
-                pass
+                det.RC.append(vcr_RC)
             results[display_name_AB] = det
             entries += 1
         assert sum(vcrs_RC) == vr_RC, f"{display_name}.RC={vr_RC}, but the sum of the vcrs' RCs is {sum(vcrs_RC)} "
@@ -288,7 +288,7 @@ log.basicConfig(level=numeric_level,format='%(asctime)s-%(levelname)s:%(message)
 results: dict[str, Details] = {}    # DisplayName (ABn) : details
 files = 0
 entries = 0
-# to be un/pickled: [files, rows, usages]
+# to be un/pickled: [files, entries, results]
 
 t0 = dt.now()
 plotfilepath = "".join(args.paths)+".html"
@@ -342,13 +342,7 @@ else:
 
 
 log.debug("Selecting traces")
-# Decide which results look interesting
-
-
-
-
-
-
+# Decide which results look interesting, taking into account that they all will be plotted together
 
 #traces_selected = []
 #labels_selected = []
@@ -362,25 +356,24 @@ for k,v in results.items():
     minRC_entry = min(v.RC)
     minRC = min(minRC, minRC_entry)
     maxRC_entry = max(v.RC)
-    try:
-        if maxRC_entry > args.limitRC:
-            continue #TODO continue is not good enough. The plot will happen anyway because it's failed, so the delta is not important; but the maxRC still can help shape the plot
-    except TypeError:
-        pass
     maxRC = max(maxRC, maxRC_entry)
-
+    if args.limitRC != None:
+            # if there was a limit, any resource count over the limit should be in the fails, not in the RCs
+            assert maxRC_entry < args.limitRC, f"{args.limitRC=} but {maxRC_entry=}"
+            #assert v.fails == [] or min(v.fails) > args.limitRC,
+            if v.fails != [] and min(v.fails) > args.limitRC:
+                log.warning(f"{args.limitRC=} but min failed is smaller {min(v.fails)=}")
     # Calculate the % difference between max and min
     delta = (maxRC_entry-minRC_entry)/maxRC_entry 
     line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {delta:>8.2%}"
     log.debug(line)
-    if delta < args.delta/100:
-        # uninteresting results won't even store a delta
-        continue
+    # if len(v.fails) == 0 and delta < args.delta/100:
+    #     # uninteresting results won't even store a delta
+    #     continue
 
     results[k].RC_max = maxRC_entry
     results[k].RC_min = minRC_entry
     results[k].RC_delta = delta
-
     #print(f"{line}")
     #traces_selected.append(v)
     #labels_selected.append(k)
@@ -388,60 +381,70 @@ for k,v in results.items():
 #sort the dictionary of results by the delta; high delta == high interest
 results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'RC_delta',0))}
 # but failed results are even more interesting
-results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'failed'))}
+results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'fails'))}
 
-if next(iter(results.items()))[1].failed > 0 and args.limitRC==None:
+
+if len(next(iter(results.items()))[1].fails) > 0 and args.limitRC==None:
     log.warning(f"There are 'failed' results, but no limitRC was given!")
 
 # Plot legends can't be sorted, so add the sorted index to the beginning of each DN
-results2 = {f'{i} {k}':v for i,(k,v) in enumerate(results.items())}
-results = results2
-# results2 = {}
-# keys = list(results.keys())
-# for i in range(len(keys)):
-#     new_key = f'{i+1} {keys[i]}'
-#     results2[new_key] = results[keys[i]]
+# results2 = {f'{i+1} {k}':v for i,(k,v) in enumerate(results.items())}
 # results = results2
 
 # We have the interesting DNs, but when plotting all histograms together, the bin distribution might cause some DNs to fall into a single bin
 # So let's remove those from the plots
 # For that, we need to calculate all the histograms
-table = ""
-line = f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'diff':>8} {'failed?':>8}\n"
-table += line
-line = f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'====':>8} {'=======':>8}\n"
-table += line
+#table = ""
+table_df = pd.DataFrame( columns=["Element", "minRC", "maxRC", "delta", "success", "fails", "plotted"])
+#table += f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'  diff':>8} {'fails':>6}\n"
+#table += f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'======':>8} {'=====':>6}\n"
 bins = np.linspace(minRC,maxRC, num=args.nbins+1)
 bh = 0.5 * (bins[:-1] + bins[1:])
 hist_dict = {}
+hist_df = pd.DataFrame()
+hist_df["bins"] = bh
+#hist_df["zeros"] = len(bins[:-1]) * [0]
+hist_df = hist_df.reindex()
 # the results dict is sorted by delta; to keep that order we need to traverse the dict, not the list of labs_selected
-for dn in results.keys():
+for n,dn in enumerate(results.keys()):
+    # if n == args.top:
+    #     break
     d = results[dn]
-    delta = getattr(d,'RC_delta',0)
-    if delta < args.delta/100:
-        break #because it's sorted
-    counts, _ = np.histogram(d.RC,bins=bins)
-    failstr = "FAILED" if d.failed>0 else ""
-    line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%} {failstr:>8}"
+    #delta = getattr(d,'RC_delta',0)
+    # if len(d.fails) == 0 and delta < args.delta/100:
+    #     break #because it's sorted and we ran out of interesting cases
+    
+    #failstr = len(d.fails) if len(d.fails)>0 else ""
+    #line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%} {failstr:>6}"
 
+    counts, _ = np.histogram(d.RC,bins=bins)
     # remove plots that would fall into less than 3 bins
     nonempty = []
     for i in range(len(counts)):
         if counts[i] != 0:
             nonempty += [i]
-    if nonempty[-1]-nonempty[0] < 3:
-        table += f"{line}\n"
-        continue
-    table += f"{line}\tPLOTTED\n"
-    hist_dict[dn] = counts
-print(table)
-print("Plotting those not in a single bin...")
+    plotted = (n < args.top) and ((nonempty[-1]-nonempty[0] > 3) or (len(d.fails) > 0))
+    table_df.loc[n+1] = {
+        "Element": dn,
+        "success": len(d.RC),
+        "minRC": smag(d.RC_min),
+        "maxRC": smag(d.RC_max),
+        "delta": f"{d.RC_delta:>8.2%}",
+        "fails": len(d.fails),
+        "plotted": plotted
+    }
+
+    if plotted:
+        hist_dict[dn] = counts
+        hist_df[dn] = counts
+        with np.errstate(divide='ignore'): # to silence the errors because of log of 0 values
+            hist_df[dn+"_log"] = np.log10(counts)
+#print(table)
+print(table_df)
 
 # HOLOVIEWS
 
 log.debug("Imports")
-import numpy as np
-import pandas as pd
 import holoviews as hv
 import hvplot
 from hvplot import hvPlot
@@ -455,20 +458,37 @@ log.debug("hvplot renderer")
 renderer = hv.renderer('bokeh')
 
 
-log.debug("creating dataframe")
-d = {k:v for k,v in zip(results.keys(), map(lambda v: v.RC, results.values()))}
-
+# log.debug("creating dataframe")
+# d = {k:v for k,v in zip(results.keys(), map(lambda v: v.RC, results.values()))}
 # df = pd.DataFrame(d)
 # df = df.reset_index() # adds an index column, makes life easier with plotting libs
 
 log.debug("hvplot")
-histplots_dict = {
-    l: hv.Histogram((bins, hist_dict[l])).redim(x="RC").opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
-        for l in hist_dict.keys()
-    }
+# histplots_dict_lin = {
+#     l: hv.Histogram((bins, hist_dict[l])).redim(x="RC").opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
+#         for l in hist_dict.keys()
+#     }
+# hists_lin = hv.NdOverlay(histplots_dict_lin)#, kdims='Elements')
+# hists_lin.opts(
+#     opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True)
+#     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
+#     )
+
+histplots_dict = {}
+jitter = (bins[1]-bins[0])/len(hist_dict)/3 
+for i,l in enumerate(hist_dict):
+    h = hv.Histogram((hist_df["bins"]+i*jitter,hist_df[l+"_log"],hist_df[l]),kdims=["RC"],vdims=["Log(Count)", "Count"]).opts(
+        autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1))
+        )
+    histplots_dict[l] = h
+
+
+#hist_dummylogy= hv.Histogram((hist_df["bins"],hist_df["zeros"]),kdims=["RC"]).opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
+#histplots_dict["dummy"] = hist_dummylogy
+
 hists = hv.NdOverlay(histplots_dict)#, kdims='Elements')
 hists.opts(
-    opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True)
+    opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True, muted=True)
     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
     )
 
@@ -486,9 +506,9 @@ spikes.opts(
     #opts.NdOverlay(shared_axes=True, shared_datasource=True,show_legend=False)
     )
 
-#dlink = DataLink(spikes,hists)
+table_plot = hv.Table(table_df.drop(columns=['plotted']),kdims="Element")
 
-plot = hists + spikes #+ hist #+ violin
+plot = hists + spikes + table_plot #+ hist #+ violin
 plot.cols(1)
 plot.opts(
 #     #opts.Violin(tools=['box_select','lasso_select']),
