@@ -1,6 +1,7 @@
 #! python3
 
 import argparse
+from matplotlib import table
 from quantiphy import Quantity
 
 parser = argparse.ArgumentParser()
@@ -361,8 +362,8 @@ for k,v in results.items():
             # if there was a limit, any resource count over the limit should be in the fails, not in the RCs
             assert maxRC_entry < args.limitRC, f"{args.limitRC=} but {maxRC_entry=}"
             #assert v.fails == [] or min(v.fails) > args.limitRC,
-            if v.fails != [] and min(v.fails) > args.limitRC:
-                log.warning(f"{args.limitRC=} but min failed is smaller {min(v.fails)=}")
+            if v.fails != [] and min(v.fails) < args.limitRC:
+                log.warning(f"{args.limitRC=} but min failed for {k} is smaller {min(v.fails)=}")
     # Calculate the % difference between max and min
     delta = (maxRC_entry-minRC_entry)/maxRC_entry 
     line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {delta:>8.2%}"
@@ -448,13 +449,15 @@ log.debug("Imports")
 import holoviews as hv
 import hvplot
 from hvplot import hvPlot
-import hvplot.pandas
+#import hvplot.pandas
 from holoviews import opts
-from holoviews.plotting.links import DataLink
+#from holoviews.plotting.links import DataLink
+import panel as pn
+pn.extension()
 
-log.debug("hvplot extension")
-hvplot.extension('bokeh')
-log.debug("hvplot renderer")
+#log.debug("hvplot extension")
+#hvplot.extension('bokeh')
+#log.debug("hvplot renderer")
 renderer = hv.renderer('bokeh')
 
 
@@ -463,7 +466,7 @@ renderer = hv.renderer('bokeh')
 # df = pd.DataFrame(d)
 # df = df.reset_index() # adds an index column, makes life easier with plotting libs
 
-log.debug("hvplot")
+# log.debug("hvplot")
 # histplots_dict_lin = {
 #     l: hv.Histogram((bins, hist_dict[l])).redim(x="RC").opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
 #         for l in hist_dict.keys()
@@ -475,12 +478,20 @@ log.debug("hvplot")
 #     )
 
 histplots_dict = {}
-jitter = (bins[1]-bins[0])/len(hist_dict)/3 
+failplots_dict = {}
+bin_width = int(bins[1]-bins[0])
+jitter = (bin_width)/len(hist_dict)/3 
 for i,l in enumerate(hist_dict):
     h = hv.Histogram((hist_df["bins"]+i*jitter,hist_df[l+"_log"],hist_df[l]),kdims=["RC"],vdims=["Log(Count)", "Count"]).opts(
         autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1))
         )
     histplots_dict[l] = h
+    # f = hv.Histogram((["fails"], np.log10(table_df["fails"][table_df['Element']==l])))
+    # failplots_dict[l] = f
+
+
+
+
 
 
 #hist_dummylogy= hv.Histogram((hist_df["bins"],hist_df["zeros"]),kdims=["RC"]).opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
@@ -488,14 +499,30 @@ for i,l in enumerate(hist_dict):
 
 hists = hv.NdOverlay(histplots_dict)#, kdims='Elements')
 hists.opts(
-    opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True, muted=True)
+    opts.Histogram(alpha=0.9, responsive=True, height=2000,  tools=['hover'],autorange='y',show_legend=True, muted=True)
     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
     )
 
+# fails = hv.NdOverlay(failplots_dict)
+# fails.opts(
+#     opts.Histogram(alpha=0.9, responsive=True, height=2000,  tools=['hover'],autorange='y',show_legend=True, muted=True)
+#     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
+#     )
+
+fails_df = table_df[["Element","fails"]][table_df['plotted']==True]
+fails_df["Log(Count)"]=np.log10(fails_df["fails"])
+fails = hv.Bars(fails_df,kdims="Element", vdims=["Log(Count)", "fails"])#.redim(fails="Log(Count)")#.redim(Element="fails")
+#[table_df['fails']!=0]
+fails.opts(
+    opts.Bars(alpha=0.9, responsive=True, height=500, tools=['hover'],autorange='y',show_legend=True, muted=True, yaxis="right")
+)
+
+
+
+
 nlabs = len(hist_dict)
 spikes_dict = {}
-for i in range(len(hist_dict.keys())):
-    dn = list(hist_dict.keys())[i]
+for i,dn in enumerate(hist_dict.keys()):
     x= results[dn].RC
     y = [dn]*len(x)
     spikes_dict[dn] = hv.Spikes((x,y),kdims="RC").opts(position=i,tools=['hover'])
@@ -508,19 +535,44 @@ spikes.opts(
 
 table_plot = hv.Table(table_df.drop(columns=['plotted']),kdims="Element")
 
-plot = hists + spikes + table_plot #+ hist #+ violin
-plot.cols(1)
-plot.opts(
-#     #opts.Violin(tools=['box_select','lasso_select']),
-#     #opts.Histogram(responsive=True, height=500, width=1000),
-    # opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
-    opts.NdOverlay(click_policy='mute',autorange='y',xformatter=SIFormatter(),legend_position="right")
-)
-#plot.opts(shared_axes=True)
+gspec = pn.GridSpec(sizing_mode='stretch_both', min_height=800)
+mc = 4 # max col
+mr = 5 # max row
+gspec[0:mc, 0:mr] = pn.pane.HoloViews(hists)#,sizing_mode='stretch_width',align='end')
+gspec[0:mc,   mr] = pn.pane.HoloViews(fails)#,sizing_mode='stretch_width',align='center')
+gspec[mc  , 0:mr] = pn.pane.HoloViews(hists)#,sizing_mode='stretch_width',align='center')
+plot = gspec
+
+# pane_hb = pn.Row(hists, barplot)
+# pane_spikes = pn.Row(spikes)
+# pane = pn.Column(pane_hb, pane_spikes)
+# plot = pane
+
+
+
+
+# plot = hists + spikes + table_plot #+ hist #+ violin
+# plot.cols(1)
+
+# plot.opts(
+# #     #opts.Violin(tools=['box_select','lasso_select']),
+# #     #opts.Histogram(responsive=True, height=500, width=1000),
+#     # opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
+#     opts.NdOverlay(click_policy='mute',autorange='y',xformatter=SIFormatter(),legend_position="right")
+# )
+# plot.opts(shared_axes=True)
 
 #renderer.save(plot, 'plot')
-hv.save(plot, plotfilepath)
+# hv.save(plot, plotfilepath)
 #hvplot.show(plot)
+
+try:
+    os.remove(plotfilepath)
+except:
+    pass
+# from bokeh.resources import INLINE
+plot.save(plotfilepath)#, resources=INLINE)
+
 os.system(f"open {plotfilepath}")
 
 #webbrowser.open('plot.html')
