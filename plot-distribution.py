@@ -18,139 +18,6 @@ parser.add_argument("-l", "--limitRC", type=Quantity, default=None, help="RCs ov
 args = parser.parse_args()
 
 
-#######################################################################################################################
-# A tick formatter for Bokeh plots, so that is uses SI suffixes for big numbers
-
-TS_CODE = """
-// Bureau International des Poids et Mesures
-// The International System of Units (SI)
-// 9th edition 2019
-//
-// Table 7. SI prefixes
-// _____________________________________________________
-// Factor   Name    Symbol      Factor  Name    Symbol
-// 10^1     deca    da          10^-1   deci    d
-// 10^2     hecto   h           10^-2   centi   c
-// 10^3     kilo    k           10^-3   milli   m
-// 10^6     mega    M           10^-6   micro   μ
-// 10^9     giga    G           10^-9   nano    n
-// 10^12    tera    T           10^-12  pico    p
-// 10^15    peta    P           10^-15  femto   f
-// 10^18    exa     E           10^-18  atto    a
-// 10^21    zetta   Z           10^-21  zepto   z
-// 10^24    yotta   Y           10^-24  yocto   y
-// _____________________________________________________
-// ref.: https://www.bipm.org/documents/20126/41483022/SI-Brochure-9-EN.pdf/2d2b50bf-f2b4-9661-f402-5f9d66e4b507?version=1.10&t=1632138671693&download=true
-//
-// Currently deca, hecto, deci, centi are not used.
-// Implemented to be a suffix to the axis ticks.
-
-import {TickFormatter} from "models/formatters/tick_formatter"
-import * as p from "core/properties"
-
-let factorMapping: any = {
-    '1': 'da', '2': 'h', '3': 'k', '6': 'M', '9': 'G',
-    '12': 'T', '15': 'P', '18': 'E', '21': 'Z', '24': 'Y',
-    '-1': 'd', '-2': 'c', '-3': 'm', '-6': 'μ', '-9': 'n',
-    '-12': 'p', '-15': 'f', '-18': 'a', '-21': 'z', '-24': 'y'
-};
-
-export namespace SIFormatter {
-  export type Attrs = p.AttrsOf<Props>
-
-  export type Props = TickFormatter.Props & {
-    precision: p.Property<number | "auto">,
-    suffix: p.Property<string>
-  }
-}
-
-export interface SIFormatter extends SIFormatter.Attrs {}
-
-export class SIFormatter extends TickFormatter {
-  // TickFormatters should implement this method, which accepts a list
-  // of numbers (ticks) and returns a list of strings where numbers
-  // converted to appropiate SI symbol
-  properties: SIFormatter.Props
-
-  constructor(attrs?: Partial<SIFormatter.Attrs>) {
-    super(attrs)
-  }
-
-  static {
-    this.define<SIFormatter.Props>(({Or, Int, Auto, String}) => ({
-      precision: [ Or(Int, Auto), 'auto' ],
-      suffix: [ String, '' ]
-    }))
-  }
-
-  doFormat(ticks: number[], _opts: {loc: number}): string[] {
-    var factorStr = '';
-    const highThreshold = 10000;
-    const lowThreshold = 0.1;
-    const maxVal = Math.max(...ticks);
-    const formatted = [];
-
-    var base = Math.floor(Math.log10(Math.abs(maxVal)));
-    var base = Math.floor(base / 3);
-    var factor = base * 3;
-
-    for (let i = 0, len = ticks.length; i < len; i++) {
-        if (base === 0) {
-            var newTickVal = ticks[i];
-        } else if ((maxVal < highThreshold) && (maxVal > lowThreshold)) {
-            var newTickVal = ticks[i];
-        } else {
-            var newTickVal = ((ticks[i]) / Math.pow(10, factor));
-
-            // Sometimes I experience ticks with trailing numbers eg. 0.006000000001
-            // This is an attempt to check for this and remove eg. 0.000000000001
-            // Not sure if a JS function exist for this?
-            // Or should it be handled in TickFormatter?
-
-            const remain = newTickVal % (Math.trunc(newTickVal));
-            if (remain < 1e-8) {
-                newTickVal -= remain;
-            }
-
-            factorStr = ' ' + factorMapping[factor];
-        }
-        if (this.precision != 'auto') {
-            var newTickStr = newTickVal.toFixed(this.precision);
-        } else {
-            var newTickStr = newTickVal.toString();
-        }
-        if ((factorStr == '') && (this.suffix != '')) {
-            factorStr = ' ';
-        }
-        formatted.push(newTickStr + factorStr + this.suffix);
-    }
-    return formatted;
-  }
-}
-"""
-
-
-
-from curses.ascii import SI
-from bokeh.models import TickFormatter, NumeralTickFormatter
-from bokeh.util.compiler import TypeScript
-from bokeh.core.properties import Auto, Either, Int, String
-
-class SIFormatter(TickFormatter):
-
-    __implementation__ = TypeScript(TS_CODE)
-
-    precision = Either(Auto, Int, help="""
-    How many digits of precision to display in tick labels.
-    """)
-
-    suffix = String(default="", help="""
-    Any suffix to add to ticks labels eg. Hz.
-    """)
-
-
-#######################################################################################################################
-
 import json
 import logging as log
 from math import inf
@@ -402,10 +269,17 @@ table_df = pd.DataFrame( columns=["Element", "minRC", "maxRC", "delta", "success
 #table += f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'  diff':>8} {'fails':>6}\n"
 #table += f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'======':>8} {'=====':>6}\n"
 bins = np.linspace(minRC,maxRC, num=args.nbins+1)
-bh = 0.5 * (bins[:-1] + bins[1:])
+# add a  bin for fails, wide so that it stands out
+bin_width = bins[1]-bins[0]
+bins_extension = bins[-1] + [1 * bin_width, 3 * bin_width]
+# maxX = bins[-1] + 4 * bin_width
+bins_with_fails = np.append(bins,bins_extension)
+
+
 #hist_dict = {}
 labels_plotted = []
 hist_df = pd.DataFrame()
+bh = 0.5 * (bins_with_fails[:-1] + bins_with_fails[1:])
 hist_df["bins"] = bh
 #hist_df["zeros"] = len(bins[:-1]) * [0]
 hist_df = hist_df.reindex()
@@ -422,12 +296,16 @@ for n,dn in enumerate(results.keys()):
     #line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%} {failstr:>6}"
 
     counts, _ = np.histogram(d.RC,bins=bins)
-    # remove plots that would fall into less than 3 bins
-    nonempty = []
-    for i in range(len(counts)):
-        if counts[i] != 0:
-            nonempty += [i]
-    plotted = (n < args.top) and ((nonempty[-1]-nonempty[0] > 3) or (len(d.fails) > 0))
+    counts = np.append(counts,[0,len(d.fails)])
+
+    # remove plots that would span less than 3 bins
+    nonempty_bins = []
+    for i,c in enumerate(counts):
+        if c != 0:
+            nonempty_bins.append(i)
+    plotted = (n < args.top) \
+                            and ((nonempty_bins[-1]-nonempty_bins[0] > 3) \
+                                or (len(d.fails) > 0))
     table_df.loc[n+1] = {
         "Element": dn,
         "success": len(d.RC),
@@ -444,6 +322,7 @@ for n,dn in enumerate(results.keys()):
         hist_df[dn] = counts
         with np.errstate(divide='ignore'): # to silence the errors because of log of 0 values
             hist_df[dn+"_log"] = np.log10(counts)
+
 #print(table)
 print(table_df)
 
@@ -482,11 +361,10 @@ renderer = hv.renderer('bokeh')
 #     )
 
 histplots_dict = {}
-bin_width = int(bins[1]-bins[0])
 jitter = (bin_width)/len(hist_df)/3
 for i,l in enumerate(labels_plotted):
-    h = hv.Histogram((hist_df["bins"]+i*jitter,hist_df[l+"_log"],hist_df[l]),kdims=["RC"],vdims=["Log(Count)", "Count"]).opts(
-        autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1))
+    h = hv.Histogram((bins_with_fails+i*jitter,hist_df[l+"_log"],hist_df[l]),kdims=["RC"],vdims=["Log(Count)", "Count"]).opts(
+        autorange='y',ylim=(0,None), xlim=(bins_with_fails[0],bins_with_fails[-1]),padding=(0, (0, 0.1))
         )
     histplots_dict[l] = h
 
@@ -512,7 +390,9 @@ nlabs = len(labels_plotted)
 spikes_dict = {}
 for i,dn in enumerate(labels_plotted):
     x= results[dn].RC
-    y = [dn]*len(x)
+    if results[dn].fails != []:
+        x.append(bins_with_fails[-1])
+    y = [dn]*len(x) # so that it'll appear in the hover tool
     spikes_dict[dn] = hv.Spikes((x,y),kdims="RC").opts(position=i,tools=['hover'])
 spikes = hv.NdOverlay(spikes_dict).opts(yticks=[((i+1)-0.5, list(spikes_dict.keys())[i]) for i in range(nlabs)])
 spikes.opts(
@@ -526,14 +406,39 @@ table_plot = hv.Table(table_df.drop(columns=['plotted']),kdims="Element")
 plot = hists + spikes + table_plot #+ hist #+ violin
 plot.cols(1)
 
+from bokeh.models import NumeralTickFormatter
+from bokeh.util.compiler import TypeScript
+class MyFormatter(NumeralTickFormatter):
+    __implementation__ = TypeScript("""
+import {NumeralTickFormatter} from "models/formatters/numeral_tick_formatter"
+
+export class MyFormatter extends NumeralTickFormatter {
+  FAIL_MIN=""" + str(int(maxRC)) + """
+
+  doFormat(ticks: number[], _opts: {loc: number}): string[] {
+    const formatted = []
+    const ticks2 = super.doFormat(ticks, _opts)
+    for (let i = 0; i < ticks.length; i++) {
+      if (ticks[i] < this.FAIL_MIN) {
+        formatted.push(ticks2[i])
+      } else {
+        formatted.push('FAILED')
+      }
+    }
+    return formatted
+  }
+}
+""")
+
+mf = MyFormatter(format="0.0a")
+
 plot.opts(
 #     #opts.Violin(tools=['box_select','lasso_select']),
 #     #opts.Histogram(responsive=True, height=500, width=1000),
     # opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
-    opts.NdOverlay(click_policy='mute',autorange='y',xformatter=SIFormatter(),legend_position="right")
+    opts.NdOverlay(click_policy='mute',autorange='y',xformatter=mf,legend_position="right")
 )
 plot.opts(shared_axes=True)
-
 
 
 
