@@ -1,6 +1,7 @@
 #! python3
 
 import argparse
+from matplotlib import table
 from quantiphy import Quantity
 
 parser = argparse.ArgumentParser()
@@ -127,6 +128,8 @@ export class SIFormatter extends TickFormatter {
   }
 }
 """
+
+
 
 from curses.ascii import SI
 from bokeh.models import TickFormatter, NumeralTickFormatter
@@ -361,8 +364,8 @@ for k,v in results.items():
             # if there was a limit, any resource count over the limit should be in the fails, not in the RCs
             assert maxRC_entry < args.limitRC, f"{args.limitRC=} but {maxRC_entry=}"
             #assert v.fails == [] or min(v.fails) > args.limitRC,
-            if v.fails != [] and min(v.fails) > args.limitRC:
-                log.warning(f"{args.limitRC=} but min failed is smaller {min(v.fails)=}")
+            if v.fails != [] and min(v.fails) < args.limitRC:
+                log.warning(f"{args.limitRC=} but min failed for {k} is smaller {min(v.fails)=}")
     # Calculate the % difference between max and min
     delta = (maxRC_entry-minRC_entry)/maxRC_entry 
     line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {delta:>8.2%}"
@@ -400,7 +403,8 @@ table_df = pd.DataFrame( columns=["Element", "minRC", "maxRC", "delta", "success
 #table += f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'======':>8} {'=====':>6}\n"
 bins = np.linspace(minRC,maxRC, num=args.nbins+1)
 bh = 0.5 * (bins[:-1] + bins[1:])
-hist_dict = {}
+#hist_dict = {}
+labels_plotted = []
 hist_df = pd.DataFrame()
 hist_df["bins"] = bh
 #hist_df["zeros"] = len(bins[:-1]) * [0]
@@ -435,35 +439,38 @@ for n,dn in enumerate(results.keys()):
     }
 
     if plotted:
-        hist_dict[dn] = counts
+        #hist_dict[dn] = counts
+        labels_plotted.append(dn)
         hist_df[dn] = counts
         with np.errstate(divide='ignore'): # to silence the errors because of log of 0 values
             hist_df[dn+"_log"] = np.log10(counts)
 #print(table)
 print(table_df)
 
+# fails_df = table_df[["Element","fails"]][table_df['plotted']==True]
+# fails_df["Log(Count)"]=np.log10(fails_df["fails"])
+
+
+
+
+
 # HOLOVIEWS
 
-log.debug("Imports")
+
 import holoviews as hv
 import hvplot
 from hvplot import hvPlot
-import hvplot.pandas
 from holoviews import opts
-from holoviews.plotting.links import DataLink
 
-log.debug("hvplot extension")
-hvplot.extension('bokeh')
-log.debug("hvplot renderer")
+hv.extension('bokeh')
 renderer = hv.renderer('bokeh')
-
 
 # log.debug("creating dataframe")
 # d = {k:v for k,v in zip(results.keys(), map(lambda v: v.RC, results.values()))}
 # df = pd.DataFrame(d)
 # df = df.reset_index() # adds an index column, makes life easier with plotting libs
 
-log.debug("hvplot")
+# log.debug("hvplot")
 # histplots_dict_lin = {
 #     l: hv.Histogram((bins, hist_dict[l])).redim(x="RC").opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
 #         for l in hist_dict.keys()
@@ -475,13 +482,13 @@ log.debug("hvplot")
 #     )
 
 histplots_dict = {}
-jitter = (bins[1]-bins[0])/len(hist_dict)/3 
-for i,l in enumerate(hist_dict):
+bin_width = int(bins[1]-bins[0])
+jitter = (bin_width)/len(hist_df)/3
+for i,l in enumerate(labels_plotted):
     h = hv.Histogram((hist_df["bins"]+i*jitter,hist_df[l+"_log"],hist_df[l]),kdims=["RC"],vdims=["Log(Count)", "Count"]).opts(
         autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1))
         )
     histplots_dict[l] = h
-
 
 #hist_dummylogy= hv.Histogram((hist_df["bins"],hist_df["zeros"]),kdims=["RC"]).opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
 #histplots_dict["dummy"] = hist_dummylogy
@@ -492,10 +499,18 @@ hists.opts(
     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
     )
 
-nlabs = len(hist_dict)
+# fails = hv.NdOverlay(failplots_dict)
+# fails.opts(
+#     opts.Histogram(alpha=0.9, responsive=True, height=2000,  tools=['hover'],autorange='y',show_legend=True, muted=True)
+#     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
+#     )
+
+
+
+
+nlabs = len(labels_plotted)
 spikes_dict = {}
-for i in range(len(hist_dict.keys())):
-    dn = list(hist_dict.keys())[i]
+for i,dn in enumerate(labels_plotted):
     x= results[dn].RC
     y = [dn]*len(x)
     spikes_dict[dn] = hv.Spikes((x,y),kdims="RC").opts(position=i,tools=['hover'])
@@ -510,17 +525,34 @@ table_plot = hv.Table(table_df.drop(columns=['plotted']),kdims="Element")
 
 plot = hists + spikes + table_plot #+ hist #+ violin
 plot.cols(1)
+
 plot.opts(
 #     #opts.Violin(tools=['box_select','lasso_select']),
 #     #opts.Histogram(responsive=True, height=500, width=1000),
     # opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
     opts.NdOverlay(click_policy='mute',autorange='y',xformatter=SIFormatter(),legend_position="right")
 )
-#plot.opts(shared_axes=True)
+plot.opts(shared_axes=True)
+
+
+
+
+
+
+
+
+try:
+    os.remove(plotfilepath)
+except:
+    pass
 
 #renderer.save(plot, 'plot')
 hv.save(plot, plotfilepath)
 #hvplot.show(plot)
+# from bokeh.resources import INLINE
+#plot.save(plotfilepath)#, resources=INLINE)
+
+print(f"Created file {plotfilepath}")
 os.system(f"open {plotfilepath}")
 
 #webbrowser.open('plot.html')
