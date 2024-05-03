@@ -10,10 +10,10 @@ parser.add_argument("-v", "--verbose", action="count", default=0)
 parser.add_argument("-p", "--recreate-pickle",action="store_true")
 parser.add_argument("-n", "--nbins", default=50)
 #parser.add_argument("-y", "--ylog",action="store_true")
-parser.add_argument("-d", "--delta", type=int, default=10, help="The delta maxRC-minRC (as a % of max) over which a plot might be interesting")
+parser.add_argument("-d", "--delta", type=int, default=10, help="The delta maxRC-minRC (as a % of max) over which a plot is considered interesting")
 parser.add_argument("-i", "--ignore", action='append', default=[], help="DisplayNames with these substrings will be ignored")
-parser.add_argument("-t", "--top", type=int, default=5, help="Plot only the first N at the top of the list")
-parser.add_argument("-l", "--limitRC", type=Quantity, default=None, help="RCs over this limit will be considered failure markers")
+parser.add_argument("-t", "--top", type=int, default=5, help="Plot only the top N in the list")
+parser.add_argument("-l", "--limitRC", type=Quantity, default=None, help="The RC limit used during verification; just for sanity checking")
 
 args = parser.parse_args()
 
@@ -209,15 +209,9 @@ else:
         pickle.dump([files, entries, results], pf)
 
 
-
-
-log.debug("Selecting traces")
-# Decide which results look interesting, taking into account that they all will be plotted together
-
-#traces_selected = []
-#labels_selected = []
 maxRC = -inf
 minRC = inf
+minFail = inf # min RC of the failed entries
 
 for k,v in results.items():
     for ig in args.ignore:
@@ -227,9 +221,11 @@ for k,v in results.items():
     minRC = min(minRC, minRC_entry)
     maxRC_entry = max(v.RC)
     maxRC = max(maxRC, maxRC_entry)
+    if v.fails != []:
+        minFail = min(minFail,min(v.fails))
     if args.limitRC != None:
             # if there was a limit, any resource count over the limit should be in the fails, not in the RCs
-            assert maxRC_entry < args.limitRC, f"{args.limitRC=} but {maxRC_entry=}"
+            assert maxRC_entry < args.limitRC, f"{args.limitRC=} but {k}:{maxRC_entry=}"
             #assert v.fails == [] or min(v.fails) > args.limitRC,
             if v.fails != [] and min(v.fails) < args.limitRC:
                 log.warning(f"{args.limitRC=} but min failed for {k} is smaller {min(v.fails)=}")
@@ -244,9 +240,10 @@ for k,v in results.items():
     results[k].RC_max = maxRC_entry
     results[k].RC_min = minRC_entry
     results[k].RC_delta = delta
-    #print(f"{line}")
-    #traces_selected.append(v)
-    #labels_selected.append(k)
+
+minFail = Quantity(minFail)
+assert maxRC < minFail
+
 
 #sort the dictionary of results by the delta; high delta == high interest
 results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'RC_delta',0))}
@@ -254,46 +251,39 @@ results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item:
 results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'fails'))}
 
 
-if len(next(iter(results.items()))[1].fails) > 0 and args.limitRC==None:
-    log.warning(f"There are 'failed' results, but no limitRC was given!")
+if args.limitRC==None:
+    if minFail < inf:
+        log.warning(f"There are 'failed' results, but no limitRC was given. Min failed RC found = {smag(minFail)}")
+        fstr: str = f" > {minFail}"
+    else:
+        fstr = ""
+else:
+    fstr: str = f" > {args.limitRC}"
 
-# Plot legends can't be sorted, so add the sorted index to the beginning of each DN
-# results2 = {f'{i+1} {k}':v for i,(k,v) in enumerate(results.items())}
-# results = results2
+failstr: str = "FAILED" + fstr
+
 
 # We have the interesting DNs, but when plotting all histograms together, the bin distribution might cause some DNs to fall into a single bin
 # So let's remove those from the plots
 # For that, we need to calculate all the histograms
-#table = ""
+# The histograms have the user-given num of bins, +2 (spacer and fails)
 table_df = pd.DataFrame( columns=["Element", "minRC", "maxRC", "delta", "success", "fails", "plotted"])
-#table += f"{'Display Name':40} {'Datapoints':>10} {'minRC':>8}    {'maxRC':>6} {'  diff':>8} {'fails':>6}\n"
-#table += f"{'============':40} {'==========':>10} {'=====':>8}    {'=====':>6} {'======':>8} {'=====':>6}\n"
 bins = np.linspace(minRC,maxRC, num=args.nbins+1)
-# add a  bin for fails, wide so that it stands out
+# add a bin for fails
 bin_width = bins[1]-bins[0]
-bins_extension = bins[-1] + [1 * bin_width, 3 * bin_width]
-# maxX = bins[-1] + 4 * bin_width
-bins_with_fails = np.append(bins,bins_extension)
+log.info(f"{args.nbins=}, range {smag(minRC)} - {smag(maxRC)}, width {smag(bin_width)}")
+bin_margin = bins[-1] + 3 * bin_width
+bin_fails = bin_margin + 3 * bin_width
+bins_with_fails = np.append(bins,[bin_margin,bin_fails])
 
-
-#hist_dict = {}
 labels_plotted = []
 hist_df = pd.DataFrame()
-bh = 0.5 * (bins_with_fails[:-1] + bins_with_fails[1:])
-hist_df["bins"] = bh
-#hist_df["zeros"] = len(bins[:-1]) * [0]
+bin_centers = 0.5 * (bins_with_fails[:-1] + bins_with_fails[1:])
+hist_df["bins"] = bin_centers
+
 hist_df = hist_df.reindex()
-# the results dict is sorted by delta; to keep that order we need to traverse the dict, not the list of labs_selected
 for n,dn in enumerate(results.keys()):
-    # if n == args.top:
-    #     break
     d = results[dn]
-    #delta = getattr(d,'RC_delta',0)
-    # if len(d.fails) == 0 and delta < args.delta/100:
-    #     break #because it's sorted and we ran out of interesting cases
-    
-    #failstr = len(d.fails) if len(d.fails)>0 else ""
-    #line = f"{dn:40} {len(d.RC):>10} {smag(d.RC_min):>8}    {smag(d.RC_max):>6} {d.RC_delta:>8.2%} {failstr:>6}"
 
     counts, _ = np.histogram(d.RC,bins=bins)
     counts = np.append(counts,[0,len(d.fails)])
@@ -303,9 +293,10 @@ for n,dn in enumerate(results.keys()):
     for i,c in enumerate(counts):
         if c != 0:
             nonempty_bins.append(i)
-    plotted = (n < args.top) \
-                            and ((nonempty_bins[-1]-nonempty_bins[0] > 3) \
+    plotted = ((n < args.top)
+                                and ((nonempty_bins[-1]-nonempty_bins[0] > 3)
                                 or (len(d.fails) > 0))
+                            )
     table_df.loc[n+1] = {
         "Element": dn,
         "success": len(d.RC),
@@ -317,20 +308,12 @@ for n,dn in enumerate(results.keys()):
     }
 
     if plotted:
-        #hist_dict[dn] = counts
         labels_plotted.append(dn)
         hist_df[dn] = counts
         with np.errstate(divide='ignore'): # to silence the errors because of log of 0 values
             hist_df[dn+"_log"] = np.log10(counts)
-
-#print(table)
+        hist_df[dn+"_RCFail"] = [smag(b) for b in bin_centers[0:-2]] + ["",failstr ]
 print(table_df)
-
-# fails_df = table_df[["Element","fails"]][table_df['plotted']==True]
-# fails_df["Log(Count)"]=np.log10(fails_df["fails"])
-
-
-
 
 
 # HOLOVIEWS
@@ -340,64 +323,125 @@ import holoviews as hv
 import hvplot
 from hvplot import hvPlot
 from holoviews import opts
+from bokeh.models.tickers import FixedTicker, CompositeTicker, BasicTicker
 
 hv.extension('bokeh')
 renderer = hv.renderer('bokeh')
 
-# log.debug("creating dataframe")
-# d = {k:v for k,v in zip(results.keys(), map(lambda v: v.RC, results.values()))}
-# df = pd.DataFrame(d)
-# df = df.reset_index() # adds an index column, makes life easier with plotting libs
-
-# log.debug("hvplot")
-# histplots_dict_lin = {
-#     l: hv.Histogram((bins, hist_dict[l])).redim(x="RC").opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
-#         for l in hist_dict.keys()
-#     }
-# hists_lin = hv.NdOverlay(histplots_dict_lin)#, kdims='Elements')
-# hists_lin.opts(
-#     opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True)
-#     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
-#     )
-
 histplots_dict = {}
-jitter = (bin_width)/len(hist_df)/3
+jitter = (bin_width)/len(labels_plotted)/3
 for i,l in enumerate(labels_plotted):
-    h = hv.Histogram((bins_with_fails+i*jitter,hist_df[l+"_log"],hist_df[l]),kdims=["RC"],vdims=["Log(Count)", "Count"]).opts(
-        autorange='y',ylim=(0,None), xlim=(bins_with_fails[0],bins_with_fails[-1]),padding=(0, (0, 0.1))
+    h = hv.Histogram(
+            (bins_with_fails+i*jitter,
+                hist_df[l+"_log"],
+                hist_df[l],
+                hist_df[l+"_RCFail"]
+                ),
+            kdims=["RC"],
+            vdims=["LogQuantity", "Quantity", "RCFail"]
+        ).opts(
+            autorange='y',
+            ylim=(0,None),
+            xlim=(bins_with_fails[0],bins_with_fails[-1]+bin_width),
+            padding=(0, (0, 0.1))
         )
     histplots_dict[l] = h
 
-#hist_dummylogy= hv.Histogram((hist_df["bins"],hist_df["zeros"]),kdims=["RC"]).opts(autorange='y',ylim=(0,None), xlim=(bins[0],bins[-1]),padding=(0, (0, 0.1)))
-#histplots_dict["dummy"] = hist_dummylogy
+from bokeh.models import HoverTool
+hover = HoverTool(tooltips=[
+    ("Element", "@Element"),
+    ("ResCount bin", "@RCFail"),
+    ("Quantity", "@Quantity"),
+    ("Log(Quantity)", "@LogQuantity"),
+    ])
+
+fticker = FixedTicker(ticks=bin_centers, num_minor_ticks=0)
+bticker = BasicTicker(min_interval = bin_width, num_minor_ticks=0)
+cticker = CompositeTicker(tickers=[fticker, bticker])
+# cticker works, but is distracting
 
 hists = hv.NdOverlay(histplots_dict)#, kdims='Elements')
 hists.opts(
-    opts.Histogram(alpha=0.9, responsive=True, height=500,  tools=['hover'],autorange='y',show_legend=True, muted=True)
+    opts.Histogram(alpha=0.9,
+                   responsive=True,
+                   height=500,
+                   tools=[hover],
+                   autorange='y',
+                   show_legend=True,
+                   muted=True,
+                   backend_opts={
+                       "xaxis.bounds" : (0,bin_fails+bin_width),
+                       "axis.ticker" : cticker
+                        }
+                    )
     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
     )
 
-# fails = hv.NdOverlay(failplots_dict)
-# fails.opts(
-#     opts.Histogram(alpha=0.9, responsive=True, height=2000,  tools=['hover'],autorange='y',show_legend=True, muted=True)
-#     #,logy=True # histograms with logY have been broken in bokeh for years: https://github.com/holoviz/holoviews/issues/2591
-#     )
+# A vertical line separating the fails bar
+# disabled because it disables the autoranging of the histograms
+# vline = hv.VLine(bin_centers[-2]).opts(
+#     opts.VLine(color='black', line_width=3, autorange='y',ylim=(0,None))
+# )
+# hists = hists * vline
 
 
+####### SPIKES
 
+from bokeh.models import CustomJSHover
+RCFfunc = CustomJSHover(code='''
+        var value;
+        var modified;
+        if (value > ''' + str(int(maxRC)) + ''') {
+            modified = "''' + failstr + '''";
+        } else {
+            modified = value.toString();
+        }
+        return modified
+''')
 
 nlabs = len(labels_plotted)
 spikes_dict = {}
 for i,dn in enumerate(labels_plotted):
-    x= results[dn].RC
+    RCs = results[dn].RC
+    x= RCs
+    #RCFail = RCs # so that it'll appear in the hover tool
     if results[dn].fails != []:
-        x.append(bins_with_fails[-1])
-    y = [dn]*len(x) # so that it'll appear in the hover tool
-    spikes_dict[dn] = hv.Spikes((x,y),kdims="RC").opts(position=i,tools=['hover'])
+        x.append(bin_centers[-1])
+        #RCFail.append(0)
+    hover2 = HoverTool(
+                tooltips=[
+                    ("Element", dn),
+                    ("ResCount", "@RC{custom}"),
+                    ],
+                formatters={
+                    "@RC" : RCFfunc,
+                    "dn"  : 'numeral'
+                }
+            )
+    spikes_dict[dn] = hv.Spikes(x,kdims="RC").opts(position=i,tools=[hover2],xaxis="bottom")
 spikes = hv.NdOverlay(spikes_dict).opts(yticks=[((i+1)-0.5, list(spikes_dict.keys())[i]) for i in range(nlabs)])
+
+
+
 spikes.opts(
-    opts.Spikes(spike_length=1,line_alpha=1,responsive=True, height=50+nlabs*20,color=hv.Cycle(),ylim=(0,nlabs),autorange=None,tools=['hover'],yaxis='right'),
-    opts.NdOverlay(show_legend=False,click_policy='mute',autorange=None,ylim=(0,nlabs),tools=['hover']),
+    opts.Spikes(spike_length=1,
+                line_alpha=1,
+                responsive=True,
+                height=50+nlabs*20,
+                color=hv.Cycle(),
+                ylim=(0,nlabs),
+                autorange=None,
+                yaxis='right',
+                backend_opts={
+                    "xaxis.bounds" : (0,bin_fails+bin_width)
+                    }
+                ),
+    opts.NdOverlay(show_legend=False,
+                   click_policy='mute',
+                   autorange=None,
+                   ylim=(0,nlabs),
+                   xlim=(minRC,maxRC)
+                ),
     #opts.NdOverlay(shared_axes=True, shared_datasource=True,show_legend=False)
     )
 
@@ -408,12 +452,12 @@ plot.cols(1)
 
 from bokeh.models import NumeralTickFormatter
 from bokeh.util.compiler import TypeScript
-class MyFormatter(NumeralTickFormatter):
+class NumericalTickFormatterWithLimit(NumeralTickFormatter):
     __implementation__ = TypeScript("""
 import {NumeralTickFormatter} from "models/formatters/numeral_tick_formatter"
 
-export class MyFormatter extends NumeralTickFormatter {
-  FAIL_MIN=""" + str(int(maxRC)) + """
+export class NumericalTickFormatterWithLimit extends NumeralTickFormatter {
+  FAIL_MIN=""" + str(int(bin_margin)) + """
 
   doFormat(ticks: number[], _opts: {loc: number}): string[] {
     const formatted = []
@@ -430,16 +474,19 @@ export class MyFormatter extends NumeralTickFormatter {
 }
 """)
 
-mf = MyFormatter(format="0.0a")
+mf = NumericalTickFormatterWithLimit(format="0.0a")
 
 plot.opts(
-#     #opts.Violin(tools=['box_select','lasso_select']),
 #     #opts.Histogram(responsive=True, height=500, width=1000),
     # opts.Layout(sizing_mode="scale_both", shared_axes=True, sync_legends=True, shared_datasource=True)
     opts.NdOverlay(click_policy='mute',autorange='y',xformatter=mf,legend_position="right")
 )
 plot.opts(shared_axes=True)
 
+# fig = hv.render(plot)
+# #hb = fig.traverse(specs=[hv.plotting.bokeh.Histogram])
+
+# fig.xaxis.bounds = (0,bin_fails)
 
 
 
@@ -459,6 +506,12 @@ hv.save(plot, plotfilepath)
 
 print(f"Created file {plotfilepath}")
 os.system(f"open {plotfilepath}")
+
+# Repeat the warning
+if args.limitRC==None:
+    if minFail < inf:
+        log.warning(f"There are 'failed' results, but no limitRC was given. Min failed RC found = {smag(minFail)}")
+
 
 #webbrowser.open('plot.html')
 
