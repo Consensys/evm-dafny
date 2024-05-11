@@ -1,4 +1,4 @@
-import dis
+import csv
 import json
 import logging as log
 import re
@@ -26,6 +26,7 @@ class Details:
     randomSeed: int = None
     RC_delta: int
     fails: list[int]
+    is_AB: bool
 
 type resultsType = dict[str, Details]
 
@@ -51,9 +52,22 @@ def check_locations_ABs(locations) -> None:
                 continue
             assert ABs_first == ABs, f"{loc} has changing ABs. Until now it was {ABs_first}. But for rseed {r}, it's {ABs}"
 
+def readCSV(fullpath) -> int: #reads 1 file, returns number of rows read
+    """Reads the CSV file into the global usages map"""
+    rows = 0
+    global results
+    with open(fullpath) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            rows += 1
+            dn = cleanDisplayName(row['TestResult.DisplayName'])
+            rc = row['TestResult.ResourceCount']
+            results[dn] = results.get(dn,[]) + [int(rc)]
+    log.info(f"{fullpath} :{rows} rows")
+    return rows
 
 
-def readJSON(fullpath: str, paranoid=False) -> resultsType:
+def readJSON(fullpath: str, paranoid=True) -> resultsType:
     #reads 1 file (possibly containing multiple verification runs)
     results: resultsType = {}
 
@@ -78,90 +92,88 @@ def readJSON(fullpath: str, paranoid=False) -> resultsType:
     # But if "isolating assertions" was used, then each DN contains an "AB x";
     # and each DN+AB's entry contains not only list of RCs, but also location
 
-    mode_IA = None  # Isolate Assertions. We'll guess the mode to check if it stays coherent.
+    mode_IA = (len(verificationResults[0]['vcResults']) > 1)  # Isolate Assertions. We guess the mode to check if it stays coherent.
     locations: dict[tuple,dict[int,dict[str,str]]] = {} # to detect when a location (file,line,col) has consistent ABs across random seeds:{randomseed:{displayname_AB:description}}
-    dn_to_vcrs: dict[str,int] = {} # does a dn always have the same number of vcrs?
 
     for vr in verificationResults:
         display_name = cleanDisplayName(vr["name"])
         assert vr["outcome"] in ["Correct", "Errors", "OutOfResource"], f"{vr["name"]} has unknown outcome: {vr["outcome"]=}"
+        
+        vr_RC = vr["resourceCount"]
+        vr_rseed = vr['vcResults'][0]['randomSeed'] # the rseed is only present in the vcrs, so get it from the first one
+
+        det: Details = results.get(display_name, Details())
+        det.is_AB = False
+        if vr["outcome"] == "Correct":
+            det.RC.append(vr_RC)
+        else:
+            assert vr["outcome"] != "Errors", f"{vr["name"]}, rseed={vr_rseed} has error outcome!"
+            det.fails.append(vr_RC)
+        det.randomSeed = vr_rseed
+        results[display_name] = det
 
         # Without "isolating assertions", there is only 1 vcr per vr
-        # Curiously, with IA, there is always (?) an extra empty assertion in each AB, so with IA the minimum is 2 assertions per AB
-
-        if mode_IA == None:
-            mode_IA = (len(vr['vcResults']) > 1)
-
+        # Curiously, with IA, there is always an extra empty vcr in each vr, so with IA the minimum is 2 vcr per vr
         assert mode_IA == (len(vr['vcResults']) != 1), f"It looked like 'isolating-assertions'=={mode_IA}, and yet there's {len(vr['vcResults'])} ABs for {display_name}"
 
-        # We will store only the vcr's RC in each DN
-        # but check that the vr's RC equals the sum of the vcrs.
-        vcrs_RC = []
-        vr_RC = vr["resourceCount"]
+        if mode_IA:
+            # We will check that the vr's RC equals the sum of the vcrs' RCs.
+            vcrs_RC = []
 
-        vr_randomseed = None # The vr doesn't contain a randomseed, only the vcrs do. Ensure that the randomseed stays consistent across them.
-        for vcr in vr['vcResults']:
-            if vr_randomseed == None:
-                vr_randomseed = vcr["randomSeed"]
-            else:
-                assert vr_randomseed == vcr["randomSeed"]
+            for vcr in vr['vcResults']:
+                assert vr_rseed == vcr["randomSeed"]
 
-            #assert vcr['outcome'] == "Valid", f"{vr["name"]} has vcResult.outcome == {vr["outcome"]}, stopping"
-            if mode_IA:
                 # There's multiple ABs. Each AB contains a single assertion
                 display_name_AB: str = display_name + f" AB{vcr["vcNum"]}"
                 det: Details = results.get(display_name_AB, Details())
+                det.is_AB = True
 
+                # The first vcr is always empty
                 if vcr['vcNum'] == 1:
-                    assert len(vcr['assertions']) == 0 #only seems to happen in the first one
+                    assert len(vcr['assertions']) == 0 
                     # Plus, assertions contain their location and description, so here there should be nothing either
                     # Ensure that it's empty every time it appears
                     assert det.line == None
                     assert det.col == None
                     assert det.description == None
                 else:
-                    assert len(vcr['assertions']) == 1, f"{display_name_AB} contains {len(vcr['assertions'])} assertions, expected only 1 because we're in IA mode!"
-                    a = vcr['assertions'][0]
-                    if det.line != None:
-                        # Looks like this is not the first verification run, so
-                        # just double-check that everything stays consistent with previous runs
-                        assert det.filename == a['filename']
-                        assert det.line == a['line']
-                        assert det.col == a['col']
-                        assert det.description == a['description']
+                    assert len(vcr['assertions']) == 1, f"{display_name_AB} contains {len(vcr['assertions'])} assertions, expected exactly 1 because we're in IA mode!"
+                    asst = vcr['assertions'][0]
+                    if det.line == None:
+                        det.filename = asst['filename']
+                        det.line = asst['line']
+                        det.col = asst['col']
+                        det.description = asst['description']
                     else:
-                        det.filename = a['filename']
-                        det.line = a['line']
-                        det.col = a['col']
-                        det.description = a['description']
+                        # This is not the first verification run, so
+                        # just double-check that previous runs with this display_name + AB are consistent
+                        assert det.filename == asst['filename']
+                        assert det.line == asst['line']
+                        assert det.col == asst['col']
+                        assert det.description == asst['description']
                 location_current = (det.filename, det.line, det.col)
                 l = locations.get(location_current,{})
-                l2 = l.get(vr_randomseed,{})
+                l2 = l.get(vr_rseed,{})
                 l2[vcr["vcNum"]]=det.description
-                l[vr_randomseed]=l2
+                l[vr_rseed]=l2
                 locations[location_current] = l
-            else:
-                # A single AB with all the assertions. We don't want that much detail for plotting.
-                display_name_AB = display_name
-                det: Details = results.get(display_name_AB, Details())
-                pass
 
-            vcr_RC = vcr['resourceCount']
-            vcrs_RC.append(vcr_RC)
-            det.randomSeed = vcr['randomSeed']
-            if vcr["outcome"] != "Valid" :
-                assert vcr["outcome"] in ["OutOfResource","Invalid"], f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!"
-                assert vr["outcome"] in ["OutOfResource","Errors"], f"{display_name}.outcome == {vr["outcome"]}: unexpected!"
-                det.fails.append(vcr_RC)
-            else: # vcr Valid
-                det.RC.append(vcr_RC)
-            results[display_name_AB] = det
 
-        # Ensure that the sum of AB's RCs equals the vr's RC
-        assert sum(vcrs_RC) == vr_RC, f"{display_name}.RC={vr_RC}, but the sum of the vcrs' RCs is {sum(vcrs_RC)} "
+                vcr_RC = vcr['resourceCount']
+                vcrs_RC.append(vcr_RC)
+                if vcr["outcome"] != "Valid" :
+                    assert vcr["outcome"] in ["OutOfResource","Invalid"], f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!"
+                    assert vr["outcome"] in ["OutOfResource","Errors"], f"{display_name}.outcome == {vr["outcome"]}: unexpected!"
+                    det.fails.append(vcr_RC)
+                else: # vcr Valid
+                    det.RC.append(vcr_RC)
+                results[display_name_AB] = det
+
+            # Ensure that the sum of AB's RCs equals the vr's RC
+            assert sum(vcrs_RC) == vr_RC, f"{display_name}.RC={vr_RC}, but the sum of the vcrs' RCs is {sum(vcrs_RC)} "
         
-        if paranoid:
-            check_locations_ABs(locations)
+    if paranoid:
+        check_locations_ABs(locations)
 
     return results
 
@@ -207,9 +219,8 @@ def readLogs(paths,recreate_pickle = True) -> resultsType:
 
 
         print(f"Processed {files} files in {(dt.now()-t0)/td(seconds=1)}")
-        #print(results)
 
-        # print overlapping ABs
+        # PRINT OVERLAPPING ABs
         # go through each result, store its location vs what happened in it
         # finally print locations with multiple results
         # loc_ABs: dict[tuple,dict[str,str]] = {}
@@ -228,5 +239,3 @@ def readLogs(paths,recreate_pickle = True) -> resultsType:
             pickle.dump([files, results], pf)
         return results
 
-#TODO warn of ABs with the same location
-#TODO warn of vcr totals != sum of vcr's partials

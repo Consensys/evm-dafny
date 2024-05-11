@@ -38,7 +38,7 @@ results = readLogs(args.paths, args.recreate_pickle)
 maxRC = -inf
 minRC = inf
 minFail = inf # min RC of the failed entries
-df = pd.DataFrame( columns=["minRC", "maxRC", "delta", "success", "fails"])
+df = pd.DataFrame( columns=["minRC", "maxRC", "delta", "successes", "fails","is_AB"])
 df.index.name="Element"
 
 for k,v in results.items():
@@ -54,30 +54,26 @@ for k,v in results.items():
     if args.limitRC != None:
             # if there was a limit, any resource count over the limit should be in the fails, not in the RCs
             assert maxRC_entry < args.limitRC, f"{args.limitRC=} but {k}:{maxRC_entry=}"
-            #assert v.fails == [] or min(v.fails) > args.limitRC,
             if v.fails != [] and min(v.fails) < args.limitRC:
-                log.warning(f"{args.limitRC=} but min failed for {k} is smaller {min(v.fails)=}")
+                log.warning(f"{args.limitRC=} but min failed for {k} is smaller {min(v.fails)}")
     # Calculate the % difference between max and min
     delta = (maxRC_entry-minRC_entry)/maxRC_entry 
     line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {delta:>8.2%}"
     log.debug(line)
 
     df.loc[k] = {
-        "success": len(v.RC),
+        "successes": len(v.RC),
         "minRC": smag(minRC_entry),
         "maxRC": smag(maxRC_entry),
         "delta": f"{delta:>8.2%}",
         "fails": len(v.fails),
+        "is_AB": v.is_AB
     }
 
 minFail = Quantity(minFail)
 assert maxRC < minFail
 
 
-#sort the dictionary of results by the delta; high delta == high interest
-# results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'RC_delta'))}
-# but failed results are even more interesting
-# results = {k:v for k,v in sorted(results.items(), reverse=True, key=lambda item: getattr(item[1],'fails'))}
 df.sort_values(["fails","delta"],inplace=True, ascending=False,kind='stable')
 df.reset_index(inplace=True)
 df['Element_ordered'] = [f"{i} {s}" for i,s in zip(df.index,df["Element"])]
@@ -96,9 +92,9 @@ failstr: str = "FAILED" + fstr
 # Plot the results
 
 # When plotting all histograms together, the result distribution might cause some DNs
-# to fall close together; the plot is not helpful then.
+# to fall too close together; the plot is not helpful then.
 # So let's remove such histograms.
-# For that, we need to calculate all the histograms.
+# For that, first we need to calculate all the histograms.
 # And for that, we need to decide their bins.
 # So get the min([minRCs]) and max([maxRCs]) of the top candidates.
 minRC_plot = min(df.loc[df.index[0:args.top], "minRC"])
