@@ -5,6 +5,7 @@ import re
 from datetime import datetime as dt, timedelta as td
 import os
 import pickle
+import sys
 
 def cleanDisplayName(dn:str) -> str:
     new = dn.replace("(well-formedness)","") # WF is almost everywhere, so omit it; better just mention anything non-WF
@@ -15,7 +16,8 @@ def cleanDisplayName(dn:str) -> str:
 class Details:
     def __init__(self):
         self.RC: list[int]= []
-        self.fails = []
+        self.OoR = []
+        self.failures = []
     RC: list[int]
     RC_max: int     #useful for the table
     RC_min: int
@@ -23,9 +25,8 @@ class Details:
     col: int = None
     filename: str = None
     description: str = None
-    randomSeed: int = None
-    RC_delta: int
-    fails: list[int]
+    OoR: list[int]  #OutOfResources
+    failures: list[int]
     is_AB: bool
 
 type resultsType = dict[str, Details]
@@ -37,7 +38,8 @@ def mergeResults(r:resultsType, rNew:resultsType):
     for k in rNew:
         if k in r:
             r[k].RC.extend(rNew[k].RC)
-            r[k].fails.extend(rNew[k].fails)
+            r[k].OoR.extend(rNew[k].OoR)
+            r[k].failures.extend(rNew[k].failures)
         else:
             r[k] = rNew[k]
 
@@ -97,19 +99,28 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
 
     for vr in verificationResults:
         display_name = cleanDisplayName(vr["name"])
-        assert vr["outcome"] in ["Correct", "Errors", "OutOfResource"], f"{vr["name"]} has unknown outcome: {vr["outcome"]=}"
+        #assert vr["outcome"] in ["Correct", "Errors", "OutOfResource"], f"{vr["name"]} has unknown outcome: {vr["outcome"]=}"
         
         vr_RC = vr["resourceCount"]
-        vr_rseed = vr['vcResults'][0]['randomSeed'] # the rseed is only present in the vcrs, so get it from the first one
+        try:
+            vr_rseed = vr['vcResults'][0]['randomSeed'] # the rseed is only present in the vcrs, so get it from the first one
+        except:
+            # logs made by `dafny verify` contain no randomSeed
+            vr_rseed = None
 
         det: Details = results.get(display_name, Details())
         det.is_AB = False
         if vr["outcome"] == "Correct":
             det.RC.append(vr_RC)
+        elif vr["outcome"] == "OutOfResource":
+            det.OoR.append(vr_RC)
+            #assert vr["outcome"] != "Errors", f"{vr["name"]}, rseed={vr_rseed} has error outcome!"
+        elif vr["outcome"] == "Errors":
+                #log.info(f"{vr["name"]}, rseed={vr_rseed} has error outcome")
+            det.failures.append(vr_RC)
         else:
-            assert vr["outcome"] != "Errors", f"{vr["name"]}, rseed={vr_rseed} has error outcome!"
-            det.fails.append(vr_RC)
-        det.randomSeed = vr_rseed
+            sys.exit(f"{display_name}.outcome == {vr["outcome"]}: unexpected!")
+
         results[display_name] = det
 
         # Without "isolating assertions", there is only 1 vcr per vr
@@ -137,8 +148,11 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
                     assert det.col == None
                     assert det.description == None
                 else:
-                    assert len(vcr['assertions']) == 1, f"{display_name_AB} contains {len(vcr['assertions'])} assertions, expected exactly 1 because we're in IA mode!"
-                    asst = vcr['assertions'][0]
+                    assert len(vcr['assertions']) <= 1, f"{display_name_AB} contains {len(vcr['assertions'])} assertions, expected 1 or 0 because we're in IA mode!"
+                    try:
+                        asst = vcr['assertions'][0]
+                    except:
+                        asst = {'filename':'not_in_log','line':'not_in_log','col':'not_in_log', 'description':'not_in_log'}
                     if det.line == None:
                         det.filename = asst['filename']
                         det.line = asst['line']
@@ -161,15 +175,19 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
 
                 vcr_RC = vcr['resourceCount']
                 vcrs_RC.append(vcr_RC)
-                if vcr["outcome"] != "Valid" :
-                    assert vcr["outcome"] in ["OutOfResource","Invalid"], f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!"
-                    assert vr["outcome"] in ["OutOfResource","Errors"], f"{display_name}.outcome == {vr["outcome"]}: unexpected!"
-                    det.fails.append(vcr_RC)
-                else: # vcr Valid
+                if vcr["outcome"] == "OutOfResource" :
+                    assert vr["outcome"] == "OutOfResource", f"{display_name_AB}==OoR, {display_name}=={vr["outcome"]}: unexpected!"
+                    det.OoR.append(vcr_RC)
+                elif vcr["outcome"] == "Valid":
                     det.RC.append(vcr_RC)
+                elif vcr["outcome"] == "Invalid":
+                    assert vr["outcome"] == "Errors", f"{display_name_AB}==Invalid, {display_name}=={vr["outcome"]}: unexpected!"
+                    det.failures.append(vcr_RC)
+                else:
+                    sys.exit(f"{display_name_AB}.outcome == {vcr["outcome"]}: unexpected!")
                 results[display_name_AB] = det
 
-            # Ensure that the sum of AB's RCs equals the vr's RC
+            # Ensure that the sum of AB's RCs equals the vr's RC, independent of success/failure
             assert sum(vcrs_RC) == vr_RC, f"{display_name}.RC={vr_RC}, but the sum of the vcrs' RCs is {sum(vcrs_RC)} "
         
     if paranoid:
@@ -218,7 +236,7 @@ def readLogs(paths,recreate_pickle = True) -> resultsType:
                 exit(1)
 
 
-        print(f"Processed {files} files in {(dt.now()-t0)/td(seconds=1)}")
+        log.info(f"Processed {files} files in {(dt.now()-t0)/td(seconds=1)}")
 
         # PRINT OVERLAPPING ABs
         # go through each result, store its location vs what happened in it
