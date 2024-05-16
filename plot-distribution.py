@@ -84,7 +84,7 @@ for k,v in results.items():
                 log.warning(f"MinOoR for {k} is {min(v.OoR)}, should be > {args.limitRC=}")
                 # comment = "FAILED "
     # Calculate the % span between max and min
-    span = (maxRC_entry-minRC_entry)/maxRC_entry
+    span = (maxRC_entry-minRC_entry)/minRC_entry
     info = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {span:>8.2%}"
     log.debug(info)
     lincol = "" if v.line is None else f":{v.line}:{v.col}"
@@ -109,7 +109,7 @@ if args.IAmode and not ABs_present:
     # But this could hide a mistake
     assert vr_past_limitRC == "", vr_past_limitRC
 
-df["weighted_span"] = df["span"] * df["maxRC"]
+df["weighted_span"] = df["span"] * df["minRC"]
 df = df.sort_values(["failures","OoRs","weighted_span"], ascending=False,kind='stable')#.drop("weighted_span")
 
 # IA plots contain both vrs and vcrs. Separate them.
@@ -198,7 +198,7 @@ for i in df.index[:args.top]:
 print(df.drop(columns=["Element_ordered","is_AB","excluded"])
         .rename(columns={
             "span"          : "RC span (%)",
-            "weighted_span" : "maxRC * span"
+            "weighted_span" : "minRC * span"
             })
         .head(args.top)
         .to_string (formatters={
@@ -361,7 +361,7 @@ table_plot = hv.Table(df.drop(columns=["Element_ordered","is_AB","excluded"])
                       .rename(
                           columns={
                             "span":"RC span (%)",
-                            "weighted_span" : "maxRC * span"
+                            "weighted_span" : "minRC * span"
                             }),
                     kdims="Element"
                 ).opts(height=310,width=800)
@@ -371,12 +371,13 @@ if df_vrs is not None:
     # df_vrs["maxRC"] = df_vrs["maxRC"].apply(smag)
     # df_vrs["span"] = df_vrs["span"].apply(lambda d:f"{d:>8.2%}")
     df_vrs["span"] = df_vrs["span"].apply(lambda d:d*100)
-    table_vrs = hv.Table(df_vrs.drop(columns=["is_AB"]).rename(columns={
-        "span":"RC span (%)"
-        }),kdims="Element").opts(
-            height=310,
-            width=800,
-            )
+    table_vrs = hv.Table(df_vrs.drop(columns=["is_AB"]).rename(
+                          columns={
+                            "span":"RC span (%)",
+                            "weighted_span" : "minRC * span"
+                            }),
+                    kdims="Element"
+                ).opts(height=310,width=800)
     table_plot = ( table_plot + 
                   hv.Div("<h2>Per-function totals (in Isolated Assertions mode):</h2>").opts(height=50) + 
                   table_vrs)
