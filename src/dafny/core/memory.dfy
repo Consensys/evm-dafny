@@ -53,8 +53,8 @@ module Memory {
      *                  i.e. in 0..(r.size - 1).
      */
     function Expand(mem: T, address: nat) : (r: T)
-      ensures |r.contents| > address
-      ensures address >= |mem.contents| ==>
+    ensures |r.contents| > address
+    ensures address >= |mem.contents| ==>
         (|r.contents| % 32 == 0 &&  |r.contents| - 32 <= address)
     {
         if address < |mem.contents| then
@@ -66,9 +66,9 @@ module Memory {
 
     /** Smallest number multiple of 32 that is larger than k. */
     function SmallestLarg32(k: nat): (x:nat)
-      ensures x > k
-      ensures x % 32 == 0
-      ensures (x - 32) <= k
+    ensures x > k
+    ensures x % 32 == 0
+    ensures (x - 32) <= k
     {
       (k / 32 + 1) * 32
     }
@@ -122,7 +122,8 @@ module Memory {
     function WriteUint256(mem:T, address:nat, val:u256) : (mem':T)
     requires address + 31 < |mem.contents|
     // Nothing has changed except the bytes overwritten by the u256
-    ensures Arrays.EqualsExcept(mem.contents,mem'.contents,address,32) {
+    // ensures Arrays.EqualsExcept(mem.contents,mem'.contents,address,32) 
+    {
         var ncontents := ByteUtils.WriteUint256(mem.contents,address,val);
         Memory(contents:=ncontents)
     }

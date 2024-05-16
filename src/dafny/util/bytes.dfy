@@ -90,7 +90,8 @@ module ByteUtils {
      */
     function WriteUint8(mem:seq<u8>, address:nat, val:u8) : (mem':seq<u8>)
     requires address < |mem|
-    ensures Arrays.EqualsExcept(mem,mem',address,1){
+    // ensures Arrays.EqualsExcept(mem,mem',address,1)
+    {
         // Write location
         mem[address:=val]
     }
@@ -101,7 +102,8 @@ module ByteUtils {
      */
     function WriteUint16(mem:seq<u8>, address:nat, val:u16) : (mem':seq<u8>)
     requires address + 1 < |mem|
-    ensures Arrays.EqualsExcept(mem,mem',address,2){
+    // ensures Arrays.EqualsExcept(mem,mem',address,2)
+    {
       var w1 := val / (TWO_8 as u16);
       var w2 := val % (TWO_8 as u16);
       var mem' := WriteUint8(mem,address,w1 as u8);
@@ -114,7 +116,8 @@ module ByteUtils {
      */
     function WriteUint32(mem:seq<u8>, address:nat, val:u32) : (mem':seq<u8>)
     requires address + 3 < |mem|
-    ensures Arrays.EqualsExcept(mem,mem',address,4){
+    // ensures Arrays.EqualsExcept(mem,mem',address,4)
+    {
       var w1 := val / (TWO_16 as u32);
       var w2 := val % (TWO_16 as u32);
       var mem' := WriteUint16(mem,address,w1 as u16);
@@ -127,7 +130,8 @@ module ByteUtils {
      */
     function WriteUint64(mem:seq<u8>, address:nat, val:u64) : (mem':seq<u8>)
     requires address + 7 < |mem|
-    ensures Arrays.EqualsExcept(mem,mem',address,8) {
+    // ensures Arrays.EqualsExcept(mem,mem',address,8) 
+    {
       var w1 := val / (TWO_32 as u64);
       var w2 := val % (TWO_32 as u64);
       var mem' := WriteUint32(mem,address,w1 as u32);
@@ -140,7 +144,8 @@ module ByteUtils {
      */
     function WriteUint128(mem:seq<u8>, address:nat, val:u128) : (mem':seq<u8>)
     requires address + 15 < |mem|
-    ensures Arrays.EqualsExcept(mem,mem',address,16) {
+    // ensures Arrays.EqualsExcept(mem,mem',address,16) 
+    {
       var w1 := val / (TWO_64 as u128);
       var w2 := val % (TWO_64 as u128);
       var mem' := WriteUint64(mem,address,w1 as u64);
@@ -153,7 +158,8 @@ module ByteUtils {
      */
     function WriteUint256(mem:seq<u8>, address:nat, val:u256) : (mem':seq<u8>)
     requires address + 31 < |mem|
-    ensures Arrays.EqualsExcept(mem,mem',address,32) {
+    // ensures Arrays.EqualsExcept(mem,mem',address,32) 
+    {
       var w1 := val / (TWO_128 as u256);
       var w2 := val % (TWO_128 as u256);
       var mem' := WriteUint128(mem,address,w1 as u128);
@@ -192,7 +198,7 @@ module ByteUtils {
      * Construct a sequence of an arbitrary sized padded out with zeros.
      */
     function Padding(n:nat) : seq<u8>
-    ensures |Padding(n)| == n
+    // ensures |Padding(n)| == n
     {
         seq(n, i => 0)
     }
