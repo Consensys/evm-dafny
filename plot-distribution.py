@@ -223,7 +223,7 @@ import hvplot
 from hvplot import hvPlot
 from holoviews import opts
 from bokeh.models.tickers import FixedTicker, CompositeTicker, BasicTicker
-from bokeh.models import NumeralTickFormatter
+from bokeh.models import NumeralTickFormatter, HoverTool
 from bokeh.util.compiler import TypeScript
 
 hv.extension('bokeh')
@@ -244,7 +244,6 @@ for i,dn in enumerate(labels_plotted):
         )
     histplots_dict[eo] = h
 
-from bokeh.models import HoverTool
 hover = HoverTool(tooltips=[
     ("Element", "@Element"),
     ("ResCount bin", "@RCbin"),

@@ -1,10 +1,7 @@
 #! python3
 """
-Make it easier to run measure-complexity, store its log file with the current date and run a tool on it
-
 Runs dafny's measure-complexity with the given args,
-stores the CSV file with the args in the filename for easier bookkeeping,
-and runs dafny-reportgenerator on that file
+stores the CSV file with the args in the filename for easier bookkeeping
 """
 
 import argparse
@@ -16,6 +13,7 @@ import time
 import logging as log
 import enum
 from datetime import datetime as dt, timedelta as td
+from quantiphy import Quantity
 
 def shell(str, **kwargs):
     """Convenient way to run a CLI string and get its exit code, stdout, stderr.."""
@@ -30,6 +28,10 @@ parser.add_argument("-d", "--dafnyexec", default="dafny")
 parser.add_argument("-r", "--rseed", default=str(int(time.time())))
 parser.add_argument("-i", "--iter", default="1")
 parser.add_argument("-f", "--format", default="json")
+parser.add_argument("-l", "--limitRC", type=Quantity, default=Quantity("10M"), help="The RC limit")
+parser.add_argument("-a", "--isolate-assertions",action="store_true")
+parser.add_argument("-c", "--verify-included-files",action="store_true")
+
 args = parser.parse_args()
 
 
@@ -39,7 +41,9 @@ if not isinstance(numeric_level, int):
     raise ValueError('Invalid log level: %s' % loglevel)
 log.basicConfig(level=numeric_level,format='%(levelname)s:%(message)s')
 
-argstring4filename = f"{args.dafnyexec}{args.dafnyfile}rs{args.rseed}i{args.iter}{args.extra_args}".replace("/","").replace("-","").replace(":","").replace(" ","")
+IAstr = "IA" if args.isolate_assertions else ""
+VIFstr = "VIF" if args.verify_included_files else ""
+argstring4filename = f"{args.dafnyexec}_{args.dafnyfile}_IT{args.iter}_L{args.limitRC}_{IAstr}_{VIFstr}_{args.extra_args}".replace("/","").replace("-","").replace(":","").replace(" ","")
 d : str = dt.now()
 dstr = d.strftime('%Y%m%d-%H%M%S')
 filename = "TestResults/" + dstr + "_" + argstring4filename
@@ -56,6 +60,10 @@ arglist = [
     args.iter,
     "--log-format",
     f"{args.format};LogFileName={filename}.{args.format}",
+    "--resource-limit",
+    str(int(args.limitRC)),
+    "--isolate-assertions" if args.isolate_assertions else "",
+    "--verify-included-files" if args.verify_included_files else "",
     *args.extra_args.split(),
 
     args.dafnyfile

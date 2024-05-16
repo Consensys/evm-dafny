@@ -74,7 +74,8 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
     results: resultsType = {}
 
     with open(fullpath) as jsonfile:
-        verificationResults = json.load(jsonfile)["verificationResults"]
+        j = json.load(jsonfile)
+        verificationResults = j["verificationResults"]
     log.debug(f"{fullpath}: {len(verificationResults)} verificationResults")
 
     # A JSON verification log contains a list of verificationResults
@@ -205,14 +206,15 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
 
 
 
-def readLogs(paths,recreate_pickle = True) -> resultsType:
+def readLogs(paths, read_pickle = False, write_pickle = False) -> resultsType:
+
     results: resultsType = {}
     files = 0
     # to be un/pickled: [files, results]
 
     t0 = dt.now()
     picklefilepath = "".join(paths)+"v2.pickle"
-    if os.path.isfile(picklefilepath) and not recreate_pickle:
+    if os.path.isfile(picklefilepath) and read_pickle:
         with open(picklefilepath, 'rb') as pf:
             [files, results] = pickle.load(pf)
         print(f"Loaded pickle: {files} files {(dt.now()-t0)/td(seconds=1)}")
@@ -261,7 +263,8 @@ def readLogs(paths,recreate_pickle = True) -> resultsType:
         #     if len(ABs)>1:
         #         log.info(f" {loc[0]}:{loc[1]}:{loc[2]} contains {len(ABs)} ABs: {ABs}")
 
-        with open(picklefilepath, "wb") as pf:
-            pickle.dump([files, results], pf)
+        if write_pickle:
+            with open(picklefilepath, "wb") as pf:
+                pickle.dump([files, results], pf)
         return results
 
