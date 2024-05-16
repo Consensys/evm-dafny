@@ -61,20 +61,14 @@ for k,v in results.items():
     #     if ig in k:
     #         log.debug(f"Excluding {k}")
     #         continue
-    minRC_entry = min(v.RC)
+    minRC_entry = min(v.RC, default=inf)
     minRC = min(minRC, minRC_entry)
-    maxRC_entry = max(v.RC)
+    maxRC_entry = max(v.RC, default=-inf)
     maxRC = max(maxRC, maxRC_entry)
-    if v.OoR != []:
-        minOoR_entry = min(v.OoR)
-        minOoR = min(minOoR,minOoR_entry)
-    else:
-        minOoR_entry = inf
-    if v.failures != []:
-        minFailures_entry = min(v.failures)
-        minFailures = min(minFailures,minFailures_entry)
-    else:
-        minFailures_entry = inf
+    minOoR_entry = min(v.OoR, default=inf)
+    minOoR = min(minOoR,minOoR_entry)
+    minFailures_entry = min(v.failures, default=inf)
+    minFailures = min(minFailures,minFailures_entry)
     if v.is_AB:
         ABs_present = True
     comment = ""
@@ -85,14 +79,15 @@ for k,v in results.items():
                     sys.exit(f"LimitRC={args.limitRC} but {k}() has maxRC={Quantity(maxRC_entry)}. Should be a fail! ")
                 else:
                     # IAmode could hide a genuinely failed VR. Ensure that IAmode is only used when there are ABs.
-                    vr_past_limitRC = f"LimitRC={args.limitRC} but {k}() has maxRC={Quantity(maxRC_entry)}. Should be a fail! "
+                    vr_past_limitRC += f"LimitRC={args.limitRC} but {k} has maxRC={Quantity(maxRC_entry)}. Should be a fail!\n"
             if minOoR_entry < args.limitRC and v.is_AB:
-                log.warning(f"MinOoR for {k} is {min(v.OoR)}, smaller than {args.limitRC=}")
+                log.warning(f"MinOoR for {k} is {min(v.OoR)}, should be > {args.limitRC=}")
                 # comment = "FAILED "
     # Calculate the % span between max and min
     span = (maxRC_entry-minRC_entry)/maxRC_entry
-    line = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {span:>8.2%}"
-    log.debug(line)
+    info = f"{k:40} {len(v.RC):>10} {smag(minRC_entry):>8}    {smag(maxRC_entry):>6} {span:>8.2%}"
+    log.debug(info)
+    lincol = "" if v.line is None else f":{v.line}:{v.col}"
     df.loc[k] = {
         "successes": len(v.RC),
         "minRC" : minRC_entry,
@@ -101,10 +96,11 @@ for k,v in results.items():
         "OoRs" : len(v.OoR),
         "failures" : len(v.failures),
         "is_AB" : v.is_AB,
-        "loc"   : f"{v.line}:{v.col}",
+        "loc"   : f"{v.filename}{lincol}",
         "comment": comment
     }
 
+minFailures = Quantity(minFailures)
 minOoR = Quantity(minOoR)
 # assert maxRC < minFail
 if args.IAmode and not ABs_present:
@@ -113,15 +109,16 @@ if args.IAmode and not ABs_present:
     # But this could hide a mistake
     assert vr_past_limitRC == "", vr_past_limitRC
 
-df.sort_values(["failures","OoRs","span"],inplace=True, ascending=False,kind='stable')
+df["weighted_span"] = df["span"] * df["maxRC"]
+df = df.sort_values(["failures","OoRs","weighted_span"], ascending=False,kind='stable')#.drop("weighted_span")
 
 # IA plots contain both vrs and vcrs. Separate them.
 df_ABs = df[df["is_AB"]]
 if df_ABs.empty:
     df_vrs = None
-    df = df.drop(columns="loc")
+    df = df
 else:
-    df_vrs = df[df["is_AB"] == False].drop(columns="loc")
+    df_vrs = df[df["is_AB"] == False]
     df = df_ABs
 
 df.reset_index(inplace=True)
@@ -129,14 +126,14 @@ df['Element_ordered'] = [f"{i} {s}" for i,s in zip(df.index,df["Element"])]
 
 if args.limitRC is None:
     if minOoR < inf:
-        log.warning(f"There are OoR results, but no limitRC was given. Minimum OoR RC found = {minOoR}.")
-        fstr: str = "OoR"#f"> {minOoR}"
+        log.warning(f"Logs contain OoR results, but no limitRC was given. Minimum OoR RC found = {minOoR}.")
+        OoRstr: str = f"OoR > {minOoR}"
     else:
-        fstr = ""
+        OoRstr = ""
 else:
-    fstr: str = f"> {args.limitRC}"
+    OoRstr: str = f"OoR > {args.limitRC}"
 
-failstr: str = "FAILED"# + fstr
+failstr: str = OoRstr #"FAILED"# + fstr
 
 # PREPARATORY CALCULATIONS TO PLOT THE RESULTS
 
@@ -154,7 +151,7 @@ maxRC_plot = max(df[~df["excluded"]].iloc[0:args.top]["maxRC"])
 # The histograms have the user-given num of bins, + filler until x=0, + 2 if there are fails (spacer and fails)
 bins = np.linspace(Quantity(minRC_plot),Quantity(maxRC_plot), num=args.nbins+1)
 bin_width = bins[1]-bins[0]
-log.info(f"{args.nbins=}, range {smag(minRC_plot)} - {smag(maxRC_plot)}, width {smag(bin_width)}")
+log.debug(f"{args.nbins=}, range {smag(minRC_plot)} - {smag(maxRC_plot)}, width {smag(bin_width)}")
 plotting_fails = (minOoR != inf) or (minFailures != inf)
 bin_margin = bins[-1] + 3 * bin_width
 bin_fails = bin_margin + 3 * bin_width
@@ -190,22 +187,30 @@ for i in df.index[:args.top]:
         hist_df[dn] = counts
         with np.errstate(divide='ignore'): # to silence the errors because of log of 0 values
             hist_df[dn+"_log"] = np.log10(counts)
-        hist_df[dn+"_log"] = hist_df[dn+"_log"].apply(lambda l: l if l!=0 else 0.2) # log10(1) = 0, so it's almost invisible. log10(2)=0.3. So let's plot 1 as 0.2
+        hist_df[dn+"_log"] = hist_df[dn+"_log"].apply(
+            lambda l: l if l!=0 else 0.2    # log10(1) = 0, so it's barely visible in plot. log10(2)=0.3. So let's plot 1 as 0.2
+            ) 
         hist_df[dn+"_RCbin"] = bin_labels # for the hover tool
         df.loc[i,"comment"]+="plotted" #f"F={len(d.failures)} O={len(d.OoR)}"
     else:
         df.loc[i,"comment"]+=f"{bin_span=}"
 
-print(df.drop(columns=["Element_ordered","is_AB","excluded"]).
-            to_string(formatters={
+print(df.drop(columns=["Element_ordered","is_AB","excluded"])
+        .rename(columns={
+            "span"          : "RC span (%)",
+            "weighted_span" : "maxRC * span"
+            })
+        .head(args.top)
+        .to_string (formatters={
                 'maxRC':smag , 
                 'minRC':smag, 
                 #'OoRs':smag,
                 #'failures':smag,
                 'span':lambda d:f"{d:>8.2%}"
                 },
-                max_rows=8)
+            #max_rows=8
             )
+        )
 
 if args.stop:
     log.info("Stopping as requested.")
@@ -352,10 +357,14 @@ spikes.opts(
 # df["maxRC"] = df["maxRC"].apply(smag)
 # df["span"] = df["span"].apply(lambda d:f"{d:>8.2%}")
 df["span"] = df["span"].apply(lambda d:d*100)
-table_plot = hv.Table(df.drop(columns=["Element_ordered","is_AB","excluded"]).rename(columns={
-    "span":"RC span (%)"
-    }),kdims="Element").opts(height=310,width=800)
-
+table_plot = hv.Table(df.drop(columns=["Element_ordered","is_AB","excluded"])
+                      .rename(
+                          columns={
+                            "span":"RC span (%)",
+                            "weighted_span" : "maxRC * span"
+                            }),
+                    kdims="Element"
+                ).opts(height=310,width=800)
 
 if df_vrs is not None:
     # df_vrs["minRC"] = df_vrs["minRC"].apply(smag)
@@ -368,7 +377,9 @@ if df_vrs is not None:
             height=310,
             width=800,
             )
-    table_plot = table_plot + hv.Div("<h2>Per-function totals:</h2>").opts(height=50) + table_vrs
+    table_plot = ( table_plot + 
+                  hv.Div("<h2>Per-function totals (in Isolated Assertions mode):</h2>").opts(height=50) + 
+                  table_vrs)
     
 plot = hists + spikes + table_plot #+ hist #+ violin
 plot.cols(1)
@@ -415,6 +426,7 @@ plot.opts(shared_axes=True)
 
 # fig.xaxis.bounds = (0,bin_fails)
 
+#title = "".join(args.paths)
 plotfilepath = "".join(args.paths)+".html"
 
 try:
@@ -423,7 +435,7 @@ except:
     pass
 
 #renderer.save(plot, 'plot')
-hv.save(plot, plotfilepath)
+hv.save(plot, plotfilepath)#, title=title)
 #hvplot.show(plot)
 # from bokeh.resources import INLINE
 #plot.save(plotfilepath)#, resources=INLINE)

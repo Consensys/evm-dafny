@@ -120,7 +120,15 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
             det.failures.append(vr_RC)
         else:
             sys.exit(f"{display_name}.outcome == {vr["outcome"]}: unexpected!")
-
+        try:
+            # vcr[0].assertions[] is empty in IA mode
+            filename = vr['vcResults'][1]['assertions'][0]["filename"]
+        except:
+            try:
+                filename = vr['vcResults'][0]['assertions'][0]["filename"]
+            except:
+                filename = "???"
+        det.filename = filename
         results[display_name] = det
 
         # Without "isolating assertions", there is only 1 vcr per vr
@@ -144,16 +152,16 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
                     assert len(vcr['assertions']) == 0 
                     # Plus, assertions contain their location and description, so here there should be nothing either
                     # Ensure that it's empty every time it appears
-                    assert det.line == None
-                    assert det.col == None
-                    assert det.description == None
+                    assert det.line is None
+                    assert det.col is None
+                    assert det.description is None
                 else:
                     assert len(vcr['assertions']) <= 1, f"{display_name_AB} contains {len(vcr['assertions'])} assertions, expected 1 or 0 because we're in IA mode!"
                     try:
                         asst = vcr['assertions'][0]
                     except:
                         asst = {'filename':'not_in_log','line':'not_in_log','col':'not_in_log', 'description':'not_in_log'}
-                    if det.line == None:
+                    if det.line is None:
                         det.filename = asst['filename']
                         det.line = asst['line']
                         det.col = asst['col']
