@@ -19,6 +19,12 @@ module Int {
     import opened Optional
     import MathUtils
 
+    const TWO_1   : int := 0x0_02
+    const TWO_2   : int := 0x0_04
+    const TWO_3   : int := 0x0_08
+    const TWO_4   : int := 0x0_10
+    const TWO_5   : int := 0x0_20
+    const TWO_6   : int := 0x0_40
     const TWO_7   : int := 0x0_80
     const TWO_8   : int := 0x1_00
     const TWO_15  : int := 0x0_8000
@@ -80,6 +86,13 @@ module Int {
     newtype i256 = i:int | MIN_I256 <= i <= MAX_I256
 
     // Unsigned Integers
+    const MAX_U1 : int :=  TWO_1 - 1
+    const MAX_U2 : int :=  TWO_2 - 1
+    const MAX_U3 : int :=  TWO_3 - 1
+    const MAX_U4 : int :=  TWO_4 - 1
+    const MAX_U5 : int :=  TWO_5 - 1
+    const MAX_U6 : int :=  TWO_6 - 1
+    const MAX_U7 : int :=  TWO_7 - 1
     const MAX_U8 : int :=  TWO_8 - 1
     const MAX_U16 : int := TWO_16 - 1
     const MAX_U24 : int := TWO_24 - 1
@@ -113,6 +126,13 @@ module Int {
     const MAX_U248: int := TWO_248 - 1
     const MAX_U256: int := TWO_256 - 1
 
+    newtype{:nativeType "byte"} u1 = i:int    | 0 <= i <= MAX_U1
+    newtype{:nativeType "byte"} u2 = i:int    | 0 <= i <= MAX_U2
+    newtype{:nativeType "byte"} u3 = i:int    | 0 <= i <= MAX_U3
+    newtype{:nativeType "byte"} u4 = i:int    | 0 <= i <= MAX_U4
+    newtype{:nativeType "byte"} u5 = i:int    | 0 <= i <= MAX_U5
+    newtype{:nativeType "byte"} u6 = i:int    | 0 <= i <= MAX_U6
+    newtype{:nativeType "byte"} u7 = i:int    | 0 <= i <= MAX_U7
     newtype{:nativeType "byte"} u8 = i:int    | 0 <= i <= MAX_U8
     newtype{:nativeType "ushort"} u16 = i:int | 0 <= i <= MAX_U16
     newtype{:nativeType "uint"} u24 = i:int | 0 <= i <= MAX_U24
