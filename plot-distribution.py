@@ -4,7 +4,7 @@ import argparse
 import math
 import re
 import sys
-from matplotlib import table
+# from matplotlib import table
 from quantiphy import Quantity
 import logging as log
 from math import inf

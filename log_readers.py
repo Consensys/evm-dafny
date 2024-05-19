@@ -32,9 +32,9 @@ class Details:
 type resultsType = dict[str, Details]
 
 def mergeResults(r:resultsType, rNew:resultsType):
-    if len(rNew) == 0:
-        log.error(f"no results in rNew")
-        exit(1)
+    # if len(rNew) == 0:
+    #     log.error(f"no results in rNew")
+    #     exit(1)
     for k in rNew:
         if k in r:
             r[k].RC.extend(rNew[k].RC)
@@ -74,10 +74,15 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
     results: resultsType = {}
 
     with open(fullpath) as jsonfile:
-        j = json.load(jsonfile)
-        verificationResults = j["verificationResults"]
+        try:
+            j = json.load(jsonfile)
+            verificationResults = j["verificationResults"]
+        except:
+            sys.exit("No verificationResults!")
     log.debug(f"{fullpath}: {len(verificationResults)} verificationResults")
 
+    if len(verificationResults) == 0:
+        return results
     # A JSON verification log contains a list of verificationResults
     # multiple verification runs are only distinguishable because the randomseed changes
     # Each vR corresponds to a function or method
@@ -95,7 +100,10 @@ def readJSON(fullpath: str, paranoid=True) -> resultsType:
     # But if "isolating assertions" was used, then each DN contains an "AB x";
     # and each DN+AB's entry contains not only list of RCs, but also location
 
-    mode_IA = (len(verificationResults[0]['vcResults']) > 1)  # Isolate Assertions. We guess the mode to check if it stays coherent.
+    try:
+        mode_IA = (len(verificationResults[0]['vcResults']) > 1)  # Isolate Assertions. We guess the mode to check if it stays coherent.
+    except:
+        sys.exit("Empty verificationResults")
     locations: dict[tuple,dict[int,dict[str,str]]] = {} # to detect when a location (file,line,col) has consistent ABs across random seeds:{randomseed:{displayname_AB:description}}
 
     for vr in verificationResults:

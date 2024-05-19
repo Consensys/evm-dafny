@@ -4,7 +4,7 @@ import argparse
 import math
 import re
 import sys
-from matplotlib import table
+#from matplotlib import table
 from quantiphy import Quantity
 import logging as log
 from math import inf
@@ -104,7 +104,6 @@ df_IA["minRC * span"] = df_IA["span"] * df_IA["minRC"]
 cs = [e for e in df_IA.columns.values if e != "Element"]
 cs_IA = [c + " IA" for c in cs]
 renamer = {c:c_IA for c, c_IA in zip(cs, cs_IA)}
-renamer["span IA"]="RC span% IA"
 df_IA.rename(columns=renamer, inplace=True)
 
 df = pd.DataFrame( columns=["minRC", "maxRC", "span", "successes", "OoRs","failures","is_AB"])
@@ -127,30 +126,21 @@ df['Element_ordered'] = [f"{i} {s}" for i,s in zip(df.index,df["Element"])]
 
 maxRC = max(max(df["maxRC"]),max(df["maxRC IA"]))
 minRC = min(min(df["minRC"]),min(df["minRC IA"]))
-RCfailure = maxRC * 2 # for logx we need a big difference
-# minOoR = min(min(df["minRC"]),min(df_IA["minRC"]))
-# minFailures = min(min(df["minRC"]),min(df_IA["minRC"]))
+RCmargin = maxRC * 1.5
+RCOoR = maxRC * 2 
+RCfailure = maxRC * 2.5 
+sep = 1.0001 #separation between spikes/markers faked into the OoR/fail areas
 
-# minFailures = Quantity(minFailures)
-# minOoR = Quantity(minOoR)
-# assert maxRC < minFail
-
-
-OoRstr: str = "OoR"
-
-if args.limitRC is not None:
-    OoRstr += f">{args.limitRC}"
-
-failstr: str = OoRstr #"FAILED"# + fstr
+failstr: str = "OoR/FAILED"
 
 
 # HOLOVIEWS
 
 import holoviews as hv
-import hvplot
-from hvplot import hvPlot
+# import hvplot
+# from hvplot import hvPlot
 from holoviews import opts
-from bokeh.models.tickers import FixedTicker, CompositeTicker, BasicTicker
+# from bokeh.models.tickers import FixedTicker, CompositeTicker, BasicTicker
 from bokeh.models import NumeralTickFormatter, HoverTool
 from bokeh.util.compiler import TypeScript
 
@@ -182,10 +172,14 @@ for i,dn in enumerate(labels_plotted):
     RCs_IA = results_IA[dn].RC
     RCs_normal = results_normal[dn].RC
     # Represent the failures / OoRs with a spike/dot at x=RCfailure 
-    if results_IA[dn].OoR != [] or results_IA[dn].failures != []:
-        RCs_IA.append(RCfailure)
-    if results_normal[dn].OoR != [] or results_normal[dn].failures != []:
-        RCs_normal.append(RCfailure)
+    for n in range(0,len(results_IA[dn].OoR)):
+        RCs_IA.append(RCOoR*pow(sep, n))
+    for n in range(0,len(results_IA[dn].failures)):
+        RCs_IA.append(RCfailure*pow(sep, n))
+    for n in range(0,len(results_normal[dn].OoR)):
+        RCs_normal.append(RCOoR*pow(sep, n))
+    for n in range(0,len(results_normal[dn].failures)):
+        RCs_normal.append(RCfailure*pow(sep, n))
 
     hover2 = HoverTool(
                 tooltips=[
@@ -219,8 +213,8 @@ for i,dn in enumerate(labels_plotted):
                 tools=[hover3],
                 xaxis="bottom",
                 logx = True,
-                marker='s',
-                size=5,
+                marker='x',
+                size=10,
                 show_grid=True,
                 xlabel="Log(RC)",
                 ylabel="Func"
@@ -246,7 +240,8 @@ spikes.opts(
                 backend_opts={
                     # "xaxis.bounds" : (0,RCfailure)
                     },
-                title="◼️ = normal mode, | = Isolated Assertions mode"
+                title="X = normal mode    | = Isolated Assertions mode",
+                show_legend=False,
                 ),    
 
     opts.NdOverlay(show_legend=False,
@@ -270,21 +265,45 @@ scatter.opts(
             #backend_opts={
                 #"xaxis.bounds" : (0,bins_plot[-1]+bin_width)
             #    },
+            show_legend=False,
             ),
+    opts.NdOverlay(show_legend=False,
+        click_policy='mute',
+        autorange=None,
+        ylim=(0,nlabs),
+        #xlim=(3000,RCfailure),
+        padding=(0.05),
+    ),
+
 )
+
+# A vertical line separating the fails bar
+# disabled because it disables the autoranging of the histograms
+# vline = hv.VLine(RCmargin).opts(
+#     opts.VLine(color='black', line_width=1, autorange='y',ylim=(0,None))
+# )
+vspan = hv.VSpan(RCmargin,RCmargin*10).opts(
+    opts.VSpan(color='#FF000030',show_legend=False) # transparent red
+)
+
+
 
 # TABLE
 
-df["span IA"] = df["span IA"].apply(lambda s:s*100)
-df["span"] = df["span"].apply(lambda s:s*100)
+df["span IA"] = df["span IA"].apply(lambda s: int(s*1000)/10.0)
+df["span"] = df["span"].apply(lambda s: int(s*1000)/10.0)
 df.drop(columns=["Element_ordered"], inplace=True)
+df.rename(columns={
+        "span":"RC span%",
+        "span IA":"RC span% IA"
+    },inplace=True)
 
 table = hv.Table(df).opts(height=310,width=800)
 
 # table = hv.Div("<h2>Normal mode:</h2>").opts(height=50) + table
 
     
-plot = scatter * spikes + table
+plot = scatter * spikes * vspan + table
 plot.cols(1)
 
 class NumericalTickFormatterWithLimit(NumeralTickFormatter):
@@ -292,7 +311,7 @@ class NumericalTickFormatterWithLimit(NumeralTickFormatter):
 import {NumeralTickFormatter} from "models/formatters/numeral_tick_formatter"
 
 export class NumericalTickFormatterWithLimit extends NumeralTickFormatter {
-  FAIL_MIN=""" + str(int(RCfailure)) + """
+  FAIL_MIN=""" + str(int(RCmargin)) + """
 
   doFormat(ticks: number[], _opts: {loc: number}): string[] {
     const formatted = []
@@ -318,11 +337,12 @@ plot.opts(
         click_policy='mute',
         autorange='y',
         xformatter=mf,
-        legend_position="right",
-        responsive=True
+        #legend_position="right",
+        responsive=True,
+        show_legend=False,
         )
 )
-plot.opts(shared_axes=True)
+# plot.opts(shared_axes=True)
 
 # fig = hv.render(plot)
 # #hb = fig.traverse(specs=[hv.plotting.bokeh.Histogram])
