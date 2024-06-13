@@ -32,9 +32,9 @@ class Details:
 type resultsType = dict[str, Details]
 
 def mergeResults(r:resultsType, rNew:resultsType):
-    # if len(rNew) == 0:
-    #     log.error(f"no results in rNew")
-    #     exit(1)
+    if len(rNew) == 0:
+        log.debug(f"no results in rNew")
+        exit(1)
     for k in rNew:
         if k in r:
             r[k].RC.extend(rNew[k].RC)
@@ -233,7 +233,13 @@ def readLogs(paths, read_pickle = False, write_pickle = False) -> resultsType:
             # os.walk doesn't accept files, only dirs; so we need to process single files separately
             log.debug(f"root {p}")
             if os.path.isfile(p):
-                results_read = readJSON(p)
+                ext = os.path.splitext(p)
+                if ext == ".json":
+                    results_read = readJSON(p)
+                elif ext == ".csv":
+                    results_read = readCSV(p)
+                else:
+                    sys.exit(f"Unknown file format: {p}")
                 mergeResults(results, results_read)
                 files += 1
                 continue
@@ -246,7 +252,13 @@ def readLogs(paths, read_pickle = False, write_pickle = False) -> resultsType:
                     files +=1
                     fullpath = os.path.join(dirpath, f)
                     log.debug(f"file {files}: {fullpath}")
-                    results_read = readJSON(fullpath)
+                    ext = os.path.splitext(fullpath)
+                    if ext == ".json":
+                        results_read = readJSON(fullpath)
+                    elif ext == ".csv":
+                        results_read = readCSV(fullpath)
+                    else:
+                        sys.exit(f"Unknown file format: {fullpath}")
                     mergeResults(results, results_read)
 
             if files_before_root == files:

@@ -1,7 +1,7 @@
 #! python3
 """
 Runs dafny's measure-complexity with the given args,
-stores the CSV file with the args in the filename for easier bookkeeping
+stores the log file with the args in the filename for easier bookkeeping
 """
 
 import argparse
@@ -26,7 +26,7 @@ parser.add_argument("dafnyfile")
 parser.add_argument("-e", "--extra_args", default="")
 parser.add_argument("-d", "--dafnyexec", default="dafny")
 parser.add_argument("-r", "--rseed", default=str(int(time.time())))
-parser.add_argument("-i", "--iter", default="1")
+parser.add_argument("-i", "--iter", default="10")
 parser.add_argument("-f", "--format", default="json")
 parser.add_argument("-l", "--limitRC", type=Quantity, default=Quantity("10M"), help="The RC limit")
 parser.add_argument("-a", "--isolate-assertions",action="store_true")
@@ -68,7 +68,9 @@ arglist = [
 
     args.dafnyfile
     ]
-log.info(f"Executing:{args.dafnyexec} {" ".join(arglist)}")
+log.info(f"Executing:{args.dafnyexec} {' '.join(arglist)}")
+sys.stdout.flush()
+sys.stderr.flush()
 os.execvp(args.dafnyexec, arglist )
 
 
