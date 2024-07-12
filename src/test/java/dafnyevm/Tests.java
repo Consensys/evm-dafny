@@ -2744,7 +2744,7 @@ public class Tests {
 
     private LegacyTransaction defaultTxCall() {
         return new LegacyTransaction(DEFAULT_SENDER, null, DEFAULT_RECEIVER, BigInteger.ONE, DEFAULT_GAS, DEFAULT_VALUE,
-                DEFAULT_DATA, BigInteger.ONE);
+                DEFAULT_DATA, BigInteger.ONE, null);
     }
 
 	/**

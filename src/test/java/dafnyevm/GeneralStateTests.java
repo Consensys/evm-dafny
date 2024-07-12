@@ -95,6 +95,17 @@ public class GeneralStateTests {
             "stCreate2/RevertInCreateInInitCreate2.json");
 
     /**
+	 * Identifiers the set of instances which should be included during testing.
+	 * Everything should be included. However, for debugging, it is helpful to
+	 * narrow the scope.
+	 */
+    public final static List<String> INCLUDED = Arrays.asList(
+    	"stEIP2930/[a-zA-Z]*.json"
+    );
+    		
+    		
+    
+    /**
      * Identifies test instances which (for various reasons) should be ignored. For
      * example, because the test does not currently pass. Each line in the list is a
      * regular expression matching against the test instance name. Each line must be
@@ -248,7 +259,7 @@ public class GeneralStateTests {
      * @param instance
      * @return
      */
-    private static boolean isIgnoredInstance(TraceTest.Instance instance) {
+   private static boolean isIgnoredInstance(TraceTest.Instance instance) {
         String name = instance.toString();
         for (int i = 0; i != IGNORED_INSTANCES.size(); ++i) {
             String regex = IGNORED_INSTANCES.get(i);
@@ -259,6 +270,22 @@ public class GeneralStateTests {
         return false;
     }
 
+    private static boolean isIncluded(Path path) {
+    	// Strip off "tests/GeneralStateTests"
+    	path = path.subpath(2, path.getNameCount());
+    	//System.out.println("PATH: " + path);
+    	// Normalise path notation for platofmr
+        String p = path.toString().replace(File.separator, "/");
+        // Check whether this matches an IGNORE or not.
+        for (int i = 0; i != INCLUDED.size(); ++i) {
+            String ith = INCLUDED.get(i);
+            if(p.matches(ith)) {
+            	return true;
+            }
+        }
+        return false;
+    }
+    
     private static boolean isImpossible(Path path) {
         // Normalise path notation for platofmr
         String p = path.toString().replace(File.separator, "/");
@@ -322,7 +349,7 @@ public class GeneralStateTests {
 
     private static Stream<Triple<Path, String, TraceTest.Instance>> streamTestsFromFile(Path f) throws IOException, JSONException {
     	ArrayList<Triple<Path, String, TraceTest.Instance>> instances = new ArrayList<>();
-        if (!isImpossible(f)) {
+        if (!isImpossible(f) && isIncluded(f)) {
             // Read contents of fixture file
             String contents = Files.readString(f);
             // Convert fixture into JSON

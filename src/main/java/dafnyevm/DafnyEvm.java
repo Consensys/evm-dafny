@@ -44,6 +44,7 @@ import dafny.DafnySequence;
 import dafny.Tuple2;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
+import evmtools.core.Transaction.Access;
 import evmtools.util.Hex;
 import dafnyevm.util.Errors;
 import dafnyevm.util.Precompiles;
@@ -67,6 +68,10 @@ public class DafnyEvm {
      * Constant for EIP3651 "Warm Coinbase".
      */
     private static final BigInteger EIP3651 = BigInteger.valueOf(3651);
+    /**
+     * Constant for EIP2930 "optional access lists".
+     */
+    private static final BigInteger EIP2930 = BigInteger.valueOf(2930);
 	/**
 	 * A default tracer which does nothing.
 	 */
@@ -239,12 +244,23 @@ public class DafnyEvm {
             gasPrice = ltx.gasPrice();
             BigInteger cost = ltx.gasLimit().multiply(ltx.gasPrice());
             BigInteger balance = worldState.get(ltx.sender()).dtor_balance();
+            Access[] accessList = ltx.accessList();
             //
             if(cost.compareTo(balance) > 0) {
                 return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
             } else {
                 // Pay for transaction execution
                 ws = ws.Withdraw(ltx.sender(), cost);
+            }
+            // Manage access list
+            if(accessList != null && fork.IsActive(EIP2930)) {
+            	// Mark all entries as being accessed.
+            	for(Access a : accessList) {
+            		ss = ss.AccountAccessed(a.address);
+            		for(BigInteger key : a.storageKeys) {
+            			ss.KeyAccessed(a.address,key);
+            		}
+            	}
             }
         }
 	    // Increment sender's nonce

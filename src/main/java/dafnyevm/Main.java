@@ -19,6 +19,7 @@ import org.json.JSONObject;
 
 import evmtools.core.LegacyTransaction;
 import evmtools.core.StateTest;
+import evmtools.core.Transaction.Access;
 import evmtools.util.Hex;
 import dafnyevm.util.StateTests;
 import dafnyevm.util.Tracers;
@@ -102,9 +103,11 @@ public class Main {
 		//
 		// Parse input string
 		byte[] bytes = Hex.toBytes(args[0]);
+		//
+		Access[] accessList = null; // for now
 		// Construct EVM
 		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).create(receiver, bytes);
-		LegacyTransaction tx = new LegacyTransaction(sender,null,receiver,nonce,gas,value,data,gasPrice);
+		LegacyTransaction tx = new LegacyTransaction(sender,null,receiver,nonce,gas,value,data,gasPrice,accessList);
 		// Execute the EVM
 		evm.execute(tx);
 	}
