@@ -252,10 +252,11 @@ public class DafnyEvm {
 			}
 		}
 	    //
-	    if (tx.gasLimit().compareTo(BigInteger.ZERO) < 0) {
+	    if (gas.compareTo(BigInteger.ZERO) < 0) {
             return new State.Invalid(tracer,Transaction.Outcome.INTRINSIC_GAS);
         } else if(tx instanceof Eip1559Transaction) {
             Eip1559Transaction etx = (Eip1559Transaction) tx;
+            // FIXME: this could be wrong.
             effectiveGasPrice = etx.maxPriorityFeePerGas().multiply(etx.maxFeePerGas());
         } else {
             LegacyTransaction ltx = (LegacyTransaction) tx;

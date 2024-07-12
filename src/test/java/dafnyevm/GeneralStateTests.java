@@ -100,11 +100,10 @@ public class GeneralStateTests {
 	 * narrow the scope.
 	 */
     public final static List<String> INCLUDED = Arrays.asList(
-    	"stEIP2930/[a-zA-Z]*.json"
+    	"stEIP2930/[a-zA-Z]*.json",
+    	"stEIP1559/[a-zA-Z]*.json"
     );
     		
-    		
-    
     /**
      * Identifies test instances which (for various reasons) should be ignored. For
      * example, because the test does not currently pass. Each line in the list is a
@@ -188,7 +187,7 @@ public class GeneralStateTests {
             // Configure world state
             StateTests.configureWorldState(evm, instance.getWorldState());
             // Run the call or create
-            DafnyEvm.State<?> outcome = evm.execute((LegacyTransaction) tx.getTransaction());
+            DafnyEvm.State<?> outcome = evm.execute(tx.getTransaction());
             Trace actual = tracer.toTrace();
             Trace expected = tx.getTrace();
             //
