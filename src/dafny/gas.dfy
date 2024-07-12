@@ -66,6 +66,9 @@ module Gas {
 	const G_KECCAK256WORD: nat := 6
 	const G_COPY: nat := 3
 	const G_BLOCKHASH: nat := 20
+    // EIP-2930
+    const G_ACCESS_LIST_ADDRESS_COST: nat := 2400
+    const G_ACCESS_LIST_STORAGE_KEY_COST: nat := 1900
     // EIP-3860
     const G_INITCODE_WORD_COST := 2
     /**

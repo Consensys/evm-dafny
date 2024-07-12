@@ -107,7 +107,7 @@ public class Main {
 		Access[] accessList = null; // for now
 		// Construct EVM
 		DafnyEvm evm = new DafnyEvm().tracer(determineTracer(cmd)).create(receiver, bytes);
-		LegacyTransaction tx = new LegacyTransaction(sender,null,receiver,nonce,gas,value,data,gasPrice,accessList);
+		LegacyTransaction tx = new LegacyTransaction(sender,null,receiver,nonce,gas,value,data,accessList,gasPrice);
 		// Execute the EVM
 		evm.execute(tx);
 	}

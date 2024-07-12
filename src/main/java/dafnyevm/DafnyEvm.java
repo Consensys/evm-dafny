@@ -15,6 +15,8 @@ package dafnyevm;
 
 import static EVM.__default.Execute;
 import static Gas.__default.CostInitCode;
+import static Gas.__default.G__ACCESS__LIST__ADDRESS__COST;
+import static Gas.__default.G__ACCESS__LIST__STORAGE__KEY__COST;
 import java.math.BigInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,6 +44,7 @@ import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
+import evmtools.core.Eip1559Transaction;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
 import evmtools.core.Transaction.Access;
@@ -233,47 +236,51 @@ public class DafnyEvm {
         EvmState.State st;
 	    // Perform initial checks
 	    BigInteger intrinsic = getIntrinsicGas(tx);
-	    BigInteger gasPrice;
-
-	    if (tx.gasLimit().compareTo(intrinsic) < 0) {
+	    BigInteger effectiveGasPrice;
+	    // Calculate starting gas
+	    BigInteger gas = tx.gasLimit().subtract(intrinsic);
+        // Account for access list
+		if (tx.accessList() != null && fork.IsActive(EIP2930)) {
+			// Mark all entries as being accessed.
+			for (Access a : tx.accessList()) {
+				ss = ss.AccountAccessed(a.address);
+				gas = gas.subtract(G__ACCESS__LIST__ADDRESS__COST());
+				for (BigInteger key : a.storageKeys) {
+					ss = ss.KeyAccessed(a.address, key);
+					gas = gas.subtract(G__ACCESS__LIST__STORAGE__KEY__COST());
+				}
+			}
+		}
+	    //
+	    if (tx.gasLimit().compareTo(BigInteger.ZERO) < 0) {
             return new State.Invalid(tracer,Transaction.Outcome.INTRINSIC_GAS);
-        } else if(!(tx instanceof LegacyTransaction)) {
-            return new State.Invalid(tracer,Transaction.Outcome.TYPE_NOT_SUPPORTED);
+        } else if(tx instanceof Eip1559Transaction) {
+            Eip1559Transaction etx = (Eip1559Transaction) tx;
+            effectiveGasPrice = etx.maxPriorityFeePerGas().multiply(etx.maxFeePerGas());
         } else {
             LegacyTransaction ltx = (LegacyTransaction) tx;
-            gasPrice = ltx.gasPrice();
-            BigInteger cost = ltx.gasLimit().multiply(ltx.gasPrice());
-            BigInteger balance = worldState.get(ltx.sender()).dtor_balance();
-            Access[] accessList = ltx.accessList();
-            //
-            if(cost.compareTo(balance) > 0) {
-                return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
-            } else {
-                // Pay for transaction execution
-                ws = ws.Withdraw(ltx.sender(), cost);
-            }
-            // Manage access list
-            if(accessList != null && fork.IsActive(EIP2930)) {
-            	// Mark all entries as being accessed.
-            	for(Access a : accessList) {
-            		ss = ss.AccountAccessed(a.address);
-            		for(BigInteger key : a.storageKeys) {
-            			ss.KeyAccessed(a.address,key);
-            		}
-            	}
-            }
+            effectiveGasPrice = ltx.gasPrice();            
+        }
+	    //
+	    BigInteger cost = tx.gasLimit().multiply(effectiveGasPrice);
+        BigInteger balance = worldState.get(tx.sender()).dtor_balance();
+        //
+        if(cost.compareTo(balance) > 0) {
+            return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+        } else {
+            // Pay for transaction execution
+            ws = ws.Withdraw(tx.sender(), cost);
         }
 	    // Increment sender's nonce
 	    ws = ws.IncNonce(tx.sender());
-	    // Calculate starting gas
-	    BigInteger gas = tx.gasLimit().subtract(intrinsic);
+
 	    // Setup transaction executor
 	    DafnySequence<Byte> callData = DafnySequence.fromBytes(tx.data());
 	    // Decide between call and create
 	    if(tx.to() != null) {
 	        // Contract call
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), tx.to(), tx.value(),
-	                callData, true, gasPrice, blockInfo.toDafny());
+	                callData, true, effectiveGasPrice, blockInfo.toDafny());
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
@@ -292,7 +299,7 @@ public class DafnyEvm {
 	        BigInteger address = addr(tx.sender(),nonce);
 	        // Construct the transaction context for the call.
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
-	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
+	                DafnySequence.fromBytes(new byte[0]), true, effectiveGasPrice, blockInfo.toDafny());
 	        // Begin the call.
 	        st = EvmState.__default.Create(ws, ts, ctx, fork, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }
