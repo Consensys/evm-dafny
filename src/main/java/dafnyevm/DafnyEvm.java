@@ -239,6 +239,12 @@ public class DafnyEvm {
 	    BigInteger effectiveGasPrice;
 	    // Calculate starting gas
 	    BigInteger gas = tx.gasLimit().subtract(intrinsic);
+	    // Maximum charge per unit of gas
+	    BigInteger maxFeePerGas;
+	    // Check block limit
+	    if(tx.gasLimit().compareTo(blockInfo.gasLimit) > 0) {
+	    	return new State.Invalid(tracer,Transaction.Outcome.GAS_LIMIT_REACHED);
+	    }
         // Account for access list
 		if (tx.accessList() != null && fork.IsActive(EIP2930)) {
 			// Mark all entries as being accessed.
@@ -256,17 +262,29 @@ public class DafnyEvm {
             return new State.Invalid(tracer,Transaction.Outcome.INTRINSIC_GAS);
         } else if(tx instanceof Eip1559Transaction) {
             Eip1559Transaction etx = (Eip1559Transaction) tx;
-            // FIXME: this could be wrong.
-            effectiveGasPrice = etx.maxPriorityFeePerGas().multiply(etx.maxFeePerGas());
+            maxFeePerGas = etx.maxFeePerGas();
+            // priority fee is capped because base fee filled first
+            BigInteger priority_fee_per_gas = etx.maxPriorityFeePerGas().min(maxFeePerGas.subtract(blockInfo.baseFee));
+            // caller pays both priority fee and base fee
+            effectiveGasPrice = priority_fee_per_gas.add(blockInfo.baseFee);
+            // Total must be larger of two
+            if(maxFeePerGas.compareTo(blockInfo.baseFee) < 0) {
+            	return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+            } else if(maxFeePerGas.compareTo(etx.maxPriorityFeePerGas()) < 0) {
+            	return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+            }
         } else {
             LegacyTransaction ltx = (LegacyTransaction) tx;
             effectiveGasPrice = ltx.gasPrice();            
+            maxFeePerGas = ltx.gasPrice();
         }
 	    //
 	    BigInteger cost = tx.gasLimit().multiply(effectiveGasPrice);
         BigInteger balance = worldState.get(tx.sender()).dtor_balance();
         //
         if(cost.compareTo(balance) > 0) {
+            return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+        } else if(balance.compareTo(tx.gasLimit().multiply(maxFeePerGas)) < 0) {
             return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
         } else {
             // Pay for transaction execution
