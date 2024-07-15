@@ -56,7 +56,11 @@ public class Tests {
     /**
      * Default gas limit to use for contract calls.
      */
-    public static final BigInteger DEFAULT_GAS = new BigInteger("10000000000");
+    public static final BigInteger DEFAULT_GAS = new BigInteger("1000000");
+    /**
+     * Default block gas limit to use for contract calls.
+     */
+    public static final BigInteger DEFAULT_BLOCK_GAS = new BigInteger("30000000");
     /**
      * Default call data to use for a call (unless otherwise specified).
      */
@@ -1146,7 +1150,7 @@ public class Tests {
 
 	@Test
 	public void test_coinbase_01() {
-		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().coinBase(0xcccc));
+		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(DEFAULT_BLOCK_GAS).coinBase(0xcccc));
 		byte[] output = callWithReturn(21017, tx,
 				new int[] { COINBASE, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
@@ -1154,7 +1158,7 @@ public class Tests {
 
 	@Test
 	public void test_timestamp_01() {
-		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().timeStamp(0xcccc));
+		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(DEFAULT_BLOCK_GAS).timeStamp(0xcccc));
 		byte[] output = callWithReturn(21017, tx,
 				new int[] { TIMESTAMP, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
@@ -1162,14 +1166,14 @@ public class Tests {
 
 	@Test
 	public void test_number_01() {
-		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().number(0xcccc));
+		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(DEFAULT_BLOCK_GAS).number(0xcccc));
 		byte[] output = callWithReturn(21017, tx, new int[] { NUMBER, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
 	}
 
 	@Test
 	public void test_difficulty_01() {
-		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().difficulty(0xcccc));
+		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(DEFAULT_BLOCK_GAS).difficulty(0xcccc));
 		byte[] output = callWithReturn(21017, tx,
 				new int[] { DIFFICULTY, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
@@ -1177,15 +1181,15 @@ public class Tests {
 
 	@Test
 	public void test_gaslimit_01() {
-		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(0xcccc));
+		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(0xcccccc));
 		byte[] output = callWithReturn(21017, tx,
 				new int[] { GASLIMIT, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
-		assertArrayEquals(UINT256(0xcccc), output);
+		assertArrayEquals(UINT256(0xcccccc), output);
 	}
 
 	@Test
 	public void test_chainid_01() {
-		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().chainID(0xcccc));
+		DafnyEvm tx = defaultDafnyEvm().blockInfo(new BlockInfo().gasLimit(DEFAULT_BLOCK_GAS).chainID(0xcccc));
 		byte[] output = callWithReturn(21017, tx,
 				new int[] { CHAINID, PUSH1, 0x00, MSTORE, PUSH1, 0x20, PUSH1, 0x00, RETURN });
 		assertArrayEquals(UINT256(0xcccc), output);
@@ -2380,7 +2384,7 @@ public class Tests {
 	@Test
 	public void test_recursive_call_02() {
 	    // Recursive contract call (with lots of gas)
-        LegacyTransaction tx = (LegacyTransaction) defaultTxCall().setGasLimit(0xfffffffffL);
+        LegacyTransaction tx = (LegacyTransaction) defaultTxCall(); //.setGasLimit(0xfffffffffL);
 		// Recursive contract call
 		byte[] output = callWithReturn(23684, tx,new int[] {
 				// Branch to STOP if calldata == 0xF.
@@ -2397,9 +2401,9 @@ public class Tests {
 	@Test
 	public void test_recursive_call_03() {
         // Recursive contract call (with lots of gas)
-        LegacyTransaction tx = (LegacyTransaction) defaultTxCall().setGasLimit(0xffffffffffL);
+        LegacyTransaction tx = (LegacyTransaction) defaultTxCall().setGasLimit(0xfffffL);
 		//
-		byte[] output = callWithReturn(201077, tx,new int[] {
+		byte[] output = callWithReturn(1048575, tx,new int[] {
 				// Branch to STOP if calldata == 0x3ff.
 				PUSH1, 0x00, CALLDATALOAD, DUP1, PUSH2, 0x3, 0xff, EQ, PUSH1, 0x20, JUMPI,
 				// Add one to value for next call
@@ -2739,7 +2743,8 @@ public class Tests {
 	}
 
 	private DafnyEvm defaultDafnyEvm() {
-	    return new DafnyEvm().create(DEFAULT_SENDER, DEFAULT_BALANCE);
+		DafnyEvm.BlockInfo block = new BlockInfo().gasLimit(DEFAULT_BLOCK_GAS);
+	    return new DafnyEvm().blockInfo(block).create(DEFAULT_SENDER, DEFAULT_BALANCE);
 	}
 
     private LegacyTransaction defaultTxCall() {

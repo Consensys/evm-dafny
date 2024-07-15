@@ -165,7 +165,7 @@ public class DafnyEvm {
 	 * @param gasPrice
 	 * @return
 	 */
-	public DafnyEvm blockInfo(BlockInfo info) {
+	public DafnyEvm blockInfo(BlockInfo info) {	
 		this.blockInfo = info;
 		return this;
 	}
@@ -247,7 +247,7 @@ public class DafnyEvm {
 	    BigInteger maxFeePerGas;
 	    // Check block limit
 	    if(tx.gasLimit().compareTo(blockInfo.gasLimit) > 0) {
-	    	return new State.Invalid(tracer,Transaction.Outcome.GAS_LIMIT_REACHED);
+	    	return new State.Invalid(tracer,Transaction.Outcome.GAS_LIMIT_REACHED);	    	
 	    }
         // Account for access list
 		if (tx.accessList() != null && fork.IsActive(EIP2930)) {
