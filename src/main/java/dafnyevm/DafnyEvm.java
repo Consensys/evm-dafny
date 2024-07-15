@@ -75,6 +75,10 @@ public class DafnyEvm {
      * Constant for EIP2930 "optional access lists".
      */
     private static final BigInteger EIP2930 = BigInteger.valueOf(2930);
+    /**
+     * Constant for EIP1159 
+     */
+    private static final BigInteger EIP1559 = BigInteger.valueOf(1559);
 	/**
 	 * A default tracer which does nothing.
 	 */
@@ -261,6 +265,10 @@ public class DafnyEvm {
 	    if (gas.compareTo(BigInteger.ZERO) < 0) {
             return new State.Invalid(tracer,Transaction.Outcome.INTRINSIC_GAS);
         } else if(tx instanceof Eip1559Transaction) {
+        	if(!fork.IsActive(EIP1559)) {
+        		// Transaction type is not supported.
+        		return new State.Invalid(tracer,Transaction.Outcome.UNKNOWN);
+        	}
             Eip1559Transaction etx = (Eip1559Transaction) tx;
             maxFeePerGas = etx.maxFeePerGas();
             // priority fee is capped because base fee filled first
@@ -292,7 +300,6 @@ public class DafnyEvm {
         }
 	    // Increment sender's nonce
 	    ws = ws.IncNonce(tx.sender());
-
 	    // Setup transaction executor
 	    DafnySequence<Byte> callData = DafnySequence.fromBytes(tx.data());
 	    // Decide between call and create

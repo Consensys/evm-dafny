@@ -100,8 +100,8 @@ public class GeneralStateTests {
 	 * narrow the scope.
 	 */
     public final static List<String> INCLUDED = Arrays.asList(
-    	"stEIP2930/[a-zA-Z]*.json",
-    	"stEIP1559/[a-zA-Z]*.json"
+   		".*" // include everything
+    	//"stEIP1559/[a-zA-Z]*.json" // example include
     );
     		
     /**
@@ -156,7 +156,7 @@ public class GeneralStateTests {
             "undefinedOpcodeFirstByte_.*_0_0_0",
             "InitCollisionNonZeroNonce_.*_[0-9_]*",
             "randomStatetest353_.*_0_0_0",
-            "eip1559_.*_0_0_0",
+            //"eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
             // EIP4844 (PointEval Precompile)
             "precompsEIP2929Cancun_Cancun_.*",

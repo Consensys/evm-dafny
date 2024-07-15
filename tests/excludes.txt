@@ -3,14 +3,6 @@ GeneralStateTests/stChainId/chainIdGasCost.json
 GeneralStateTests/stChainId/chainId.json
 GeneralStateTests/stCreate2/CREATE2_Bounds*.json
 GeneralStateTests/stCreateTest/CreateOOGafterMaxCodesize.json
-GeneralStateTests/stEIP1559/lowFeeCap.json
-GeneralStateTests/stEIP1559/lowGasPriceOldTypes.json
-GeneralStateTests/stEIP1559/outOfFunds.json
-GeneralStateTests/stEIP1559/outOfFundsOldTypes.json
-GeneralStateTests/stEIP1559/tipTooHigh.json
-GeneralStateTests/stEIP1559/transactionIntinsicBug.json
-GeneralStateTests/stEIP1559/valCausesOOF.json
-GeneralStateTests/stEIP2930/coinbaseT01.json
 GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_callsItself.json
 GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_calls.json
 GeneralStateTests/stEIP3607/transactionCollidingWithNonEmptyAccount_init.json
