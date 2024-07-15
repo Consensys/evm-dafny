@@ -15,6 +15,8 @@ package dafnyevm;
 
 import static EVM.__default.Execute;
 import static Gas.__default.CostInitCode;
+import static Gas.__default.G__ACCESS__LIST__ADDRESS__COST;
+import static Gas.__default.G__ACCESS__LIST__STORAGE__KEY__COST;
 import java.math.BigInteger;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,8 +44,10 @@ import WorldState.Account;
 import dafny.DafnyMap;
 import dafny.DafnySequence;
 import dafny.Tuple2;
+import evmtools.core.Eip1559Transaction;
 import evmtools.core.LegacyTransaction;
 import evmtools.core.Transaction;
+import evmtools.core.Transaction.Access;
 import evmtools.util.Hex;
 import dafnyevm.util.Errors;
 import dafnyevm.util.Precompiles;
@@ -67,6 +71,14 @@ public class DafnyEvm {
      * Constant for EIP3651 "Warm Coinbase".
      */
     private static final BigInteger EIP3651 = BigInteger.valueOf(3651);
+    /**
+     * Constant for EIP2930 "optional access lists".
+     */
+    private static final BigInteger EIP2930 = BigInteger.valueOf(2930);
+    /**
+     * Constant for EIP1159 
+     */
+    private static final BigInteger EIP1559 = BigInteger.valueOf(1559);
 	/**
 	 * A default tracer which does nothing.
 	 */
@@ -153,7 +165,7 @@ public class DafnyEvm {
 	 * @param gasPrice
 	 * @return
 	 */
-	public DafnyEvm blockInfo(BlockInfo info) {
+	public DafnyEvm blockInfo(BlockInfo info) {	
 		this.blockInfo = info;
 		return this;
 	}
@@ -228,36 +240,73 @@ public class DafnyEvm {
         EvmState.State st;
 	    // Perform initial checks
 	    BigInteger intrinsic = getIntrinsicGas(tx);
-	    BigInteger gasPrice;
-
-	    if (tx.gasLimit().compareTo(intrinsic) < 0) {
+	    BigInteger effectiveGasPrice;
+	    // Calculate starting gas
+	    BigInteger gas = tx.gasLimit().subtract(intrinsic);
+	    // Maximum charge per unit of gas
+	    BigInteger maxFeePerGas;
+	    // Check block limit
+	    if(tx.gasLimit().compareTo(blockInfo.gasLimit) > 0) {
+	    	return new State.Invalid(tracer,Transaction.Outcome.GAS_LIMIT_REACHED);	    	
+	    }
+        // Account for access list
+		if (tx.accessList() != null && fork.IsActive(EIP2930)) {
+			// Mark all entries as being accessed.
+			for (Access a : tx.accessList()) {
+				ss = ss.AccountAccessed(a.address);
+				gas = gas.subtract(G__ACCESS__LIST__ADDRESS__COST());
+				for (BigInteger key : a.storageKeys) {
+					ss = ss.KeyAccessed(a.address, key);
+					gas = gas.subtract(G__ACCESS__LIST__STORAGE__KEY__COST());
+				}
+			}
+		}
+	    //
+	    if (gas.compareTo(BigInteger.ZERO) < 0) {
             return new State.Invalid(tracer,Transaction.Outcome.INTRINSIC_GAS);
-        } else if(!(tx instanceof LegacyTransaction)) {
-            return new State.Invalid(tracer,Transaction.Outcome.TYPE_NOT_SUPPORTED);
+        } else if(tx instanceof Eip1559Transaction) {
+        	if(!fork.IsActive(EIP1559)) {
+        		// Transaction type is not supported.
+        		return new State.Invalid(tracer,Transaction.Outcome.UNKNOWN);
+        	}
+            Eip1559Transaction etx = (Eip1559Transaction) tx;
+            maxFeePerGas = etx.maxFeePerGas();
+            // priority fee is capped because base fee filled first
+            BigInteger priority_fee_per_gas = etx.maxPriorityFeePerGas().min(maxFeePerGas.subtract(blockInfo.baseFee));
+            // caller pays both priority fee and base fee
+            effectiveGasPrice = priority_fee_per_gas.add(blockInfo.baseFee);
+            // Total must be larger of two
+            if(maxFeePerGas.compareTo(blockInfo.baseFee) < 0) {
+            	return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+            } else if(maxFeePerGas.compareTo(etx.maxPriorityFeePerGas()) < 0) {
+            	return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+            }
         } else {
             LegacyTransaction ltx = (LegacyTransaction) tx;
-            gasPrice = ltx.gasPrice();
-            BigInteger cost = ltx.gasLimit().multiply(ltx.gasPrice());
-            BigInteger balance = worldState.get(ltx.sender()).dtor_balance();
-            //
-            if(cost.compareTo(balance) > 0) {
-                return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
-            } else {
-                // Pay for transaction execution
-                ws = ws.Withdraw(ltx.sender(), cost);
-            }
+            effectiveGasPrice = ltx.gasPrice();            
+            maxFeePerGas = ltx.gasPrice();
+        }
+	    //
+	    BigInteger cost = tx.gasLimit().multiply(effectiveGasPrice);
+        BigInteger balance = worldState.get(tx.sender()).dtor_balance();
+        //
+        if(cost.compareTo(balance) > 0) {
+            return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+        } else if(balance.compareTo(tx.gasLimit().multiply(maxFeePerGas)) < 0) {
+            return new State.Invalid(tracer,Transaction.Outcome.INSUFFICIENT_FUNDS);
+        } else {
+            // Pay for transaction execution
+            ws = ws.Withdraw(tx.sender(), cost);
         }
 	    // Increment sender's nonce
 	    ws = ws.IncNonce(tx.sender());
-	    // Calculate starting gas
-	    BigInteger gas = tx.gasLimit().subtract(intrinsic);
 	    // Setup transaction executor
 	    DafnySequence<Byte> callData = DafnySequence.fromBytes(tx.data());
 	    // Decide between call and create
 	    if(tx.to() != null) {
 	        // Contract call
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), tx.to(), tx.value(),
-	                callData, true, gasPrice, blockInfo.toDafny());
+	                callData, true, effectiveGasPrice, blockInfo.toDafny());
 	        // Mark sender + recipient as having being accessed
 	        ss = ss.AccountAccessed(tx.sender());
 	        ss = ss.AccountAccessed(tx.to());
@@ -276,7 +325,7 @@ public class DafnyEvm {
 	        BigInteger address = addr(tx.sender(),nonce);
 	        // Construct the transaction context for the call.
 	        Context.T ctx = Context.__default.Create(tx.sender(), tx.sender(), address, tx.value(),
-	                DafnySequence.fromBytes(new byte[0]), true, gasPrice, blockInfo.toDafny());
+	                DafnySequence.fromBytes(new byte[0]), true, effectiveGasPrice, blockInfo.toDafny());
 	        // Begin the call.
 	        st = EvmState.__default.Create(ws, ts, ctx, fork, NATIVE_PRECOMPILES, ss, callData, gas, BigInteger.ONE);
 	    }

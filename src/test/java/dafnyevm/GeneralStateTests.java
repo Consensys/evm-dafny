@@ -95,6 +95,16 @@ public class GeneralStateTests {
             "stCreate2/RevertInCreateInInitCreate2.json");
 
     /**
+	 * Identifiers the set of instances which should be included during testing.
+	 * Everything should be included. However, for debugging, it is helpful to
+	 * narrow the scope.
+	 */
+    public final static List<String> INCLUDED = Arrays.asList(
+   		".*" // include everything
+    	//"stEIP1559/[a-zA-Z]*.json" // example include
+    );
+    		
+    /**
      * Identifies test instances which (for various reasons) should be ignored. For
      * example, because the test does not currently pass. Each line in the list is a
      * regular expression matching against the test instance name. Each line must be
@@ -146,7 +156,7 @@ public class GeneralStateTests {
             "undefinedOpcodeFirstByte_.*_0_0_0",
             "InitCollisionNonZeroNonce_.*_[0-9_]*",
             "randomStatetest353_.*_0_0_0",
-            "eip1559_.*_0_0_0",
+            //"eip1559_.*_0_0_0",
             "badOpcodes_Berlin_0_23_0", // weird?
             // EIP4844 (PointEval Precompile)
             "precompsEIP2929Cancun_Cancun_.*",
@@ -177,7 +187,7 @@ public class GeneralStateTests {
             // Configure world state
             StateTests.configureWorldState(evm, instance.getWorldState());
             // Run the call or create
-            DafnyEvm.State<?> outcome = evm.execute((LegacyTransaction) tx.getTransaction());
+            DafnyEvm.State<?> outcome = evm.execute(tx.getTransaction());
             Trace actual = tracer.toTrace();
             Trace expected = tx.getTrace();
             //
@@ -248,7 +258,7 @@ public class GeneralStateTests {
      * @param instance
      * @return
      */
-    private static boolean isIgnoredInstance(TraceTest.Instance instance) {
+   private static boolean isIgnoredInstance(TraceTest.Instance instance) {
         String name = instance.toString();
         for (int i = 0; i != IGNORED_INSTANCES.size(); ++i) {
             String regex = IGNORED_INSTANCES.get(i);
@@ -259,6 +269,22 @@ public class GeneralStateTests {
         return false;
     }
 
+    private static boolean isIncluded(Path path) {
+    	// Strip off "tests/GeneralStateTests"
+    	path = path.subpath(2, path.getNameCount());
+    	//System.out.println("PATH: " + path);
+    	// Normalise path notation for platofmr
+        String p = path.toString().replace(File.separator, "/");
+        // Check whether this matches an IGNORE or not.
+        for (int i = 0; i != INCLUDED.size(); ++i) {
+            String ith = INCLUDED.get(i);
+            if(p.matches(ith)) {
+            	return true;
+            }
+        }
+        return false;
+    }
+    
     private static boolean isImpossible(Path path) {
         // Normalise path notation for platofmr
         String p = path.toString().replace(File.separator, "/");
@@ -322,7 +348,7 @@ public class GeneralStateTests {
 
     private static Stream<Triple<Path, String, TraceTest.Instance>> streamTestsFromFile(Path f) throws IOException, JSONException {
     	ArrayList<Triple<Path, String, TraceTest.Instance>> instances = new ArrayList<>();
-        if (!isImpossible(f)) {
+        if (!isImpossible(f) && isIncluded(f)) {
             // Read contents of fixture file
             String contents = Files.readString(f);
             // Convert fixture into JSON
