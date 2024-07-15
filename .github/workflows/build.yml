@@ -17,7 +17,7 @@ jobs:
           submodules: recursive
       - uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 21
           distribution: adopt
           cache: 'gradle'        
       - uses: dafny-lang/setup-dafny-action@v1.7.0
