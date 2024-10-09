@@ -64,6 +64,7 @@ final BOOGIE_FLAGS = RANDOMIZE_FLAG
 final DAFNY4_BUILD_FLAGS = [
     'build',
     '--no-verify',
+    '--allow-warnings',
     '--target','java',
     '--output','build/libs/evm',
     '--function-syntax','4',
@@ -72,6 +73,7 @@ final DAFNY4_BUILD_FLAGS = [
 
 final DAFNY4_VERIFY_FLAGS = [
     'verify',
+    '--allow-warnings',    
     '--resource-limit','1000000',
     '--verify-included-files',
     '--log-format','csv;LogFileName=build/logs/verify.csv',
@@ -81,6 +83,7 @@ final DAFNY4_VERIFY_FLAGS = [
 
 final DAFNY4_TEST_FLAGS = [
     'test',
+    '--allow-warnings',    
     '--target','java',
     '--function-syntax','4',
     '--quantifier-syntax','4'

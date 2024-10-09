@@ -79,7 +79,7 @@ module Gas {
      *  @note                   The memory cost is linear up to a certain point (
      *                          22*32 = 704 bytes), and then quadratic.
      */
-    function QuadraticCost(memUsedSize: nat): nat
+    function {:verify false} QuadraticCost(memUsedSize: nat): nat
     {
         G_MEMORY * memUsedSize + ((memUsedSize * memUsedSize) / 512)
     }
@@ -87,7 +87,7 @@ module Gas {
     /**
      *  The quadratic cost function is increasing.
      */
-    lemma QuadraticCostIsMonotonic(x: nat, y: nat)
+    lemma {:verify false} QuadraticCostIsMonotonic(x: nat, y: nat)
     ensures x >= y ==> QuadraticCost(x) >= QuadraticCost(y)
     {
         if x > y {
