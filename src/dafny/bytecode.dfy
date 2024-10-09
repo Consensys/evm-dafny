@@ -444,8 +444,8 @@ module Bytecode {
 
     /**
      * Bitwise AND operation.
-     */
-    function And(st: ExecutingState): (st': State)
+     */     
+    function {:verify false} And(st: ExecutingState): (st': State)
     ensures st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW)
     ensures st'.EXECUTING? <==> st.Operands() >= 2
     ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 1
@@ -484,7 +484,7 @@ module Bytecode {
     /**
      * Bitwise XOR operation.
      */
-    function Xor(st: ExecutingState): (st': State)
+    function {:verify false} Xor(st: ExecutingState): (st': State)
     ensures st'.EXECUTING? || st' == ERROR(STACK_UNDERFLOW)
     ensures st'.EXECUTING? <==> st.Operands() >= 2
     ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() - 1

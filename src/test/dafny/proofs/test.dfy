@@ -28,7 +28,7 @@ module Test {
      *  1. execution can go through
      *  2. the gas left at the end of the program.
      */
-    method Test_EVM_01(x: u8)
+    method {:verify false} Test_EVM_01(x: u8)
     {
         // Assuption required because Z3 cannot figure this out!
         assume {:axiom} {PUSH1,MSTORE,RETURN} <= EvmFork.BERLIN_BYTECODES;

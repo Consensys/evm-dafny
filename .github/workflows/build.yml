@@ -22,7 +22,7 @@ jobs:
           cache: 'gradle'        
       - uses: dafny-lang/setup-dafny-action@v1.7.0
         with:
-          dafny-version: "4.4.0"
+          dafny-version: "4.8.1"
       - name: Set DAFNY_HOME
         run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV
         # Build
@@ -50,7 +50,7 @@ jobs:
           cache: 'gradle'    
       - uses: dafny-lang/setup-dafny-action@v1.7.0
         with:
-          dafny-version: "4.4.0"
+          dafny-version: "4.8.1"
       - name: Set DAFNY_HOME
         run: echo "DAFNY_HOME=$(dirname $(which dafny))" >> $GITHUB_ENV
         # Build

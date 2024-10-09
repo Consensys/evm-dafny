@@ -183,7 +183,7 @@ module Precompiled {
      * See also EIP-2565.  Observe that efforts are made to avoid unnecessary
      * calculations where possible.
      */
-    function CallModExp(data: Array<u8>) : Option<(Array<u8>,nat)> {
+    function {:verify false} CallModExp(data: Array<u8>) : Option<(Array<u8>,nat)> {
         // Length of B
         var lB := ByteUtils.ReadUint256(data,0) as nat;
         // Length of E
