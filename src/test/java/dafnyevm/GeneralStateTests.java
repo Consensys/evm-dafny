@@ -100,10 +100,8 @@ public class GeneralStateTests {
 	 * narrow the scope.
 	 */
     public final static List<String> INCLUDED = Arrays.asList(
-   		//".*" // include everything
+   		".*" // include everything
     	//"stEIP1559/[a-zA-Z]*.json" // example include
-    	//"stCallCodes/callcodecallcodecallcode_111_OOGMAfter.json"
-    	"stCallDelegateCodesCallCodeHomestead/callcodecallcallcode_101_OOGE.json"
     );
     		
     /**
@@ -199,7 +197,6 @@ public class GeneralStateTests {
                 System.err.println(tuple + " ==> " + outcome);
                 printTraceDiff(0, expected, actual);
             }
-            System.out.println(actual);
             // Finally check for equality.
             assertEquals(expected, actual);
             // Check outcome matches
