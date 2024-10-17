@@ -1321,7 +1321,7 @@ module Bytecode {
      */
     function Gas(st: ExecutingState): (st': State)
     ensures st'.EXECUTING? || st' == ERROR(STACK_OVERFLOW)
-    ensures st'.EXECUTING? <==> st.Capacity() >= 1 && st.Gas() <= (MAX_U256 as nat)
+    ensures st'.EXECUTING? <==> (st.Capacity() >= 1 && st.Gas() <= (MAX_U256 as nat))
     ensures st'.EXECUTING? ==> st'.Operands() == st.Operands() + 1
     {
         if st.Capacity() >= 1 && st.Gas() <= (MAX_U256 as nat)
