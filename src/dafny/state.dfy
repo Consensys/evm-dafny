@@ -393,7 +393,8 @@ module EvmState {
          * exists, none is returned.
          */
         function GetAccount(account:u160) : Option<WorldState.Account>
-        requires this.EXECUTING? {
+        requires this.EXECUTING? 
+        {
             if account in evm.world.accounts
             then
                 Some(evm.world.accounts[account])
